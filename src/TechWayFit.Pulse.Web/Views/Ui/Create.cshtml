@@ -1,0 +1,270 @@
+@{
+    Layout = null;
+}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create Session</title>
+  <link rel="stylesheet" href="/css/pulse-ui.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div>
+          <h1>Create Session</h1>
+          <p>Generate the code and QR for your workshop.</p>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <a class="btn secondary" href="/ui">All flows</a>
+        <a class="btn secondary" href="/ui/facilitator">Facilitator</a>
+        <a class="btn secondary" href="/ui/participant">Participant</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <h2>Set up the session in seconds.</h2>
+      <p>Once created, share the join link or QR with participants.</p>
+      <div class="actions">
+        <a class="btn secondary" href="/ui/facilitator">Go to facilitator console</a>
+        <a class="btn secondary" href="/ui/participant">Open participant UI</a>
+      </div>
+    </section>
+
+    <section class="panel" style="--delay: 0.05s;">
+      <h3>Create session</h3>
+      <p>Configure session settings and generate the join code.</p>
+      <div class="panel-grid">
+        <div class="card">
+          <h4>Session details</h4>
+          <form class="form" id="createForm">
+            <div class="row two">
+              <div>
+                <label for="sessionCode">Session code</label>
+                <input class="field" id="sessionCode" name="sessionCode" placeholder="TW-2024" />
+              </div>
+              <div>
+                <label for="sessionTitle">Session title</label>
+                <input class="field" id="sessionTitle" name="sessionTitle" placeholder="Sprint retro pulse" required />
+              </div>
+            </div>
+            <div class="row two">
+              <div>
+                <label for="sessionGoal">Goal</label>
+                <input class="field" id="sessionGoal" name="sessionGoal" placeholder="Collect quick sentiment" />
+              </div>
+              <div>
+                <label for="sessionContext">Context</label>
+                <input class="field" id="sessionContext" name="sessionContext" placeholder="Week 9 release" />
+              </div>
+            </div>
+
+            <div class="row two">
+              <div>
+                <label for="maxPerSession">Max contributions per participant</label>
+                <input class="field" id="maxPerSession" name="maxPerSession" type="number" min="1" value="10" />
+              </div>
+              <div>
+                <label for="maxPerActivity">Max per activity (optional)</label>
+                <input class="field" id="maxPerActivity" name="maxPerActivity" type="number" min="1" placeholder="Leave blank" />
+              </div>
+            </div>
+
+            <div class="row two">
+              <div>
+                <label for="ttlMinutes">Session TTL (minutes)</label>
+                <input class="field" id="ttlMinutes" name="ttlMinutes" type="number" min="5" value="120" />
+              </div>
+              <div class="toggle">
+                <input type="checkbox" id="allowAnonymous" checked />
+                <label for="allowAnonymous">Allow anonymous joins</label>
+              </div>
+            </div>
+
+            <div class="row two">
+              <div class="toggle">
+                <input type="checkbox" id="strictActivity" />
+                <label for="strictActivity">Only allow current activity</label>
+              </div>
+              <div>
+                <button class="btn secondary" type="button" id="generateCode">Generate code</button>
+                <button class="btn primary" type="submit">Create session</button>
+              </div>
+            </div>
+          </form>
+          <div class="status" id="createStatus" data-kind="info">Waiting to create a session.</div>
+        </div>
+
+        <div class="stack">
+          <div class="card">
+            <h4>Session summary</h4>
+            <div class="summary">
+              <div><strong>Code</strong><br /><span id="summaryCode">Not created</span></div>
+              <div><strong>Session ID</strong><br /><span id="summaryId">Not created</span></div>
+              <div><strong>Join form</strong><br />Department (dropdown), Role (text)</div>
+            </div>
+          </div>
+          <div class="card">
+            <h4>Join link + QR</h4>
+            <div class="qr-frame">
+              <img id="qrImage" alt="QR code" src="" />
+              <div class="qr-link">
+                <label for="joinLink">Join URL</label>
+                <input class="field" id="joinLink" readonly />
+                <button class="btn secondary" type="button" id="copyJoinLink">Copy join link</button>
+              </div>
+            </div>
+            <div class="status" id="qrStatus" data-kind="info">QR will appear after you create a session.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/js/qrcodegen.js"></script>
+  <script>
+    const createForm = document.getElementById("createForm");
+    const sessionCode = document.getElementById("sessionCode");
+    const generateCode = document.getElementById("generateCode");
+    const summaryCode = document.getElementById("summaryCode");
+    const summaryId = document.getElementById("summaryId");
+    const joinLink = document.getElementById("joinLink");
+    const qrImage = document.getElementById("qrImage");
+    const copyJoinLink = document.getElementById("copyJoinLink");
+
+    function setStatus(id, message, kind) {
+      const el = document.getElementById(id);
+      el.textContent = message;
+      el.dataset.kind = kind;
+    }
+
+    function makeCode() {
+      const number = Math.floor(1000 + Math.random() * 9000);
+      return `TW-${number}`;
+    }
+
+    function buildJoinUrl(code) {
+      if (!code) {
+        return "";
+      }
+      return `${window.location.origin}/ui/participant?code=${encodeURIComponent(code)}`;
+    }
+
+    function updateJoinArtifacts(code) {
+      const url = buildJoinUrl(code);
+      joinLink.value = url;
+      if (!url) {
+        qrImage.removeAttribute("src");
+        qrImage.style.display = "none";
+        setStatus("qrStatus", "QR will appear after you create a session.", "info");
+        return;
+      }
+      qrImage.style.display = "block";
+      const qr = qrcode(0, "M");
+      qr.addData(url);
+      qr.make();
+      qrImage.src = qr.createDataURL(6, 4);
+      setStatus("qrStatus", "QR ready to share.", "success");
+    }
+
+    async function parseJson(response) {
+      const payload = await response.json();
+      if (!response.ok || (payload.errors && payload.errors.length)) {
+        const message = payload.errors && payload.errors.length
+          ? payload.errors.map((error) => error.message).join(" ")
+          : "Request failed.";
+        throw new Error(message);
+      }
+      return payload.data;
+    }
+
+    generateCode.addEventListener("click", () => {
+      sessionCode.value = makeCode();
+      updateJoinArtifacts(sessionCode.value.trim());
+    });
+
+    sessionCode.addEventListener("input", () => {
+      updateJoinArtifacts(sessionCode.value.trim());
+    });
+
+    copyJoinLink.addEventListener("click", async () => {
+      if (!joinLink.value) {
+        setStatus("qrStatus", "Create a session to generate a link.", "error");
+        return;
+      }
+      if (!navigator.clipboard) {
+        setStatus("qrStatus", "Clipboard not available in this browser.", "error");
+        return;
+      }
+      await navigator.clipboard.writeText(joinLink.value);
+      setStatus("qrStatus", "Join link copied.", "success");
+    });
+
+    createForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      setStatus("createStatus", "Creating session...", "info");
+
+      const payload = {
+        code: sessionCode.value.trim() || makeCode(),
+        title: document.getElementById("sessionTitle").value.trim(),
+        goal: document.getElementById("sessionGoal").value.trim(),
+        context: document.getElementById("sessionContext").value.trim(),
+        settings: {
+          maxContributionsPerParticipantPerSession: Number(document.getElementById("maxPerSession").value || 10),
+          maxContributionsPerParticipantPerActivity: document.getElementById("maxPerActivity").value
+            ? Number(document.getElementById("maxPerActivity").value)
+            : null,
+          strictCurrentActivityOnly: document.getElementById("strictActivity").checked,
+          allowAnonymous: document.getElementById("allowAnonymous").checked,
+          ttlMinutes: Number(document.getElementById("ttlMinutes").value || 120)
+        },
+        joinFormSchema: {
+          maxFields: 5,
+          fields: [
+            {
+              id: "department",
+              label: "Department",
+              type: "Dropdown",
+              required: false,
+              options: ["Engineering", "Product", "Design", "Operations"],
+              useInFilters: true
+            },
+            {
+              id: "role",
+              label: "Role",
+              type: "Text",
+              required: false,
+              options: [],
+              useInFilters: true
+            }
+          ]
+        }
+      };
+
+      try {
+        const response = await fetch("/api/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await parseJson(response);
+        summaryCode.textContent = data.code;
+        summaryId.textContent = data.sessionId;
+        sessionCode.value = data.code;
+        updateJoinArtifacts(data.code);
+        setStatus("createStatus", `Session created with code ${data.code}.`, "success");
+      } catch (error) {
+        setStatus("createStatus", error.message, "error");
+      }
+    });
+
+    updateJoinArtifacts("");
+  </script>
+</body>
+</html>
