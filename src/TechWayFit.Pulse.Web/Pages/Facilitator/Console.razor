@@ -1,0 +1,512 @@
+@page "/facilitator/console/{SessionCode}"
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Contracts.Requests
+@using TechWayFit.Pulse.Contracts.Enums
+@using TechWayFit.Pulse.Web.Hubs
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Diagnostics
+@implements IAsyncDisposable
+
+<PageTitle>Live Console - @(session?.Title ?? "Loading...")</PageTitle>
+
+<div class="live-console">
+    @if (isLoading)
+    {
+        <div class="loading-state">
+        <div class="spinner"></div>
+     <p>Loading session...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+   <div class="error-state">
+   <div class="alert alert-error">
+    <strong>Error:</strong> @errorMessage
+            </div>
+       <button class="btn btn-primary" @onclick="LoadSession">Retry</button>
+        </div>
+    }
+    else if (session != null)
+    {
+        <div class="console-header">
+ <div class="session-info">
+ <h1>@session.Title</h1>
+       <div class="session-meta">
+  <span class="session-code">Code: @session.Code</span>
+    <span class="session-status status-@session.Status.ToString().ToLower()">@session.Status</span>
+            <span class="participant-count">@participantCount participants</span>
+            </div>
+ </div>
+      <div class="console-actions">
+      @if (session.Status == SessionStatus.Draft)
+      {
+       <button class="btn btn-success btn-lg" @onclick="StartSession" disabled="@isPerformingAction">
+      <i class="icon-play"></i>
+            @(isPerformingAction ? "Starting..." : "Start Session")
+         </button>
+          }
+            else if (session.Status == SessionStatus.Live)
+     {
+     <button class="btn btn-danger btn-lg" @onclick="EndSession" disabled="@isPerformingAction">
+     <i class="icon-stop"></i>
+             @(isPerformingAction ? "Ending..." : "End Session")
+            </button>
+          }
+     <button class="btn btn-outline" @onclick="GoToHome">
+ <i class="icon-home"></i>
+     Back to Home
+     </button>
+     </div>
+        </div>
+
+        <div class="console-content">
+            <div class="console-sidebar">
+       <div class="participant-panel">
+         <h3>Participants (@participantCount)</h3>
+               <div class="qr-section">
+         <div class="qr-display">
+   <canvas id="qr-@session.Code" width="200" height="200"></canvas>
+         </div>
+        <div class="join-info">
+         <div class="join-url">
+            <label>Join URL:</label>
+     <input type="text" readonly value="@joinUrl" class="join-url-input" />
+   <button class="btn btn-sm btn-outline" @onclick="CopyJoinUrl">Copy</button>
+      </div>
+   <div class="join-code">
+           <strong>Session Code: @session.Code</strong>
+  </div>
+    </div>
+          </div>
+       </div>
+
+    <div class="session-controls">
+  <h3>Session Controls</h3>
+     <div class="control-buttons">
+              @if (session.Status == SessionStatus.Draft)
+  {
+<button class="btn btn-primary" @onclick="StartSession" disabled="@isPerformingAction">
+  Start Session
+           </button>
+                  }
+             else if (session.Status == SessionStatus.Live)
+         {
+                  <button class="btn btn-danger" @onclick="EndSession" disabled="@isPerformingAction">
+    End Session
+      </button>
+          }
+      </div>
+         </div>
+            </div>
+
+      <div class="console-main">
+      <div class="agenda-panel">
+          <h3>Workshop Agenda</h3>
+       @if (activities.Any())
+          {
+   <div class="activity-list">
+          @foreach (var activity in activities.OrderBy(a => a.Order))
+            {
+   <div class="activity-item @GetActivityStateClass(activity)">
+        <div class="activity-header">
+          <span class="activity-order">#@activity.Order</span>
+          <span class="activity-title">@activity.Title</span>
+               <span class="activity-type">@activity.Type</span>
+     <span class="activity-status">@activity.Status</span>
+ </div>
+                @if (!string.IsNullOrEmpty(activity.Prompt))
+       {
+   <div class="activity-prompt">@activity.Prompt</div>
+         }
+           <div class="activity-actions">
+      @if (session.Status == SessionStatus.Live)
+  {
+          @if (activity.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending)
+   {
+   <button class="btn btn-sm btn-primary" 
+         @onclick="() => OpenActivity(activity.ActivityId)" 
+   disabled="@(isPerformingAction || IsAnotherActivityOpen(activity.ActivityId))">
+                Open Activity
+             </button>
+   }
+             else if (activity.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open)
+   {
+  <button class="btn btn-sm btn-warning" 
+          @onclick="() => CloseActivity(activity.ActivityId)" 
+         disabled="@isPerformingAction">
+         Close Activity
+        </button>
+                  <span class="current-activity-badge">LIVE</span>
+   }
+         else
+       {
+    <span class="completed-badge">Completed</span>
+     }
+   }
+              </div>
+               </div>
+         }
+     </div>
+         }
+           else
+        {
+ <div class="empty-agenda">
+         <p>No activities added yet.</p>
+    </div>
+    }
+       </div>
+
+    <div class="status-panel">
+        <h3>Live Status</h3>
+             <div class="status-grid">
+  <div class="status-card">
+  <strong>@participantCount</strong>
+     <span>Total Participants</span>
+       </div>
+           <div class="status-card">
+   <strong>@GetCurrentActivityName()</strong>
+          <span>Current Activity</span>
+         </div>
+         <div class="status-card">
+ <strong>@GetCompletedActivitiesCount()</strong>
+        <span>Completed Activities</span>
+    </div>
+<div class="status-card">
+              <strong>@GetSessionDuration()</strong>
+      <span>Session Duration</span>
+     </div>
+         </div>
+    </div>
+     </div>
+    </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string SessionCode { get; set; } = "";
+    [Parameter] [SupplyParameterFromQuery] public string? Token { get; set; }
+
+    private SessionSummaryResponse? session;
+    private List<AgendaActivityResponse> activities = new();
+    private bool isLoading = true;
+  private bool isPerformingAction = false;
+    private string errorMessage = "";
+    private int participantCount = 0;
+    private string joinUrl = "";
+ private DateTimeOffset sessionStartTime = DateTimeOffset.UtcNow;
+
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSession();
+        await InitializeSignalR();
+        await GenerateQRCode();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+   if (!string.IsNullOrEmpty(SessionCode))
+   {
+            joinUrl = $"{Navigation.BaseUri}join/{SessionCode}";
+        }
+    }
+
+    private async Task LoadSession()
+    {
+        isLoading = true;
+        errorMessage = "";
+
+        try
+      {
+      session = await ApiService.GetSessionAsync(SessionCode);
+      activities = (await ApiService.GetAgendaAsync(SessionCode)).ToList();
+          
+            // Set session start time for duration calculation
+     if (session.Status == SessionStatus.Live)
+            {
+     sessionStartTime = DateTimeOffset.UtcNow; // Placeholder - would need actual start time from API
+            }
+
+      // TODO: Load participant count from API
+    participantCount = 0; // This will be updated via SignalR
+        }
+        catch (HttpRequestException ex)
+{
+  errorMessage = $"Network error: {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
+        {
+       errorMessage = ex.Message;
+        }
+      catch (Exception ex)
+        {
+ errorMessage = $"Unexpected error: {ex.Message}";
+ }
+        finally
+        {
+ isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task InitializeSignalR()
+    {
+        if (string.IsNullOrEmpty(SessionCode)) return;
+
+     try
+        {
+ hubConnection = new HubConnectionBuilder()
+          .WithUrl($"{Navigation.BaseUri}hubs/workshop")
+                .WithAutomaticReconnect()
+           .Build();
+
+       // Handle session state changes (Draft ? Live ? Ended)
+            hubConnection.On<SessionStateChangedEvent>("SessionStateChanged", async (sessionEvent) =>
+            {
+        await InvokeAsync(async () =>
+          {
+            // Update session state and participant count
+      if (session != null && sessionEvent.SessionCode == session.Code)
+             {
+       await LoadSession(); // Reload to get latest state
+       participantCount = sessionEvent.ParticipantCount;
+ StateHasChanged();
+      }
+ });
+      });
+
+    // Handle participant joins
+hubConnection.On<ParticipantJoinedEvent>("ParticipantJoined", async (participantEvent) =>
+    {
+        await InvokeAsync(() =>
+          {
+       if (session != null && participantEvent.SessionCode == session.Code)
+   {
+             participantCount = participantEvent.TotalParticipantCount;
+    StateHasChanged();
+        }
+    });
+            });
+
+            // Handle activity state changes (Open/Close)
+            hubConnection.On<ActivityStateChangedEvent>("ActivityStateChanged", async (activityEvent) =>
+    {
+   await InvokeAsync(async () =>
+          {
+         if (session != null && activityEvent.SessionCode == session.Code)
+     {
+         // Reload activities to get updated state
+      try
+   {
+          activities = (await ApiService.GetAgendaAsync(SessionCode)).ToList();
+      StateHasChanged();
+       }
+             catch (Exception ex)
+          {
+Debug.WriteLine($"Error updating activities: {ex.Message}");
+       }
+          }
+ });
+       });
+
+    // Handle new responses
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
+            {
+                await InvokeAsync(() =>
+        {
+  if (session != null && responseEvent.SessionCode == session.Code)
+                {
+         // Could show a real-time notification or update counters
+      Debug.WriteLine($"New response received for activity {responseEvent.ActivityId}");
+             StateHasChanged();
+          }
+            });
+            });
+
+   await hubConnection.StartAsync();
+         await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+      catch (Exception ex)
+      {
+            Debug.WriteLine($"SignalR connection error: {ex.Message}");
+        }
+    }
+
+    private async Task GenerateQRCode()
+    {
+        if (string.IsNullOrEmpty(SessionCode)) return;
+        
+try
+  {
+        await JS.InvokeVoidAsync("generateQRCode", $"qr-{SessionCode}", joinUrl);
+        }
+      catch (Exception ex)
+        {
+        Debug.WriteLine($"QR code generation error: {ex.Message}");
+        }
+    }
+
+    private async Task StartSession()
+  {
+        if (string.IsNullOrEmpty(Token) || session == null) return;
+
+ isPerformingAction = true;
+        errorMessage = "";
+
+        try
+        {
+         session = await ApiService.StartSessionAsync(SessionCode, Token);
+            sessionStartTime = DateTimeOffset.UtcNow;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to start session: {ex.Message}";
+        }
+ finally
+        {
+   isPerformingAction = false;
+   StateHasChanged();
+        }
+    }
+
+    private async Task EndSession()
+    {
+        if (string.IsNullOrEmpty(Token) || session == null) return;
+
+  isPerformingAction = true;
+errorMessage = "";
+
+    try
+        {
+            session = await ApiService.EndSessionAsync(SessionCode, Token);
+     }
+        catch (Exception ex)
+        {
+errorMessage = $"Failed to end session: {ex.Message}";
+        }
+  finally
+        {
+          isPerformingAction = false;
+   StateHasChanged();
+        }
+    }
+
+    private async Task OpenActivity(Guid activityId)
+    {
+        if (string.IsNullOrEmpty(Token)) return;
+
+ isPerformingAction = true;
+
+      try
+        {
+       await ApiService.OpenActivityAsync(SessionCode, activityId, Token);
+     
+  // Reload activities to reflect changes
+     activities = (await ApiService.GetAgendaAsync(SessionCode)).ToList();
+        }
+   catch (Exception ex)
+        {
+   errorMessage = $"Failed to open activity: {ex.Message}";
+        }
+        finally
+        {
+        isPerformingAction = false;
+      StateHasChanged();
+        }
+    }
+
+    private async Task CloseActivity(Guid activityId)
+    {
+        if (string.IsNullOrEmpty(Token)) return;
+
+        isPerformingAction = true;
+
+   try
+        {
+       await ApiService.CloseActivityAsync(SessionCode, activityId, Token);
+         
+            // Reload activities to reflect changes
+      activities = (await ApiService.GetAgendaAsync(SessionCode)).ToList();
+        }
+        catch (Exception ex)
+ {
+  errorMessage = $"Failed to close activity: {ex.Message}";
+        }
+finally
+        {
+        isPerformingAction = false;
+ StateHasChanged();
+        }
+    }
+
+    private async Task CopyJoinUrl()
+    {
+ try
+      {
+          await JS.InvokeVoidAsync("navigator.clipboard.writeText", joinUrl);
+      // TODO: Show success toast
+      }
+        catch (Exception ex)
+        {
+      Debug.WriteLine($"Failed to copy URL: {ex.Message}");
+        }
+  }
+
+    private void GoToHome()
+    {
+     Navigation.NavigateTo("/");
+    }
+
+    // Helper methods
+    private string GetActivityStateClass(AgendaActivityResponse activity)
+    {
+        return activity.Status switch
+{
+     TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open => "activity-open",
+      TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Closed => "activity-closed",
+  _ => "activity-pending"
+    };
+    }
+
+    private bool IsAnotherActivityOpen(Guid excludeActivityId)
+    {
+        return activities.Any(a => a.ActivityId != excludeActivityId && a.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open);
+    }
+
+    private string GetCurrentActivityName()
+    {
+        var currentActivity = activities.FirstOrDefault(a => a.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open);
+        return currentActivity?.Title ?? "None";
+    }
+
+    private int GetCompletedActivitiesCount()
+    {
+        return activities.Count(a => a.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Closed);
+    }
+
+    private string GetSessionDuration()
+    {
+        var duration = DateTimeOffset.UtcNow.Subtract(sessionStartTime);
+        return duration.ToString(@"hh\:mm");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+    if (hubConnection is not null)
+        {
+        try
+            {
+    await hubConnection.InvokeAsync("Unsubscribe", SessionCode);
+ await hubConnection.DisposeAsync();
+        }
+   catch (Exception ex)
+            {
+          Debug.WriteLine($"Error disposing SignalR connection: {ex.Message}");
+    }
+        }
+  }
+}

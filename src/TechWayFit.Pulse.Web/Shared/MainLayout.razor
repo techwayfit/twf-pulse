@@ -1,19 +1,34 @@
 ﻿@inherits LayoutComponentBase
-
-<PageTitle>TechWayFit.Pulse.Web</PageTitle>
+@inject NavigationManager Navigation
 
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+    <main class="main-content">
+      <div class="top-row px-4">
+          <div class="nav-brand">
+   <span class="brand-text">TechWayFit</span>
+           <span class="pulse-text">Pulse</span>
+     </div>
+    <div class="nav-actions">
+     <button class="btn btn-outline btn-sm" @onclick="NavigateHome">
+     <i class="icon-home"></i>
+      Home
+    </button>
+      </div>
         </div>
 
-        <article class="content px-4">
-            @Body
+      <article class="content px-4">
+   @Body
         </article>
     </main>
 </div>
+
+@code {
+  private void NavigateHome()
+    {
+      Navigation.NavigateTo("/");
+    }
+}

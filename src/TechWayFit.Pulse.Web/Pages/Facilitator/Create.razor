@@ -1,0 +1,712 @@
+@page "/facilitator/create"
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
+@using TechWayFit.Pulse.Contracts.Models
+@using TechWayFit.Pulse.Contracts.Enums
+@using TechWayFit.Pulse.Contracts.Requests
+
+<PageTitle>Create Session - TechWayFit Pulse</PageTitle>
+
+<div class="session-wizard">
+    <div class="wizard-header">
+        <h1>Create Workshop Session</h1>
+        <div class="wizard-steps">
+   <div class="step @GetStepClass(1)">
+        <div class="step-number">1</div>
+                <span>Context</span>
+            </div>
+        <div class="step @GetStepClass(2)">
+   <div class="step-number">2</div>
+    <span>Join Form</span>
+          </div>
+    <div class="step @GetStepClass(3)">
+     <div class="step-number">3</div>
+        <span>Activities</span>
+     </div>
+            <div class="step @GetStepClass(4)">
+                <div class="step-number">4</div>
+       <span>Review</span>
+            </div>
+        </div>
+</div>
+
+    <div class="wizard-content">
+        @if (currentStep == 1)
+    {
+        <!-- Step 1: Context - keeping existing UI -->
+     <div class="step-content">
+        <h2>Workshop Context</h2>
+     <p>Define the basic information about your workshop session.</p>
+      
+          <div class="form-grid">
+          <div class="form-group">
+  <label for="sessionCode" class="required">Session Code</label>
+      <input id="sessionCode" 
+     class="form-control" 
+             @bind="sessionCode" 
+          placeholder="e.g., RETRO-2024" 
+             maxlength="32" />
+  <small>Participants will use this code to join (max 32 chars)</small>
+              </div>
+
+    <div class="form-group">
+               <label for="sessionTitle" class="required">Workshop Title</label>
+      <input id="sessionTitle" 
+       class="form-control" 
+  @bind="sessionTitle" 
+        placeholder="e.g., Q4 Retrospective" 
+               maxlength="200" />
+       </div>
+
+         <div class="form-group full-width">
+       <label for="sessionGoal">Workshop Goal</label>
+    <textarea id="sessionGoal" 
+            class="form-control" 
+      @bind="sessionGoal" 
+           rows="3"
+       placeholder="What do you want to achieve in this workshop?"></textarea>
+  </div>
+
+      <div class="form-group full-width">
+            <label for="sessionContext">Additional Context</label>
+               <textarea id="sessionContext" 
+           class="form-control" 
+  @bind="sessionContext" 
+      rows="3"
+     placeholder="Any background information or special notes for participants"></textarea>
+</div>
+
+        <div class="form-group">
+      <label for="maxContributions">Max Contributions per Participant</label>
+          <input id="maxContributions" 
+     type="number" 
+      class="form-control" 
+           @bind="maxContributions" 
+   min="1" 
+  max="50" />
+                   <small>How many responses/suggestions can each participant submit?</small>
+             </div>
+
+    <div class="form-group">
+    <label for="sessionDuration">Session Duration (minutes)</label>
+        <input id="sessionDuration" 
+      type="number" 
+      class="form-control" 
+      @bind="sessionDuration" 
+   min="30" 
+        max="1440" />
+        <small>Session will auto-expire after this time</small>
+ </div>
+
+ <div class="form-group full-width">
+         <div class="checkbox-group">
+   <label class="checkbox-label">
+  <input type="checkbox" @bind="allowAnonymous" />
+        Allow anonymous participation
+           </label>
+      <label class="checkbox-label">
+         <input type="checkbox" @bind="strictMode" />
+         Strict mode (participants can only respond to current activity)
+            </label>
+             </div>
+        </div>
+      </div>
+            </div>
+        }
+        else if (currentStep == 2)
+        {
+     <!-- Step 2: Join Form Builder - keeping existing UI -->
+            <div class="step-content">
+    <h2>Join Form Builder</h2>
+         <p>Design the form participants will fill when joining (max 5 fields).</p>
+          
+         <div class="join-form-builder">
+       <div class="current-fields">
+                <h3>Current Fields (@joinFormFields.Count/5)</h3>
+  
+            @if (joinFormFields.Any())
+   {
+         @for (int i = 0; i < joinFormFields.Count; i++)
+            {
+        var index = i; // Capture for lambda
+     var field = joinFormFields[index];
+    
+   <div class="field-item">
+         <div class="field-header">
+            <span class="field-title">@field.Label</span>
+   <span class="field-type">@field.Type.ToString()</span>
+     <button type="button" class="btn btn-sm btn-outline" @onclick="() => EditField(index)">
+  Edit
+        </button>
+         <button type="button" class="btn btn-sm btn-danger" @onclick="() => RemoveField(index)">
+           Remove
+       </button>
+   </div>
+         <div class="field-details">
+            <small>
+                 @(field.Required ? "Required" : "Optional") • 
+         @(field.UseInFilters ? "Used for filtering" : "Display only")
+   </small>
+    </div>
+           </div>
+          }
+              }
+          else
+                {
+     <div class="empty-state">
+        <p>No fields added yet. Add some fields for participant information.</p>
+          </div>
+           }
+         </div>
+
+    @if (joinFormFields.Count < 5)
+         {
+        <div class="add-field-section">
+      <h4>Add New Field</h4>
+        <div class="field-editor">
+         <div class="form-row">
+     <div class="form-group">
+            <label>Field ID</label>
+        <input class="form-control" @bind="newFieldId" placeholder="e.g., department" />
+     </div>
+          <div class="form-group">
+         <label>Label</label>
+   <input class="form-control" @bind="newFieldLabel" placeholder="e.g., Department" />
+      </div>
+          <div class="form-group">
+              <label>Type</label>
+        <select class="form-control" @bind="newFieldType">
+     <option value="@FieldType.Text">Text</option>
+     <option value="@FieldType.Number">Number</option>
+       <option value="@FieldType.Dropdown">Dropdown</option>
+              <option value="@FieldType.MultiSelect">Multi-Select</option>
+           <option value="@FieldType.Boolean">Yes/No</option>
+   </select>
+      </div>
+</div>
+
+       @if (newFieldType == FieldType.Dropdown || newFieldType == FieldType.MultiSelect)
+  {
+              <div class="form-group">
+       <label>Options (one per line)</label>
+          <textarea class="form-control" @bind="newFieldOptions" rows="4" placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+        </div>
+  }
+
+    <div class="form-row">
+        <label class="checkbox-label">
+          <input type="checkbox" @bind="newFieldRequired" />
+   Required field
+       </label>
+  <label class="checkbox-label">
+             <input type="checkbox" @bind="newFieldUseInFilters" />
+    Use for dashboard filtering
+          </label>
+       </div>
+
+     <button type="button" class="btn btn-primary" @onclick="AddField" disabled="@(!CanAddField)">
+   Add Field
+   </button>
+        </div>
+    </div>
+     }
+         </div>
+        </div>
+        }
+     else if (currentStep == 3)
+        {
+            <!-- Step 3: Activities - keeping existing UI but we'll add activities via API -->
+     <div class="step-content">
+     <h2>Activities Builder</h2>
+   <p>Create interactive activities for your workshop agenda.</p>
+  
+      <div class="activities-section">
+          <div class="current-activities">
+    <h3>Workshop Agenda (@activities.Count activities)</h3>
+ 
+  @if (activities.Any())
+          {
+           @for (int i = 0; i < activities.Count; i++)
+         {
+        var index = i;
+      var activity = activities[index];
+      
+             <div class="activity-item">
+            <div class="activity-header">
+         <span class="activity-order">#@(activity.Order)</span>
+        <span class="activity-title">@activity.Title</span>
+    <span class="activity-type">@activity.Type.ToString()</span>
+<button type="button" class="btn btn-sm btn-outline" @onclick="() => EditActivity(index)">
+         Edit
+      </button>
+           <button type="button" class="btn btn-sm btn-danger" @onclick="() => RemoveActivity(index)">
+ Remove
+      </button>
+     </div>
+          @if (!string.IsNullOrEmpty(activity.Prompt))
+       {
+  <div class="activity-prompt">
+         <small>@activity.Prompt</small>
+                </div>
+       }
+   </div>
+      }
+          }
+           else
+           {
+    <div class="empty-state">
+           <p>No activities added yet. Add some activities to engage your participants.</p>
+    </div>
+     }
+          </div>
+
+           <div class="add-activity-section">
+         <h4>Add New Activity</h4>
+        <div class="activity-editor">
+ <div class="form-row">
+    <div class="form-group">
+   <label>Title</label>
+             <input class="form-control" @bind="newActivityTitle" placeholder="e.g., What went well?" />
+          </div>
+            <div class="form-group">
+            <label>Type</label>
+        <select class="form-control" @bind="newActivityType">
+      <option value="@ActivityType.Poll">Poll (Multiple choice)</option>
+         <option value="@ActivityType.Quiz">Quiz (With correct answers)</option>
+          <option value="@ActivityType.WordCloud">Word Cloud (Text responses)</option>
+  <option value="@ActivityType.QnA">Q&A (Questions and answers)</option>
+ <option value="@ActivityType.Rating">Rating (Scale 1-5 or 1-10)</option>
+      <option value="@ActivityType.Quadrant">4-Quadrant (X/Y coordinates)</option>
+           <option value="@ActivityType.FiveWhys">5-Whys (Root cause analysis)</option>
+            </select>
+  </div>
+   </div>
+
+          <div class="form-group">
+         <label>Prompt/Question</label>
+      <textarea class="form-control" @bind="newActivityPrompt" rows="3" placeholder="What question or instruction should participants see?"></textarea>
+     </div>
+
+    <button type="button" class="btn btn-primary" @onclick="AddActivity" disabled="@(!CanAddActivity)">
+      Add Activity
+         </button>
+      </div>
+           </div>
+     </div>
+        </div>
+        }
+else if (currentStep == 4)
+        {
+            <!-- Step 4: Review - keeping existing UI -->
+  <div class="step-content">
+    <h2>Review & Launch</h2>
+           <p>Review your session configuration and launch when ready.</p>
+
+           <div class="review-sections">
+          <div class="review-section">
+   <h3>Session Details</h3>
+      <div class="review-item">
+     <strong>Code:</strong> @sessionCode
+     </div>
+                 <div class="review-item">
+              <strong>Title:</strong> @sessionTitle
+        </div>
+      @if (!string.IsNullOrEmpty(sessionGoal))
+  {
+      <div class="review-item">
+         <strong>Goal:</strong> @sessionGoal
+ </div>
+             }
+  <div class="review-item">
+  <strong>Duration:</strong> @sessionDuration minutes
+              </div>
+ <div class="review-item">
+           <strong>Max contributions:</strong> @maxContributions per participant
+          </div>
+       <div class="review-item">
+             <strong>Settings:</strong> 
+           @(allowAnonymous ? "Anonymous allowed" : "No anonymous") • 
+              @(strictMode ? "Strict mode" : "Free mode")
+  </div>
+    </div>
+
+       <div class="review-section">
+    <h3>Join Form (@joinFormFields.Count fields)</h3>
+    @if (joinFormFields.Any())
+           {
+          @foreach (var field in joinFormFields)
+     {
+        <div class="review-item">
+          <strong>@field.Label</strong> (@field.Type.ToString())
+         @if (field.Required) { <span class="required-badge">Required</span> }
+     @if (field.UseInFilters) { <span class="filter-badge">Filterable</span> }
+      </div>
+            }
+            }
+              else
+       {
+      <div class="review-item">No custom fields</div>
+           }
+      </div>
+
+   <div class="review-section">
+            <h3>Activities (@activities.Count total)</h3>
+             @if (activities.Any())
+             {
+  @foreach (var activity in activities.OrderBy(a => a.Order))
+       {
+        <div class="review-item">
+     <strong>#@activity.Order: @activity.Title</strong> (@activity.Type.ToString())
+      @if (!string.IsNullOrEmpty(activity.Prompt))
+   {
+     <br><small>@activity.Prompt</small>
+          }
+          </div>
+     }
+        }
+    else
+            {
+ <div class="review-item">No activities yet</div>
+           }
+    </div>
+</div>
+
+       @if (isCreating)
+         {
+      <div class="creating-state">
+  <div class="spinner"></div>
+   <p>Creating your session...</p>
+                </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+       {
+           <div class="alert alert-error">
+             <strong>Error:</strong> @errorMessage
+         </div>
+       }
+           else if (!string.IsNullOrEmpty(createdSessionCode))
+     {
+          <div class="alert alert-success">
+        <strong>Session created successfully!</strong>
+          <p>Session code: <strong>@createdSessionCode</strong></p>
+         <div class="success-actions">
+         <button class="btn btn-primary" @onclick="GoToLiveConsole">
+         Go to Live Console
+         </button>
+        <button class="btn btn-outline" @onclick="CreateAnother">
+         Create Another Session
+  </button>
+         </div>
+            </div>
+      }
+         </div>
+        }
+    </div>
+
+    <div class="wizard-actions">
+        @if (currentStep > 1)
+        {
+            <button class="btn btn-outline" @onclick="PreviousStep">
+    Previous
+         </button>
+        }
+     
+        @if (currentStep < 4)
+      {
+    <button class="btn btn-primary" @onclick="NextStep" disabled="@(!CanProceed)">
+     Next
+            </button>
+      }
+        else
+        {
+            <button class="btn btn-success" @onclick="CreateSession" disabled="@(!CanCreate || isCreating)">
+        @(isCreating ? "Creating..." : "Create Session")
+     </button>
+    }
+    </div>
+</div>
+
+@code {
+    // Step management
+    private int currentStep = 1;
+
+    // Session context (Step 1)
+    private string sessionCode = "";
+    private string sessionTitle = "";
+    private string sessionGoal = "";
+    private string sessionContext = "";
+    private int maxContributions = 5;
+    private int sessionDuration = 360; // 6 hours
+    private bool allowAnonymous = true;
+    private bool strictMode = true;
+
+    // Join form (Step 2)
+    private List<JoinFormFieldDto> joinFormFields = new();
+    private string newFieldId = "";
+    private string newFieldLabel = "";
+    private FieldType newFieldType = FieldType.Text;
+    private string newFieldOptions = "";
+    private bool newFieldRequired = false;
+    private bool newFieldUseInFilters = false;
+
+    // Activities (Step 3)
+    private List<ActivityDto> activities = new();
+    private string newActivityTitle = "";
+    private ActivityType newActivityType = ActivityType.Poll;
+    private string newActivityPrompt = "";
+
+ // Creation state (Step 4)
+    private bool isCreating = false;
+    private string errorMessage = "";
+    private string createdSessionCode = "";
+    private string? facilitatorToken = null;
+
+    // Helper classes for building
+    public class ActivityDto
+    {
+        public int Order { get; set; }
+  public ActivityType Type { get; set; }
+        public string Title { get; set; } = "";
+        public string? Prompt { get; set; }
+        public string? Config { get; set; }
+    }
+
+    protected override void OnInitialized()
+    {
+  // Generate a default session code
+        sessionCode = $"PULSE-{DateTime.Now:MMdd}";
+    }
+
+    private string GetStepClass(int step)
+    {
+        if (step == currentStep) return "active";
+        if (step < currentStep) return "completed";
+ return "";
+    }
+
+    private bool CanProceed => currentStep switch
+    {
+        1 => !string.IsNullOrWhiteSpace(sessionCode) && !string.IsNullOrWhiteSpace(sessionTitle),
+        2 => true, // Join form is optional
+     3 => true, // Activities are optional for now
+        4 => true,
+   _ => false
+    };
+
+    private void NextStep()
+    {
+        if (CanProceed && currentStep < 4)
+        {
+          currentStep++;
+        }
+    }
+
+  private void PreviousStep()
+    {
+        if (currentStep > 1)
+        {
+            currentStep--;
+        }
+    }
+
+    // Join form management
+ private bool CanAddField => 
+        !string.IsNullOrWhiteSpace(newFieldId) &&
+        !string.IsNullOrWhiteSpace(newFieldLabel) &&
+        joinFormFields.Count < 5 &&
+        !joinFormFields.Any(f => f.Id.Equals(newFieldId, StringComparison.OrdinalIgnoreCase));
+
+    private void AddField()
+    {
+        if (!CanAddField) return;
+
+        var options = newFieldType == FieldType.Dropdown || newFieldType == FieldType.MultiSelect
+            ? newFieldOptions.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+      .Select(o => o.Trim())
+      .Where(o => !string.IsNullOrEmpty(o))
+                .ToList()
+            : null;
+
+        joinFormFields.Add(new JoinFormFieldDto
+      {
+    Id = newFieldId.Trim(),
+       Label = newFieldLabel.Trim(),
+   Type = newFieldType,
+            Required = newFieldRequired,
+            Options = options,
+            UseInFilters = newFieldUseInFilters
+    });
+
+        // Reset form
+        newFieldId = "";
+  newFieldLabel = "";
+        newFieldType = FieldType.Text;
+        newFieldOptions = "";
+        newFieldRequired = false;
+ newFieldUseInFilters = false;
+    }
+
+    private void RemoveField(int index)
+    {
+        if (index >= 0 && index < joinFormFields.Count)
+        {
+            joinFormFields.RemoveAt(index);
+        }
+    }
+
+    private void EditField(int index)
+    {
+        // For now, just remove and let user re-add
+        // TODO: Implement proper editing
+        RemoveField(index);
+    }
+
+    // Activities management
+    private bool CanAddActivity =>
+        !string.IsNullOrWhiteSpace(newActivityTitle);
+
+    private void AddActivity()
+    {
+        if (!CanAddActivity) return;
+
+activities.Add(new ActivityDto
+     {
+Order = activities.Count + 1,
+            Type = newActivityType,
+         Title = newActivityTitle.Trim(),
+            Prompt = string.IsNullOrWhiteSpace(newActivityPrompt) ? null : newActivityPrompt.Trim(),
+            Config = null // TODO: Type-specific config
+   });
+
+        // Reset form
+        newActivityTitle = "";
+     newActivityType = ActivityType.Poll;
+    newActivityPrompt = "";
+    }
+
+    private void RemoveActivity(int index)
+  {
+        if (index >= 0 && index < activities.Count)
+        {
+       activities.RemoveAt(index);
+     // Reorder remaining activities
+ for (int i = 0; i < activities.Count; i++)
+          {
+   activities[i].Order = i + 1;
+            }
+      }
+    }
+
+    private void EditActivity(int index)
+    {
+     // For now, just remove and let user re-add
+     // TODO: Implement proper editing
+        RemoveActivity(index);
+    }
+
+    // Session creation - NOW USING REAL API
+    private bool CanCreate =>
+        !string.IsNullOrWhiteSpace(sessionCode) &&
+        !string.IsNullOrWhiteSpace(sessionTitle) &&
+        !isCreating;
+
+    private async Task CreateSession()
+    {
+    if (!CanCreate) return;
+
+        isCreating = true;
+        errorMessage = "";
+
+        try
+   {
+      var createRequest = new CreateSessionRequest
+            {
+      Code = sessionCode.Trim(),
+         Title = sessionTitle.Trim(),
+         Goal = string.IsNullOrWhiteSpace(sessionGoal) ? null : sessionGoal.Trim(),
+      Context = string.IsNullOrWhiteSpace(sessionContext) ? null : sessionContext.Trim(),
+           Settings = new SessionSettingsDto
+          {
+ MaxContributionsPerParticipantPerSession = maxContributions,
+            MaxContributionsPerParticipantPerActivity = null,
+     StrictCurrentActivityOnly = strictMode,
+      AllowAnonymous = allowAnonymous,
+      TtlMinutes = sessionDuration
+             },
+                JoinFormSchema = new JoinFormSchemaDto
+     {
+        MaxFields = 5,
+        Fields = joinFormFields
+    }
+            };
+
+         // Create the session via API
+    var createResponse = await ApiService.CreateSessionAsync(createRequest);
+    createdSessionCode = createRequest.Code;
+
+      // Join as facilitator to get token
+            var joinFacilitatorRequest = new JoinFacilitatorRequest();
+ var facilitatorResponse = await ApiService.JoinAsFacilitatorAsync(createdSessionCode, joinFacilitatorRequest);
+    facilitatorToken = facilitatorResponse.Token;
+
+    // Add activities via API
+         foreach (var activity in activities)
+            {
+                var addActivityRequest = new AddActivityRequest
+           {
+        Order = activity.Order,
+  Type = activity.Type,
+    Title = activity.Title,
+     Prompt = activity.Prompt,
+      Config = activity.Config
+     };
+
+       await ApiService.AddActivityAsync(createdSessionCode, addActivityRequest, facilitatorToken);
+            }
+        }
+  catch (HttpRequestException ex)
+        {
+     errorMessage = $"Network error: {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
+        {
+   errorMessage = ex.Message;
+    }
+        catch (Exception ex)
+        {
+        errorMessage = $"Unexpected error: {ex.Message}";
+        }
+    finally
+        {
+   isCreating = false;
+        }
+    }
+
+    private void GoToLiveConsole()
+    {
+        if (!string.IsNullOrEmpty(createdSessionCode))
+        {
+            Navigation.NavigateTo($"/facilitator/console/{createdSessionCode}?token={facilitatorToken}");
+        }
+    }
+
+    private void CreateAnother()
+  {
+  // Reset form and go to step 1
+        currentStep = 1;
+        sessionCode = $"PULSE-{DateTime.Now:MMdd}";
+        sessionTitle = "";
+        sessionGoal = "";
+        sessionContext = "";
+        maxContributions = 5;
+        sessionDuration = 360;
+        allowAnonymous = true;
+        strictMode = true;
+        joinFormFields.Clear();
+        activities.Clear();
+   errorMessage = "";
+        createdSessionCode = "";
+ facilitatorToken = null;
+    }
+}

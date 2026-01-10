@@ -91,20 +91,7 @@ internal static class ApiMapper
         };
     }
 
-    private static TechWayFit.Pulse.Domain.Enums.FieldType MapFieldType(FieldType type)
-    {
-        return type switch
-        {
-            FieldType.Text => TechWayFit.Pulse.Domain.Enums.FieldType.Text,
-            FieldType.Number => TechWayFit.Pulse.Domain.Enums.FieldType.Number,
-            FieldType.Dropdown => TechWayFit.Pulse.Domain.Enums.FieldType.Dropdown,
-            FieldType.MultiSelect => TechWayFit.Pulse.Domain.Enums.FieldType.MultiSelect,
-            FieldType.Boolean => TechWayFit.Pulse.Domain.Enums.FieldType.Boolean,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported field type.")
-        };
-    }
-
-    private static SessionStatus MapSessionStatus(TechWayFit.Pulse.Domain.Enums.SessionStatus status)
+    internal static SessionStatus MapSessionStatus(TechWayFit.Pulse.Domain.Enums.SessionStatus status)
     {
         return status switch
         {
@@ -116,7 +103,7 @@ internal static class ApiMapper
         };
     }
 
-    private static TechWayFit.Pulse.Contracts.Enums.ActivityStatus MapActivityStatus(TechWayFit.Pulse.Domain.Enums.ActivityStatus status)
+    internal static TechWayFit.Pulse.Contracts.Enums.ActivityStatus MapActivityStatus(TechWayFit.Pulse.Domain.Enums.ActivityStatus status)
     {
         return status switch
         {
@@ -124,6 +111,19 @@ internal static class ApiMapper
             TechWayFit.Pulse.Domain.Enums.ActivityStatus.Open => TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open,
             TechWayFit.Pulse.Domain.Enums.ActivityStatus.Closed => TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Closed,
             _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unsupported activity status.")
+        };
+    }
+
+    private static TechWayFit.Pulse.Domain.Enums.FieldType MapFieldType(FieldType type)
+    {
+        return type switch
+        {
+            FieldType.Text => TechWayFit.Pulse.Domain.Enums.FieldType.Text,
+            FieldType.Number => TechWayFit.Pulse.Domain.Enums.FieldType.Number,
+            FieldType.Dropdown => TechWayFit.Pulse.Domain.Enums.FieldType.Dropdown,
+            FieldType.MultiSelect => TechWayFit.Pulse.Domain.Enums.FieldType.MultiSelect,
+            FieldType.Boolean => TechWayFit.Pulse.Domain.Enums.FieldType.Boolean,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported field type.")
         };
     }
 }

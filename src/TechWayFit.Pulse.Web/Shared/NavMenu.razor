@@ -1,28 +1,60 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">TechWayFit.Pulse.Web</a>
+        <a class="navbar-brand" href="">TechWayFit Pulse</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
     </div>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+<div class="@NavMenuCssClass nav-scrollable" @onclick="CollapseNavMenu">
     <nav class="flex-column">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
+                <i class="icon-home" aria-hidden="true"></i> Home
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="oi oi-plus" aria-hidden="true"></span> Counter
-            </NavLink>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Facilitator</div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="facilitator/create">
+                    <i class="icon-plus" aria-hidden="true"></i> Create Session
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="facilitator/dashboard">
+                    <i class="icon-activity" aria-hidden="true"></i> Live Console
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="facilitator/insights">
+                    <i class="icon-chart" aria-hidden="true"></i> Insights
+                </NavLink>
+            </div>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
-            </NavLink>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Participant</div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="participant/join">
+                    <i class="icon-users" aria-hidden="true"></i> Join Session
+                </NavLink>
+            </div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Demo</div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="counter">
+                    <i class="icon-refresh" aria-hidden="true"></i> Counter
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="fetchdata">
+                    <i class="icon-cloud" aria-hidden="true"></i> Fetch data
+                </NavLink>
+            </div>
         </div>
     </nav>
 </div>
@@ -35,5 +67,10 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void CollapseNavMenu()
+    {
+        collapseNavMenu = true;
     }
 }

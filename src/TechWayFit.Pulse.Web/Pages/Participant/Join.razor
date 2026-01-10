@@ -1,0 +1,410 @@
+@page "/participant/join"
+@page "/join/{SessionCode?}"
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@using TechWayFit.Pulse.Contracts.Requests
+@using TechWayFit.Pulse.Contracts.Responses
+
+<PageTitle>Join Session - TechWayFit Pulse</PageTitle>
+
+<div class="join-container">
+    <div class="join-card">
+        <div class="join-header">
+            <h1>Join Workshop</h1>
+            <p>Enter your session code to participate in the workshop</p>
+     </div>
+
+        @if (currentState == JoinState.EnterCode)
+        {
+ <div class="join-form">
+ <div class="form-group">
+       <label for="sessionCode" class="required">Session Code</label>
+     <input id="sessionCode" 
+           class="form-control form-control-lg" 
+           @bind="sessionCode" 
+      @onkeypress="HandleCodeKeyPress"
+          placeholder="Enter session code"
+ maxlength="32" 
+           style="text-transform: uppercase;" />
+        </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+       {
+ <div class="alert alert-error">
+             @errorMessage
+  </div>
+ }
+
+        <button class="btn btn-primary btn-lg btn-full" 
+     @onclick="LookupSession" 
+      disabled="@(isLoading || string.IsNullOrWhiteSpace(sessionCode))">
+@(isLoading ? "Looking up..." : "Continue")
+         </button>
+
+      <div class="join-help">
+<p><strong>Don't have a code?</strong></p>
+    <p>Ask your facilitator for the session code, or scan the QR code displayed during the workshop.</p>
+    </div>
+       </div>
+        }
+        else if (currentState == JoinState.FillForm)
+     {
+     <div class="join-form">
+     <div class="session-info">
+       <h2>@sessionSummary?.Title</h2>
+            @if (!string.IsNullOrEmpty(sessionSummary?.Goal))
+           {
+        <p class="session-goal">@sessionSummary.Goal</p>
+          }
+     <div class="session-meta">
+              <span class="session-code">Code: @sessionSummary?.Code</span>
+  <span class="session-status">Status: @sessionSummary?.Status</span>
+        </div>
+        </div>
+
+    <div class="participant-form">
+        <h3>Your Information</h3>
+      
+  <div class="form-group">
+            <label for="displayName">Display Name</label>
+         <input id="displayName" 
+     class="form-control" 
+      @bind="displayName" 
+       placeholder="How should others see you? (optional)" 
+         maxlength="120" />
+             </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+         <input type="checkbox" @bind="isAnonymous" />
+         Join anonymously
+     </label>
+       <small>Your responses will be included in results but not linked to you</small>
+                  </div>
+
+     @if (joinFormFields?.Any() == true)
+            {
+     <h4>Additional Information</h4>
+    @foreach (var field in joinFormFields)
+           {
+                    <div class="form-group">
+      <label for="field-@field.Id" class="@(field.Required ? "required" : "")">
+    @field.Label
+          </label>
+        
+          @if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Text)
+              {
+            <input id="field-@field.Id" 
+       class="form-control" 
+        @bind="fieldValues[field.Id]" 
+placeholder="@GetFieldPlaceholder(field)" />
+    }
+   else if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Number)
+ {
+   <input id="field-@field.Id" 
+        type="number" 
+     class="form-control" 
+  @bind="fieldValues[field.Id]" 
+   placeholder="@GetFieldPlaceholder(field)" />
+             }
+  else if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Dropdown)
+            {
+           <select id="field-@field.Id" 
+      class="form-control" 
+           @bind="fieldValues[field.Id]">
+     <option value="">-- Select --</option>
+      @if (field.Options?.Any() == true)
+          {
+          @foreach (var option in field.Options)
+        {
+           <option value="@option">@option</option>
+ }
+        }
+    </select>
+   }
+           else if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Boolean)
+ {
+   <div class="radio-group">
+       <label class="radio-label">
+              <input type="radio" 
+            name="field-@field.Id" 
+                 value="true" 
+           @onchange="@((e) => SetFieldValue(field.Id, e.Value?.ToString()))" />
+           Yes
+      </label>
+         <label class="radio-label">
+                 <input type="radio" 
+     name="field-@field.Id" 
+          value="false" 
+         @onchange="@((e) => SetFieldValue(field.Id, e.Value?.ToString()))" />
+    No
+     </label>
+ </div>
+  }
+            </div>
+             }
+ }
+          </div>
+
+       @if (!string.IsNullOrEmpty(errorMessage))
+       {
+ <div class="alert alert-error">
+    @errorMessage
+      </div>
+      }
+
+      <div class="form-actions">
+        <button class="btn btn-outline" @onclick="BackToCodeEntry">
+      Change Code
+        </button>
+         <button class="btn btn-primary btn-lg" 
+   @onclick="JoinSession" 
+             disabled="@(isLoading || !CanJoin)">
+     @(isLoading ? "Joining..." : "Join Workshop")
+  </button>
+       </div>
+    </div>
+        }
+  else if (currentState == JoinState.Joined)
+        {
+   <div class="join-success">
+              <div class="success-icon">?</div>
+          <h2>Welcome to the workshop!</h2>
+           <p>You've successfully joined <strong>@sessionSummary?.Title</strong></p>
+  
+ <div class="participant-info">
+        <div class="info-item">
+  <strong>Your ID:</strong> @participantId
+          </div>
+  @if (!isAnonymous && !string.IsNullOrEmpty(displayName))
+ {
+ <div class="info-item">
+     <strong>Display Name:</strong> @displayName
+      </div>
+          }
+          </div>
+
+   @if (sessionSummary?.Status == TechWayFit.Pulse.Contracts.Enums.SessionStatus.Draft)
+       {
+             <div class="waiting-message">
+         <h3>Waiting for facilitator...</h3>
+    <p>The workshop hasn't started yet. Please wait for the facilitator to begin.</p>
+            <div class="spinner"></div>
+         </div>
+              }
+   else if (sessionSummary?.Status == TechWayFit.Pulse.Contracts.Enums.SessionStatus.Live)
+    {
+                 <div class="live-message">
+             <h3>Workshop is live!</h3>
+              <p>Click below to go to the activity screen.</p>
+      <button class="btn btn-primary btn-lg" @onclick="GoToActivity">
+      Go to Activities
+ </button>
+     </div>
+    }
+       else
+    {
+          <div class="ended-message">
+             <h3>Workshop has ended</h3>
+       <p>This workshop session is no longer active.</p>
+               </div>
+}
+      </div>
+    }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? SessionCode { get; set; }
+
+    private enum JoinState
+    {
+        EnterCode,
+        FillForm,
+        Joined
+    }
+
+    private JoinState currentState = JoinState.EnterCode;
+    private bool isLoading = false;
+    private string errorMessage = "";
+
+    // Session lookup
+    private string sessionCode = "";
+    private SessionSummaryResponse? sessionSummary;
+    private List<TechWayFit.Pulse.Contracts.Models.JoinFormFieldDto>? joinFormFields;
+
+    // Participant info
+    private string displayName = "";
+    private bool isAnonymous = false;
+    private Dictionary<string, string?> fieldValues = new();
+    private Guid? participantId;
+
+    protected override void OnInitialized()
+  {
+        // If session code provided in URL, use it
+      if (!string.IsNullOrEmpty(SessionCode))
+        {
+            sessionCode = SessionCode.ToUpperInvariant();
+  // Automatically lookup the session
+        _ = Task.Run(async () =>
+          {
+    await InvokeAsync(async () =>
+        {
+        await LookupSession();
+  StateHasChanged();
+     });
+            });
+   }
+    }
+
+    private async Task HandleCodeKeyPress(KeyboardEventArgs e)
+ {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(sessionCode))
+        {
+await LookupSession();
+        }
+  }
+
+    private async Task LookupSession()
+    {
+        if (string.IsNullOrWhiteSpace(sessionCode))
+        {
+   errorMessage = "Please enter a session code.";
+     return;
+        }
+
+        isLoading = true;
+        errorMessage = "";
+
+        try
+        {
+     // TODO: Call API to lookup session
+            // For now, simulate API call
+     await Task.Delay(1000);
+
+            // Simulate session data
+          sessionSummary = new SessionSummaryResponse(
+     Guid.NewGuid(),
+    sessionCode.Trim().ToUpperInvariant(),
+            "Sample Workshop",
+       "This is a sample workshop for testing",
+     TechWayFit.Pulse.Contracts.Enums.SessionStatus.Draft,
+          null,
+    DateTimeOffset.UtcNow.AddHours(6)
+            );
+
+            // Simulate join form fields
+     joinFormFields = new List<TechWayFit.Pulse.Contracts.Models.JoinFormFieldDto>
+   {
+       new TechWayFit.Pulse.Contracts.Models.JoinFormFieldDto
+              {
+        Id = "department",
+    Label = "Department",
+      Type = TechWayFit.Pulse.Contracts.Enums.FieldType.Dropdown,
+         Required = true,
+      Options = new List<string> { "Engineering", "Product", "Design", "Marketing" },
+        UseInFilters = true
+     },
+    new TechWayFit.Pulse.Contracts.Models.JoinFormFieldDto
+     {
+             Id = "role",
+         Label = "Role",
+  Type = TechWayFit.Pulse.Contracts.Enums.FieldType.Text,
+   Required = false,
+   UseInFilters = true
+ }
+      };
+
+    // Initialize field values
+     fieldValues.Clear();
+            if (joinFormFields?.Any() == true)
+     {
+        foreach (var field in joinFormFields)
+        {
+              fieldValues[field.Id] = "";
+   }
+   }
+
+            currentState = JoinState.FillForm;
+        }
+        catch (Exception ex)
+        {
+  errorMessage = $"Could not find session: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetFieldPlaceholder(TechWayFit.Pulse.Contracts.Models.JoinFormFieldDto field)
+    {
+     return field.Type switch
+        {
+     TechWayFit.Pulse.Contracts.Enums.FieldType.Text => "Enter text...",
+TechWayFit.Pulse.Contracts.Enums.FieldType.Number => "Enter number...",
+  _ => ""
+ };
+    }
+
+    private void SetFieldValue(string fieldId, string? value)
+    {
+        fieldValues[fieldId] = value == "true" ? "Yes" : value == "false" ? "No" : value;
+    }
+
+    private bool CanJoin
+    {
+        get
+        {
+            if (joinFormFields?.Any() != true) return true;
+
+    // Check required fields
+            return joinFormFields
+                .Where(f => f.Required)
+    .All(f => fieldValues.ContainsKey(f.Id) && !string.IsNullOrWhiteSpace(fieldValues[f.Id]));
+ }
+    }
+
+    private async Task JoinSession()
+    {
+        if (!CanJoin) return;
+
+      isLoading = true;
+        errorMessage = "";
+
+   try
+        {
+        // TODO: Call API to join session
+          // For now, simulate join
+            await Task.Delay(1500);
+
+     participantId = Guid.NewGuid();
+    currentState = JoinState.Joined;
+        }
+  catch (Exception ex)
+        {
+ errorMessage = $"Could not join session: {ex.Message}";
+        }
+        finally
+        {
+     isLoading = false;
+        }
+    }
+
+    private void BackToCodeEntry()
+    {
+    currentState = JoinState.EnterCode;
+        sessionSummary = null;
+        joinFormFields = null;
+ fieldValues.Clear();
+        errorMessage = "";
+    }
+
+    private void GoToActivity()
+    {
+        if (participantId.HasValue && sessionSummary != null)
+        {
+            Navigation.NavigateTo($"/participant/activity/{sessionSummary.Code}?pid={participantId}");
+        }
+    }
+}

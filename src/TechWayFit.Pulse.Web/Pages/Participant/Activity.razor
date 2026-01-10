@@ -1,0 +1,471 @@
+@page "/participant/activity/{SessionCode}"
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Contracts.Requests
+@using TechWayFit.Pulse.Contracts.Enums
+@using TechWayFit.Pulse.Web.Hubs
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Diagnostics
+@implements IAsyncDisposable
+
+<PageTitle>Workshop Activity - @(session?.Title ?? "Loading...")</PageTitle>
+
+<div class="activity-container">
+    @if (isLoading)
+    {
+        <div class="loading-state">
+     <div class="spinner"></div>
+  <p>Loading activity...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+   <div class="error-state">
+            <div class="alert alert-error">
+        <strong>Error:</strong> @errorMessage
+            </div>
+  <button class="btn btn-primary" @onclick="LoadSession">Retry</button>
+      </div>
+    }
+    else if (session != null)
+    {
+   <div class="activity-header">
+         <div class="session-info">
+    <h1>@session.Title</h1>
+ <div class="session-meta">
+          <span class="session-code">Code: @session.Code</span>
+     <span class="session-status status-@session.Status.ToString().ToLower()">@session.Status</span>
+   </div>
+            </div>
+          <div class="participant-info">
+     @if (!string.IsNullOrEmpty(participantDisplayName))
+ {
+      <span class="participant-name">@participantDisplayName</span>
+        }
+    @if (contributionsRemaining >= 0)
+           {
+          <span class="contributions-remaining">@contributionsRemaining contributions remaining</span>
+       }
+   </div>
+    </div>
+
+        <div class="activity-content">
+            @if (session.Status == SessionStatus.Draft)
+ {
+                <div class="waiting-state">
+     <div class="waiting-icon">?</div>
+         <h2>Waiting for facilitator to start...</h2>
+                    <p>The workshop hasn't started yet. Please wait for the facilitator to begin the session.</p>
+         </div>
+            }
+        else if (session.Status == SessionStatus.Ended)
+  {
+                <div class="ended-state">
+  <div class="ended-icon">?</div>
+            <h2>Workshop completed!</h2>
+      <p>Thank you for participating in this workshop. The session has ended.</p>
+            <div class="final-stats">
+     <div class="stat">
+      <strong>@totalResponsesSubmitted</strong>
+     <span>responses submitted</span>
+           </div>
+    <div class="stat">
+             <strong>@activitiesParticipated</strong>
+  <span>activities completed</span>
+            </div>
+        </div>
+   </div>
+            }
+     else if (currentActivity != null)
+   {
+                <div class="current-activity">
+     <div class="activity-info">
+   <h2>@currentActivity.Title</h2>
+       @if (!string.IsNullOrEmpty(currentActivity.Prompt))
+   {
+               <p class="activity-prompt">@currentActivity.Prompt</p>
+  }
+      <div class="activity-meta">
+           <span class="activity-type">@currentActivity.Type</span>
+    <span class="activity-status">@currentActivity.Status</span>
+      </div>
+  </div>
+
+ @if (currentActivity.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open)
+     {
+    <div class="response-section">
+            @if (currentActivity.Type == ActivityType.Poll)
+      {
+             <div class="poll-activity">
+             <h3>Make your choice:</h3>
+ <div class="poll-options">
+    @for (int i = 0; i < samplePollOptions.Count; i++)
+      {
+                 var index = i;
+       <label class="poll-option">
+       <input type="radio" 
+            name="pollChoice" 
+        value="@index" 
+       @onchange="@((e) => SetPollChoice(index))" />
+            <span>@samplePollOptions[index]</span>
+</label>
+         }
+          </div>
+            <button class="btn btn-primary" 
+          @onclick="SubmitPollResponse" 
+          disabled="@(isSubmittingResponse || selectedPollOption == -1 || hasSubmittedResponse)">
+  @GetSubmitButtonText()
+    </button>
+ </div>
+ }
+  else if (currentActivity.Type == ActivityType.WordCloud)
+            {
+         <div class="wordcloud-activity">
+        <h3>Share your thoughts:</h3>
+         <div class="wordcloud-input">
+                 <textarea class="form-control" 
+       @bind="wordCloudText" 
+        rows="3"
+       placeholder="Type your response here..."
+        maxlength="500"></textarea>
+     <small>@(500 - (wordCloudText?.Length ?? 0)) characters remaining</small>
+           </div>
+               <button class="btn btn-primary" 
+     @onclick="SubmitWordCloudResponse" 
+        disabled="@(isSubmittingResponse || string.IsNullOrWhiteSpace(wordCloudText) || hasSubmittedResponse)">
+              @GetSubmitButtonText()
+          </button>
+    </div>
+         }
+               else if (currentActivity.Type == ActivityType.Rating)
+            {
+        <div class="rating-activity">
+          <h3>Rate this:</h3>
+              <div class="rating-scale">
+  @for (int i = 1; i <= 5; i++)
+            {
+      var rating = i;
+     <button class="rating-button @(selectedRating == rating ? "selected" : "")"
+     @onclick="() => SetRating(rating)">
+     @rating
+          </button>
+    }
+      </div>
+       <button class="btn btn-primary" 
+        @onclick="SubmitRatingResponse" 
+           disabled="@(isSubmittingResponse || selectedRating == 0 || hasSubmittedResponse)">
+        @GetSubmitButtonText()
+     </button>
+     </div>
+                }
+  else
+    {
+              <div class="generic-activity">
+         <h3>Activity type: @currentActivity.Type</h3>
+      <p>This activity type is not yet implemented in the participant interface.</p>
+           <div class="generic-input">
+<textarea class="form-control" 
+      @bind="genericResponseText" 
+          rows="4"
+    placeholder="Enter your response..."
+ maxlength="1000"></textarea>
+        </div>
+      <button class="btn btn-primary" 
+  @onclick="SubmitGenericResponse" 
+                   disabled="@(isSubmittingResponse || string.IsNullOrWhiteSpace(genericResponseText) || hasSubmittedResponse)">
+             @GetSubmitButtonText()
+        </button>
+     </div>
+       }
+
+ @if (!string.IsNullOrEmpty(submitMessage))
+   {
+      <div class="alert alert-@(submitSuccess ? "success" : "error")">
+                 @submitMessage
+       </div>
+ }
+  </div>
+   }
+         else
+          {
+          <div class="activity-locked">
+      <div class="locked-icon">??</div>
+      <h3>Activity is not open</h3>
+    <p>Wait for the facilitator to open this activity.</p>
+      </div>
+                    }
+           </div>
+        }
+  else
+    {
+<div class="no-activity">
+     <div class="waiting-icon">??</div>
+         <h2>No active activity</h2>
+               <p>Wait for the facilitator to start an activity.</p>
+        </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string SessionCode { get; set; } = "";
+  [Parameter] [SupplyParameterFromQuery] public Guid? Pid { get; set; }
+
+    private SessionSummaryResponse? session;
+    private AgendaActivityResponse? currentActivity;
+    private bool isLoading = true;
+    private string errorMessage = "";
+    private string participantDisplayName = "";
+    private int contributionsRemaining = -1;
+    private int totalResponsesSubmitted = 0;
+    private int activitiesParticipated = 0;
+    
+    // Response submission state
+    private bool isSubmittingResponse = false;
+    private bool hasSubmittedResponse = false;
+    private string submitMessage = "";
+    private bool submitSuccess = false;
+ 
+    // Activity-specific state
+    private List<string> samplePollOptions = new() { "Option A", "Option B", "Option C", "Option D" };
+    private int selectedPollOption = -1;
+    private string? wordCloudText;
+    private int selectedRating = 0;
+    private string? genericResponseText;
+
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+   await LoadSession();
+      await InitializeSignalR();
+    }
+
+    private async Task LoadSession()
+    {
+isLoading = true;
+  errorMessage = "";
+
+        try
+        {
+ session = await ApiService.GetSessionAsync(SessionCode);
+ 
+    // Load current activity
+            if (session.CurrentActivityId.HasValue)
+  {
+           var activities = await ApiService.GetAgendaAsync(SessionCode);
+             currentActivity = activities.FirstOrDefault(a => a.ActivityId == session.CurrentActivityId);
+          }
+     
+    // TODO: Load participant dashboard/stats
+   if (Pid.HasValue)
+            {
+        // Load participant-specific data
+    participantDisplayName = "Participant"; // Placeholder
+      contributionsRemaining = 3; // Placeholder
+    totalResponsesSubmitted = 0; // Placeholder
+        activitiesParticipated = 0; // Placeholder
+  }
+        }
+  catch (HttpRequestException ex)
+        {
+  errorMessage = $"Network error: {ex.Message}";
+   }
+        catch (InvalidOperationException ex)
+        {
+        errorMessage = ex.Message;
+        }
+    catch (Exception ex)
+        {
+        errorMessage = $"Unexpected error: {ex.Message}";
+        }
+   finally
+        {
+       isLoading = false;
+   StateHasChanged();
+  }
+    }
+
+    private async Task InitializeSignalR()
+    {
+        if (string.IsNullOrEmpty(SessionCode)) return;
+
+      try
+        {
+          hubConnection = new HubConnectionBuilder()
+   .WithUrl($"{Navigation.BaseUri}hubs/workshop")
+  .WithAutomaticReconnect()
+ .Build();
+
+            // Handle session state changes (Draft ? Live ? Ended)
+         hubConnection.On<SessionStateChangedEvent>("SessionStateChanged", async (sessionEvent) =>
+         {
+    await InvokeAsync(async () =>
+     {
+    if (sessionEvent.SessionCode == SessionCode)
+   {
+    await LoadSession(); // Reload to get latest state
+      StateHasChanged();
+  }
+          });
+      });
+
+       // Handle activity state changes (activity opens/closes)
+         hubConnection.On<ActivityStateChangedEvent>("ActivityStateChanged", async (activityEvent) =>
+     {
+        await InvokeAsync(async () =>
+       {
+            if (activityEvent.SessionCode == SessionCode)
+  {
+         await LoadSession(); // Reload to get current activity
+   StateHasChanged();
+       }
+    });
+  });
+
+   // Handle dashboard updates (optional for participants)
+  hubConnection.On<DashboardUpdatedEvent>("DashboardUpdated", async (dashboardEvent) =>
+     {
+       await InvokeAsync(() =>
+           {
+    if (dashboardEvent.SessionCode == SessionCode)
+  {
+        // Could show live aggregation updates to participants
+         Debug.WriteLine($"Dashboard updated for activity {dashboardEvent.ActivityId}");
+        StateHasChanged();
+    }
+     });
+      });
+
+         await hubConnection.StartAsync();
+       await hubConnection.InvokeAsync("Subscribe", SessionCode);
+     }
+        catch (Exception ex)
+      {
+   Debug.WriteLine($"SignalR connection error: {ex.Message}");
+     }
+    }
+
+    // Poll activity methods
+    private void SetPollChoice(int optionIndex)
+    {
+        selectedPollOption = optionIndex;
+        hasSubmittedResponse = false;
+        submitMessage = "";
+    }
+
+    private async Task SubmitPollResponse()
+    {
+        if (currentActivity == null || !Pid.HasValue) return;
+
+        await SubmitResponse($"{{\"selectedOptionId\": \"option-{selectedPollOption}\"}}");
+    }
+
+    // WordCloud activity methods
+    private async Task SubmitWordCloudResponse()
+    {
+if (currentActivity == null || !Pid.HasValue || string.IsNullOrWhiteSpace(wordCloudText)) return;
+
+        await SubmitResponse($"{{\"text\": \"{wordCloudText.Trim()}\"}}");
+    }
+
+    // Rating activity methods
+    private void SetRating(int rating)
+    {
+        selectedRating = rating;
+        hasSubmittedResponse = false;
+        submitMessage = "";
+    }
+
+    private async Task SubmitRatingResponse()
+    {
+        if (currentActivity == null || !Pid.HasValue) return;
+
+   await SubmitResponse($"{{\"rating\": {selectedRating}}}");
+ }
+
+    // Generic response method
+    private async Task SubmitGenericResponse()
+    {
+        if (currentActivity == null || !Pid.HasValue || string.IsNullOrWhiteSpace(genericResponseText)) return;
+
+      await SubmitResponse($"{{\"text\": \"{genericResponseText.Trim()}\"}}");
+    }
+
+    // Common submit method
+    private async Task SubmitResponse(string payload)
+    {
+        if (currentActivity == null || !Pid.HasValue) return;
+
+        isSubmittingResponse = true;
+submitMessage = "";
+        submitSuccess = false;
+
+        try
+     {
+    var request = new SubmitResponseRequest
+         {
+    ParticipantId = Pid.Value,
+       Payload = payload
+    };
+
+            // Submit response via API
+ await ApiService.SubmitResponseAsync(SessionCode, currentActivity.ActivityId, request);
+
+     hasSubmittedResponse = true;
+       totalResponsesSubmitted++;
+ contributionsRemaining--;
+        submitSuccess = true;
+       submitMessage = "Response submitted successfully!";
+    
+       // Clear form fields
+  ResetFormFields();
+        }
+        catch (Exception ex)
+        {
+   submitSuccess = false;
+       submitMessage = $"Failed to submit response: {ex.Message}";
+      }
+        finally
+        {
+      isSubmittingResponse = false;
+          StateHasChanged();
+     }
+    }
+
+    private void ResetFormFields()
+ {
+ selectedPollOption = -1;
+     wordCloudText = "";
+        selectedRating = 0;
+        genericResponseText = "";
+    }
+
+    private string GetSubmitButtonText()
+    {
+     if (hasSubmittedResponse)
+     return "Response Submitted";
+      if (isSubmittingResponse)
+       return "Submitting...";
+        return "Submit Response";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+   if (hubConnection is not null)
+        {
+            try
+      {
+    await hubConnection.InvokeAsync("Unsubscribe", SessionCode);
+         await hubConnection.DisposeAsync();
+ }
+            catch (Exception ex)
+            {
+     Debug.WriteLine($"Error disposing SignalR connection: {ex.Message}");
+        }
+        }
+    }
+}
