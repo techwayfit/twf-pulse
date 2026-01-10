@@ -1,0 +1,29 @@
+@page "/participant/done-view"
+@inject NavigationManager Navigation
+
+<PageTitle>TechWayFit Pulse — Done</PageTitle>
+
+<main class="wrap">
+    <div class="center">
+        <div class="card phone">
+            <div class="title">
+                <div>
+                    <h2 class="h2">Thanks 🙌</h2>
+                    <div class="subtle">Your input helped shape measurable next steps.</div>
+                </div>
+                <span class="chip">Session ends in <strong>&nbsp;2h</strong></span>
+            </div>
+
+            <div class="viz" style="margin-top:12px">
+                <strong>Final thought (optional)</strong>
+                <textarea class="field" rows="4" @bind="finalThought" placeholder="Anything else the team should know?"></textarea>
+                <div class="sp"></div>
+                <a class="btn primary" style="width:100%; text-align:center" href="/home">Submit & Exit</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+@code {
+    private string finalThought = "";
+}

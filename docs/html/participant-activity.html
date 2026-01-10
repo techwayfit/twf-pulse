@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TechWayFit Pulse — Activity</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="row">
+    <a class="brand" href="index.html">
+      <div class="logo" aria-hidden="true"></div>
+      <div class="name">
+        <strong>TechWayFit Pulse</strong>
+        <span>Participant • Live activity</span>
+      </div>
+    </a>
+    <div class="navbtns">
+      <a class="btn ghost" href="participant-join.html">Back</a>
+      <a class="btn primary" href="participant-done.html">Done</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="center">
+    <div class="card phone">
+      <div class="title">
+        <div>
+          <h2 class="h2">Live activity</h2>
+          <div class="subtle">Impact vs Effort</div>
+        </div>
+        <span class="chip"><span class="dot"></span> Open</span>
+      </div>
+
+      <div class="viz" style="margin-top:12px">
+        <strong>Place your point</strong>
+        <p class="p">Move sliders and submit (placeholder).</p>
+
+        <div class="row2" style="margin-top:10px">
+          <div>
+            <label>Effort (1–5)</label>
+            <input class="field" type="range" min="1" max="5" value="3" />
+          </div>
+          <div>
+            <label>Impact (1–5)</label>
+            <input class="field" type="range" min="1" max="5" value="4" />
+          </div>
+        </div>
+
+        <div class="sp"></div>
+        <label>Idea title (optional)</label>
+        <input class="field" placeholder="e.g., Reduce approval steps" />
+
+        <div class="sp"></div>
+        <a class="btn primary" style="width:100%; text-align:center" href="participant-done.html">Submit</a>
+      </div>
+
+      <div class="viz" style="margin-top:12px; padding:12px">
+        <strong>Note</strong>
+        <div class="subtle">In the real app, this screen updates when facilitator moves to next activity.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

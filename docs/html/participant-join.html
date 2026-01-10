@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TechWayFit Pulse — Join</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="pjoin">
+<header class="topbar">
+  <div class="row">
+    <a class="brand" href="index.html">
+      <div class="logo" aria-hidden="true"></div>
+      <div class="name">
+        <strong>TechWayFit Pulse</strong>
+        <span>Participant</span>
+      </div>
+    </a>
+    <div class="navbtns">
+      <a class="btn ghost" data-nav="home" href="index.html">Home</a>
+      <a class="btn ghost" data-nav="create" href="create.html">Create</a>
+      <a class="btn ghost" data-nav="live" href="live.html">Live Room</a>
+      <a class="btn ghost" data-nav="dash" href="dashboards.html">Dashboards</a>
+      <a class="btn ghost" data-nav="pjoin" href="participant-join.html">Participant</a>
+      <a class="btn primary" href="participant-activity.html">Join</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="center">
+    <div class="card phone">
+      <div class="title">
+        <div>
+          <h2 class="h2">Join session</h2>
+          <div class="subtle">Join form (example)</div>
+        </div>
+        <span class="chip">TYF-4821</span>
+      </div>
+
+      <div class="form" style="margin-top:10px">
+        <div>
+          <label>Display name (optional)</label>
+          <input class="field" placeholder="e.g., Alex" />
+        </div>
+
+        <div class="row2">
+          <div>
+            <label>Team</label>
+            <select class="field">
+              <option>Ops</option><option>Tech</option><option>Finance</option><option>Support</option><option>Leadership</option>
+            </select>
+          </div>
+          <div>
+            <label>Role</label>
+            <select class="field">
+              <option>Officer</option><option selected>Supervisor</option><option>Manager</option><option>Director</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label>Location</label>
+            <select class="field"><option selected>HQ</option><option>Branch</option><option>Remote</option></select>
+          </div>
+          <div>
+            <label>Anonymous</label>
+            <select class="field"><option selected>Yes</option><option>No</option></select>
+          </div>
+        </div>
+
+        <a class="btn primary" style="width:100%; text-align:center" href="participant-activity.html">Join</a>
+        <div class="subtle right">Max contributions (N) enforced server-side in real app.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

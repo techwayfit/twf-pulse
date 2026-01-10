@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TechWayFit Pulse — Live Room</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="live">
+<header class="topbar">
+  <div class="row">
+    <a class="brand" href="index.html">
+      <div class="logo" aria-hidden="true"></div>
+      <div class="name">
+        <strong>TechWayFit Pulse</strong>
+        <span>Live facilitator console</span>
+      </div>
+    </a>
+    <div class="navbtns">
+      <a class="btn ghost" data-nav="home" href="index.html">Home</a>
+      <a class="btn ghost" data-nav="create" href="create.html">Create</a>
+      <a class="btn ghost" data-nav="live" href="live.html">Live Room</a>
+      <a class="btn ghost" data-nav="dash" href="dashboards.html">Dashboards</a>
+      <a class="btn ghost" data-nav="pjoin" href="participant-join.html">Participant</a>
+      <a class="btn primary" href="participant-join.html">Share Link</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid" style="grid-template-columns: 320px 1fr;">
+    <aside class="card">
+      <div class="title">
+        <h2 class="h2">Agenda</h2>
+        <span class="chip"><span class="dot"></span> Live</span>
+      </div>
+      <div class="subtle">Code: <strong>TYF-4821</strong></div>
+      <div class="subtle">Participants: <strong id="liveCount">18</strong></div>
+
+      <div class="list">
+        <div class="item"><strong>1) Poll</strong><div>Slowest step</div></div>
+        <div class="item"><strong>2) Word Cloud</strong><div>Pain in one word</div></div>
+        <div class="item active"><strong>3) Quadrant</strong><div>Impact vs Effort</div></div>
+        <div class="item"><strong>4) 5-Whys</strong><div>Root cause ladder</div></div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn primary">Open</button>
+        <button class="btn">Close</button>
+        <button class="btn">Next</button>
+      </div>
+
+      <div class="hr"></div>
+      <div class="subtle">Strict pacing: only current open activity accepts responses.</div>
+    </aside>
+
+    <section class="viz">
+      <div class="vizhead">
+        <div>
+          <strong>Impact vs Effort</strong>
+          <div class="subtle">Live quadrant preview (placeholder)</div>
+        </div>
+        <div class="pulse"><span class="b"></span><strong>Updating</strong></div>
+      </div>
+
+      <svg viewBox="0 0 800 420" width="100%" height="auto" style="border-radius:18px; background: rgba(255,255,255,.65); border:1px solid rgba(15,36,56,.08);">
+        <line x1="400" y1="20" x2="400" y2="400" stroke="rgba(15,36,56,.12)" stroke-width="2"/>
+        <line x1="20" y1="210" x2="780" y2="210" stroke="rgba(15,36,56,.12)" stroke-width="2"/>
+        <text x="28" y="44" fill="rgba(15,36,56,.65)" font-size="14">Quick Wins</text>
+        <text x="540" y="44" fill="rgba(15,36,56,.65)" font-size="14">Big Bets</text>
+        <text x="28" y="392" fill="rgba(15,36,56,.65)" font-size="14">Fill-ins</text>
+        <text x="540" y="392" fill="rgba(15,36,56,.65)" font-size="14">Hard Slogs</text>
+        <g>
+          <circle cx="260" cy="120" r="10" fill="rgba(43,196,138,.72)" stroke="rgba(43,196,138,.95)" stroke-width="2"/>
+          <circle cx="600" cy="140" r="10" fill="rgba(45,127,249,.62)" stroke="rgba(45,127,249,.95)" stroke-width="2"/>
+          <circle cx="560" cy="300" r="10" fill="rgba(255,176,32,.62)" stroke="rgba(255,176,32,.95)" stroke-width="2"/>
+          <circle cx="220" cy="290" r="10" fill="rgba(255,77,109,.55)" stroke="rgba(255,77,109,.92)" stroke-width="2"/>
+        </g>
+      </svg>
+
+      <div class="toolbar" style="margin-top:12px">
+        <span class="chip">Filter: Team = <strong>&nbsp;Ops</strong></span>
+        <span class="chip">Filter: Role = <strong>&nbsp;Supervisor</strong></span>
+        <a class="btn primary" href="dashboards.html">Open dashboards</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

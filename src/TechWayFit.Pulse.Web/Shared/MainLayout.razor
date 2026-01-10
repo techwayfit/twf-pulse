@@ -2,33 +2,22 @@
 @inject NavigationManager Navigation
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main class="main-content">
-      <div class="top-row px-4">
-          <div class="nav-brand">
-   <span class="brand-text">TechWayFit</span>
-           <span class="pulse-text">Pulse</span>
-     </div>
-    <div class="nav-actions">
-     <button class="btn btn-outline btn-sm" @onclick="NavigateHome">
-     <i class="icon-home"></i>
-      Home
-    </button>
-      </div>
-        </div>
-
-      <article class="content px-4">
-   @Body
-        </article>
-    </main>
+  <!-- Header -->
+  <div>
+    <NavMenu />
+  </div>
+  <!-- Main content -->
+  <main class="main-content">
+    <article class="content px-4">
+      @Body
+    </article>
+  </main>
+  <!-- Footer -->
+  <footer class="footer">
+    <div>TechWayFit vibe • "Code it Right" • Open-source workshop companion</div>
+    <div class="badge">Storage: @(UseInMemory ? "InMemory" : "SQLite") • Real-time: SignalR-ready</div>
+  </footer>
 </div>
-
 @code {
-  private void NavigateHome()
-    {
-      Navigation.NavigateTo("/");
-    }
+  private bool UseInMemory = true;
 }

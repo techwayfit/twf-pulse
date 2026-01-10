@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TechWayFit Pulse — Create Session</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="create">
+<header class="topbar">
+  <div class="row">
+    <a class="brand" href="index.html">
+      <div class="logo" aria-hidden="true"></div>
+      <div class="name">
+        <strong>TechWayFit Pulse</strong>
+        <span>Make workshops fun. Make insights measurable.</span>
+      </div>
+    </a>
+    <div class="navbtns">
+      <a class="btn ghost" data-nav="home" href="index.html">Home</a>
+      <a class="btn ghost" data-nav="create" href="create.html">Create</a>
+      <a class="btn ghost" data-nav="live" href="live.html">Live Room</a>
+      <a class="btn ghost" data-nav="dash" href="dashboards.html">Dashboards</a>
+      <a class="btn ghost" data-nav="pjoin" href="participant-join.html">Participant</a>
+      <a class="btn primary" href="live.html">Launch</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <div class="title">
+      <div>
+        <h2 class="h2">Create session</h2>
+        <div class="subtle">Context → Join Form (max 5 fields) → Activities → Launch</div>
+      </div>
+      <span class="chip">TTL: <strong>&nbsp;6h</strong></span>
+    </div>
+
+    <div class="grid">
+      <div class="card solid" style="box-shadow:none">
+        <h3 class="h2">Session context</h3>
+        <div class="sp"></div>
+        <div class="form">
+          <div>
+            <label>Session title</label>
+            <input class="field" value="Ops Pain Points Workshop — Group 1" />
+          </div>
+          <div>
+            <label>Goal</label>
+            <textarea class="field" rows="3">Identify bottlenecks and quantify impact so we can prioritize fixes.</textarea>
+          </div>
+          <div class="row2">
+            <div>
+              <label>Workshop type</label>
+              <select class="field">
+                <option selected>Ops / Process Improvement</option>
+                <option>Retro</option>
+                <option>Discovery</option>
+                <option>Incident Review</option>
+                <option>Feedback</option>
+              </select>
+            </div>
+            <div>
+              <label>Max contributions per participant (N)</label>
+              <select class="field">
+                <option>3</option><option selected>5</option><option>8</option><option>10</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <a class="btn primary" href="live.html">Save & Go Live</a>
+            <a class="btn" href="index.html">Cancel</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card solid" style="box-shadow:none">
+        <h3 class="h2">Join form (max 5 fields)</h3>
+        <p class="p">Simple builder concept — configure up to 5 fields for filtering/clustering.</p>
+        <div class="viz" style="margin-top:12px">
+          <div class="row2">
+            <div>
+              <label>Field 1</label>
+              <select class="field"><option selected>Team (Dropdown)</option><option>Role</option><option>Location</option></select>
+            </div>
+            <div>
+              <label>Field 2</label>
+              <select class="field"><option>Team</option><option selected>Role (Dropdown)</option><option>Location</option></select>
+            </div>
+          </div>
+          <div class="sp"></div>
+          <div class="row2">
+            <div>
+              <label>Field 3</label>
+              <select class="field"><option selected>Location (Dropdown)</option><option>Experience</option><option>Text</option></select>
+            </div>
+            <div>
+              <label>Fields remaining</label>
+              <input class="field" value="2" readonly />
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+        <h3 class="h2">Activities</h3>
+        <div class="list">
+          <div class="item"><strong>1) Poll</strong><div>Slowest step</div></div>
+          <div class="item"><strong>2) Word Cloud</strong><div>Pain in one word</div></div>
+          <div class="item active"><strong>3) Quadrant</strong><div>Impact vs Effort</div></div>
+          <div class="item"><strong>4) 5-Whys</strong><div>Root cause ladder</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="assets/app.js"></script>
+</body>
+</html>

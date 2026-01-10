@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TechWayFit Pulse — Dashboards</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body data-page="dash">
+<header class="topbar">
+  <div class="row">
+    <a class="brand" href="index.html">
+      <div class="logo" aria-hidden="true"></div>
+      <div class="name">
+        <strong>TechWayFit Pulse</strong>
+        <span>Real-time dashboards</span>
+      </div>
+    </a>
+    <div class="navbtns">
+      <a class="btn ghost" data-nav="home" href="index.html">Home</a>
+      <a class="btn ghost" data-nav="create" href="create.html">Create</a>
+      <a class="btn ghost" data-nav="live" href="live.html">Live Room</a>
+      <a class="btn ghost" data-nav="dash" href="dashboards.html">Dashboards</a>
+      <a class="btn ghost" data-nav="pjoin" href="participant-join.html">Participant</a>
+      <a class="btn primary" href="live.html">Back to Live</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="grid">
+    <div class="card">
+      <div class="title">
+        <div>
+          <h2 class="h2">Dashboards</h2>
+          <div class="subtle">Filter by join fields • Live updates</div>
+        </div>
+        <span class="chip"><span class="dot"></span> Updating</span>
+      </div>
+
+      <div class="viz" style="margin-top:12px">
+        <div class="vizhead">
+          <strong>Overview</strong>
+          <span class="chip">Code: <strong>&nbsp;TYF-4821</strong></span>
+        </div>
+
+        <div class="grid" style="grid-template-columns: repeat(3,1fr); gap:10px;">
+          <div class="viz" style="box-shadow:none">
+            <strong id="ovResp">126</strong>
+            <div class="subtle">Total responses</div>
+          </div>
+          <div class="viz" style="box-shadow:none">
+            <strong id="ovRate">82%</strong>
+            <div class="subtle">Participation</div>
+          </div>
+          <div class="viz" style="box-shadow:none">
+            <strong>6</strong>
+            <div class="subtle">Active themes</div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+        <strong>Word cloud (sample)</strong>
+        <div class="cloud" style="margin-top:10px">
+          <span class="w big">handoffs</span>
+          <span class="w med">approvals</span>
+          <span class="w med">rework</span>
+          <span class="w small">waiting</span>
+          <span class="w small">manual</span>
+          <span class="w med">visibility</span>
+          <span class="w small">emails</span>
+          <span class="w med">clarity</span>
+        </div>
+      </div>
+    </div>
+
+    <aside class="card solid">
+      <h2 class="h2">Filters</h2>
+      <p class="p">Powered by join form (≤ 5 fields).</p>
+      <div class="form" style="margin-top:12px">
+        <div class="row2">
+          <div>
+            <label>Team</label>
+            <select class="field"><option>All</option><option selected>Ops</option><option>Tech</option><option>Finance</option></select>
+          </div>
+          <div>
+            <label>Role</label>
+            <select class="field"><option>All</option><option selected>Supervisor</option><option>Officer</option><option>Manager</option></select>
+          </div>
+        </div>
+        <button class="btn primary" style="width:100%">Apply</button>
+      </div>
+
+      <div class="hr"></div>
+      <a class="btn" href="live.html">Return to Live Room</a>
+    </aside>
+  </section>
+</main>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
