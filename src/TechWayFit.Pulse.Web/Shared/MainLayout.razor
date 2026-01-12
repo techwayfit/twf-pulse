@@ -13,9 +13,13 @@
     </article>
   </main>
   <!-- Footer -->
-  <footer class="footer">
-    <div>TechWayFit vibe • "Code it Right" • Open-source workshop companion</div>
-    <div class="badge">Storage: @(UseInMemory ? "InMemory" : "SQLite") • Real-time: SignalR-ready</div>
+  <footer class="footer bg-light border-top mt-auto py-3">
+    <div class="container-fluid">
+      <div class="d-flex flex-wrap justify-content-between align-items-center text-muted small">
+        <div class="mb-2 mb-md-0">TechWayFit vibe • "Code it Right" • Open-source workshop companion</div>
+        <div>Storage: @(UseInMemory ? "InMemory" : "SQLite") • Real-time: SignalR-ready</div>
+      </div>
+    </div>
   </footer>
 </div>
 @code {

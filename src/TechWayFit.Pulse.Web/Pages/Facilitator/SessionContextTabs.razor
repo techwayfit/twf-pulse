@@ -1,0 +1,112 @@
+@using TechWayFit.Pulse.Web.Models
+@rendermode InteractiveServer
+
+<div class="section-card">
+    <h3 class="section-title">Session context</h3>
+    
+    <!-- Tab Navigation -->
+    <div class="custom-tabs mb-3">
+        <button type="button" 
+                class="custom-tab @(activeTab == "basic" ? "active" : "")" 
+                @onclick="SwitchToBasic">
+            Basic Info
+        </button>
+        <button type="button" 
+                class="custom-tab @(activeTab == "ai" ? "active" : "")" 
+                @onclick="SwitchToAI">
+            AI Context
+        </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        @if (activeTab == "basic")
+        {
+            <div>
+                <div class="mb-3">
+                    <label class="form-label">Session title</label>
+                    <input class="form-control" @bind="Data.SessionTitle" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Goal</label>
+                    <textarea class="form-control" rows="3" @bind="Data.SessionGoal"></textarea>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Workshop type</label>
+                        <select class="form-select" @bind="Data.WorkshopType">
+                            <option value="Ops / Process Improvement">Ops / Process Improvement</option>
+                            <option value="Retro">Retro</option>
+                            <option value="Discovery">Discovery</option>
+                            <option value="Incident Review">Incident Review</option>
+                            <option value="Feedback">Feedback</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Primary activity</label>
+                        <select class="form-select" @bind="Data.PrimaryActivity">
+                            <option value="Poll">Poll</option>
+                            <option value="Word Cloud">Word Cloud</option>
+                            <option value="Quadrant (2x2 Matrix)">Quadrant (2x2 Matrix)</option>
+                            <option value="5-Whys">5-Whys</option>
+                            <option value="Custom/Mixed">Custom/Mixed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Max contributions per participant</label>
+                        <select class="form-select" @bind="Data.MaxContributions">
+                            <option value="3">3</option>
+                            <option value="5">5</option>
+                            <option value="8">8</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (activeTab == "ai")
+        {
+            <div>
+                <p class="text-muted small mb-3">
+                    Provide detailed context to help AI generate better questions and insights. This information is not shown to participants.
+                </p>
+                <div class="mb-3">
+                    <label class="form-label">Current process/workflow</label>
+                    <textarea class="form-control" rows="3" @bind="Data.CurrentProcess" 
+                              placeholder="Describe the current process, workflow, or system being discussed..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Known pain points & challenges</label>
+                    <textarea class="form-control" rows="3" @bind="Data.PainPoints" 
+                              placeholder="List known issues, bottlenecks, or areas of concern..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Solution architecture / technical context</label>
+                    <textarea class="form-control" rows="3" @bind="Data.TechnicalContext" 
+                              placeholder="Relevant technical details, architecture, tools, or systems involved..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Team background & dynamics</label>
+                    <textarea class="form-control" rows="2" @bind="Data.TeamBackground" 
+                              placeholder="Team size, roles, experience levels, communication patterns..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Specific AI assistance goals</label>
+                    <textarea class="form-control" rows="2" @bind="Data.AiGoals" 
+                              placeholder="What should AI focus on? (e.g., 'Generate probing questions', 'Identify patterns', 'Suggest prioritization')"></textarea>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string activeTab = "basic";
+
+    [Parameter] public SessionContextViewModel Data { get; set; } = new();
+    [Parameter] public EventCallback<SessionContextViewModel> DataChanged { get; set; }
+
+    private void SwitchToBasic() => activeTab = "basic";
+    private void SwitchToAI() => activeTab = "ai";
+}

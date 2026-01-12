@@ -74,6 +74,16 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
+// Ensure database is created for SQLite
+if (!useInMemory)
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<PulseDbContext>();
+        dbContext.Database.EnsureCreated();
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

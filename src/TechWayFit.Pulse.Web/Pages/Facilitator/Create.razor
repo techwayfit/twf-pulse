@@ -1,117 +1,198 @@
 @page "/facilitator/create"
+@using TechWayFit.Pulse.Web.Models
+@using TechWayFit.Pulse.Web.Services
+@using TechWayFit.Pulse.Contracts.Requests
+@using TechWayFit.Pulse.Contracts.Models
+@using TechWayFit.Pulse.Contracts.Enums
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
+@inject IPulseApiService ApiService
 
 <PageTitle>TechWayFit Pulse — Create Session</PageTitle>
 
 <main class="wrap">
-    <section class="card">
-        <div class="title">
+    <div class="create-session-container">
+        <div class="page-header">
             <div>
-                <h2 class="h2">Create session</h2>
-                <div class="subtle">Context → Join Form (max 5 fields) → Activities → Launch</div>
+                <h2>Create session</h2>
+                <div class="subtitle">Context → Join Form (max 5 fields) → Launch</div>
             </div>
             <span class="chip">TTL: <strong>&nbsp;6h</strong></span>
         </div>
 
-        <div class="card" style="box-shadow:none">
-            <div class="card-body">
-                <h3 class="h4 mb-3">Session context</h3>
-                <div class="mb-3">
-                    <label class="form-label">Session title</label>
-                    <input class="form-control" @bind="sessionTitle" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Goal</label>
-                    <textarea class="form-control" rows="3" @bind="sessionGoal"></textarea>
-                </div>
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Workshop type</label>
-                        <select class="form-select" @bind="workshopType">
-                            <option selected>Ops / Process Improvement</option>
-                            <option>Retro</option>
-                            <option>Discovery</option>
-                            <option>Incident Review</option>
-                            <option>Feedback</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Max contributions per participant (N)</label>
-                        <select class="form-select" @bind="maxContributions">
-                            <option>3</option>
-                            <option selected>5</option>
-                            <option>8</option>
-                            <option>10</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <a class="btn btn-primary" href="/facilitator/live">Save & Go Live</a>
-                    <a class="btn btn-secondary" href="/home">Cancel</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="sp"></div>
+        <SessionContextTabs Data="sessionContext" DataChanged="OnSessionContextChanged" />
         
-        <div class="card" style="box-shadow:none">
-            <div class="card-body">
-                <h3 class="h4 mb-2">Join form builder (max 5 fields)</h3>
-                <p class="text-muted mb-4">Drag field types to build your join form. Configure up to 5 fields for filtering/clustering.</p>
-                
-                <div class="form-builder-container" id="joinFormBuilder">
-                    <div class="field-types">
-                        <!-- Field types will be rendered by JavaScript -->
-                    </div>
-                    <div class="form-drop-zone">
-                        <!-- Drop zone will be rendered by JavaScript -->
-                    </div>
+        <div class="section-card">
+            <h3 class="section-title">Join form builder</h3>
+            <p class="section-subtitle">Add up to 5 fields for participant registration. This data helps filter and group responses.</p>
+            
+            <div class="form-builder-container" id="joinFormBuilder" @key="joinFormBuilderKey">
+                <div class="field-types">
+                    <!-- Field types will be rendered by JavaScript -->
                 </div>
-
-                <hr class="my-4" />
-                <h3 class="h4 mb-3">Activities</h3>
-                <div class="list-group">
-                    <div class="list-group-item"><strong>1) Poll</strong><div class="text-muted small">Slowest step</div></div>
-                    <div class="list-group-item"><strong>2) Word Cloud</strong><div class="text-muted small">Pain in one word</div></div>
-                    <div class="list-group-item active"><strong>3) Quadrant</strong><div class="text-muted small">Impact vs Effort</div></div>
-                    <div class="list-group-item"><strong>4) 5-Whys</strong><div class="text-muted small">Root cause ladder</div></div>
+                <div class="form-drop-zone">
+                    <!-- Drop zone will be rendered by JavaScript -->
                 </div>
             </div>
         </div>
-    </section>
+
+        <div class="section-card">
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger" role="alert">
+                    @errorMessage
+                </div>
+            }
+            <div class="action-buttons">
+                <a class="btn btn-secondary" href="/home">Cancel</a>
+                <button class="btn btn-primary" @onclick="SaveAndGoLive" disabled="@isSubmitting">
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Creating session...</span>
+                    }
+                    else
+                    {
+                        <span>Save & Go Live</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
 </main>
 
 @code {
-    private string sessionTitle = "Ops Pain Points Workshop — Group 1";
-    private string sessionGoal = "Identify bottlenecks and quantify impact so we can prioritize fixes.";
-    private string workshopType = "Ops / Process Improvement";
-    private string maxContributions = "5";
+    private SessionContextViewModel sessionContext = new();
     private List<FormField> joinFormFields = new();
+    private readonly string joinFormBuilderKey = Guid.NewGuid().ToString();
+    private bool isSubmitting = false;
+    private string errorMessage = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            // Form builder auto-initializes via JavaScript
-            // This is just a backup call
-            try
-            {
-                await Task.Delay(200);
-                await JS.InvokeVoidAsync("initFormBuilder", "joinFormBuilder");
-            }
-            catch
-            {
-                // Ignore - form builder will auto-init from script
-            }
+            await Task.Delay(100);
+            await JS.InvokeVoidAsync("initFormBuilder", "joinFormBuilder");
         }
     }
 
-    private async Task SaveFormFields()
+    private void OnSessionContextChanged(SessionContextViewModel updatedContext)
     {
-        var fields = await JS.InvokeAsync<List<FormField>>("getFormBuilderFields");
-        joinFormFields = fields ?? new();
+        sessionContext = updatedContext;
+    }
+
+    private async Task SaveAndGoLive()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            // Collect form builder fields
+            var fields = await JS.InvokeAsync<List<FormField>>("getFormBuilderFields");
+            joinFormFields = fields ?? new();
+
+            // Validate
+            if (string.IsNullOrWhiteSpace(sessionContext.SessionTitle))
+            {
+                errorMessage = "Session title is required.";
+                return;
+            }
+
+            // Generate session code
+            var sessionCode = GenerateSessionCode();
+
+            // Build request
+            var request = new CreateSessionRequest
+            {
+                Code = sessionCode,
+                Title = sessionContext.SessionTitle.Trim(),
+                Goal = string.IsNullOrWhiteSpace(sessionContext.SessionGoal) ? null : sessionContext.SessionGoal.Trim(),
+                Context = BuildContextString(),
+                Settings = new SessionSettingsDto
+                {
+                    MaxContributionsPerParticipantPerSession = int.Parse(sessionContext.MaxContributions),
+                    MaxContributionsPerParticipantPerActivity = null,
+                    StrictCurrentActivityOnly = true,
+                    AllowAnonymous = false,
+                    TtlMinutes = 360 // 6 hours
+                },
+                JoinFormSchema = new JoinFormSchemaDto
+                {
+                    MaxFields = 5,
+                    Fields = joinFormFields.Select((f, index) => new JoinFormFieldDto
+                    {
+                        Id = $"field_{index + 1}",
+                        Label = f.Label,
+                        Type = MapFieldType(f.Type),
+                        Required = f.Required,
+                        Options = f.GetOptionsList(),
+                        UseInFilters = true
+                    }).ToList()
+                }
+            };
+
+            // Call API
+            var response = await ApiService.CreateSessionAsync(request);
+
+            // Navigate to live page with session code
+            Navigation.NavigateTo($"/facilitator/live?code={response.Code}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to create session: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private string? BuildContextString()
+    {
+        var parts = new List<string>();
+        
+        if (!string.IsNullOrWhiteSpace(sessionContext.CurrentProcess))
+            parts.Add($"Current Process: {sessionContext.CurrentProcess.Trim()}");
+        
+        if (!string.IsNullOrWhiteSpace(sessionContext.PainPoints))
+            parts.Add($"Pain Points: {sessionContext.PainPoints.Trim()}");
+        
+        if (!string.IsNullOrWhiteSpace(sessionContext.TechnicalContext))
+            parts.Add($"Technical Context: {sessionContext.TechnicalContext.Trim()}");
+        
+        if (!string.IsNullOrWhiteSpace(sessionContext.TeamBackground))
+            parts.Add($"Team Background: {sessionContext.TeamBackground.Trim()}");
+        
+        if (!string.IsNullOrWhiteSpace(sessionContext.AiGoals))
+            parts.Add($"AI Goals: {sessionContext.AiGoals.Trim()}");
+        
+        return parts.Any() ? string.Join(" | ", parts) : null;
+    }
+
+    private FieldType MapFieldType(string type)
+    {
+        return type.ToLower() switch
+        {
+            "text" => FieldType.Text,
+            "number" => FieldType.Number,
+            "dropdown" => FieldType.Dropdown,
+            "multiselect" => FieldType.MultiSelect,
+            "boolean" => FieldType.Boolean,
+            _ => FieldType.Text
+        };
+    }
+
+    private string GenerateSessionCode()
+    {
+        var random = new Random();
+        var code = new string(Enumerable.Range(0, 6)
+            .Select(_ => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[random.Next(32)])
+            .ToArray());
+        return code;
     }
 
     public class FormField
@@ -119,6 +200,18 @@
         public string Type { get; set; } = string.Empty;
         public string Label { get; set; } = string.Empty;
         public bool Required { get; set; }
-        public List<string>? Options { get; set; }
+        public object? Options { get; set; } // Can be string or null from JavaScript
+        
+        public List<string> GetOptionsList()
+        {
+            if (Options is string optionsStr && !string.IsNullOrWhiteSpace(optionsStr))
+            {
+                return optionsStr.Split(',')
+                    .Select(o => o.Trim())
+                    .Where(o => !string.IsNullOrEmpty(o))
+                    .ToList();
+            }
+            return new List<string>();
+        }
     }
 }

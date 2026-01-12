@@ -4,39 +4,75 @@
 <PageTitle>TechWayFit Pulse — Home</PageTitle>
 
 <main class="wrap">
-    <section class="grid">
-        <div class="card">
-            <div class="title">
-                <h1 class="h1">Run engaging workshops—without losing the data.</h1>
-                <span class="badge"><span class="dot"></span> Live-ready</span>
+    <section class="home-hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="status-dot"></span>
+                <span>Live-ready</span>
             </div>
-            <p class="p">
+            <h1 class="hero-title">Run engaging workshops—without losing the data.</h1>
+            <p class="hero-description">
                 Polls, word clouds, 4-quadrant matrices, and guided 5-Whys—designed to help people open up,
                 and help you leave with measurable outcomes.
             </p>
 
-            <div class="toolbar">
-                <a class="btn primary" href="/facilitator/create">Create a session</a>
-                <a class="btn" href="/participant/join">Join as participant</a>
-                <a class="btn" href="/facilitator/dashboards">See dashboards</a>
-            </div>
-        </div>
-
-        <div class="card solid">
-            <h2 class="h2">Starter templates</h2>
-            <p class="p">Pick one and customize in 60 seconds.</p>
-
-            <div class="list" style="margin-top:12px">
-                <a class="item" href="/facilitator/create"><strong>Retro Sprint Review</strong><div>Quick pulse + themes + actions</div></a>
-                <a class="item" href="/facilitator/create"><strong>Ops Pain Points</strong><div>Impact/Effort + 5-Whys</div></a>
-                <a class="item" href="/facilitator/create"><strong>Product Discovery</strong><div>Idea cloud + prioritization</div></a>
-                <a class="item" href="/facilitator/create"><strong>Incident Review</strong><div>Root cause ladder + fixes</div></a>
+            <div class="hero-actions">
+                <a class="btn primary large" href="/facilitator/create">
+                    <span class="btn-icon">✨</span>
+                    Create a session
+                </a>
+                <a class="btn secondary large" href="/participant/join">
+                    Join as participant
+                </a>
+                <a class="btn ghost large" href="/facilitator/dashboards">
+                    See dashboards
+                </a>
             </div>
         </div>
     </section>
 
-    <footer class="footer">
-        <div>TechWayFit Pulse • Open-source workshop companion (template).</div>
-        <div class="badge">Storage: InMemory / SQLite • Real-time: SignalR-ready</div>
-    </footer>
+    <section class="templates-section">
+        <div class="section-header">
+            <h2 class="section-title">Starter templates</h2>
+            <p class="section-subtitle">Pick one and customize in 60 seconds.</p>
+        </div>
+
+        <div class="template-grid">
+            <a class="template-card" href="/facilitator/create">
+                <div class="template-icon">🔄</div>
+                <div class="template-content">
+                    <h3 class="template-title">Retro Sprint Review</h3>
+                    <p class="template-description">Quick pulse + themes + actions</p>
+                </div>
+                <div class="template-arrow">→</div>
+            </a>
+
+            <a class="template-card" href="/facilitator/create">
+                <div class="template-icon">⚡</div>
+                <div class="template-content">
+                    <h3 class="template-title">Ops Pain Points</h3>
+                    <p class="template-description">Impact/Effort + 5-Whys</p>
+                </div>
+                <div class="template-arrow">→</div>
+            </a>
+
+            <a class="template-card" href="/facilitator/create">
+                <div class="template-icon">💡</div>
+                <div class="template-content">
+                    <h3 class="template-title">Product Discovery</h3>
+                    <p class="template-description">Idea cloud + prioritization</p>
+                </div>
+                <div class="template-arrow">→</div>
+            </a>
+
+            <a class="template-card" href="/facilitator/create">
+                <div class="template-icon">🔍</div>
+                <div class="template-content">
+                    <h3 class="template-title">Incident Review</h3>
+                    <p class="template-description">Root cause ladder + fixes</p>
+                </div>
+                <div class="template-arrow">→</div>
+            </a>
+            </div>
+    </section>
 </main>
