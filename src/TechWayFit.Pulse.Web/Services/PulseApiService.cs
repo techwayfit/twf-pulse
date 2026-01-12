@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
 
@@ -27,12 +28,13 @@ public class PulseApiService : IPulseApiService
 
     public PulseApiService(HttpClient httpClient)
     {
-      _httpClient = httpClient;
-  _jsonOptions = new JsonSerializerOptions
-  {
-   PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true
-     };
+        _httpClient = httpClient;
+    _jsonOptions = new JsonSerializerOptions
+     {
+       PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true,
+  Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+      };
     }
 
     public async Task<CreateSessionResponse> CreateSessionAsync(CreateSessionRequest request, CancellationToken cancellationToken = default)

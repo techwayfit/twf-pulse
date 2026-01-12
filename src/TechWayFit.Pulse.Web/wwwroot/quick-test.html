@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Field Options Test</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 20px; }
+    button { margin: 10px 5px; padding: 10px 15px; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 5px; }
+       .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+      pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+  <h1>Field Options Test</h1>
+    <p>Testing that dropdown fields require options, but text fields don't.</p>
+    
+    <button onclick="testTextOnly()">? Test Text Field Only (Should Work)</button>
+    <button onclick="testDropdownValid()">? Test Dropdown with Options (Should Work)</button>
+    <button onclick="testDropdownInvalid()">? Test Dropdown without Options (Should Fail)</button>
+ <button onclick="testMixed()">? Test Mixed Fields (Should Work)</button>
+    
+ <div id="result"></div>
+
+    <script>
+   let testCount = 0;
+
+        async function testTextOnly() {
+   const payload = {
+        code: `TEXT-${++testCount}`,
+         title: "Text Only Test",
+      goal: "Test text field without options",
+              context: "Text field test",
+     settings: getDefaultSettings(),
+joinFormSchema: {
+         maxFields: 5,
+       fields: [
+  {
+       id: "name",
+label: "Participant Name",
+  type: "Text",
+           required: false,
+            options: "", // Empty options for text field
+         useInFilters: false
+         }
+               ]
+                }
+          };
+  await testPayload(payload, "Text Field Only");
+  }
+
+        async function testDropdownValid() {
+    const payload = {
+ code: `DROPDOWN-VALID-${++testCount}`,
+        title: "Valid Dropdown Test",
+   goal: "Test dropdown with valid options",
+     context: "Valid dropdown test",
+         settings: getDefaultSettings(),
+         joinFormSchema: {
+       maxFields: 5,
+    fields: [
+     {
+  id: "department",
+ label: "Department",
+          type: "Dropdown",
+    required: false,
+  options: "Engineering,Product,Design,Marketing", // Valid comma-separated options
+           useInFilters: true
+   }
+          ]
+                }
+          };
+     await testPayload(payload, "Valid Dropdown");
+    }
+
+        async function testDropdownInvalid() {
+  const payload = {
+       code: `DROPDOWN-INVALID-${++testCount}`,
+        title: "Invalid Dropdown Test",
+     goal: "Test dropdown without options",
+           context: "Invalid dropdown test",
+            settings: getDefaultSettings(),
+              joinFormSchema: {
+ maxFields: 5,
+              fields: [
+      {
+  id: "department",
+         label: "Department",
+      type: "Dropdown",
+            required: false,
+ options: "", // Empty options for dropdown - should fail validation
+useInFilters: true
+       }
+    ]
+    }
+          };
+  await testPayload(payload, "Invalid Dropdown (Should Fail)");
+        }
+
+        async function testMixed() {
+         const payload = {
+ code: `MIXED-${++testCount}`,
+    title: "Mixed Fields Test",
+         goal: "Test mixed field types",
+        context: "Mixed fields test",
+           settings: getDefaultSettings(),
+    joinFormSchema: {
+       maxFields: 5,
+  fields: [
+    {
+              id: "name",
+    label: "Name",
+     type: "Text",
+                  required: false,
+       options: "", // Empty options OK for text
+          useInFilters: false
+    },
+    {
+             id: "department",
+      label: "Department",
+       type: "Dropdown",
+         required: false,
+   options: "Engineering,Product,Design", // Options required for dropdown
+      useInFilters: true
+    },
+          {
+ id: "experience_years",
+       label: "Years of Experience",
+      type: "Number",
+     required: false,
+       options: "", // Empty options OK for number
+    useInFilters: true
+     }
+        ]
+  }
+        };
+ await testPayload(payload, "Mixed Fields");
+ }
+
+     function getDefaultSettings() {
+         return {
+      maxContributionsPerParticipantPerSession: 10,
+  maxContributionsPerParticipantPerActivity: null,
+                strictCurrentActivityOnly: true,
+  allowAnonymous: true,
+      ttlMinutes: 360
+      };
+      }
+
+        async function testPayload(payload, testName) {
+            const resultDiv = document.getElementById('result');
+   
+       try {
+                resultDiv.innerHTML = `<div>?? Running ${testName}...</div>`;
+
+       const response = await fetch('/api/sessions', {
+         method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+      });
+
+    const result = await response.json();
+         
+let resultClass = response.ok ? 'success' : 'error';
+                let statusIcon = response.ok ? '?' : '?';
+              
+   resultDiv.innerHTML = `
+           <div class="result ${resultClass}">
+        <h3>${statusIcon} ${testName}</h3>
+          <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+     ${response.ok ? 
+        `<p><strong>Session Code:</strong> ${result.data?.code || 'N/A'}</p>` : 
+       `<p><strong>Error:</strong> ${result.errors?.[0]?.message || 'Unknown error'}</p>`
+             }
+      <details>
+   <summary>Show Details</summary>
+  <pre>${JSON.stringify(result, null, 2)}</pre>
+               </details>
+    </div>
+  `;
+              
+        } catch (error) {
+     resultDiv.innerHTML = `
+      <div class="result error">
+        <h3>? ${testName} - Network Error</h3>
+     <p><strong>Error:</strong> ${error.message}</p>
+      </div>
+     `;
+            }
+        }
+    </script>
+</body>
+</html>

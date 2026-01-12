@@ -28,10 +28,12 @@ public sealed class ParticipantRepository : IParticipantRepository
         var records = await _dbContext.Participants
             .AsNoTracking()
             .Where(x => x.SessionId == sessionId)
-            .OrderBy(x => x.JoinedAt)
             .ToListAsync(cancellationToken);
 
-        return records.Select(record => record.ToDomain()).ToList();
+        // Sort on the client side to avoid SQLite DateTimeOffset ordering issues
+        var sortedRecords = records.OrderBy(x => x.JoinedAt).ToList();
+
+        return sortedRecords.Select(record => record.ToDomain()).ToList();
     }
 
     public async Task AddAsync(Participant participant, CancellationToken cancellationToken = default)

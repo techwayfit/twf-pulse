@@ -25,10 +25,12 @@ public sealed class ResponseRepository : IResponseRepository
         var records = await _dbContext.Responses
             .AsNoTracking()
             .Where(x => x.ActivityId == activityId)
-            .OrderBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return records.Select(record => record.ToDomain()).ToList();
+        // Sort on the client side to avoid SQLite DateTimeOffset ordering issues
+        var sortedRecords = records.OrderBy(x => x.CreatedAt).ToList();
+
+        return sortedRecords.Select(record => record.ToDomain()).ToList();
     }
 
     public Task<int> CountByActivityAndParticipantAsync(
@@ -50,10 +52,12 @@ public sealed class ResponseRepository : IResponseRepository
         var records = await _dbContext.Responses
             .AsNoTracking()
             .Where(x => x.SessionId == sessionId && x.ParticipantId == participantId)
-            .OrderBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return records.Select(record => record.ToDomain()).ToList();
+        // Sort on the client side to avoid SQLite DateTimeOffset ordering issues
+        var sortedRecords = records.OrderBy(x => x.CreatedAt).ToList();
+
+        return sortedRecords.Select(record => record.ToDomain()).ToList();
     }
 
     public async Task<IReadOnlyList<Response>> GetBySessionAsync(
@@ -63,9 +67,11 @@ public sealed class ResponseRepository : IResponseRepository
         var records = await _dbContext.Responses
             .AsNoTracking()
             .Where(x => x.SessionId == sessionId)
-            .OrderBy(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return records.Select(record => record.ToDomain()).ToList();
+        // Sort on the client side to avoid SQLite DateTimeOffset ordering issues
+        var sortedRecords = records.OrderBy(x => x.CreatedAt).ToList();
+
+        return sortedRecords.Select(record => record.ToDomain()).ToList();
     }
 }

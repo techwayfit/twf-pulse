@@ -128,7 +128,7 @@
                         Label = f.Label,
                         Type = MapFieldType(f.Type),
                         Required = f.Required,
-                        Options = f.GetOptionsList(),
+                        Options = f.Options ?? string.Empty, // Ensure it's never null
                         UseInFilters = true
                     }).ToList()
                 }
@@ -200,18 +200,7 @@
         public string Type { get; set; } = string.Empty;
         public string Label { get; set; } = string.Empty;
         public bool Required { get; set; }
-        public object? Options { get; set; } // Can be string or null from JavaScript
-        
-        public List<string> GetOptionsList()
-        {
-            if (Options is string optionsStr && !string.IsNullOrWhiteSpace(optionsStr))
-            {
-                return optionsStr.Split(',')
-                    .Select(o => o.Trim())
-                    .Where(o => !string.IsNullOrEmpty(o))
-                    .ToList();
-            }
-            return new List<string>();
-        }
+        public string? Options { get; set; } // Can be string or null from JavaScript
+       
     }
 }

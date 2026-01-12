@@ -1,4 +1,5 @@
 using TechWayFit.Pulse.Contracts.Enums;
+using TechWayFit.Pulse.Contracts.Models;
 
 namespace TechWayFit.Pulse.Contracts.Responses;
 
@@ -9,4 +10,5 @@ public sealed record SessionSummaryResponse(
     string? Goal,
     SessionStatus Status,
     Guid? CurrentActivityId,
-    DateTimeOffset ExpiresAt);
+    DateTimeOffset ExpiresAt,
+    List<JoinFormFieldDto>? JoinFormFields = null);

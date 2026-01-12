@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Contracts.Models;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
 using TechWayFit.Pulse.Web.Api;
@@ -31,8 +32,8 @@ public sealed class SessionsController : ControllerBase
     {
         _sessions = sessions;
         _activities = activities;
-     _participants = participants;
-   _responses = responses;
+        _participants = participants;
+        _responses = responses;
         _dashboards = dashboards;
         _facilitatorTokens = facilitatorTokens;
         _hub = hub;
@@ -43,29 +44,32 @@ public sealed class SessionsController : ControllerBase
         [FromBody] CreateSessionRequest request,
         CancellationToken cancellationToken)
     {
-     try
-     {
-  var settings = ApiMapper.ToDomain(request.Settings);
-      var joinFormSchema = ApiMapper.ToDomain(request.JoinFormSchema);
-          var session = await _sessions.CreateSessionAsync(
-  request.Code,
- request.Title,
-            request.Goal,
-    request.Context,
-           settings,
-     joinFormSchema,
-            DateTimeOffset.UtcNow,
-   cancellationToken);
+        try
+        {
+            // Validate the request to catch options field issues
+            ValidateJoinFormSchema(request.JoinFormSchema);
+
+            var settings = ApiMapper.ToDomain(request.Settings);
+            var joinFormSchema = ApiMapper.ToDomain(request.JoinFormSchema);
+            var session = await _sessions.CreateSessionAsync(
+                                    request.Code,
+                                    request.Title,
+                                    request.Goal,
+                                    request.Context,
+                                    settings,
+                                    joinFormSchema,
+                                    DateTimeOffset.UtcNow,
+                                    cancellationToken);
 
             return Ok(Wrap(new CreateSessionResponse(session.Id, session.Code)));
         }
-      catch (ArgumentException ex)
+        catch (ArgumentException ex)
         {
             return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
         }
         catch (InvalidOperationException ex)
         {
-return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
+            return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
         }
     }
 
@@ -75,8 +79,8 @@ return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
         CancellationToken cancellationToken)
     {
         var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-     if (session is null)
-      {
+        if (session is null)
+        {
             return NotFound(Error<SessionSummaryResponse>("not_found", "Session not found."));
         }
 
@@ -92,7 +96,7 @@ return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
         var session = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (session is null)
         {
-   return NotFound(Error<JoinFacilitatorResponse>("not_found", "Session not found."));
+            return NotFound(Error<JoinFacilitatorResponse>("not_found", "Session not found."));
         }
 
         var auth = _facilitatorTokens.Create(session.Id);
@@ -106,20 +110,20 @@ return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
     {
         var session = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (session is null)
-     {
+        {
             return NotFound(Error<SessionSummaryResponse>("not_found", "Session not found."));
         }
 
-   var authError = RequireFacilitatorToken<SessionSummaryResponse>(session);
+        var authError = RequireFacilitatorToken<SessionSummaryResponse>(session);
         if (authError is not null)
         {
- return authError;
+            return authError;
         }
 
         await _sessions.SetStatusAsync(session.Id, TechWayFit.Pulse.Domain.Enums.SessionStatus.Live, DateTimeOffset.UtcNow, cancellationToken);
-     var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
+        var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (updated is not null)
- {
+        {
             await PublishSessionStateChangedAsync(updated, cancellationToken);
         }
         return Ok(Wrap(ApiMapper.ToSummary(updated ?? session)));
@@ -131,9 +135,9 @@ return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
     CancellationToken cancellationToken)
     {
         var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-  if (session is null)
-   {
-     return NotFound(Error<SessionSummaryResponse>("not_found", "Session not found."));
+        if (session is null)
+        {
+            return NotFound(Error<SessionSummaryResponse>("not_found", "Session not found."));
         }
 
         var authError = RequireFacilitatorToken<SessionSummaryResponse>(session);
@@ -142,13 +146,13 @@ return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
             return authError;
         }
 
-  await _sessions.SetStatusAsync(session.Id, TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended, DateTimeOffset.UtcNow, cancellationToken);
+        await _sessions.SetStatusAsync(session.Id, TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended, DateTimeOffset.UtcNow, cancellationToken);
         var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (updated is not null)
-      {
+        {
             await PublishSessionStateChangedAsync(updated, cancellationToken);
         }
-    return Ok(Wrap(ApiMapper.ToSummary(updated ?? session)));
+        return Ok(Wrap(ApiMapper.ToSummary(updated ?? session)));
     }
 
     [HttpPut("{code}/join-form")]
@@ -161,28 +165,28 @@ return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
         {
             var session = await _sessions.GetByCodeAsync(code, cancellationToken);
             if (session is null)
- {
-  return NotFound(Error<SessionSummaryResponse>("not_found", "Session not found."));
+            {
+                return NotFound(Error<SessionSummaryResponse>("not_found", "Session not found."));
             }
 
-  var authError = RequireFacilitatorToken<SessionSummaryResponse>(session);
-    if (authError is not null)
- {
-            return authError;
-  }
+            var authError = RequireFacilitatorToken<SessionSummaryResponse>(session);
+            if (authError is not null)
+            {
+                return authError;
+            }
 
-         var schema = ApiMapper.ToDomain(request.JoinFormSchema);
-var updated = await _sessions.UpdateJoinFormSchemaAsync(session.Id, schema, DateTimeOffset.UtcNow, cancellationToken);
+            var schema = ApiMapper.ToDomain(request.JoinFormSchema);
+            var updated = await _sessions.UpdateJoinFormSchemaAsync(session.Id, schema, DateTimeOffset.UtcNow, cancellationToken);
             return Ok(Wrap(ApiMapper.ToSummary(updated)));
         }
-  catch (ArgumentException ex)
+        catch (ArgumentException ex)
         {
             return BadRequest(Error<SessionSummaryResponse>("validation_error", ex.Message));
-      }
-   catch (InvalidOperationException ex)
+        }
+        catch (InvalidOperationException ex)
         {
-       return BadRequest(Error<SessionSummaryResponse>("validation_error", ex.Message));
-      }
+            return BadRequest(Error<SessionSummaryResponse>("validation_error", ex.Message));
+        }
     }
 
     [HttpPost("{code}/activities")]
@@ -194,38 +198,38 @@ var updated = await _sessions.UpdateJoinFormSchemaAsync(session.Id, schema, Date
         try
         {
             var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-      if (session is null)
-         {
-return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
+            if (session is null)
+            {
+                return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
             }
 
-        var authError = RequireFacilitatorToken<ActivityResponse>(session);
+            var authError = RequireFacilitatorToken<ActivityResponse>(session);
             if (authError is not null)
-         {
- return authError;
-      }
+            {
+                return authError;
+            }
 
-    var activity = await _activities.AddActivityAsync(
-        session.Id,
-                request.Order,
-    ApiMapper.MapActivityType(request.Type),
-              request.Title,
-    request.Prompt,
-    request.Config,
-        cancellationToken);
+            var activity = await _activities.AddActivityAsync(
+                session.Id,
+                        request.Order,
+            ApiMapper.MapActivityType(request.Type),
+                      request.Title,
+            request.Prompt,
+            request.Config,
+                cancellationToken);
 
-          await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
-      return Ok(Wrap(new ActivityResponse(activity.Id)));
+            await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+            return Ok(Wrap(new ActivityResponse(activity.Id)));
         }
         catch (ArgumentException ex)
         {
-   return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
-     }
- catch (InvalidOperationException ex)
-        {
-     return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
         }
-  }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+        }
+    }
 
     [HttpGet("{code}/activities")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<AgendaActivityResponse>>>> GetAgenda(
@@ -234,8 +238,8 @@ return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
     {
         var session = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (session is null)
- {
- return NotFound(Error<IReadOnlyList<AgendaActivityResponse>>("not_found", "Session not found."));
+        {
+            return NotFound(Error<IReadOnlyList<AgendaActivityResponse>>("not_found", "Session not found."));
         }
 
         var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
@@ -243,7 +247,7 @@ return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
     .OrderBy(activity => activity.Order)
          .Select(ApiMapper.ToAgenda)
        .ToList();
-   return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(response));
+        return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(response));
     }
 
     [HttpPut("{code}/activities/reorder")]
@@ -254,32 +258,32 @@ return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
     {
         try
         {
-       var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-    if (session is null)
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
             {
                 return NotFound(Error<IReadOnlyList<AgendaActivityResponse>>("not_found", "Session not found."));
-          }
+            }
 
-       var authError = RequireFacilitatorToken<IReadOnlyList<AgendaActivityResponse>>(session);
+            var authError = RequireFacilitatorToken<IReadOnlyList<AgendaActivityResponse>>(session);
             if (authError is not null)
-    {
-         return authError;
-          }
+            {
+                return authError;
+            }
 
-     var updated = await _activities.ReorderAsync(session.Id, request.ActivityIds, cancellationToken);
-          var response = updated
-   .OrderBy(activity => activity.Order)
-                .Select(ApiMapper.ToAgenda)
-         .ToList();
-  return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(response));
+            var updated = await _activities.ReorderAsync(session.Id, request.ActivityIds, cancellationToken);
+            var response = updated
+     .OrderBy(activity => activity.Order)
+                  .Select(ApiMapper.ToAgenda)
+           .ToList();
+            return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(response));
         }
         catch (ArgumentException ex)
         {
             return BadRequest(Error<IReadOnlyList<AgendaActivityResponse>>("validation_error", ex.Message));
-      }
+        }
         catch (InvalidOperationException ex)
         {
-       return BadRequest(Error<IReadOnlyList<AgendaActivityResponse>>("validation_error", ex.Message));
+            return BadRequest(Error<IReadOnlyList<AgendaActivityResponse>>("validation_error", ex.Message));
         }
     }
 
@@ -289,43 +293,43 @@ return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
      Guid activityId,
       CancellationToken cancellationToken)
     {
-   try
+        try
         {
             var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-        if (session is null)
-   {
-     return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
+            if (session is null)
+            {
+                return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
             }
 
             var authError = RequireFacilitatorToken<ActivityResponse>(session);
             if (authError is not null)
-       {
- return authError;
+            {
+                return authError;
             }
 
-         await _activities.OpenAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
-          await _sessions.SetCurrentActivityAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
+            await _activities.OpenAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
+            await _sessions.SetCurrentActivityAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
             var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
- if (updated is not null)
-{
-       await PublishSessionStateChangedAsync(updated, cancellationToken);
-          }
-
-       var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
-         var activity = agenda.FirstOrDefault(item => item.Id == activityId);
-            if (activity is not null)
-      {
-  await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+            if (updated is not null)
+            {
+                await PublishSessionStateChangedAsync(updated, cancellationToken);
             }
-       return Ok(Wrap(new ActivityResponse(activityId)));
-   }
-      catch (ArgumentException ex)
-        {
-  return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+
+            var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+            var activity = agenda.FirstOrDefault(item => item.Id == activityId);
+            if (activity is not null)
+            {
+                await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+            }
+            return Ok(Wrap(new ActivityResponse(activityId)));
         }
-  catch (InvalidOperationException ex)
-   {
-   return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
         }
     }
 
@@ -336,58 +340,58 @@ return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
         CancellationToken cancellationToken)
     {
         try
-      {
+        {
             var session = await _sessions.GetByCodeAsync(code, cancellationToken);
             if (session is null)
-    {
-   return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
- }
-
-      var authError = RequireFacilitatorToken<ActivityResponse>(session);
-         if (authError is not null)
-      {
-     return authError;
- }
-
-         await _activities.CloseAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
-            await _sessions.SetCurrentActivityAsync(session.Id, null, DateTimeOffset.UtcNow, cancellationToken);
-          var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (updated is not null)
-   {
-await PublishSessionStateChangedAsync(updated, cancellationToken);
-  }
-
-     var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
-        var activity = agenda.FirstOrDefault(item => item.Id == activityId);
-       if (activity is not null)
             {
-  await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
-         }
-return Ok(Wrap(new ActivityResponse(activityId)));
+                return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
+            }
+
+            var authError = RequireFacilitatorToken<ActivityResponse>(session);
+            if (authError is not null)
+            {
+                return authError;
+            }
+
+            await _activities.CloseAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
+            await _sessions.SetCurrentActivityAsync(session.Id, null, DateTimeOffset.UtcNow, cancellationToken);
+            var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (updated is not null)
+            {
+                await PublishSessionStateChangedAsync(updated, cancellationToken);
+            }
+
+            var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+            var activity = agenda.FirstOrDefault(item => item.Id == activityId);
+            if (activity is not null)
+            {
+                await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+            }
+            return Ok(Wrap(new ActivityResponse(activityId)));
         }
         catch (ArgumentException ex)
-     {
-     return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+        {
+            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
         }
-   catch (InvalidOperationException ex)
+        catch (InvalidOperationException ex)
         {
             return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
         }
     }
 
-  [HttpPost("{code}/participants/join")]
+    [HttpPost("{code}/participants/join")]
     public async Task<ActionResult<ApiResponse<JoinParticipantResponse>>> JoinParticipant(
-     string code,
-        [FromBody] JoinParticipantRequest request,
-        CancellationToken cancellationToken)
-  {
+       string code,
+          [FromBody] JoinParticipantRequest request,
+          CancellationToken cancellationToken)
+    {
         try
         {
-         var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
             if (session is null)
-        {
-      return NotFound(Error<JoinParticipantResponse>("not_found", "Session not found."));
-        }
+            {
+                return NotFound(Error<JoinParticipantResponse>("not_found", "Session not found."));
+            }
 
             var participant = await _participants.JoinAsync(
                 session.Id,
@@ -397,9 +401,9 @@ return Ok(Wrap(new ActivityResponse(activityId)));
        DateTimeOffset.UtcNow,
     cancellationToken);
 
-      var participantCount = await _participants.GetBySessionAsync(session.Id, cancellationToken);
-            
-       // Broadcast participant joined event
+            var participantCount = await _participants.GetBySessionAsync(session.Id, cancellationToken);
+
+            // Broadcast participant joined event
             await _hub.Clients.Group(session.Code).ParticipantJoined(new ParticipantJoinedEvent(
         session.Code,
             participant.Id,
@@ -408,14 +412,14 @@ return Ok(Wrap(new ActivityResponse(activityId)));
                 DateTimeOffset.UtcNow));
 
             return Ok(Wrap(new JoinParticipantResponse(participant.Id)));
-      }
+        }
         catch (ArgumentException ex)
         {
-      return BadRequest(Error<JoinParticipantResponse>("validation_error", ex.Message));
+            return BadRequest(Error<JoinParticipantResponse>("validation_error", ex.Message));
         }
         catch (InvalidOperationException ex)
-      {
-        return BadRequest(Error<JoinParticipantResponse>("validation_error", ex.Message));
+        {
+            return BadRequest(Error<JoinParticipantResponse>("validation_error", ex.Message));
         }
     }
 
@@ -427,11 +431,11 @@ return Ok(Wrap(new ActivityResponse(activityId)));
         CancellationToken cancellationToken)
     {
         try
-   {
+        {
             var session = await _sessions.GetByCodeAsync(code, cancellationToken);
             if (session is null)
-          {
-   return NotFound(Error<SubmitResponseResponse>("not_found", "Session not found."));
+            {
+                return NotFound(Error<SubmitResponseResponse>("not_found", "Session not found."));
             }
 
             var response = await _responses.SubmitAsync(
@@ -443,32 +447,32 @@ return Ok(Wrap(new ActivityResponse(activityId)));
         cancellationToken);
 
             // Broadcast response received event
-         await _hub.Clients.Group(session.Code).ResponseReceived(new ResponseReceivedEvent(
-    session.Code,
-                activityId,
-           response.Id,
-     request.ParticipantId,
-        response.CreatedAt,
-   DateTimeOffset.UtcNow));
+            await _hub.Clients.Group(session.Code).ResponseReceived(new ResponseReceivedEvent(
+       session.Code,
+                   activityId,
+              response.Id,
+        request.ParticipantId,
+           response.CreatedAt,
+      DateTimeOffset.UtcNow));
 
- // Broadcast dashboard updated event
-    await _hub.Clients.Group(session.Code).DashboardUpdated(new DashboardUpdatedEvent(
-           session.Code,
-      activityId,
-    "response_submitted",
-     new { ResponseId = response.Id, ActivityId = activityId },
-    DateTimeOffset.UtcNow));
+            // Broadcast dashboard updated event
+            await _hub.Clients.Group(session.Code).DashboardUpdated(new DashboardUpdatedEvent(
+                   session.Code,
+              activityId,
+            "response_submitted",
+             new { ResponseId = response.Id, ActivityId = activityId },
+            DateTimeOffset.UtcNow));
 
-    return Ok(Wrap(new SubmitResponseResponse(response.Id)));
+            return Ok(Wrap(new SubmitResponseResponse(response.Id)));
         }
         catch (ArgumentException ex)
         {
-         return BadRequest(Error<SubmitResponseResponse>("validation_error", ex.Message));
-      }
+            return BadRequest(Error<SubmitResponseResponse>("validation_error", ex.Message));
+        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(Error<SubmitResponseResponse>("validation_error", ex.Message));
-     }
+        }
     }
 
     [HttpGet("{code}/participants/{participantId:guid}/responses")]
@@ -477,28 +481,28 @@ return Ok(Wrap(new ActivityResponse(activityId)));
         Guid participantId,
         CancellationToken cancellationToken)
     {
-      var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (session is null)
         {
-     return NotFound(Error<ParticipantResponsesResponse>("not_found", "Session not found."));
+            return NotFound(Error<ParticipantResponsesResponse>("not_found", "Session not found."));
         }
 
-var participants = await _participants.GetBySessionAsync(session.Id, cancellationToken);
+        var participants = await _participants.GetBySessionAsync(session.Id, cancellationToken);
         if (participants.All(participant => participant.Id != participantId))
         {
- return NotFound(Error<ParticipantResponsesResponse>("not_found", "Participant not found."));
+            return NotFound(Error<ParticipantResponsesResponse>("not_found", "Participant not found."));
         }
 
         var responses = await _responses.GetByParticipantAsync(session.Id, participantId, cancellationToken);
-      var items = responses
-       .Select(response => new ParticipantResponseItem(
-      response.Id,
-            response.ActivityId,
-         response.Payload,
-             response.CreatedAt))
-   .ToList();
+        var items = responses
+         .Select(response => new ParticipantResponseItem(
+        response.Id,
+              response.ActivityId,
+           response.Payload,
+               response.CreatedAt))
+     .ToList();
 
- return Ok(Wrap(new ParticipantResponsesResponse(participantId, items)));
+        return Ok(Wrap(new ParticipantResponsesResponse(participantId, items)));
     }
 
     [HttpGet("{code}/participants/{participantId:guid}/dashboard")]
@@ -507,21 +511,21 @@ var participants = await _participants.GetBySessionAsync(session.Id, cancellatio
   Guid participantId,
         CancellationToken cancellationToken)
     {
-var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (session is null)
         {
-        return NotFound(Error<ParticipantDashboardResponse>("not_found", "Session not found."));
- }
+            return NotFound(Error<ParticipantDashboardResponse>("not_found", "Session not found."));
+        }
 
-    var participants = await _participants.GetBySessionAsync(session.Id, cancellationToken);
+        var participants = await _participants.GetBySessionAsync(session.Id, cancellationToken);
         if (participants.All(participant => participant.Id != participantId))
         {
-    return NotFound(Error<ParticipantDashboardResponse>("not_found", "Participant not found."));
-      }
+            return NotFound(Error<ParticipantDashboardResponse>("not_found", "Participant not found."));
+        }
 
-    var responses = await _responses.GetByParticipantAsync(session.Id, participantId, cancellationToken);
-     var totalResponses = responses.Count;
-  var distinctActivities = responses.Select(response => response.ActivityId).Distinct().Count();
+        var responses = await _responses.GetByParticipantAsync(session.Id, participantId, cancellationToken);
+        var totalResponses = responses.Count;
+        var distinctActivities = responses.Select(response => response.ActivityId).Distinct().Count();
         var lastResponseAt = responses.Count == 0
       ? (DateTimeOffset?)null
     : responses.Max(response => response.CreatedAt);
@@ -541,13 +545,13 @@ var session = await _sessions.GetByCodeAsync(code, cancellationToken);
         [FromQuery] Dictionary<string, string?>? filters,
         CancellationToken cancellationToken)
     {
-      try
+        try
         {
-     var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-     if (session is null)
-         {
-    return NotFound(Error<DashboardResponse>("not_found", "Session not found."));
-     }
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<DashboardResponse>("not_found", "Session not found."));
+            }
 
             var dashboard = await _dashboards.GetDashboardAsync(
        session.Id,
@@ -557,13 +561,13 @@ filters ?? new Dictionary<string, string?>(),
 
             return Ok(Wrap(dashboard));
         }
-      catch (ArgumentException ex)
+        catch (ArgumentException ex)
         {
             return BadRequest(Error<DashboardResponse>("validation_error", ex.Message));
         }
         catch (InvalidOperationException ex)
         {
-return BadRequest(Error<DashboardResponse>("validation_error", ex.Message));
+            return BadRequest(Error<DashboardResponse>("validation_error", ex.Message));
         }
     }
 
@@ -573,13 +577,13 @@ return BadRequest(Error<DashboardResponse>("validation_error", ex.Message));
     }
 
     private static ApiResponse<T> Error<T>(string code, string message)
- {
+    {
         return new ApiResponse<T>(default, new[] { new ApiError(code, message) });
     }
 
     private const string FacilitatorTokenHeader = "X-Facilitator-Token";
 
-  private ActionResult<ApiResponse<T>>? RequireFacilitatorToken<T>(TechWayFit.Pulse.Domain.Entities.Session session)
+    private ActionResult<ApiResponse<T>>? RequireFacilitatorToken<T>(TechWayFit.Pulse.Domain.Entities.Session session)
     {
         if (!_facilitatorTokens.TryGet(session.Id, out var auth))
         {
@@ -589,11 +593,11 @@ return BadRequest(Error<DashboardResponse>("validation_error", ex.Message));
         if (Request.Headers.TryGetValue(FacilitatorTokenHeader, out var token)
      && string.Equals(token.ToString(), auth.Token, StringComparison.Ordinal))
         {
-   return null;
+            return null;
         }
 
-   return Unauthorized(Error<T>("facilitator_token_required", "Facilitator token is required."));
- }
+        return Unauthorized(Error<T>("facilitator_token_required", "Facilitator token is required."));
+    }
 
     /// <summary>
     /// Broadcast session state change event to all session participants
@@ -603,7 +607,7 @@ return BadRequest(Error<DashboardResponse>("validation_error", ex.Message));
     CancellationToken cancellationToken)
     {
         var participants = await _participants.GetBySessionAsync(session.Id, cancellationToken);
-        
+
         var sessionStateEvent = new SessionStateChangedEvent(
     session.Code,
  ApiMapper.MapSessionStatus(session.Status),
@@ -614,7 +618,7 @@ return BadRequest(Error<DashboardResponse>("validation_error", ex.Message));
         await _hub.Clients.Group(session.Code).SessionStateChanged(sessionStateEvent);
     }
 
-  /// <summary>
+    /// <summary>
     /// Broadcast activity state change event to all session participants
     /// </summary>
     private async Task PublishActivityStateChangedAsync(
@@ -632,6 +636,73 @@ return BadRequest(Error<DashboardResponse>("validation_error", ex.Message));
             activity.ClosedAt,
   DateTimeOffset.UtcNow);
 
-      await _hub.Clients.Group(sessionCode).ActivityStateChanged(activityStateEvent);
+        await _hub.Clients.Group(sessionCode).ActivityStateChanged(activityStateEvent);
+    }
+
+    [HttpPost("debug/test-schema")]
+    public async Task<ActionResult<ApiResponse<object>>> TestJoinFormSchema(
+        [FromBody] CreateSessionRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Just test the mapping without creating a session
+            var settings = ApiMapper.ToDomain(request.Settings);
+            var joinFormSchema = ApiMapper.ToDomain(request.JoinFormSchema);
+
+            // Return the mapped data to see what happened
+            var result = new
+            {
+                originalRequest = request,
+                mappedSettings = settings,
+                mappedSchema = new
+                {
+                    MaxFields = joinFormSchema.MaxFields,
+                    Fields = joinFormSchema.Fields.Select(f => new
+                    {
+                        f.Id,
+                        f.Label,
+                        Type = f.Type.ToString(),
+                        f.Required,
+                        Options = f.Options.ToList(),
+                        f.UseInFilters
+                    }).ToList()
+                }
+            };
+
+            return Ok(Wrap(result));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(Error<object>("mapping_error", $"Error mapping schema: {ex.Message}"));
+        }
+    }
+
+    private void ValidateJoinFormSchema(JoinFormSchemaDto schema)
+    {
+        if (schema?.Fields == null) return;
+
+      foreach (var field in schema.Fields)
+ {
+     // Only validate options for dropdown and multiselect fields
+         if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Dropdown ||
+           field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.MultiSelect)
+     {
+   // Check if options is provided and not empty
+    if (string.IsNullOrWhiteSpace(field.Options))
+      {
+       throw new ArgumentException($"Field '{field.Label}' of type '{field.Type}' must have options defined (comma-separated values).");
+         }
+
+   // Validate that the parsed options list has valid entries
+var parsedOptions = field.OptionsList;
+     if (!parsedOptions.Any())
+     {
+     throw new ArgumentException($"Field '{field.Label}' of type '{field.Type}' has invalid options format. Expected comma-separated values, got: '{field.Options}'");
+      }
+}
+  // For other field types (Text, Number, Boolean), options is optional
+   // No validation needed
+ }
     }
 }
