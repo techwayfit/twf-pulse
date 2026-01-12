@@ -82,6 +82,7 @@ builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IParticipantService, ParticipantService>();
 builder.Services.AddScoped<IResponseService, ResponseService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<ISessionCodeGenerator, SessionCodeGenerator>();
 
 // SignalR for real-time features
 builder.Services.AddSignalR(options =>

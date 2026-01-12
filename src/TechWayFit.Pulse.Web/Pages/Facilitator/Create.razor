@@ -107,7 +107,6 @@
             // Build request
             var request = new CreateSessionRequest
             {
-                Code = sessionCode,
                 Title = sessionContext.SessionTitle.Trim(),
                 Goal = string.IsNullOrWhiteSpace(sessionContext.SessionGoal) ? null : sessionContext.SessionGoal.Trim(),
                 Context = BuildContextString(),

@@ -1,0 +1,42 @@
+<!-- QR Code Test Page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>QR Code Test</title>
+</head>
+<body>
+    <h1>QR Code Generation Test</h1>
+    
+    <h2>Test 1: Check if scripts loaded</h2>
+    <div id="test1"></div>
+    
+    <h2>Test 2: Generate QR Code</h2>
+    <canvas id="testQR" width="200" height="200" style="border: 1px solid black;"></canvas>
+    
+    <h2>Test 3: Console Output</h2>
+    <div id="test3"></div>
+
+    <!-- Load Scripts -->
+    <script src="/js/qrcodegen.js"></script>
+    <script src="/js/qrcode.js"></script>
+    
+    <script>
+        // Test 1: Check if functions exist
+        const test1 = document.getElementById('test1');
+        test1.innerHTML = `
+   <p>qrcode function: ${typeof qrcode}</p>
+     <p>generateQRCode function: ${typeof generateQRCode}</p>
+        `;
+        
+// Test 2: Try to generate QR code
+        try {
+        generateQRCode('testQR', 'https://example.com/test');
+          document.getElementById('test3').innerHTML = '<p style="color: green;">? QR Code generated successfully!</p>';
+        } catch (error) {
+            document.getElementById('test3').innerHTML = `<p style="color: red;">? Error: ${error.message}</p>`;
+        console.error('QR generation error:', error);
+        }
+    </script>
+</body>
+</html>

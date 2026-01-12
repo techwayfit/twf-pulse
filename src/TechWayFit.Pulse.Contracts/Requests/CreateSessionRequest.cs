@@ -4,8 +4,6 @@ namespace TechWayFit.Pulse.Contracts.Requests;
 
 public sealed class CreateSessionRequest
 {
-    public string Code { get; set; } = string.Empty;
-
     public string Title { get; set; } = string.Empty;
 
     public string? Goal { get; set; }

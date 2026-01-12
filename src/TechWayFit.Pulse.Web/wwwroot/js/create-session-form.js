@@ -323,31 +323,42 @@ if (nameLabel) {
      */
     updateFormFieldsInput() {
    const fields = [];
-     const formFields = this.dropZone.querySelectorAll('.form-field');
+ const formFields = this.dropZone.querySelectorAll('.form-field');
         
    formFields.forEach((field, index) => {
-            const label = field.querySelector('.field-label').value;
+  const label = field.querySelector('.field-label').value;
         const required = field.querySelector('.field-required').checked;
-      const type = field.dataset.type;
-            const optionsElement = field.querySelector('.field-options');
+      let type = field.dataset.type;
+   const optionsElement = field.querySelector('.field-options');
         const options = optionsElement ? optionsElement.value : '';
-      
+    
+        // Map internal field types to API enum values
+        const typeMapping = {
+            'text': 'text',
+ 'checkbox': 'boolean',  // Map checkbox to boolean
+     'dropdown': 'dropdown',
+  'textarea': 'text',      // Map textarea to text
+            'radio': 'dropdown'      // Map radio to dropdown with options
+        };
+        
+        type = typeMapping[type] || type;
+  
         if (label.trim()) {
-           fields.push({
+        fields.push({
         id: `field_${index + 1}`,
         label: label.trim(),
             type: type,
-          required: required,
+      required: required,
         options: options.trim()
     });
  }
-        });
+    });
         
-        const hiddenInput = document.getElementById('joinFormFields');
-      if (hiddenInput) {
+    const hiddenInput = document.getElementById('joinFormFields');
+  if (hiddenInput) {
       hiddenInput.value = JSON.stringify(fields);
         }
-        
+
         console.log('Updated form fields:', fields);
     }
 
@@ -399,15 +410,27 @@ if (nameLabel) {
            });
             
     if (response.ok) {
-               const result = await response.json();
-       console.log('Session created successfully:', result);
-   window.location.href = `/facilitator/live?code=${result.code}`;
+        const result = await response.json();
+      console.log('Session created successfully:', result);
+        
+        // Extract code from the wrapped API response
+ const sessionCode = result.data?.code || result.code;
+  
+        if (!sessionCode) {
+            console.error('No session code in response:', result);
+            this.showError('Session created but no code returned');
+            return;
+        }
+        
+        window.location.href = `/facilitator/live?code=${sessionCode}`;
     } else {
-         const error = await response.json();
-    console.error('API error:', error);
-     this.showError(error.message || 'Failed to create session');
-          }
-         
+        const error = await response.json();
+        console.error('API error:', error);
+        
+  // Extract error message from wrapped response
+        const errorMessage = error.errors?.[0]?.message || error.message || 'Failed to create session';
+        this.showError(errorMessage);
+    }
             } catch (error) {
     console.error('Submission error:', error);
            this.showError(`Failed to create session: ${error.message}`);
@@ -424,40 +447,31 @@ if (nameLabel) {
      * Build session data object from form
      */
     buildSessionData(formData) {
-        // Build context string from all AI context fields
+      // Build context string from all AI context fields
         const contextParts = [];
-      if (formData.get('currentProcess')) contextParts.push(`Current Process: ${formData.get('currentProcess')}`);
+        if (formData.get('currentProcess')) contextParts.push(`Current Process: ${formData.get('currentProcess')}`);
         if (formData.get('painPoints')) contextParts.push(`Pain Points: ${formData.get('painPoints')}`);
-if (formData.get('technicalContext')) contextParts.push(`Technical Context: ${formData.get('technicalContext')}`);
-      if (formData.get('teamBackground')) contextParts.push(`Team Background: ${formData.get('teamBackground')}`);
+  if (formData.get('technicalContext')) contextParts.push(`Technical Context: ${formData.get('technicalContext')}`);
+   if (formData.get('teamBackground')) contextParts.push(`Team Background: ${formData.get('teamBackground')}`);
         if (formData.get('aiGoals')) contextParts.push(`AI Goals: ${formData.get('aiGoals')}`);
 
-        return {
-            code: this.generateSessionCode(),
+  return {
+      // Let server generate the code - it will be unique and in XXX-XXX-XXX format
        title: formData.get('sessionTitle'),
-       goal: formData.get('sessionGoal') || null,
-       context: contextParts.length > 0 ? contextParts.join(' | ') : null,
- settings: {
-                maxContributionsPerParticipantPerSession: parseInt(formData.get('maxContributions') || '10'),
-                strictCurrentActivityOnly: true,
-                allowAnonymous: false,
-      ttlMinutes: 360
-            },
-            joinFormSchema: {
-       maxFields: 5,
-             fields: JSON.parse(formData.get('joinFormFields') || '[]')
-    }
-        };
-    }
-
-    /**
-     * Generate a random session code
-     */
-    generateSessionCode() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      return Array.from({ length: 6 }, () => 
-     chars[Math.floor(Math.random() * chars.length)]
-   ).join('');
+    goal: formData.get('sessionGoal') || null,
+    context: contextParts.length > 0 ? contextParts.join(' | ') : null,
+            settings: {
+     maxContributionsPerParticipantPerSession: parseInt(formData.get('maxContributions') || '10'),
+  maxContributionsPerParticipantPerActivity: null,
+   strictCurrentActivityOnly: true,
+        allowAnonymous: false,
+            ttlMinutes: 360
+      },
+         joinFormSchema: {
+      maxFields: 5,
+       fields: JSON.parse(formData.get('joinFormFields') || '[]')
+          }
+    };
     }
 
     /**
@@ -465,10 +479,10 @@ if (formData.get('technicalContext')) contextParts.push(`Technical Context: ${fo
   */
     showError(message) {
         const errorDiv = document.getElementById('errorMessage');
-        if (errorDiv) {
+     if (errorDiv) {
       errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    errorDiv.style.display = 'block';
+  errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     }
 
@@ -478,10 +492,11 @@ if (formData.get('technicalContext')) contextParts.push(`Technical Context: ${fo
     hideError() {
       const errorDiv = document.getElementById('errorMessage');
         if (errorDiv) {
-    errorDiv.style.display = 'none';
-        }
+  errorDiv.style.display = 'none';
+     }
  }
 }
+
 
 // Initialize the form when this script loads
 new CreateSessionForm();

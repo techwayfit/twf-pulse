@@ -19,6 +19,7 @@ public sealed class SessionsController : ControllerBase
     private readonly IResponseService _responses;
     private readonly IDashboardService _dashboards;
     private readonly IFacilitatorTokenStore _facilitatorTokens;
+    private readonly ISessionCodeGenerator _codeGenerator;
     private readonly IHubContext<WorkshopHub, IWorkshopClient> _hub;
 
     public SessionsController(
@@ -28,6 +29,7 @@ public sealed class SessionsController : ControllerBase
         IResponseService responses,
       IDashboardService dashboards,
         IFacilitatorTokenStore facilitatorTokens,
+        ISessionCodeGenerator codeGenerator,
         IHubContext<WorkshopHub, IWorkshopClient> hub)
     {
         _sessions = sessions;
@@ -36,30 +38,34 @@ public sealed class SessionsController : ControllerBase
         _responses = responses;
         _dashboards = dashboards;
         _facilitatorTokens = facilitatorTokens;
+        _codeGenerator = codeGenerator;
         _hub = hub;
     }
 
     [HttpPost]
     public async Task<ActionResult<ApiResponse<CreateSessionResponse>>> CreateSession(
-        [FromBody] CreateSessionRequest request,
-        CancellationToken cancellationToken)
+   [FromBody] CreateSessionRequest request,
+ CancellationToken cancellationToken)
     {
         try
         {
             // Validate the request to catch options field issues
             ValidateJoinFormSchema(request.JoinFormSchema);
 
+            // Always generate a unique code server-side
+            var code = await _codeGenerator.GenerateUniqueCodeAsync(cancellationToken);
+
             var settings = ApiMapper.ToDomain(request.Settings);
             var joinFormSchema = ApiMapper.ToDomain(request.JoinFormSchema);
             var session = await _sessions.CreateSessionAsync(
-                                    request.Code,
-                                    request.Title,
-                                    request.Goal,
-                                    request.Context,
-                                    settings,
-                                    joinFormSchema,
-                                    DateTimeOffset.UtcNow,
-                                    cancellationToken);
+           code,
+            request.Title,
+                     request.Goal,
+                request.Context,
+          settings,
+            joinFormSchema,
+         DateTimeOffset.UtcNow,
+                     cancellationToken);
 
             return Ok(Wrap(new CreateSessionResponse(session.Id, session.Code)));
         }
@@ -628,81 +634,43 @@ filters ?? new Dictionary<string, string?>(),
     {
         var activityStateEvent = new ActivityStateChangedEvent(
             sessionCode,
-   activity.Id,
-        activity.Order,
-    activity.Title,
+            activity.Id,
+            activity.Order,
+            activity.Title,
             ApiMapper.MapActivityStatus(activity.Status),
-       activity.OpenedAt,
+            activity.OpenedAt,
             activity.ClosedAt,
-  DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow);
 
         await _hub.Clients.Group(sessionCode).ActivityStateChanged(activityStateEvent);
     }
 
-    [HttpPost("debug/test-schema")]
-    public async Task<ActionResult<ApiResponse<object>>> TestJoinFormSchema(
-        [FromBody] CreateSessionRequest request,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            // Just test the mapping without creating a session
-            var settings = ApiMapper.ToDomain(request.Settings);
-            var joinFormSchema = ApiMapper.ToDomain(request.JoinFormSchema);
-
-            // Return the mapped data to see what happened
-            var result = new
-            {
-                originalRequest = request,
-                mappedSettings = settings,
-                mappedSchema = new
-                {
-                    MaxFields = joinFormSchema.MaxFields,
-                    Fields = joinFormSchema.Fields.Select(f => new
-                    {
-                        f.Id,
-                        f.Label,
-                        Type = f.Type.ToString(),
-                        f.Required,
-                        Options = f.Options.ToList(),
-                        f.UseInFilters
-                    }).ToList()
-                }
-            };
-
-            return Ok(Wrap(result));
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(Error<object>("mapping_error", $"Error mapping schema: {ex.Message}"));
-        }
-    }
 
     private void ValidateJoinFormSchema(JoinFormSchemaDto schema)
     {
         if (schema?.Fields == null) return;
 
-      foreach (var field in schema.Fields)
- {
-     // Only validate options for dropdown and multiselect fields
-         if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Dropdown ||
-           field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.MultiSelect)
-     {
-   // Check if options is provided and not empty
-    if (string.IsNullOrWhiteSpace(field.Options))
-      {
-       throw new ArgumentException($"Field '{field.Label}' of type '{field.Type}' must have options defined (comma-separated values).");
-         }
+        foreach (var field in schema.Fields)
+        {
+            // Only validate options for dropdown and multiselect fields
+            if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Dropdown ||
+              field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.MultiSelect)
+            {
+                // Check if options is provided and not empty
+                if (string.IsNullOrWhiteSpace(field.Options))
+                {
+                    throw new ArgumentException($"Field '{field.Label}' of type '{field.Type}' must have options defined (comma-separated values).");
+                }
 
-   // Validate that the parsed options list has valid entries
-var parsedOptions = field.OptionsList;
-     if (!parsedOptions.Any())
-     {
-     throw new ArgumentException($"Field '{field.Label}' of type '{field.Type}' has invalid options format. Expected comma-separated values, got: '{field.Options}'");
-      }
-}
-  // For other field types (Text, Number, Boolean), options is optional
-   // No validation needed
- }
+                // Validate that the parsed options list has valid entries
+                var parsedOptions = field.OptionsList;
+                if (!parsedOptions.Any())
+                {
+                    throw new ArgumentException($"Field '{field.Label}' of type '{field.Type}' has invalid options format. Expected comma-separated values, got: '{field.Options}'");
+                }
+            }
+            // For other field types (Text, Number, Boolean), options is optional
+            // No validation needed
+        }
     }
 }
