@@ -1,0 +1,246 @@
+﻿@{
+    ViewData["Title"] = "TechWayFit Pulse — Create Session";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/create-session.css" asp-append-version="true" />
+}
+
+<main class="py-5">
+    <!-- Constrained Container -->
+    <div class="container" style="max-width: 1200px;">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h2 class="mb-2">Create session</h2>
+                <p class="text-muted mb-0">Context → Join Form (max 5 fields) → Launch</p>
+            </div>
+            <span class="badge bg-white text-dark border px-3 py-2">TTL: <strong>6h</strong></span>
+        </div>
+
+        <!-- Form -->
+        <form id="sessionCreateForm" action="/api/sessions" method="post">
+            <!-- Session Context Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-semibold mb-4">Session context</h5>
+
+                    <!-- Custom Tabs -->
+                    <div class="custom-tabs mb-4">
+                        <button type="button" class="custom-tab active" data-tab-target="basic">
+                            Basic Info
+                        </button>
+                        <button type="button" class="custom-tab" data-tab-target="ai">
+                            AI Context
+                        </button>
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content-container">
+                        <!-- Basic Info Tab -->
+                        <div id="tab-basic" class="tab-pane active">
+                            <div class="mb-4">
+                                <label class="form-label fw-medium">Session title</label>
+                                <input class="form-control" name="sessionTitle" id="sessionTitle" required
+                                       placeholder="e.g., Sprint Retrospective - Team Alpha" />
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-medium">Goal</label>
+                                <textarea class="form-control" name="sessionGoal" rows="3"
+                                          placeholder="What do you want to achieve in this session?"></textarea>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-medium">Workshop type</label>
+                                    <select class="form-select" name="workshopType">
+                                        <option value="Ops / Process Improvement">Ops / Process Improvement</option>
+                                        <option value="Retro">Retro</option>
+                                        <option value="Discovery">Discovery</option>
+                                        <option value="Incident Review">Incident Review</option>
+                                        <option value="Feedback">Feedback</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-medium">Primary activity</label>
+                                    <select class="form-select" name="primaryActivity">
+                                        <option value="Poll">Poll</option>
+                                        <option value="Word Cloud">Word Cloud</option>
+                                        <option value="Quadrant (2x2 Matrix)">Quadrant (2x2 Matrix)</option>
+                                        <option value="5-Whys">5-Whys</option>
+                                        <option value="Custom/Mixed">Custom/Mixed</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-medium">Max contributions per participant</label>
+                                    <select class="form-select" name="maxContributions">
+                                        <option value="3">3</option>
+                                        <option value="5">5</option>
+                                        <option value="8">8</option>
+                                        <option value="10" selected>10</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Context Tab -->
+                        <div id="tab-ai" class="tab-pane" style="display: none;">
+                            <div class="alert alert-info border-0 mb-4">
+                                <small>
+                                    💡 Provide detailed context to help AI generate better questions and insights.
+                                    This information is not shown to participants.
+                                </small>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-medium">Current process/workflow</label>
+                                <textarea class="form-control" name="currentProcess" rows="3"
+                                          placeholder="Describe the current process, workflow, or system being discussed..."></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-medium">Known pain points & challenges</label>
+                                <textarea class="form-control" name="painPoints" rows="3"
+                                          placeholder="List known issues, bottlenecks, or areas of concern..."></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-medium">Solution architecture / technical context</label>
+                                <textarea class="form-control" name="technicalContext" rows="3"
+                                          placeholder="Relevant technical details, architecture, tools, or systems involved..."></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-medium">Team background & dynamics</label>
+                                <textarea class="form-control" name="teamBackground" rows="2"
+                                          placeholder="Team size, roles, experience levels, communication patterns..."></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-medium">Specific AI assistance goals</label>
+                                <textarea class="form-control" name="aiGoals" rows="2"
+                                          placeholder="What should AI focus on? (e.g., 'Generate probing questions', 'Identify patterns', 'Suggest prioritization')"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Join Form Builder Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <!-- Header -->
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="text-primary" viewBox="0 0 16 16">
+                                <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Join form builder</h6>
+                            <p class="text-muted small mb-0">
+                                Add up to 5 fields for participant registration. This data helps filter and group responses.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Form Builder Content -->
+                    <div class="form-builder-container" id="joinFormBuilder">
+                        <!-- Left: Field Types -->
+                        <div>
+                            <div class="d-flex align-items-center mb-3">
+                                <h6 class="fw-semibold mb-0 text-uppercase small text-muted">Available Field Types</h6>
+                            </div>
+                            <div class="d-flex flex-column gap-2" id="fieldTypes">
+                                <div class="field-type" draggable="true" data-type="text">
+                                    <span class="icon">📝</span>
+                                    <span class="label">Text Box</span>
+                                </div>
+                                <div class="field-type" draggable="true" data-type="checkbox">
+                                    <span class="icon">☑️</span>
+                                    <span class="label">Checkbox</span>
+                                </div>
+                                <div class="field-type" draggable="true" data-type="dropdown">
+                                    <span class="icon">📋</span>
+                                    <span class="label">Dropdown</span>
+                                </div>
+                                <div class="field-type" draggable="true" data-type="textarea">
+                                    <span class="icon">📄</span>
+                                    <span class="label">Text Area</span>
+                                </div>
+                                <div class="field-type" draggable="true" data-type="radio">
+                                    <span class="icon">◉</span>
+                                    <span class="label">Radio Button</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Drop Zone -->
+                        <div class="form-drop-zone" id="formDropZone">
+                            <div class="drop-zone-placeholder">
+                                <div class="text-center text-muted">
+                                    <div class="fs-1 mb-2">⬇️</div>
+                                    <div class="fw-medium">Drag field types here to build your join form</div>
+                                    <small class="d-block mt-2">Maximum 5 fields allowed</small>
+                                </div>
+                            </div>
+                            <!-- Dynamic fields will be added here by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Hidden input to store form fields as JSON -->
+                    <input type="hidden" id="joinFormFields" name="joinFormFields" value="[]" />
+                </div>
+            </div>
+
+            <!-- Error Alert -->
+            <div id="errorMessage" class="alert alert-danger alert-dismissible fade" role="alert" style="display: none;">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                        <a class="btn btn-outline-secondary px-4" href="/">Cancel</a>
+                        <button type="submit" class="btn btn-primary pulse-btn-primary px-4 py-2" id="submitBtn">
+                            <span class="btn-text">Save & Go Live</span>
+                            <span class="btn-loading d-none">
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Creating session...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</main>
+
+@section Scripts {
+    <!-- External JavaScript -->
+    <script src="~/js/create-session-form.js" asp-append-version="true"></script>
+
+    <!-- Tab switching functionality -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+                 // Initialize tab switching
+            const tabButtons = document.querySelectorAll('.custom-tab');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+             tabButtons.forEach(button => {
+              button.addEventListener('click', function () {
+                     const targetTab = this.getAttribute('data-tab-target');
+                     // Remove active class from all buttons and panes
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabPanes.forEach(pane => {
+                    pane.classList.remove('active');
+                    pane.style.display = 'none';
+                });
+
+                // Add active class to clicked button and corresponding pane
+                this.classList.add('active');
+                const targetPane = document.getElementById(`tab-${targetTab}`);
+                if (targetPane) {
+                    targetPane.classList.add('active');
+                    targetPane.style.display = 'block';
+                }
+           });
+        });
+    });
+    </script>
+}

@@ -1,0 +1,232 @@
+@page "/participant/interactive-join/{sessionCode}"
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
+@inject Microsoft.AspNetCore.SignalR.Client.HubConnection? HubConnection
+@using TechWayFit.Pulse.Contracts.Requests
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Contracts.Models
+@using Microsoft.AspNetCore.SignalR.Client
+
+<PageTitle>Join @sessionSummary?.Title - TechWayFit Pulse</PageTitle>
+
+<main class="wrap">
+    @if (currentState == JoinState.FillForm)
+    {
+   <div class="session-wizard">
+      <div class="wizard-header">
+       <h1>@sessionSummary?.Title</h1>
+      @if (!string.IsNullOrEmpty(sessionSummary?.Goal))
+      {
+     <p>@sessionSummary.Goal</p>
+  }
+</div>
+
+         <div class="wizard-content">
+      <div class="session-info">
+        <div class="session-meta">
+        <span class="session-code">Code: @sessionSummary?.Code</span>
+     <span class="session-status status-@sessionSummary?.Status.ToString().ToLower()">@sessionSummary?.Status</span>
+           </div>
+         </div>
+
+     <div class="form">
+          <h3>Your Information</h3>
+          
+       <div>
+  <label for="displayName">Display Name</label>
+              <input id="displayName" 
+         class="field" 
+           @bind="displayName" 
+  placeholder="How should others see you? (optional)" 
+ maxlength="120" />
+ </div>
+
+  <div class="toggle">
+       <input type="checkbox" id="isAnonymous" @bind="isAnonymous" />
+              <label for="isAnonymous">Join anonymously</label>
+        <small class="subtle">Your responses will be included in results but not linked to you</small>
+       </div>
+
+     @if (joinFormFields?.Any() == true)
+       {
+ <div class="sp"></div>
+       <h4>Additional Information</h4>
+       
+  @foreach (var field in joinFormFields)
+      {
+ <div>
+ <label for="field-@field.Id" class="@(field.Required ? "required" : "")">
+       @field.Label
+      </label>
+          
+   @if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Text)
+      {
+    <input id="field-@field.Id" 
+         class="field" 
+       @bind="fieldValues[field.Id]" 
+     placeholder="@GetFieldPlaceholder(field)" />
+ }
+     // ... other field types
+         </div>
+      }
+                    }
+
+          @if (!string.IsNullOrEmpty(errorMessage))
+   {
+   <div class="alert alert-error">
+       @errorMessage
+      </div>
+         }
+       </div>
+       </div>
+
+     <div class="wizard-actions">
+   <button class="btn ghost large" @onclick="BackToStaticJoin">
+ Change Code
+     </button>
+        <button class="btn primary large" 
+         @onclick="JoinSession" 
+     disabled="@(isLoading || !CanJoin)">
+     @if (isLoading)
+     {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          <span>Joining...</span>
+   }
+       else
+        {
+   <span class="btn-icon">?</span>
+    <span>Join Workshop</span>
+  }
+ </button>
+  </div>
+    </div>
+  }
+    else if (currentState == JoinState.Joined)
+    {
+        <!-- Real-time participant experience with SignalR -->
+   <ParticipantDashboard SessionCode="@SessionCode" 
+    ParticipantId="@participantId" 
+       SessionSummary="@sessionSummary" />
+    }
+</main>
+
+@code {
+    [Parameter] public string SessionCode { get; set; } = string.Empty;
+
+    private enum JoinState
+    {
+  FillForm,
+    Joined
+    }
+
+    private JoinState currentState = JoinState.FillForm;
+ private bool isLoading = false;
+    private string errorMessage = "";
+    private SessionSummaryResponse? sessionSummary;
+    private List<JoinFormFieldDto>? joinFormFields;
+    private string displayName = "";
+ private bool isAnonymous = false;
+ private Dictionary<string, string?> fieldValues = new();
+    private Guid? participantId;
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+  {
+  try
+     {
+ // Load session data
+ sessionSummary = await ApiService.GetSessionAsync(SessionCode);
+       joinFormFields = sessionSummary?.JoinFormFields ?? new List<JoinFormFieldDto>();
+        
+  // Initialize field values
+   fieldValues.Clear();
+ if (joinFormFields?.Any() == true)
+    {
+           foreach (var field in joinFormFields)
+      {
+    fieldValues[field.Id] = "";
+  }
+    }
+
+   // Setup SignalR connection for real-time updates
+      await SetupSignalRConnection();
+ }
+catch (Exception ex)
+        {
+       errorMessage = $"Could not load session: {ex.Message}";
+        }
+    }
+
+    private async Task SetupSignalRConnection()
+    {
+    hubConnection = new HubConnectionBuilder()
+      .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+     .Build();
+
+ // Setup event handlers for real-time updates
+   hubConnection.On<object>("SessionStateChanged", async (data) =>
+   {
+    await InvokeAsync(StateHasChanged);
+      });
+
+        await hubConnection.StartAsync();
+  await hubConnection.InvokeAsync("Subscribe", SessionCode);
+    }
+
+private async Task JoinSession()
+    {
+      if (!CanJoin || sessionSummary == null) return;
+
+        isLoading = true;
+  errorMessage = "";
+
+        try
+ {
+   var request = new JoinParticipantRequest
+  {
+  DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim(),
+     IsAnonymous = isAnonymous,
+     Dimensions = fieldValues.Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
+    .ToDictionary(kv => kv.Key, kv => kv.Value)
+      };
+
+            var response = await ApiService.JoinAsParticipantAsync(sessionSummary.Code, request);
+       participantId = response.ParticipantId;
+  currentState = JoinState.Joined;
+ }
+ catch (Exception ex)
+ {
+            errorMessage = $"Could not join session: {ex.Message}";
+     }
+      finally
+        {
+ isLoading = false;
+ }
+    }
+
+    private void BackToStaticJoin()
+    {
+ Navigation.NavigateTo($"/static/home/join?code={SessionCode}");
+    }
+
+    private string GetFieldPlaceholder(JoinFormFieldDto field) => 
+        field.Type switch
+ {
+  TechWayFit.Pulse.Contracts.Enums.FieldType.Text => "Enter text...",
+            TechWayFit.Pulse.Contracts.Enums.FieldType.Number => "Enter number...",
+  _ => ""
+ };
+
+    private bool CanJoin =>
+joinFormFields?.Where(f => f.Required)
+   .All(f => fieldValues.ContainsKey(f.Id) && !string.IsNullOrWhiteSpace(fieldValues[f.Id])) ?? true;
+
+    public async ValueTask DisposeAsync()
+ {
+   if (hubConnection is not null)
+     {
+        await hubConnection.DisposeAsync();
+        }
+ }
+}

@@ -1,0 +1,126 @@
+﻿@{
+    ViewData["Title"] = "TechWayFit Pulse — Home";
+}
+
+<main>
+    <!-- Hero Section -->
+    <section class="py-5">
+        <div class="container" style="max-width: 1200px;">
+            <div class="row min-vh-75 align-items-center">
+                <div class="col-lg-7">
+                    <!-- Badge -->
+                    <div class="mb-4">
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                            <span class="pulse-dot me-2"></span>
+                            Live-ready
+                        </span>
+                    </div>
+
+                    <!-- Title -->
+                    <h1 class="display-4 fw-bold mb-4" style="line-height: 1.2;">
+                        Run engaging workshops—without losing the data.
+                    </h1>
+
+                    <!-- Description -->
+                    <p class="lead text-muted mb-4">
+                        Polls, word clouds, 4-quadrant matrices, and guided 5-Whys—designed to help people open up,
+                        and help you leave with measurable outcomes.
+                    </p>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex flex-wrap gap-3 mb-4">
+                        <a class="btn btn-primary btn-lg pulse-btn-primary px-4 py-3" href="/facilitator/create">
+                            Create a session
+                        </a>
+                        <a class="btn btn-outline-primary btn-lg px-4 py-3" href="/participant/join">
+                            Join as participant
+                        </a>
+                        <a class="btn btn-outline-secondary btn-lg px-4 py-3" href="/facilitator/dashboards">
+                            See dashboards
+                        </a>
+                    </div>
+
+                    <!-- Feature Pills -->
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-white text-dark border px-3 py-2">✅ Anonymous optional</span>
+                        <span class="badge bg-white text-dark border px-3 py-2">⚡ Real-time dashboards</span>
+                        <span class="badge bg-white text-dark border px-3 py-2">🎯 "5 Whys" output</span>
+                        <span class="badge bg-white text-dark border px-3 py-2">🧠 AI-assisted</span>
+                    </div>
+                </div>
+
+                <!-- Hero Visual -->
+                <div class="col-lg-5 d-none d-lg-flex justify-content-center align-items-center">
+                    <div class="pulse-visual-container">
+                        <div class="pulse-animation"></div>
+                        <div class="pulse-meter">
+                            <svg viewBox="0 0 200 80" width="200" height="80">
+                                <polyline points="0,40 30,40 40,20 50,60 60,30 70,50 80,40 200,40"
+                                    fill="none"
+                                    stroke="white"
+                                    stroke-width="3"
+                                    class="pulse-line" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Templates Section -->
+    <section class="py-5">
+        <div class="container" style="max-width: 1200px;">
+            <div class="bg-white bg-opacity-75 rounded-4 p-5">
+                <!-- Section Header -->
+                <div class="text-center mb-5">
+                    <h2 class="display-6 fw-bold mb-3">Starter templates</h2>
+                    <p class="text-muted">Pick one and customize in 60 seconds.</p>
+                </div>
+
+                <!-- Templates Grid -->
+                <div class="row g-4">
+                    <div class="col-sm-6 col-lg-3">
+                        <a href="/facilitator/create" class="card h-100 text-decoration-none border-0 shadow-sm hover-lift">
+                            <div class="card-body text-center p-4">
+                                <div class="fs-1 mb-3">🔄</div>
+                                <h5 class="card-title fw-semibold mb-2">Retro Sprint Review</h5>
+                                <p class="card-text text-muted small mb-0">Quick pulse + themes + actions</p>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col-sm-6 col-lg-3">
+                        <a href="/facilitator/create" class="card h-100 text-decoration-none border-0 shadow-sm hover-lift">
+                            <div class="card-body text-center p-4">
+                                <div class="fs-1 mb-3">⚙️</div>
+                                <h5 class="card-title fw-semibold mb-2">Ops Pain Points</h5>
+                                <p class="card-text text-muted small mb-0">Impact/Effort + 5-Whys</p>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col-sm-6 col-lg-3">
+                        <a href="/facilitator/create" class="card h-100 text-decoration-none border-0 shadow-sm hover-lift">
+                            <div class="card-body text-center p-4">
+                                <div class="fs-1 mb-3">💡</div>
+                                <h5 class="card-title fw-semibold mb-2">Product Discovery</h5>
+                                <p class="card-text text-muted small mb-0">Idea cloud + prioritization</p>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col-sm-6 col-lg-3">
+                        <a href="/facilitator/create" class="card h-100 text-decoration-none border-0 shadow-sm hover-lift">
+                            <div class="card-body text-center p-4">
+                                <div class="fs-1 mb-3">🚨</div>
+                                <h5 class="card-title fw-semibold mb-2">Incident Review</h5>
+                                <p class="card-text text-muted small mb-0">Root cause ladder + fixes</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>

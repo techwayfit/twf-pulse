@@ -1,0 +1,209 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+/* TechWayFit Brand Colors */
+:root {
+  --pulse-bg: #FFFEEF;
+  --pulse-blue: #2D7FF9;
+  --pulse-mint: #2BC48A;
+  --pulse-teal: #1ebea5;
+}
+
+/* Body Background */
+.pulse-body {
+  font-family: "IBM Plex Sans", "Space Grotesk", system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 20% -10%, rgba(45,127,249,.18), transparent 60%),
+    radial-gradient(900px 500px at 85% 10%, rgba(43,196,138,.18), transparent 60%),
+    radial-gradient(900px 700px at 40% 120%, rgba(121,182,255,.16), transparent 60%),
+    var(--pulse-bg);
+  min-height: 100vh;
+}
+
+/* Logo */
+.pulse-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background:
+    radial-gradient(14px 14px at 25% 30%, rgba(255,255,255,.9), rgba(255,255,255,0) 60%),
+    linear-gradient(135deg, var(--pulse-blue), var(--pulse-mint));
+  box-shadow: 0 4px 12px rgba(15,36,56,.16);
+  flex-shrink: 0;
+}
+
+/* Primary Button Gradient */
+.pulse-btn-primary {
+  background: linear-gradient(135deg, var(--pulse-blue), var(--pulse-mint)) !important;
+  border: none !important;
+  color: white !important;
+}
+
+.pulse-btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(45,127,249,.3) !important;
+}
+
+/* Pulse Dot Animation */
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pulse-mint);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+/* Pulse Animation Visual */
+.pulse-visual-container {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulse-animation {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pulse-blue), var(--pulse-teal));
+  box-shadow: 0 14px 40px rgba(45,127,249,.25);
+  animation: pulse-scale 3s ease-in-out infinite;
+}
+
+@keyframes pulse-scale {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+/* Pulse Meter Overlay */
+.pulse-meter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulse-line {
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: pulse-draw 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+}
+
+@keyframes pulse-draw {
+  0% {
+    stroke-dashoffset: 500;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+/* Heartbeat Animation (kept for reference) */
+.pulse-heart-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulse-heart {
+  font-size: 120px;
+  animation: heartbeat 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 10px 30px rgba(255, 77, 109, 0.3));
+  transform-origin: center;
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  10% {
+    transform: scale(1.1);
+  }
+  20% {
+  transform: scale(1);
+  }
+  30% {
+    transform: scale(1.15);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+/* Heartbeat pulse rings */
+.pulse-heart-container::before,
+.pulse-heart-container::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 77, 109, 0.4);
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+.pulse-heart-container::after {
+  animation-delay: 1s;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Enhanced Card Hover Effect */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent !important;
+}
+
+.hover-lift:hover {
+  transform: scale(1.05) translateY(-4px);
+  border-color: var(--pulse-blue) !important;
+  box-shadow: 0 16px 32px rgba(45,127,249,.2) !important;
+}
+
+/* Optional: Add a subtle glow effect */
+.hover-lift:hover .card-body {
+  background: linear-gradient(135deg, rgba(45,127,249,.03), rgba(43,196,138,.03));
+}

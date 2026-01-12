@@ -11,18 +11,29 @@ using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 using TechWayFit.Pulse.Web.Data;
 using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Services;
+using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
 builder.Services.AddControllersWithViews()
-    .AddJsonOptions(options =>
+ .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
     });
+
+// Add Blazor Server for interactive pages only
+builder.Services.AddServerSideBlazor(options =>
+{
+ // Optimize Blazor Server for workshop scenarios
+    options.DetailedErrors = builder.Environment.IsDevelopment();
+    options.DisconnectedCircuitMaxRetained = 10; // Limit retained circuits
+    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(3); // Reduce retention time
+    options.JSInteropDefaultCallTimeout = TimeSpan.FromSeconds(30);
+    options.MaxBufferedUnacknowledgedRenderBatches = 10; // Reduce memory usage
+});
 
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<IFacilitatorTokenStore, FacilitatorTokenStore>();
@@ -33,13 +44,13 @@ builder.Services.AddHttpClient<IPulseApiService, PulseApiService>((serviceProvid
     var httpContext = serviceProvider.GetService<IHttpContextAccessor>()?.HttpContext;
     if (httpContext != null)
     {
-        var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
- client.BaseAddress = new Uri(baseUrl);
+  var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+        client.BaseAddress = new Uri(baseUrl);
     }
-  else
+    else
     {
-  // Fallback for command line scenarios
-        client.BaseAddress = new Uri("https://localhost:7100");
+        // Fallback for command line scenarios
+   client.BaseAddress = new Uri("https://localhost:7100");
     }
     client.Timeout = TimeSpan.FromSeconds(30);
 });
@@ -57,7 +68,7 @@ builder.Services.AddDbContext<PulseDbContext>(options =>
         return;
     }
 
-    options.UseSqlite(connectionString);
+  options.UseSqlite(connectionString);
 });
 
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
@@ -72,16 +83,24 @@ builder.Services.AddScoped<IParticipantService, ParticipantService>();
 builder.Services.AddScoped<IResponseService, ResponseService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
-builder.Services.AddSignalR();
+// SignalR for real-time features
+builder.Services.AddSignalR(options =>
+{
+    // Optimize SignalR for workshop scenarios
+    options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+    options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+    options.MaximumReceiveMessageSize = 32 * 1024; // 32KB limit
+});
 
 var app = builder.Build();
 
 // Ensure database is created for SQLite
 if (!useInMemory)
 {
-    using (var scope = app.Services.CreateScope())
+ using (var scope = app.Services.CreateScope())
     {
-        var dbContext = scope.ServiceProvider.GetRequiredService<PulseDbContext>();
+var dbContext = scope.ServiceProvider.GetRequiredService<PulseDbContext>();
         dbContext.Database.EnsureCreated();
     }
 }
@@ -90,7 +109,7 @@ if (!useInMemory)
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    app.UseHsts();
+ app.UseHsts();
 }
 else
 {
@@ -100,29 +119,34 @@ else
 // Important: UseHttpsRedirection should come before UseStaticFiles
 app.UseHttpsRedirection();
 
-// Configure static files with proper options
+// Configure static files with proper caching
 app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
     {
-        // Add cache headers for better performance
-    if (ctx.File.Name.EndsWith(".css") || ctx.File.Name.EndsWith(".js"))
+   // Add cache headers for better performance
+        if (ctx.File.Name.EndsWith(".css") || ctx.File.Name.EndsWith(".js"))
    {
-     ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=600");
+            ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=600");
         }
     }
 });
 
 app.UseRouting();
 
-// Map API controllers first (higher priority)
+// Map API controllers first (highest priority)
 app.MapControllers();
 
-// Map SignalR hub
+// Map SignalR hub for real-time features
 app.MapHub<TechWayFit.Pulse.Web.Hubs.WorkshopHub>("/hubs/workshop");
 
-// Map Blazor Hub
+// Map Blazor Hub (only for interactive pages)
 app.MapBlazorHub();
+
+// Map MVC routes for static pages (no WebSocket)
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 // Map specific MVC routes
 app.MapControllerRoute(
@@ -130,7 +154,10 @@ app.MapControllerRoute(
     pattern: "ui/{action=Index}/{id?}",
     defaults: new { controller = "Ui" });
 
-// Map fallback to Blazor only for root and non-API routes
+// Map Razor Pages (for Blazor interactive components only)
+app.MapRazorPages();
+
+// Blazor pages fallback (only for routes that need interactivity)
 app.MapFallbackToPage("/_Host");
 
 app.Run();
