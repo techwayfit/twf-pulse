@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
+    <title>@(ViewData["Title"] ?? "TechWayFit Pulse")</title>
     <base href="~/" />
 
     <!-- Bootstrap CSS -->
@@ -15,6 +15,7 @@
 
     <!-- Page-specific styles -->
     @await RenderSectionAsync("Styles", required: false)
+    
 </head>
 <body class="pulse-body">
     <!-- Navigation Header - Full Width Background -->
