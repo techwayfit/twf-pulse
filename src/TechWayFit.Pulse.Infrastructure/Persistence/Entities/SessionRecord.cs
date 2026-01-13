@@ -25,4 +25,6 @@ public sealed class SessionRecord
     public DateTimeOffset UpdatedAt { get; set; }
 
     public DateTimeOffset ExpiresAt { get; set; }
+
+    public Guid? FacilitatorUserId { get; set; }
 }

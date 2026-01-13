@@ -17,7 +17,8 @@ public sealed class Session
         Guid? currentActivityId,
         DateTimeOffset createdAt,
         DateTimeOffset updatedAt,
-        DateTimeOffset expiresAt)
+        DateTimeOffset expiresAt,
+        Guid? facilitatorUserId = null)
     {
         Id = id;
         Code = code.Trim();
@@ -31,6 +32,7 @@ public sealed class Session
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         ExpiresAt = expiresAt;
+        FacilitatorUserId = facilitatorUserId;
     }
 
     public Guid Id { get; }
@@ -56,6 +58,12 @@ public sealed class Session
     public DateTimeOffset UpdatedAt { get; private set; }
 
     public DateTimeOffset ExpiresAt { get; private set; }
+
+    /// <summary>
+    /// ID of the facilitator user who created this session.
+    /// Null for legacy sessions created before authentication was implemented.
+    /// </summary>
+    public Guid? FacilitatorUserId { get; private set; }
 
     public void SetStatus(SessionStatus status, DateTimeOffset updatedAt)
     {

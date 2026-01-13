@@ -416,3 +416,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Local configuration files (contains secrets/passwords)
+**/appsettings.local.json
+**/appsettings.*.local.json
+
+# Data Protection keys directory
+**/keys/

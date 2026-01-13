@@ -1,7 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
@@ -14,6 +16,61 @@ using TechWayFit.Pulse.Web.Services;
 using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add authentication services
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+ {
+        options.LoginPath = "/account/login";
+        options.LogoutPath = "/account/logout";
+        options.AccessDeniedPath = "/account/login";
+        options.ExpireTimeSpan = TimeSpan.FromDays(30);
+        options.SlidingExpiration = true;
+        options.Cookie.Name = "TechWayFit.Pulse.Auth";
+  options.Cookie.HttpOnly = true;
+  options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+ options.Cookie.SameSite = SameSiteMode.Lax;
+    });
+
+builder.Services.AddAuthorization();
+
+// Add Data Protection for distributed cookie sharing (web farm support)
+var dataProtectionConfig = builder.Configuration.GetSection("DataProtection");
+var storageType = dataProtectionConfig["StorageType"] ?? "FileSystem";
+
+var dataProtection = builder.Services.AddDataProtection()
+    .SetApplicationName("TechWayFit.Pulse");
+
+switch (storageType.ToLowerInvariant())
+{
+    case "filesystem":
+    default:
+        // File-based storage (development or single-server deployments)
+        var keysPath = dataProtectionConfig["KeysPath"] 
+      ?? Path.Combine(builder.Environment.ContentRootPath, "keys");
+        
+        var keysDirectory = new DirectoryInfo(keysPath);
+        if (!keysDirectory.Exists)
+        {
+            keysDirectory.Create();
+        }
+        
+     dataProtection.PersistKeysToFileSystem(keysDirectory);
+      break;
+        
+  // Add other storage types as needed:
+    // case "redis":
+    // var redisConnection = builder.Configuration.GetConnectionString("Redis");
+    //     var redis = ConnectionMultiplexer.Connect(redisConnection);
+    //     dataProtection.PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys");
+    //     break;
+    //
+    // case "azureblob":
+    //     var blobUri = dataProtectionConfig["BlobStorageUri"];
+    //     var blobClient = new BlobClient(new Uri(blobUri), new DefaultAzureCredential());
+    //  dataProtection.PersistKeysToAzureBlobStorage(blobClient);
+    //     break;
+}
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -52,7 +109,7 @@ builder.Services.AddHttpClient<IPulseApiService, PulseApiService>((serviceProvid
         // Fallback for command line scenarios
    client.BaseAddress = new Uri("https://localhost:7100");
     }
-    client.Timeout = TimeSpan.FromSeconds(30);
+ client.Timeout = TimeSpan.FromSeconds(30);
 });
 
 // Add HttpContextAccessor for dynamic URL resolution
@@ -76,6 +133,8 @@ builder.Services.AddScoped<IActivityRepository, ActivityRepository>();
 builder.Services.AddScoped<IParticipantRepository, ParticipantRepository>();
 builder.Services.AddScoped<IResponseRepository, ResponseRepository>();
 builder.Services.AddScoped<IContributionCounterRepository, ContributionCounterRepository>();
+builder.Services.AddScoped<IFacilitatorUserRepository, FacilitatorUserRepository>();
+builder.Services.AddScoped<ILoginOtpRepository, LoginOtpRepository>();
 
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
@@ -83,6 +142,19 @@ builder.Services.AddScoped<IParticipantService, ParticipantService>();
 builder.Services.AddScoped<IResponseService, ResponseService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ISessionCodeGenerator, SessionCodeGenerator>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+
+// Register email service based on configuration
+var emailProvider = builder.Configuration.GetValue<string>("Email:Provider");
+if (emailProvider?.Equals("Smtp", StringComparison.OrdinalIgnoreCase) == true)
+{
+    builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+}
+else
+{
+    // Default to console for development/testing
+    builder.Services.AddScoped<IEmailService, ConsoleEmailService>();
+}
 
 // SignalR for real-time features
 builder.Services.AddSignalR(options =>
@@ -128,12 +200,16 @@ app.UseStaticFiles(new StaticFileOptions
    // Add cache headers for better performance
         if (ctx.File.Name.EndsWith(".css") || ctx.File.Name.EndsWith(".js"))
    {
-            ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=600");
+  ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=600");
         }
     }
 });
 
 app.UseRouting();
+
+// Add authentication & authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Map API controllers first (highest priority)
 app.MapControllers();
@@ -148,12 +224,6 @@ app.MapBlazorHub();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-
-// Map specific MVC routes
-app.MapControllerRoute(
-    name: "ui",
-    pattern: "ui/{action=Index}/{id?}",
-    defaults: new { controller = "Ui" });
 
 // Map Razor Pages (for Blazor interactive components only)
 app.MapRazorPages();

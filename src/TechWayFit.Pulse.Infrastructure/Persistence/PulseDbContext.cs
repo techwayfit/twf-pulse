@@ -19,6 +19,10 @@ public sealed class PulseDbContext : DbContext
 
     public DbSet<ContributionCounterRecord> ContributionCounters => Set<ContributionCounterRecord>();
 
+    public DbSet<FacilitatorUserRecord> FacilitatorUsers => Set<FacilitatorUserRecord>();
+
+    public DbSet<LoginOtpRecord> LoginOtps => Set<LoginOtpRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<SessionRecord>(entity =>
@@ -33,6 +37,7 @@ public sealed class PulseDbContext : DbContext
             entity.HasIndex(x => x.Code).IsUnique();
             entity.HasIndex(x => x.Status);
             entity.HasIndex(x => x.ExpiresAt);
+            entity.HasIndex(x => x.FacilitatorUserId);
         });
 
         modelBuilder.Entity<ActivityRecord>(entity =>
@@ -70,6 +75,27 @@ public sealed class PulseDbContext : DbContext
             entity.ToTable("ContributionCounters");
             entity.HasKey(x => x.ParticipantId);
             entity.HasIndex(x => x.SessionId);
+        });
+
+        modelBuilder.Entity<FacilitatorUserRecord>(entity =>
+        {
+            entity.ToTable("FacilitatorUsers");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Email).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.DisplayName).HasMaxLength(120).IsRequired();
+            entity.HasIndex(x => x.Email).IsUnique();
+            entity.HasIndex(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<LoginOtpRecord>(entity =>
+        {
+            entity.ToTable("LoginOtps");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Email).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.OtpCode).HasMaxLength(10).IsRequired();
+            entity.HasIndex(x => new { x.Email, x.OtpCode });
+            entity.HasIndex(x => new { x.Email, x.CreatedAt });
+            entity.HasIndex(x => x.ExpiresAt);
         });
     }
 }

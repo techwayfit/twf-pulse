@@ -1,0 +1,64 @@
+@model TechWayFit.Pulse.Domain.Entities.FacilitatorUser
+
+@{
+    ViewData["Title"] = "Profile - TechWayFit Pulse";
+}
+
+<main class="py-5">
+    <div class="container" style="max-width: 800px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">Facilitator Profile</h2>
+      <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-outline-secondary">
+        Back to Dashboard
+   </a>
+ </div>
+
+     <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+     <h5 class="card-title fw-semibold mb-4">Account Information</h5>
+ 
+     <div class="row g-3">
+    <div class="col-md-6">
+ <label class="form-label fw-medium text-muted small">User ID</label>
+       <div class="fw-semibold">@Model.Id</div>
+ </div>
+
+     <div class="col-md-6">
+    <label class="form-label fw-medium text-muted small">Email</label>
+   <div class="fw-semibold">@Model.Email</div>
+    </div>
+
+      <div class="col-md-6">
+     <label class="form-label fw-medium text-muted small">Display Name</label>
+   <div class="fw-semibold">@Model.DisplayName</div>
+    </div>
+
+        <div class="col-md-6">
+        <label class="form-label fw-medium text-muted small">Member Since</label>
+        <div class="fw-semibold">@Model.CreatedAt.ToString("MMMM dd, yyyy")</div>
+       </div>
+
+<div class="col-md-6">
+       <label class="form-label fw-medium text-muted small">Last Login</label>
+      <div class="fw-semibold">
+   @(Model.LastLoginAt.HasValue ? Model.LastLoginAt.Value.ToString("MMMM dd, yyyy HH:mm") : "Never")
+     </div>
+     </div>
+        </div>
+      </div>
+        </div>
+
+  <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+<h5 class="card-title fw-semibold mb-4">Actions</h5>
+         
+        <form method="post" asp-action="Logout" asp-controller="Account" class="d-inline">
+   @Html.AntiForgeryToken()
+       <button type="submit" class="btn btn-outline-danger">
+        Sign Out
+  </button>
+ </form>
+     </div>
+        </div>
+    </div>
+</main>

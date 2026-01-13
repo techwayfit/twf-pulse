@@ -15,12 +15,5 @@ public class HomeController : Controller
  return View();
     }
 
-    /// <summary>
-    /// Create session page - static form with JavaScript enhancement
-    /// </summary>
-    [HttpGet("facilitator/create")]
-    public IActionResult CreateSession()
-    {
-   return View();
-    }
+    
 }

@@ -43,4 +43,17 @@ public sealed class SessionRepository : ISessionRepository
         _dbContext.Sessions.Update(session.ToRecord());
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Session>> GetByFacilitatorUserIdAsync(
+        Guid facilitatorUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var records = await _dbContext.Sessions
+            .AsNoTracking()
+            .Where(x => x.FacilitatorUserId == facilitatorUserId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return records.Select(r => r.ToDomain()).ToList();
+    }
 }
