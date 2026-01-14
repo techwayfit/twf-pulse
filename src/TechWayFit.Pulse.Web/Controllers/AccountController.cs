@@ -35,7 +35,7 @@ public class AccountController : Controller
 
     [HttpPost("login")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(string email, string? displayName, string? returnUrl = null)
+    public async Task<IActionResult> Login(string email, string? displayName, string? returnUrl = null, CancellationToken cancellationToken = default)
     {
 if (string.IsNullOrWhiteSpace(email))
         {
@@ -43,7 +43,7 @@ if (string.IsNullOrWhiteSpace(email))
             return View();
         }
 
-        var result = await _authService.SendLoginOtpAsync(email, displayName);
+        var result = await _authService.SendLoginOtpAsync(email, displayName, cancellationToken);
 
         if (!result.Success)
      {
@@ -77,7 +77,7 @@ if (string.IsNullOrWhiteSpace(email))
 
     [HttpPost("verify-otp")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> VerifyOtp(string email, string otpCode, string? returnUrl = null)
+    public async Task<IActionResult> VerifyOtp(string email, string otpCode, string? returnUrl = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(otpCode))
       {
@@ -85,7 +85,7 @@ if (string.IsNullOrWhiteSpace(email))
             return RedirectToAction(nameof(VerifyOtp));
         }
 
-        var result = await _authService.VerifyOtpAsync(email, otpCode);
+        var result = await _authService.VerifyOtpAsync(email, otpCode, cancellationToken);
 
         if (!result.Success || result.User == null)
         {
@@ -124,7 +124,7 @@ if (string.IsNullOrWhiteSpace(email))
     [HttpPost("logout")]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken = default)
     {
   await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 _logger.LogInformation("User logged out");
@@ -133,7 +133,7 @@ _logger.LogInformation("User logged out");
 
     [HttpGet("profile")]
     [Authorize]
-    public async Task<IActionResult> Profile()
+    public async Task<IActionResult> Profile(CancellationToken cancellationToken = default)
     {
         var userId = GetCurrentUserId();
       if (userId == null)
@@ -141,7 +141,7 @@ _logger.LogInformation("User logged out");
             return RedirectToAction(nameof(Login));
         }
 
-     var user = await _authService.GetFacilitatorAsync(userId.Value);
+     var user = await _authService.GetFacilitatorAsync(userId.Value, cancellationToken);
         if (user == null)
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

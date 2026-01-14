@@ -51,9 +51,11 @@ public sealed class SessionRepository : ISessionRepository
         var records = await _dbContext.Sessions
             .AsNoTracking()
             .Where(x => x.FacilitatorUserId == facilitatorUserId)
-            .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return records.Select(r => r.ToDomain()).ToList();
+        // Sort on the client side to avoid SQLite DateTimeOffset ordering issues
+        var sortedRecords = records.OrderByDescending(x => x.CreatedAt).ToList();
+
+        return sortedRecords.Select(r => r.ToDomain()).ToList();
     }
 }

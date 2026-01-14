@@ -1,0 +1,18 @@
+{{GREETING}},
+
+You requested to sign in to TechWayFit Pulse. Use the code below to complete your login:
+
+{{OTP_CODE}}
+
+This code will expire in 10 minutes.
+
+⚠️ Security Notice: If you didn't request this code, please ignore this email. Never share this code with anyone.
+
+Need help? Contact our support team.
+
+Best regards,
+TechWayFit Pulse Team
+
+---
+This is an automated email. Please do not reply to this message.
+© {{CURRENT_YEAR}} TechWayFit. All rights reserved.

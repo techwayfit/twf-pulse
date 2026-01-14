@@ -25,7 +25,7 @@ ISessionRepository sessionRepository,
     }
 
     [HttpGet("dashboard")]
-    public async Task<IActionResult> Dashboard()
+    public async Task<IActionResult> Dashboard(CancellationToken cancellationToken = default)
     {
         var userId = GetCurrentUserId();
         if (userId == null)
@@ -33,7 +33,7 @@ ISessionRepository sessionRepository,
             return RedirectToAction("Login", "Account");
         }
 
-        var sessions = await _sessionRepository.GetByFacilitatorUserIdAsync(userId.Value);
+        var sessions = await _sessionRepository.GetByFacilitatorUserIdAsync(userId.Value, cancellationToken);
 
         ViewData["UserEmail"] = User.FindFirst(ClaimTypes.Email)?.Value;
         ViewData["UserName"] = User.FindFirst(ClaimTypes.Name)?.Value;

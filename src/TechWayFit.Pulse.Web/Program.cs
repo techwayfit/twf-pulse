@@ -117,6 +117,10 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ISessionCodeGenerator, SessionCodeGenerator>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
+// Register file service and memory cache for template caching
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IFileService, FileService>();
+
 // Register email service based on configuration
 var emailProvider = builder.Configuration.GetValue<string>("Email:Provider");
 if (emailProvider?.Equals("Smtp", StringComparison.OrdinalIgnoreCase) == true)

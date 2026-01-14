@@ -7,58 +7,95 @@
 <main class="py-5">
     <div class="container" style="max-width: 800px;">
         <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="mb-0">Facilitator Profile</h2>
-      <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-outline-secondary">
-        Back to Dashboard
-   </a>
- </div>
-
-     <div class="card border-0 shadow-sm mb-4">
-      <div class="card-body p-4">
-     <h5 class="card-title fw-semibold mb-4">Account Information</h5>
- 
-     <div class="row g-3">
-    <div class="col-md-6">
- <label class="form-label fw-medium text-muted small">User ID</label>
-       <div class="fw-semibold">@Model.Id</div>
- </div>
-
-     <div class="col-md-6">
-    <label class="form-label fw-medium text-muted small">Email</label>
-   <div class="fw-semibold">@Model.Email</div>
-    </div>
-
-      <div class="col-md-6">
-     <label class="form-label fw-medium text-muted small">Display Name</label>
-   <div class="fw-semibold">@Model.DisplayName</div>
-    </div>
-
-        <div class="col-md-6">
-        <label class="form-label fw-medium text-muted small">Member Since</label>
-        <div class="fw-semibold">@Model.CreatedAt.ToString("MMMM dd, yyyy")</div>
-       </div>
-
-<div class="col-md-6">
-       <label class="form-label fw-medium text-muted small">Last Login</label>
-      <div class="fw-semibold">
-   @(Model.LastLoginAt.HasValue ? Model.LastLoginAt.Value.ToString("MMMM dd, yyyy HH:mm") : "Never")
-     </div>
-     </div>
-        </div>
-      </div>
+            <div>
+                <h2 class="mb-1">Facilitator Profile</h2>
+                <p class="text-muted mb-0 small">Manage your account settings</p>
+            </div>
+            <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-outline-secondary btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+                </svg>
+                Back to Dashboard
+            </a>
         </div>
 
-  <div class="card border-0 shadow-sm">
+        <!-- User Avatar Section -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center mb-3" 
+                     style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #2D7FF9, #2BC48A); color: white; font-size: 32px; font-weight: 600;">
+                    @{
+                        var displayName = Model.DisplayName;
+                        var initials = string.Join("", displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => w[0]));
+                    }
+                    @initials.ToUpper()
+                </div>
+                <h4 class="mb-1">@Model.DisplayName</h4>
+                <p class="text-muted mb-0">@Model.Email</p>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4">
-<h5 class="card-title fw-semibold mb-4">Actions</h5>
-         
-        <form method="post" asp-action="Logout" asp-controller="Account" class="d-inline">
-   @Html.AntiForgeryToken()
-       <button type="submit" class="btn btn-outline-danger">
-        Sign Out
-  </button>
- </form>
-     </div>
+                <h5 class="card-title fw-semibold mb-4">Account Information</h5>
+
+                <div class="row g-3">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-medium text-muted small">User ID</label>
+                        <div class="fw-semibold font-monospace small">@Model.Id</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-muted small">Member Since</label>
+                        <div class="fw-semibold">@Model.CreatedAt.ToString("MMMM dd, yyyy")</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium text-muted small">Last Login</label>
+                        <div class="fw-semibold">
+                            @(Model.LastLoginAt.HasValue ? Model.LastLoginAt.Value.ToString("MMMM dd, yyyy HH:mm") : "Never")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-semibold mb-3">Quick Actions</h5>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-outline-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                            <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5zM1.5 1a.5.5 0 0 0-.5.5V5h4V1zM5 6H1v4h4zm1 4h4V6H6zm-1 1H1v3.5a.5.5 0 0 0 .5.5H5zm1 0v4h4v-4zm5 0v4h3.5a.5.5 0 0 0 .5-.5V11zm0-1h4V6h-4zm0-5h4V1.5a.5.5 0 0 0-.5-.5H11zm-1 0V1H6v4z"/>
+                        </svg>
+                        View My Sessions
+                    </a>
+                    <a href="@Url.Action("Create", "Facilitator")" class="btn btn-primary pulse-btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                        </svg>
+                        Create New Session
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-semibold mb-3 text-danger">Sign Out</h5>
+                <p class="text-muted mb-3">You will be logged out from this device.</p>
+                <form method="post" asp-action="Logout" asp-controller="Account" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+                            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                        </svg>
+                        Sign Out
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </main>

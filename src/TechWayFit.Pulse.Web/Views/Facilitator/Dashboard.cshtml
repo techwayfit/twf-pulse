@@ -14,12 +14,9 @@
     <h2 class="mb-1">My Workshop Sessions</h2>
       <p class="text-muted mb-0">Welcome back, <strong>@userName</strong></p>
   </div>
-       <div class="d-flex gap-2">
-     <a href="@Url.Action("Profile", "Account")" class="btn btn-outline-secondary">
- ?? Profile
-     </a>
+       <div>
   <a href="@Url.Action("Create", "Facilitator")" class="btn btn-primary pulse-btn-primary">
-       ? Create New Session
+       ✨ Create New Session
    </a>
     </div>
         </div>
@@ -34,7 +31,7 @@
           <div class="text-muted small">Total Sessions</div>
         <div class="h4 mb-0 fw-bold">@Model.Count</div>
  </div>
-  <div class="text-primary fs-2">??</div>
+  <div class="text-primary fs-2">📊</div>
       </div>
       </div>
      </div>
@@ -48,7 +45,7 @@
         <div class="text-muted small">Live Sessions</div>
          <div class="h4 mb-0 fw-bold">@Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Live)</div>
    </div>
-  <div class="text-success fs-2">??</div>
+  <div class="text-success fs-2">📡</div>
       </div>
     </div>
     </div>
@@ -62,7 +59,7 @@
    <div class="text-muted small">Draft Sessions</div>
      <div class="h4 mb-0 fw-bold">@Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft)</div>
        </div>
-    <div class="text-warning fs-2">??</div>
+    <div class="text-warning fs-2">📝</div>
       </div>
       </div>
     </div>
@@ -76,7 +73,7 @@
        <div class="text-muted small">Completed</div>
 <div class="h4 mb-0 fw-bold">@Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended)</div>
      </div>
-      <div class="text-secondary fs-2">?</div>
+      <div class="text-secondary fs-2">✅</div>
       </div>
    </div>
        </div>

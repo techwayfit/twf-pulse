@@ -38,10 +38,12 @@ public sealed class FacilitatorUserRepository : IFacilitatorUserRepository
     {
         var records = await _context.FacilitatorUsers
  .AsNoTracking()
-        .OrderBy(u => u.CreatedAt)
  .ToListAsync(cancellationToken);
 
-        return records.Select(MapToDomain).ToList();
+        // Sort on the client side to avoid SQLite DateTimeOffset ordering issues
+        var sortedRecords = records.OrderBy(u => u.CreatedAt).ToList();
+
+        return sortedRecords.Select(MapToDomain).ToList();
     }
 
     public async Task AddAsync(FacilitatorUser user, CancellationToken cancellationToken = default)

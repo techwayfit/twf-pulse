@@ -57,8 +57,11 @@ public sealed class LoginOtpRepository : ILoginOtpRepository
   .Take(count)
          .ToListAsync(cancellationToken);
 
+        // Sort on the client side to avoid SQLite DateTimeOffset ordering issues
         return records
-            .OrderByDescending(o => o.CreatedAt).Select(MapToDomain).ToList();
+            .OrderByDescending(o => o.CreatedAt)
+            .Select(MapToDomain)
+            .ToList();
     }
 
     public async Task AddAsync(LoginOtp otp, CancellationToken cancellationToken = default)

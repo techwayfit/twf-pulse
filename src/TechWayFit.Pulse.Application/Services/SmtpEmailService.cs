@@ -10,190 +10,83 @@ namespace TechWayFit.Pulse.Application.Services;
 /// <summary>
 /// SMTP-based email service using MailKit for production use.
 /// Configured via appsettings.json SMTP section.
+/// Uses file-based templates with caching to reduce disk I/O.
 /// </summary>
 public sealed class SmtpEmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
+    private readonly IFileService _fileService;
     private readonly ILogger<SmtpEmailService> _logger;
+    private readonly string _templateBasePath;
 
     public SmtpEmailService(
-     IConfiguration configuration,
-     ILogger<SmtpEmailService> logger)
-{
-     _configuration = configuration;
-      _logger = logger;
+        IConfiguration configuration,
+        IFileService fileService,
+        ILogger<SmtpEmailService> logger)
+    {
+        _configuration = configuration;
+        _fileService = fileService;
+        _logger = logger;
+
+        // Get template base path from configuration or use default
+        _templateBasePath = _configuration["EmailTemplates:BasePath"] 
+            ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "EmailTemplates");
     }
 
     public async Task SendLoginOtpAsync(
         string toEmail,
         string otpCode,
-      string? displayName = null,
+        string? displayName = null,
         CancellationToken cancellationToken = default)
     {
         var greeting = string.IsNullOrWhiteSpace(displayName) ? "Hi" : $"Hi {displayName}";
         var subject = "Your TechWayFit Pulse Login Code";
 
-        var htmlBody = $@"
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-      body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }}
-   .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-   .header {{ background: linear-gradient(135deg, #2D7FF9, #2BC48A); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }}
-      .content {{ background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; }}
- .otp-code {{ background: #f5f5f5; border: 2px solid #2D7FF9; border-radius: 8px; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #2D7FF9; margin: 20px 0; }}
-        .footer {{ background: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 10px 10px; }}
-        .warning {{ background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 20px 0; }}
-        a {{ color: #2D7FF9; text-decoration: none; }}
-    </style>
-</head>
-<body>
-    <div class=""container"">
-        <div class=""header"">
-     <h1 style=""margin: 0; font-size: 24px;"">?? Your Login Code</h1>
-        </div>
-        <div class=""content"">
-       <p>{greeting},</p>
-     <p>You requested to sign in to TechWayFit Pulse. Use the code below to complete your login:</p>
-            
-            <div class=""otp-code"">{otpCode}</div>
-   
-            <p><strong>This code will expire in 10 minutes.</strong></p>
-         
-    <div class=""warning"">
-      <strong>?? Security Notice:</strong> If you didn't request this code, please ignore this email. Never share this code with anyone.
-      </div>
-     
-       <p>Need help? Contact our support team.</p>
-      
-   <p style=""margin-top: 30px;"">
-       Best regards,<br>
-    <strong>TechWayFit Pulse Team</strong>
-            </p>
-        </div>
-        <div class=""footer"">
-          <p>This is an automated email. Please do not reply to this message.</p>
-            <p>&copy; {DateTime.UtcNow.Year} TechWayFit. All rights reserved.</p>
-   </div>
-    </div>
-</body>
-</html>";
+        // Load templates from files
+        var htmlTemplate = await LoadTemplateAsync("LoginOtp.html", cancellationToken);
+        var textTemplate = await LoadTemplateAsync("LoginOtp.txt", cancellationToken);
 
-   var plainTextBody = $@"{greeting},
+        // Replace placeholders
+        var replacements = new Dictionary<string, string>
+        {
+            { "{{GREETING}}", greeting },
+            { "{{OTP_CODE}}", otpCode },
+            { "{{CURRENT_YEAR}}", DateTime.UtcNow.Year.ToString() }
+        };
 
-You requested to sign in to TechWayFit Pulse. Use the code below to complete your login:
-
-{otpCode}
-
-This code will expire in 10 minutes.
-
-?? Security Notice: If you didn't request this code, please ignore this email. Never share this code with anyone.
-
-Best regards,
-TechWayFit Pulse Team
-
----
-This is an automated email. Please do not reply to this message.
-© {DateTime.UtcNow.Year} TechWayFit. All rights reserved.";
+        var htmlBody = ReplaceTokens(htmlTemplate, replacements);
+        var plainTextBody = ReplaceTokens(textTemplate, replacements);
 
         await SendEmailAsync(toEmail, subject, htmlBody, plainTextBody, cancellationToken);
     }
 
     public async Task SendWelcomeEmailAsync(
         string toEmail,
-      string displayName,
-     CancellationToken cancellationToken = default)
+        string displayName,
+        CancellationToken cancellationToken = default)
     {
-        var subject = "Welcome to TechWayFit Pulse! ??";
+        var subject = "Welcome to TechWayFit Pulse! ðŸŽ‰";
 
-        var htmlBody = $@"
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #2D7FF9, #2BC48A); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }}
-        .content {{ background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; }}
-        .features {{ background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }}
-        .feature-item {{ padding: 10px 0; border-bottom: 1px solid #e0e0e0; }}
-        .feature-item:last-child {{ border-bottom: none; }}
-        .cta-button {{ display: inline-block; background: #2D7FF9; color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; margin: 20px 0; }}
-        .footer {{ background: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 10px 10px; }}
-    </style>
-</head>
-<body>
-    <div class=""container"">
-     <div class=""header"">
-      <h1 style=""margin: 0; font-size: 28px;"">Welcome to TechWayFit Pulse! ??</h1>
-        </div>
-        <div class=""content"">
-      <p>Hi {displayName},</p>
-   
-            <p>Welcome to <strong>TechWayFit Pulse</strong>! Your facilitator account has been created successfully.</p>
-         
-   <p>You can now create and manage interactive workshop sessions with real-time participant engagement.</p>
-         
-  <div class=""features"">
-      <h3 style=""margin-top: 0;"">What you can do:</h3>
- <div class=""feature-item"">
-  ? <strong>Create Sessions</strong> - Set up workshops in seconds with customizable join forms
-      </div>
-      <div class=""feature-item"">
-             ?? <strong>Real-time Activities</strong> - Run polls, word clouds, quadrant matrices, and 5-Whys
-         </div>
-                <div class=""feature-item"">
-     ?? <strong>Live Dashboards</strong> - View insights and filter by participant attributes
-      </div>
-    <div class=""feature-item"">
-        ?? <strong>Secure & Private</strong> - Passwordless authentication and encrypted sessions
- </div>
-   </div>
-          
-            <p style=""text-align: center;"">
-    <a href=""https://pulse.techway.fit/facilitator/dashboard"" class=""cta-button"">Go to Dashboard</a>
-  </p>
-     
-            <p>If you have any questions or need help getting started, don't hesitate to reach out to our support team.</p>
-       
-            <p style=""margin-top: 30px;"">
-        Happy facilitating! ??<br>
-  <strong>TechWayFit Pulse Team</strong>
-      </p>
-   </div>
-  <div class=""footer"">
-     <p>This is an automated email. Please do not reply to this message.</p>
-            <p>&copy; {DateTime.UtcNow.Year} TechWayFit. All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>";
+        // Load templates from files
+        var htmlTemplate = await LoadTemplateAsync("Welcome.html", cancellationToken);
+        var textTemplate = await LoadTemplateAsync("Welcome.txt", cancellationToken);
 
-        var plainTextBody = $@"Hi {displayName},
+        // Get dashboard URL from configuration or use default
+        var dashboardUrl = _configuration["App:DashboardUrl"] 
+            ?? "https://pulse.techway.fit/facilitator/dashboard";
 
-Welcome to TechWayFit Pulse! Your facilitator account has been created successfully.
+        // Replace placeholders
+        var replacements = new Dictionary<string, string>
+        {
+            { "{{DISPLAY_NAME}}", displayName },
+            { "{{DASHBOARD_URL}}", dashboardUrl },
+            { "{{CURRENT_YEAR}}", DateTime.UtcNow.Year.ToString() }
+        };
 
-You can now create and manage interactive workshop sessions with real-time participant engagement.
+        var htmlBody = ReplaceTokens(htmlTemplate, replacements);
+        var plainTextBody = ReplaceTokens(textTemplate, replacements);
 
-What you can do:
-? Create Sessions - Set up workshops in seconds with customizable join forms
-?? Real-time Activities - Run polls, word clouds, quadrant matrices, and 5-Whys
-?? Live Dashboards - View insights and filter by participant attributes
-?? Secure & Private - Passwordless authentication and encrypted sessions
-
-Get started: https://pulse.techway.fit/facilitator/dashboard
-
-If you have any questions or need help getting started, don't hesitate to reach out to our support team.
-
-Happy facilitating! ??
-TechWayFit Pulse Team
-
----
-This is an automated email. Please do not reply to this message.
-© {DateTime.UtcNow.Year} TechWayFit. All rights reserved.";
-
-   await SendEmailAsync(toEmail, subject, htmlBody, plainTextBody, cancellationToken);
+        await SendEmailAsync(toEmail, subject, htmlBody, plainTextBody, cancellationToken);
     }
 
     private async Task SendEmailAsync(
@@ -256,8 +149,42 @@ var port = int.TryParse(smtpConfig["Port"], out var p) ? p : 587;
         }
         catch (Exception ex)
      {
-      _logger.LogError(ex, "Failed to send email to {Email} - Subject: {Subject}", toEmail, subject);
-    throw;
+            _logger.LogError(ex, "Failed to send email to {Email} - Subject: {Subject}", toEmail, subject);
+            throw;
         }
-}
+    }
+
+    /// <summary>
+    /// Loads an email template from the file system.
+    /// Templates are cached by the FileService to reduce disk I/O.
+    /// </summary>
+    private async Task<string> LoadTemplateAsync(string templateFileName, CancellationToken cancellationToken)
+    {
+        var templatePath = Path.Combine(_templateBasePath, templateFileName);
+        
+        try
+        {
+            return await _fileService.ReadFileAsync(templatePath, cancellationToken);
+        }
+        catch (FileNotFoundException ex)
+        {
+            _logger.LogError(ex, "Email template not found: {TemplatePath}", templatePath);
+            throw new InvalidOperationException($"Email template not found: {templateFileName}", ex);
+        }
+    }
+
+    /// <summary>
+    /// Replaces tokens in the template with actual values.
+    /// </summary>
+    private static string ReplaceTokens(string template, Dictionary<string, string> replacements)
+    {
+        var result = template;
+        
+        foreach (var (token, value) in replacements)
+        {
+            result = result.Replace(token, value);
+        }
+        
+        return result;
+    }
 }
