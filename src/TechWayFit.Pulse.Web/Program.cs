@@ -1,9 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
@@ -13,7 +12,6 @@ using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 using TechWayFit.Pulse.Web.Data;
 using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Services;
-using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,43 +33,17 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization();
 
-// Add Data Protection for distributed cookie sharing (web farm support)
-var dataProtectionConfig = builder.Configuration.GetSection("DataProtection");
-var storageType = dataProtectionConfig["StorageType"] ?? "FileSystem";
+// Add Data Protection with custom file-based key storage
+var keysPath = Path.Combine(builder.Environment.ContentRootPath, "keys");
+var loggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
+var customRepo = new CustomFileSystemXmlRepository(
+    new DirectoryInfo(keysPath),
+    loggerFactory.CreateLogger<CustomFileSystemXmlRepository>());
 
-var dataProtection = builder.Services.AddDataProtection()
-    .SetApplicationName("TechWayFit.Pulse");
-
-switch (storageType.ToLowerInvariant())
-{
-    case "filesystem":
-    default:
-        // File-based storage (development or single-server deployments)
-        var keysPath = dataProtectionConfig["KeysPath"] 
-      ?? Path.Combine(builder.Environment.ContentRootPath, "keys");
-        
-        var keysDirectory = new DirectoryInfo(keysPath);
-        if (!keysDirectory.Exists)
-        {
-            keysDirectory.Create();
-        }
-        
-     dataProtection.PersistKeysToFileSystem(keysDirectory);
-      break;
-        
-  // Add other storage types as needed:
-    // case "redis":
-    // var redisConnection = builder.Configuration.GetConnectionString("Redis");
-    //     var redis = ConnectionMultiplexer.Connect(redisConnection);
-    //     dataProtection.PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys");
-    //     break;
-    //
-    // case "azureblob":
-    //     var blobUri = dataProtectionConfig["BlobStorageUri"];
-    //     var blobClient = new BlobClient(new Uri(blobUri), new DefaultAzureCredential());
-    //  dataProtection.PersistKeysToAzureBlobStorage(blobClient);
-    //     break;
-}
+builder.Services.AddSingleton<IXmlRepository>(customRepo);
+builder.Services.AddDataProtection()
+    .SetApplicationName("TechWayFit.Pulse")
+    .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -198,10 +170,10 @@ app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
     {
-   // Add cache headers for better performance
+        // Add cache headers for better performance
         if (ctx.File.Name.EndsWith(".css") || ctx.File.Name.EndsWith(".js"))
-   {
-  ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=600");
+        {
+            ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=600");
         }
     }
 });

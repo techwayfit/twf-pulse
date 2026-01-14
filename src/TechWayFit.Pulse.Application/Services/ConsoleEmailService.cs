@@ -29,18 +29,9 @@ public sealed class ConsoleEmailService : IEmailService
 📧 LOGIN OTP EMAIL
 ========================================
 To: {toEmail}
-Subject: Your TechWayFit Pulse Login Code
-
-{greeting},
-
 Your login code is: {otpCode}
 
 This code will expire in 10 minutes.
-
-If you didn't request this code, please ignore this email.
-
-Best regards,
-TechWayFit Pulse Team
 ========================================
 ";
 
@@ -60,12 +51,6 @@ TechWayFit Pulse Team
 📧 WELCOME EMAIL
 ========================================
 To: {toEmail}
-Subject: Welcome to TechWayFit Pulse!
-
-Hi {displayName},
-
-Welcome to TechWayFit Pulse! 🎉
-
 Your facilitator account has been created successfully.
 
 You can now:
@@ -73,10 +58,6 @@ You can now:
 • Run live polls, word clouds, and quadrant matrices
 • View real-time dashboards and insights
 
-Get started at: https://pulse.techway.fit
-
-Best regards,
-TechWayFit Pulse Team
 ========================================
 ";
 
