@@ -25,6 +25,7 @@ public sealed class SessionService : ISessionService
         SessionSettings settings,
         JoinFormSchema joinFormSchema,
         DateTimeOffset now,
+        Guid? facilitatorUserId = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(code))
@@ -68,7 +69,8 @@ public sealed class SessionService : ISessionService
             null,
             now,
             now,
-            now.AddMinutes(settings.TtlMinutes));
+            now.AddMinutes(settings.TtlMinutes),
+            facilitatorUserId);
 
         await _sessions.AddAsync(session, cancellationToken);
         return session;

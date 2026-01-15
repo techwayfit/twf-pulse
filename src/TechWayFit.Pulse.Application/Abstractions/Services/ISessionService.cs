@@ -14,6 +14,7 @@ public interface ISessionService
         SessionSettings settings,
         JoinFormSchema joinFormSchema,
         DateTimeOffset now,
+        Guid? facilitatorUserId = null,
         CancellationToken cancellationToken = default);
 
     Task<Session?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);

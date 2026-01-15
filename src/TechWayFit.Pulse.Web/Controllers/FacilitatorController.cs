@@ -12,22 +12,25 @@ public class FacilitatorController : Controller
 {
     private readonly ISessionRepository _sessionRepository;
     private readonly ISessionService _sessionService;
+    private readonly IAuthenticationService _authService;
     private readonly ILogger<FacilitatorController> _logger;
 
     public FacilitatorController(
 ISessionRepository sessionRepository,
   ISessionService sessionService,
+   IAuthenticationService authService,
    ILogger<FacilitatorController> logger)
     {
         _sessionRepository = sessionRepository;
         _sessionService = sessionService;
+        _authService = authService;
         _logger = logger;
     }
 
     [HttpGet("dashboard")]
     public async Task<IActionResult> Dashboard(CancellationToken cancellationToken = default)
     {
-        var userId = GetCurrentUserId();
+        var userId = await GetCurrentUserIdAsync(cancellationToken);
         if (userId == null)
         {
             return RedirectToAction("Login", "Account");
@@ -51,9 +54,30 @@ ISessionRepository sessionRepository,
         return View();
     }
 
-    private Guid? GetCurrentUserId()
+    private async Task<Guid?> GetCurrentUserIdAsync(CancellationToken cancellationToken)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
+        if (User?.Identity?.IsAuthenticated != true)
+        {
+            return null;
+        }
+
+        var userIdClaim = User.FindFirst("FacilitatorUserId")?.Value;
+        if (Guid.TryParse(userIdClaim, out var userId))
+        {
+            var user = await _authService.GetFacilitatorAsync(userId, cancellationToken);
+            if (user != null)
+            {
+                return user.Id;
+            }
+        }
+
+        var email = User.FindFirst(ClaimTypes.Email)?.Value;
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            var user = await _authService.GetFacilitatorByEmailAsync(email, cancellationToken);
+            return user?.Id;
+        }
+
+        return null;
     }
 }

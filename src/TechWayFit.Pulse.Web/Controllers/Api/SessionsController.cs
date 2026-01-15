@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Contracts.Models;
 using TechWayFit.Pulse.Contracts.Requests;
@@ -14,6 +15,7 @@ namespace TechWayFit.Pulse.Web.Controllers.Api;
 public sealed class SessionsController : ControllerBase
 {
     private readonly ISessionService _sessions;
+    private readonly IAuthenticationService _authService;
     private readonly IActivityService _activities;
     private readonly IParticipantService _participants;
     private readonly IResponseService _responses;
@@ -24,6 +26,7 @@ public sealed class SessionsController : ControllerBase
 
     public SessionsController(
         ISessionService sessions,
+        IAuthenticationService authService,
         IActivityService activities,
         IParticipantService participants,
         IResponseService responses,
@@ -33,6 +36,7 @@ public sealed class SessionsController : ControllerBase
         IHubContext<WorkshopHub, IWorkshopClient> hub)
     {
         _sessions = sessions;
+        _authService = authService;
         _activities = activities;
         _participants = participants;
         _responses = responses;
@@ -57,15 +61,17 @@ public sealed class SessionsController : ControllerBase
 
             var settings = ApiMapper.ToDomain(request.Settings);
             var joinFormSchema = ApiMapper.ToDomain(request.JoinFormSchema);
+            var facilitatorUserId = await GetCurrentUserIdAsync(cancellationToken);
             var session = await _sessions.CreateSessionAsync(
-           code,
-            request.Title,
-                     request.Goal,
+                code,
+                request.Title,
+                request.Goal,
                 request.Context,
-          settings,
-            joinFormSchema,
-         DateTimeOffset.UtcNow,
-                     cancellationToken);
+                settings,
+                joinFormSchema,
+                DateTimeOffset.UtcNow,
+                facilitatorUserId,
+                cancellationToken);
 
             return Ok(Wrap(new CreateSessionResponse(session.Id, session.Code)));
         }
@@ -107,6 +113,33 @@ public sealed class SessionsController : ControllerBase
 
         var auth = _facilitatorTokens.Create(session.Id);
         return Ok(Wrap(new JoinFacilitatorResponse(auth.FacilitatorId, auth.Token)));
+    }
+
+    private async Task<Guid?> GetCurrentUserIdAsync(CancellationToken cancellationToken)
+    {
+        if (User?.Identity?.IsAuthenticated != true)
+        {
+            return null;
+        }
+
+        var userIdClaim = User.FindFirst("FacilitatorUserId")?.Value;
+        if (Guid.TryParse(userIdClaim, out var userId))
+        {
+            var user = await _authService.GetFacilitatorAsync(userId, cancellationToken);
+            if (user != null)
+            {
+                return user.Id;
+            }
+        }
+
+        var email = User.FindFirst(ClaimTypes.Email)?.Value;
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            var user = await _authService.GetFacilitatorByEmailAsync(email, cancellationToken);
+            return user?.Id;
+        }
+
+        return null;
     }
 
     [HttpPost("{code}/start")]

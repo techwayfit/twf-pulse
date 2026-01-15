@@ -1,4 +1,4 @@
-# Workshop Fun App (TechWayFit) — HLD & LLD
+# TechWayFit Pulse — HLD & LLD
 
 > Purpose: Open-source, single-purpose workshop engagement app (Mentimeter-like) to **Make Workshops Fun** while producing **measurable, filterable insights** (dashboards, word cloud, 4-quadrant, charts, 5-Whys).
 
@@ -537,4 +537,3 @@ Strict mode is recommended to enforce one-by-one flow.
   "selectedOptionId": "opt-2"
 }
 ```
-

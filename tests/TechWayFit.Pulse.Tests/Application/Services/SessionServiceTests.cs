@@ -31,6 +31,7 @@ var context = "Test Context";
 var settings = new SessionSettings(5, null, true, true, 360);
         var joinFormSchema = new JoinFormSchema(5, new List<JoinFormField>());
       var now = DateTimeOffset.UtcNow;
+        var facilitatorUserId = Guid.NewGuid();
 
         _sessionRepositoryMock
             .Setup(x => x.GetByCodeAsync(code, It.IsAny<CancellationToken>()))
@@ -42,7 +43,7 @@ var settings = new SessionSettings(5, null, true, true, 360);
 
      // Act
         var result = await _sessionService.CreateSessionAsync(
-            code, title, goal, context, settings, joinFormSchema, now);
+            code, title, goal, context, settings, joinFormSchema, now, facilitatorUserId);
 
      // Assert
         result.Should().NotBeNull();
@@ -54,6 +55,7 @@ var settings = new SessionSettings(5, null, true, true, 360);
         result.JoinFormSchema.Should().Be(joinFormSchema);
         result.Status.Should().Be(SessionStatus.Draft);
         result.CreatedAt.Should().Be(now);
+        result.FacilitatorUserId.Should().Be(facilitatorUserId);
     result.ExpiresAt.Should().Be(now.AddMinutes(360));
 
   _sessionRepositoryMock.Verify(
