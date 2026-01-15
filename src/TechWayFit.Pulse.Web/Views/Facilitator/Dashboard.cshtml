@@ -92,36 +92,37 @@
                         <input type="text" class="form-control" id="sessionSearch" placeholder="Search by title, code, or goal...">
                     </div>
                     <div class="col-md-5">
-                        <div class="mb-1">
-                            <span class="text-muted small">Filter by Group:</span>
-                        </div>
-                        @{
-                            var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
-                            
-                            if (sessionGroups != null)
-                            {
-                                foreach (var group in sessionGroups)
-                                {
-                                    treeItems.Add(new TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem
+                        <div class="d-flex align-items-center">
+                            <span class="text-muted me-2 small flex-shrink-0">Filter by Group:</span>
+                            <div class="flex-grow-1">
+                                @{
+                                    var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
+                                    
+                                    if (sessionGroups != null)
                                     {
-                                        Value = group.Id.ToString(),
-                                        Text = group.Name,
-                                        ParentValue = group.ParentGroupId?.ToString(),
-                                        Level = group.Level - 1,
-                                        HasChildren = sessionGroups.Any(g => g.ParentGroupId == group.Id),
-                                        Icon = group.Level == 1 ? "📁" : group.Level == 2 ? "📂" : "📄"
-                                    });
+                                        foreach (var group in sessionGroups)
+                                        {
+                                            treeItems.Add(new TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem
+                                            {
+                                                Value = group.Id.ToString(),
+                                                Text = group.Name,
+                                                ParentValue = group.ParentGroupId?.ToString(),
+                                                Level = group.Level - 1,
+                                                HasChildren = sessionGroups.Any(g => g.ParentGroupId == group.Id),
+                                                Icon = group.Level == 1 ? "📁" : group.Level == 2 ? "📂" : "📄"
+                                            });
+                                        }
+                                    }
                                 }
-                            }
-                        }
-                        @await Component.InvokeAsync("TreeDropdown", new {
-                            id = "groupFilter",
-                            name = "groupFilter",
-                            placeholder = "All Groups",
-                            items = treeItems,
-                            allowClear = true,
-                            cssClass = "w-100"
-                        })
+                                @await Component.InvokeAsync("TreeDropdown", new {
+                                    id = "groupFilter",
+                                    name = "groupFilter",
+                                    placeholder = "All Groups",
+                                    items = treeItems,
+                                    allowClear = true
+                                })
+                            </div>
+                        </div>
                     </div>
                     <div class="col-md-2 text-end">
                         <div class="d-flex gap-2 justify-content-end">
