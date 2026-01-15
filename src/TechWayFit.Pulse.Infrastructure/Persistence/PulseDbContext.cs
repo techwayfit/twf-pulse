@@ -23,6 +23,8 @@ public sealed class PulseDbContext : DbContext
 
     public DbSet<LoginOtpRecord> LoginOtps => Set<LoginOtpRecord>();
 
+    public DbSet<SessionGroupRecord> SessionGroups => Set<SessionGroupRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<SessionRecord>(entity =>
@@ -38,6 +40,7 @@ public sealed class PulseDbContext : DbContext
             entity.HasIndex(x => x.Status);
             entity.HasIndex(x => x.ExpiresAt);
             entity.HasIndex(x => x.FacilitatorUserId);
+            entity.HasIndex(x => x.GroupId);
         });
 
         modelBuilder.Entity<ActivityRecord>(entity =>
@@ -96,6 +99,18 @@ public sealed class PulseDbContext : DbContext
             entity.HasIndex(x => new { x.Email, x.OtpCode });
             entity.HasIndex(x => new { x.Email, x.CreatedAt });
             entity.HasIndex(x => x.ExpiresAt);
+        });
+
+        modelBuilder.Entity<SessionGroupRecord>(entity =>
+        {
+            entity.ToTable("SessionGroups");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1000);
+            entity.Property(x => x.Level).IsRequired();
+            entity.HasIndex(x => x.FacilitatorUserId);
+            entity.HasIndex(x => x.ParentGroupId);
+            entity.HasIndex(x => new { x.FacilitatorUserId, x.Level, x.ParentGroupId });
         });
     }
 }

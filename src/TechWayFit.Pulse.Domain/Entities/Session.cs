@@ -18,7 +18,8 @@ public sealed class Session
         DateTimeOffset createdAt,
         DateTimeOffset updatedAt,
         DateTimeOffset expiresAt,
-        Guid? facilitatorUserId = null)
+        Guid? facilitatorUserId = null,
+        Guid? groupId = null)
     {
         Id = id;
         Code = code.Trim();
@@ -33,6 +34,7 @@ public sealed class Session
         UpdatedAt = updatedAt;
         ExpiresAt = expiresAt;
         FacilitatorUserId = facilitatorUserId;
+        GroupId = groupId;
     }
 
     public Guid Id { get; }
@@ -65,6 +67,12 @@ public sealed class Session
     /// </summary>
     public Guid? FacilitatorUserId { get; private set; }
 
+    /// <summary>
+    /// ID of the group this session belongs to.
+    /// Null if session is not assigned to any group.
+    /// </summary>
+    public Guid? GroupId { get; private set; }
+
     public void SetStatus(SessionStatus status, DateTimeOffset updatedAt)
     {
         Status = status;
@@ -80,6 +88,12 @@ public sealed class Session
     public void UpdateJoinFormSchema(JoinFormSchema joinFormSchema, DateTimeOffset updatedAt)
     {
         JoinFormSchema = joinFormSchema;
+        UpdatedAt = updatedAt;
+    }
+
+    public void SetGroup(Guid? groupId, DateTimeOffset updatedAt)
+    {
+        GroupId = groupId;
         UpdatedAt = updatedAt;
     }
 }

@@ -56,6 +56,7 @@ internal static class ApiMapper
             MapSessionStatus(session.Status),
             session.CurrentActivityId,
             session.ExpiresAt,
+            session.GroupId,
             joinFormFields);
     }
 

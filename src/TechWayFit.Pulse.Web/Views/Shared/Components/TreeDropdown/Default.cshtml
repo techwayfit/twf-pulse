@@ -1,0 +1,54 @@
+@using TechWayFit.Pulse.Web.ViewComponents.TreeDropdown
+@model TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownViewModel
+
+<div class="dropdown tree-dropdown @Model.CssClass" data-dropdown-id="@Model.Id">
+    <input type="hidden" name="@Model.Name" id="@Model.Id" value="@Model.Value" />
+    
+    <button class="btn btn-outline-secondary dropdown-toggle w-100 d-flex justify-content-between align-items-center" 
+            type="button" 
+            id="dropdown-@Model.Id" 
+            data-bs-toggle="dropdown" 
+            aria-expanded="false">
+        <span class="dropdown-text">@(string.IsNullOrEmpty(Model.Value) ? Model.Placeholder : GetSelectedText(Model.Items, Model.Value))</span>
+    </button>
+    
+    <div class="dropdown-menu dropdown-menu-tree" aria-labelledby="dropdown-@Model.Id">
+        @if (Model.AllowClear)
+        {
+            <div class="dropdown-item tree-item" data-value="" data-level="0">
+                <span class="tree-item-text">All Groups</span>
+            </div>
+            <hr class="dropdown-divider">
+        }
+        
+        @foreach (var item in Model.Items.Where(i => i.ParentValue == null).OrderBy(i => i.Text))
+        {
+            @await Html.PartialAsync("_TreeDropdownItem", item, new ViewDataDictionary(ViewData) 
+            { 
+                ["AllItems"] = Model.Items,
+                ["SelectedValue"] = Model.Value 
+            })
+        }
+    </div>
+</div>
+
+@{
+    string GetSelectedText(IEnumerable<TreeDropdownItem> items, string value)
+    {
+        if (string.IsNullOrEmpty(value)) return Model.Placeholder;
+        
+        var item = items.FirstOrDefault(i => i.Value == value);
+        if (item == null) return Model.Placeholder;
+        
+        var path = new List<string>();
+        var current = item;
+        
+        while (current != null)
+        {
+            path.Insert(0, current.Text);
+            current = items.FirstOrDefault(i => i.Value == current.ParentValue);
+        }
+        
+        return string.Join(" → ", path);
+    }
+}

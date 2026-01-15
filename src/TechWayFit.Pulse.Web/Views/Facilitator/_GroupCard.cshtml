@@ -1,0 +1,99 @@
+@model TechWayFit.Pulse.Domain.Entities.SessionGroup
+
+<div class="card group-card mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <h5 class="card-title mb-0">@Model.Name</h5>
+                    <span class="badge bg-primary level-badge">Level @Model.Level</span>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="text-muted mb-2">@Model.Description</p>
+                }
+                
+                <div class="d-flex align-items-center gap-3 text-muted small">
+                    <span>
+                        <i class="bi bi-calendar-event"></i>
+                        Created @Model.CreatedAt.ToString("MMM d, yyyy")
+                    </span>
+                    @if (Model.UpdatedAt != Model.CreatedAt)
+                    {
+                        <span>
+                            <i class="bi bi-pencil"></i>
+                            Updated @Model.UpdatedAt.ToString("MMM d, yyyy")
+                        </span>
+                    }
+                </div>
+            </div>
+            
+            <div class="group-actions">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        ⋮
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="javascript:void(0)" onclick="editGroup('@Model.Id.ToString()', '@(Model.Name.Replace("'", "\\'"))', '@((Model.Description ?? "").Replace("'", "\\'"))')">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                        </li>
+                        @if (Model.Level < 3)
+                        {
+                            <li>
+                                <a class="dropdown-item" href="javascript:void(0)" onclick="createSubGroup('@Model.Id', @Model.Level)">
+                                    <i class="bi bi-folder-plus"></i> Add Sub Group
+                                </a>
+                            </li>
+                        }
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteGroup('@Model.Id.ToString()', '@(Model.Name.Replace("'", "\\'"))')">
+                                <i class="bi bi-trash"></i> Delete
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function createSubGroup(parentId, parentLevel) {
+        event.preventDefault();
+        const modal = document.getElementById('createGroupModal');
+        const levelSelect = document.getElementById('groupLevel');
+        const parentSelect = document.getElementById('parentGroup');
+        const createModalLabel = document.getElementById('createGroupModalLabel');
+        
+        // Calculate the new level (parent level + 1)
+        const newLevel = parentLevel + 1;
+        
+        // Update modal title to indicate it's for sub-group creation
+        createModalLabel.textContent = `Create Level ${newLevel} Sub Group`;
+        
+        // Set level and disable the field since it's auto-calculated
+        levelSelect.value = newLevel;
+        levelSelect.disabled = true;
+        
+        // Show parent group container and set parent
+        const parentContainer = document.getElementById('parentGroupContainer');
+        parentContainer.style.display = 'block';
+        parentSelect.required = true;
+        parentSelect.value = parentId;
+        parentSelect.disabled = true; // Disable since parent is pre-selected
+        
+        // Filter and show only valid parent options
+        const options = parentSelect.querySelectorAll('option[data-level]');
+        options.forEach(option => {
+            const optionLevel = parseInt(option.getAttribute('data-level'));
+            option.style.display = optionLevel < newLevel ? 'block' : 'none';
+        });
+        
+        new bootstrap.Modal(modal).show();
+        return false;
+    }
+</script>

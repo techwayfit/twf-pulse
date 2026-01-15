@@ -13,4 +13,6 @@ public sealed class CreateSessionRequest
     public SessionSettingsDto Settings { get; set; } = new();
 
     public JoinFormSchemaDto JoinFormSchema { get; set; } = new();
+
+    public Guid? GroupId { get; set; }
 }

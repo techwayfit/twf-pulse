@@ -98,7 +98,7 @@ builder.Services.AddDbContext<PulseDbContext>(options =>
         return;
     }
 
-  options.UseSqlite(connectionString);
+  options.UseSqlite(connectionString, b => b.MigrationsAssembly("TechWayFit.Pulse.Web"));
 });
 
 builder.Services.AddScoped<ISessionRepository, SessionRepository>();
@@ -108,6 +108,7 @@ builder.Services.AddScoped<IResponseRepository, ResponseRepository>();
 builder.Services.AddScoped<IContributionCounterRepository, ContributionCounterRepository>();
 builder.Services.AddScoped<IFacilitatorUserRepository, FacilitatorUserRepository>();
 builder.Services.AddScoped<ILoginOtpRepository, LoginOtpRepository>();
+builder.Services.AddScoped<ISessionGroupRepository, SessionGroupRepository>();
 
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
@@ -116,6 +117,7 @@ builder.Services.AddScoped<IResponseService, ResponseService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ISessionCodeGenerator, SessionCodeGenerator>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<ISessionGroupService, SessionGroupService>();
 
 // Register file service and memory cache for template caching
 builder.Services.AddMemoryCache();

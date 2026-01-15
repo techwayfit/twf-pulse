@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Web.Extensions;
 
 namespace TechWayFit.Pulse.Web.Controllers;
 
@@ -12,17 +13,20 @@ public class FacilitatorController : Controller
 {
     private readonly ISessionRepository _sessionRepository;
     private readonly ISessionService _sessionService;
+    private readonly ISessionGroupService _sessionGroupService;
     private readonly IAuthenticationService _authService;
     private readonly ILogger<FacilitatorController> _logger;
 
     public FacilitatorController(
 ISessionRepository sessionRepository,
   ISessionService sessionService,
+  ISessionGroupService sessionGroupService,
    IAuthenticationService authService,
    ILogger<FacilitatorController> logger)
     {
         _sessionRepository = sessionRepository;
         _sessionService = sessionService;
+        _sessionGroupService = sessionGroupService;
         _authService = authService;
         _logger = logger;
     }
@@ -30,16 +34,18 @@ ISessionRepository sessionRepository,
     [HttpGet("dashboard")]
     public async Task<IActionResult> Dashboard(CancellationToken cancellationToken = default)
     {
-        var userId = await GetCurrentUserIdAsync(cancellationToken);
+        var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
         if (userId == null)
         {
             return RedirectToAction("Login", "Account");
         }
 
         var sessions = await _sessionRepository.GetByFacilitatorUserIdAsync(userId.Value, cancellationToken);
+        var groups = await _sessionGroupService.GetGroupHierarchyAsync(userId.Value, cancellationToken);
 
         ViewData["UserEmail"] = User.FindFirst(ClaimTypes.Email)?.Value;
         ViewData["UserName"] = User.FindFirst(ClaimTypes.Name)?.Value;
+        ViewData["Groups"] = groups;
 
         return View(sessions);
     }
@@ -49,35 +55,37 @@ ISessionRepository sessionRepository,
     /// Create session page - static form with JavaScript enhancement
     /// </summary>
     [HttpGet("create")]
-    public IActionResult CreateSession()
+    public async Task<IActionResult> CreateSession(CancellationToken cancellationToken = default)
     {
+        var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+        if (userId == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var groups = await _sessionGroupService.GetFacilitatorGroupsAsync(userId.Value, cancellationToken);
+        ViewData["Groups"] = groups;
+
         return View();
     }
 
-    private async Task<Guid?> GetCurrentUserIdAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// Session Groups management page
+    /// </summary>
+    [HttpGet("groups")]
+    public async Task<IActionResult> Groups(CancellationToken cancellationToken = default)
     {
-        if (User?.Identity?.IsAuthenticated != true)
+        var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+        if (userId == null)
         {
-            return null;
+            return RedirectToAction("Login", "Account");
         }
 
-        var userIdClaim = User.FindFirst("FacilitatorUserId")?.Value;
-        if (Guid.TryParse(userIdClaim, out var userId))
-        {
-            var user = await _authService.GetFacilitatorAsync(userId, cancellationToken);
-            if (user != null)
-            {
-                return user.Id;
-            }
-        }
-
-        var email = User.FindFirst(ClaimTypes.Email)?.Value;
-        if (!string.IsNullOrWhiteSpace(email))
-        {
-            var user = await _authService.GetFacilitatorByEmailAsync(email, cancellationToken);
-            return user?.Id;
-        }
-
-        return null;
+        var groups = await _sessionGroupService.GetGroupHierarchyAsync(userId.Value, cancellationToken);
+        
+        ViewData["UserEmail"] = User.FindFirst(ClaimTypes.Email)?.Value;
+        ViewData["UserName"] = User.FindFirst(ClaimTypes.Name)?.Value;
+        
+        return View(groups);
     }
 }

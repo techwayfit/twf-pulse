@@ -27,4 +27,6 @@ public sealed class SessionRecord
     public DateTimeOffset ExpiresAt { get; set; }
 
     public Guid? FacilitatorUserId { get; set; }
+
+    public Guid? GroupId { get; set; }
 }

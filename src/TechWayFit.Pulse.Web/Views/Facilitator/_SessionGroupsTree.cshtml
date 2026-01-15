@@ -1,0 +1,169 @@
+@model IEnumerable<TechWayFit.Pulse.Domain.Entities.SessionGroup>
+
+@if (Model != null)
+{
+    var groups = Model.ToList();
+    var level1Groups = groups.Where(g => g.Level == 1).ToList();
+    
+    <div id="sessionGroupsTreeContainer">
+        @foreach (var group in level1Groups)
+        {
+            @await Html.PartialAsync("_SessionGroupNode", new { Group = group, AllGroups = groups })
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        async function toggleGroup(groupId) {
+            const sessionsContainer = document.getElementById(`sessions-${groupId}`);
+            const toggleIcon = document.getElementById(`toggle-icon-${groupId}`);
+            const toggleButton = document.querySelector(`[onclick="toggleGroup('${groupId}')"]`);
+            const isExpanded = toggleButton.getAttribute('data-expanded') === 'true';
+            
+            if (!isExpanded) {
+                // Show sessions
+                sessionsContainer.style.display = 'block';
+                toggleIcon.className = 'fas fa-chevron-down';
+                toggleButton.setAttribute('data-expanded', 'true');
+                
+                // Load sessions if not already loaded
+                if (sessionsContainer.querySelector('.loading-placeholder')) {
+                    await loadGroupSessions(groupId);
+                }
+            } else {
+                // Hide sessions
+                sessionsContainer.style.display = 'none';
+                toggleIcon.className = 'fas fa-chevron-right';
+                toggleButton.setAttribute('data-expanded', 'false');
+            }
+        }
+        
+        async function loadGroupSessions(groupId) {
+            const sessionsContainer = document.getElementById(`sessions-${groupId}`);
+            
+            try {
+                const response = await fetch(`/api/session-groups/${groupId}/sessions`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load sessions');
+                }
+                
+                const sessions = await response.json();
+                
+                if (sessions.length === 0) {
+                    sessionsContainer.innerHTML = `
+                        <div class="text-center py-3">
+                            <p class="text-muted mb-0">No sessions in this group</p>
+                        </div>
+                    `;
+                } else {
+                    sessionsContainer.innerHTML = sessions.map(session => `
+                        <div class="session-item card border mb-2">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
+                                                ${session.code}
+                                            </span>
+                                            <div>
+                                                <strong>${session.title}</strong>
+                                                ${session.goal ? `<br><small class="text-muted">${session.goal}</small>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        ${getStatusBadge(session.status)}
+                                        ${getActionButton(session)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+            } catch (error) {
+                console.error('Failed to load sessions:', error);
+                sessionsContainer.innerHTML = `
+                    <div class="alert alert-warning py-2 mb-0">
+                        <small>Failed to load sessions. Please try again.</small>
+                    </div>
+                `;
+            }
+        }
+        
+        function getStatusBadge(status) {
+            switch (status) {
+                case 'Live':
+                    return '<span class="badge bg-success">Live</span>';
+                case 'Draft':
+                    return '<span class="badge bg-warning text-dark">Draft</span>';
+                case 'Ended':
+                    return '<span class="badge bg-secondary">Ended</span>';
+                case 'Expired':
+                    return '<span class="badge bg-danger">Expired</span>';
+                default:
+                    return '<span class="badge bg-light text-dark">Unknown</span>';
+            }
+        }
+        
+        function getActionButton(session) {
+            switch (session.status) {
+                case 'Live':
+                    return `<a href="/facilitator/live?Code=${session.code}" class="btn btn-sm btn-success">Go Live</a>`;
+                case 'Draft':
+                    return `<a href="/facilitator/live?Code=${session.code}" class="btn btn-sm btn-primary">Start Session</a>`;
+                default:
+                    return `<a href="/facilitator/live?Code=${session.code}" class="btn btn-sm btn-outline-secondary">View</a>`;
+            }
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .tree-node {
+            position: relative;
+        }
+        
+        .tree-toggle {
+            min-width: 32px;
+            min-height: 32px;
+            padding: 0.25rem;
+            border-radius: 50%;
+        }
+        
+        .tree-toggle:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .sessions-container {
+            border-left: 2px solid #e9ecef;
+            padding-left: 1rem;
+        }
+        
+        .subgroups-container {
+            border-left: 2px solid #dee2e6;
+            padding-left: 1rem;
+        }
+        
+        .session-item {
+            transition: all 0.2s ease;
+        }
+        
+        .session-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .loading-placeholder {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+}

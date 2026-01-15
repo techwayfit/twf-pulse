@@ -50,7 +50,21 @@
                                           placeholder="What do you want to achieve in this session?"></textarea>
                             </div>
                             <div class="row g-3">
-                                <div class="col-md-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium">Session Group</label>
+                                    <select class="form-select" name="groupId">
+                                        <option value="">No group (ungrouped)</option>
+                                        @{
+                                            var groups = ViewData["Groups"] as IReadOnlyCollection<TechWayFit.Pulse.Domain.Entities.SessionGroup> ?? new List<TechWayFit.Pulse.Domain.Entities.SessionGroup>();
+                                        }
+                                        @foreach (var group in groups.OrderBy(g => g.Level).ThenBy(g => g.Name))
+                                        {
+                                            <option value="@group.Id">@(new string('—', (group.Level - 1) * 2)) @group.Name</option>
+                                        }
+                                    </select>
+                                    <div class="form-text">Optional: Organize your session into a group</div>
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label fw-medium">Workshop type</label>
                                     <select class="form-select" name="workshopType">
                                         <option value="Ops / Process Improvement">Ops / Process Improvement</option>
@@ -60,6 +74,8 @@
                                         <option value="Feedback">Feedback</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="form-label fw-medium">Primary activity</label>
                                     <select class="form-select" name="primaryActivity">

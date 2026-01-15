@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Web.Extensions;
 using TechWayFit.Pulse.Contracts.Models;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
@@ -61,7 +62,7 @@ public sealed class SessionsController : ControllerBase
 
             var settings = ApiMapper.ToDomain(request.Settings);
             var joinFormSchema = ApiMapper.ToDomain(request.JoinFormSchema);
-            var facilitatorUserId = await GetCurrentUserIdAsync(cancellationToken);
+            var facilitatorUserId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
             var session = await _sessions.CreateSessionAsync(
                 code,
                 request.Title,
@@ -71,6 +72,7 @@ public sealed class SessionsController : ControllerBase
                 joinFormSchema,
                 DateTimeOffset.UtcNow,
                 facilitatorUserId,
+                request.GroupId,
                 cancellationToken);
 
             return Ok(Wrap(new CreateSessionResponse(session.Id, session.Code)));
@@ -113,33 +115,6 @@ public sealed class SessionsController : ControllerBase
 
         var auth = _facilitatorTokens.Create(session.Id);
         return Ok(Wrap(new JoinFacilitatorResponse(auth.FacilitatorId, auth.Token)));
-    }
-
-    private async Task<Guid?> GetCurrentUserIdAsync(CancellationToken cancellationToken)
-    {
-        if (User?.Identity?.IsAuthenticated != true)
-        {
-            return null;
-        }
-
-        var userIdClaim = User.FindFirst("FacilitatorUserId")?.Value;
-        if (Guid.TryParse(userIdClaim, out var userId))
-        {
-            var user = await _authService.GetFacilitatorAsync(userId, cancellationToken);
-            if (user != null)
-            {
-                return user.Id;
-            }
-        }
-
-        var email = User.FindFirst(ClaimTypes.Email)?.Value;
-        if (!string.IsNullOrWhiteSpace(email))
-        {
-            var user = await _authService.GetFacilitatorByEmailAsync(email, cancellationToken);
-            return user?.Id;
-        }
-
-        return null;
     }
 
     [HttpPost("{code}/start")]
@@ -217,6 +192,41 @@ public sealed class SessionsController : ControllerBase
             var schema = ApiMapper.ToDomain(request.JoinFormSchema);
             var updated = await _sessions.UpdateJoinFormSchemaAsync(session.Id, schema, DateTimeOffset.UtcNow, cancellationToken);
             return Ok(Wrap(ApiMapper.ToSummary(updated)));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<SessionSummaryResponse>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<SessionSummaryResponse>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpPut("{code}/group")]
+    public async Task<ActionResult<ApiResponse<SessionSummaryResponse>>> AssignToGroup(
+        string code,
+        [FromBody] AssignSessionToGroupRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<SessionSummaryResponse>("not_found", "Session not found."));
+            }
+
+            var authError = RequireFacilitatorToken<SessionSummaryResponse>(session);
+            if (authError is not null)
+            {
+                return authError;
+            }
+
+            await _sessions.SetSessionGroupAsync(session.Id, request.GroupId, DateTimeOffset.UtcNow, cancellationToken);
+            
+            var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
+            return Ok(Wrap(ApiMapper.ToSummary(updated ?? session)));
         }
         catch (ArgumentException ex)
         {

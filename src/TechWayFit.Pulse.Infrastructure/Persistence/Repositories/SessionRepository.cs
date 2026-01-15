@@ -58,4 +58,20 @@ public sealed class SessionRepository : ISessionRepository
 
         return sortedRecords.Select(r => r.ToDomain()).ToList();
     }
+
+    public async Task<IReadOnlyCollection<Session>> GetByGroupAsync(
+        Guid? groupId,
+        Guid facilitatorUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var records = await _dbContext.Sessions
+            .AsNoTracking()
+            .Where(x => x.FacilitatorUserId == facilitatorUserId && x.GroupId == groupId)
+            .ToListAsync(cancellationToken);
+
+        // Sort on the client side to avoid SQLite DateTimeOffset ordering issues
+        var sortedRecords = records.OrderByDescending(x => x.CreatedAt).ToList();
+
+        return sortedRecords.Select(r => r.ToDomain()).ToList();
+    }
 }

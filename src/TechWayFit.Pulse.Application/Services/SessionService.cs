@@ -26,6 +26,7 @@ public sealed class SessionService : ISessionService
         JoinFormSchema joinFormSchema,
         DateTimeOffset now,
         Guid? facilitatorUserId = null,
+        Guid? groupId = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(code))
@@ -70,7 +71,8 @@ public sealed class SessionService : ISessionService
             now,
             now,
             now.AddMinutes(settings.TtlMinutes),
-            facilitatorUserId);
+            facilitatorUserId,
+            groupId);
 
         await _sessions.AddAsync(session, cancellationToken);
         return session;
@@ -130,5 +132,29 @@ public sealed class SessionService : ISessionService
         session.UpdateJoinFormSchema(joinFormSchema, now);
         await _sessions.UpdateAsync(session, cancellationToken);
         return session;
+    }
+
+    public async Task SetSessionGroupAsync(
+        Guid sessionId,
+        Guid? groupId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        var session = await _sessions.GetByIdAsync(sessionId, cancellationToken);
+        if (session is null)
+        {
+            throw new InvalidOperationException("Session not found.");
+        }
+
+        session.SetGroup(groupId, now);
+        await _sessions.UpdateAsync(session, cancellationToken);
+    }
+
+    public async Task<IReadOnlyCollection<Session>> GetSessionsByGroupAsync(
+        Guid? groupId,
+        Guid facilitatorUserId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _sessions.GetByGroupAsync(groupId, facilitatorUserId, cancellationToken);
     }
 }

@@ -15,6 +15,7 @@ public interface ISessionService
         JoinFormSchema joinFormSchema,
         DateTimeOffset now,
         Guid? facilitatorUserId = null,
+        Guid? groupId = null,
         CancellationToken cancellationToken = default);
 
     Task<Session?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
@@ -27,5 +28,16 @@ public interface ISessionService
         Guid sessionId,
         JoinFormSchema joinFormSchema,
         DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    Task SetSessionGroupAsync(
+        Guid sessionId,
+        Guid? groupId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<Session>> GetSessionsByGroupAsync(
+        Guid? groupId,
+        Guid facilitatorUserId,
         CancellationToken cancellationToken = default);
 }

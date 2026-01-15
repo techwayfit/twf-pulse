@@ -1,0 +1,39 @@
+@model TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem
+
+@{
+    var allItems = ViewData["AllItems"] as IEnumerable<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>;
+    var selectedValue = ViewData["SelectedValue"] as string;
+    var children = allItems?.Where(i => i.ParentValue == Model.Value).OrderBy(i => i.Text) ?? Enumerable.Empty<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
+    var isSelected = Model.Value == selectedValue;
+    var indentClass = $"ms-{Model.Level * 3}";
+}
+
+<div class="dropdown-item tree-item @(isSelected ? "selected" : "")" 
+     data-value="@Model.Value" 
+     data-level="@Model.Level"
+     data-has-children="@Model.HasChildren.ToString().ToLower()">
+    <div class="d-flex align-items-center @indentClass">
+        @if (Model.HasChildren)
+        {
+            <button type="button" class="tree-toggle btn-link border-0 bg-transparent p-1 me-2" data-target="children-@Model.Value">
+                <i class="fas fa-chevron-right" style="font-size: 0.75rem;"></i>
+            </button>
+        }
+        else
+        {
+            <span class="tree-spacer me-2" style="width: 24px;"></span>
+        }
+        <span class="tree-icon me-2">@Model.Icon</span>
+        <span class="tree-item-text flex-grow-1">@Model.Text</span>
+    </div>
+</div>
+
+@if (children.Any())
+{
+    <div class="tree-children" id="children-@Model.Value" style="display: none;">
+        @foreach (var child in children)
+        {
+            @await Html.PartialAsync("_TreeDropdownItem", child, new ViewDataDictionary(ViewData))
+        }
+    </div>
+}

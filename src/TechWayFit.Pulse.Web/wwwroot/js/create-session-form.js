@@ -460,6 +460,7 @@ if (nameLabel) {
        title: formData.get('sessionTitle'),
     goal: formData.get('sessionGoal') || null,
     context: contextParts.length > 0 ? contextParts.join(' | ') : null,
+    groupId: formData.get('groupId') || null,
             settings: {
      maxContributionsPerParticipantPerSession: parseInt(formData.get('maxContributions') || '10'),
   maxContributionsPerParticipantPerActivity: null,

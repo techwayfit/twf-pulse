@@ -21,7 +21,8 @@ internal static class RecordMapper
             record.CreatedAt,
             record.UpdatedAt,
             record.ExpiresAt,
-            record.FacilitatorUserId);
+            record.FacilitatorUserId,
+            record.GroupId);
     }
 
     internal static SessionRecord ToRecord(this Session session)
@@ -40,7 +41,8 @@ internal static class RecordMapper
             CreatedAt = session.CreatedAt,
             UpdatedAt = session.UpdatedAt,
             ExpiresAt = session.ExpiresAt,
-            FacilitatorUserId = session.FacilitatorUserId
+            FacilitatorUserId = session.FacilitatorUserId,
+            GroupId = session.GroupId
         };
     }
 

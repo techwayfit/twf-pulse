@@ -1,0 +1,347 @@
+@model IReadOnlyCollection<TechWayFit.Pulse.Domain.Entities.SessionGroup>
+
+@{
+    ViewData["Title"] = "Manage Groups - TechWayFit Pulse";
+    var userEmail = ViewData["UserEmail"] as string;
+    var userName = ViewData["UserName"] as string;
+}
+
+@section Styles {
+    <style>
+        .group-card {
+            transition: all 0.2s ease;
+            border: 1px solid #e9ecef !important;
+            position: relative;
+            z-index: 1;
+        }
+        .group-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+            z-index: 10;
+        }
+        .level-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .group-actions .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .hierarchy-indent-1 { margin-left: 1.5rem; }
+        .hierarchy-indent-2 { margin-left: 3rem; }
+        
+        /* Fix dropdown z-index issues */
+        .dropdown-menu {
+            z-index: 1050 !important;
+        }
+        .group-actions .dropdown {
+            position: relative;
+            z-index: 10;
+        }
+        .group-actions .dropdown.show {
+            z-index: 1050;
+        }
+        
+        /* Ensure dropdowns appear above other content */
+        .card.group-card .group-actions .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 1050 !important;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+    </style>
+}
+
+<main class="py-5">
+    <div class="container" style="max-width: 1200px;">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h2 class="mb-1">Session Groups</h2>
+                <p class="text-muted mb-0">Organize your workshop sessions into groups for better management</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                    ➕ Create Group
+                </button>
+                <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-outline-secondary">
+                    ← Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        <!-- Info Alert -->
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info border-0 shadow-sm mb-4">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 fs-4">💡</div>
+                    <div>
+                        <h6 class="alert-heading mb-1">Get Started with Session Groups</h6>
+                        <p class="mb-0">Create hierarchical groups to organize your workshop sessions. You can have up to 3 levels: Group → Sub Group → Sub Sub Group</p>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Groups List -->
+        <div id="groupsList">
+            @foreach (var group in Model.Where(g => g.Level == 1))
+            {
+                @await Html.PartialAsync("_GroupCard", group)
+                
+                <!-- Level 2 Groups -->
+                @foreach (var subGroup in Model.Where(g => g.Level == 2 && g.ParentGroupId == group.Id))
+                {
+                    <div class="hierarchy-indent-1">
+                        @await Html.PartialAsync("_GroupCard", subGroup)
+                    </div>
+                    
+                    <!-- Level 3 Groups -->
+                    @foreach (var subSubGroup in Model.Where(g => g.Level == 3 && g.ParentGroupId == subGroup.Id))
+                    {
+                        <div class="hierarchy-indent-2">
+                            @await Html.PartialAsync("_GroupCard", subSubGroup)
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
+</main>
+
+<!-- Create Group Modal -->
+<div class="modal fade" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createGroupModalLabel">Create Session Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createGroupForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="groupName" class="form-label">Group Name *</label>
+                        <input type="text" class="form-control" id="groupName" name="name" required maxlength="200">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="groupDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="groupDescription" name="description" rows="3" maxlength="1000" placeholder="Optional description for this group"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="groupLevel" class="form-label">Level *</label>
+                        <select class="form-select" id="groupLevel" name="level" required>
+                            <option value="1">Level 1 (Main Group)</option>
+                            <option value="2">Level 2 (Sub Group)</option>
+                            <option value="3">Level 3 (Sub Sub Group)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3" id="parentGroupContainer" style="display: none;">
+                        <label for="parentGroup" class="form-label">Parent Group *</label>
+                        <select class="form-select" id="parentGroup" name="parentGroupId">
+                            <option value="">Select parent group...</option>
+                            @foreach (var group in Model.Where(g => g.Level <= 2))
+                            {
+                                <option value="@group.Id" data-level="@group.Level">
+                                    @(new string('—', (group.Level - 1) * 2)) @group.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Group Modal -->
+<div class="modal fade" id="editGroupModal" tabindex="-1" aria-labelledby="editGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editGroupModalLabel">Edit Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editGroupForm">
+                <input type="hidden" id="editGroupId" name="id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editGroupName" class="form-label">Group Name *</label>
+                        <input type="text" class="form-control" id="editGroupName" name="name" required maxlength="200">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editGroupDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editGroupDescription" name="description" rows="3" maxlength="1000"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Reset modal when it's closed
+        document.getElementById('createGroupModal').addEventListener('hidden.bs.modal', function () {
+            const levelSelect = document.getElementById('groupLevel');
+            const parentSelect = document.getElementById('parentGroup');
+            const createModalLabel = document.getElementById('createGroupModalLabel');
+            const parentContainer = document.getElementById('parentGroupContainer');
+            
+            // Reset modal title
+            createModalLabel.textContent = 'Create Session Group';
+            
+            // Re-enable fields
+            levelSelect.disabled = false;
+            parentSelect.disabled = false;
+            
+            // Reset form
+            document.getElementById('createGroupForm').reset();
+            
+            // Hide parent container
+            parentContainer.style.display = 'none';
+            parentSelect.required = false;
+        });
+
+        // Group level change handler
+        document.getElementById('groupLevel').addEventListener('change', function() {
+            // Skip if field is disabled (sub-group creation mode)
+            if (this.disabled) return;
+            
+            const level = parseInt(this.value);
+            const parentContainer = document.getElementById('parentGroupContainer');
+            const parentSelect = document.getElementById('parentGroup');
+            
+            if (level > 1) {
+                parentContainer.style.display = 'block';
+                parentSelect.required = true;
+                
+                // Filter parent options based on level
+                const options = parentSelect.querySelectorAll('option[data-level]');
+                options.forEach(option => {
+                    const optionLevel = parseInt(option.getAttribute('data-level'));
+                    option.style.display = optionLevel < level ? 'block' : 'none';
+                });
+            } else {
+                parentContainer.style.display = 'none';
+                parentSelect.required = false;
+                parentSelect.value = '';
+            }
+        });
+
+        // Create group form
+        document.getElementById('createGroupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Convert empty parentGroupId to null
+            if (!data.parentGroupId) {
+                data.parentGroupId = null;
+            } else {
+                data.parentGroupId = data.parentGroupId;
+            }
+            
+            data.level = parseInt(data.level);
+            
+            try {
+                const response = await fetch('/api/session-groups', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Error creating group: ' + error.message);
+                }
+            } catch (err) {
+                alert('Error creating group: ' + err.message);
+            }
+        });
+
+        // Edit group
+        function editGroup(id, name, description) {
+            event.preventDefault();
+            document.getElementById('editGroupId').value = id;
+            document.getElementById('editGroupName').value = name;
+            document.getElementById('editGroupDescription').value = description || '';
+            
+            new bootstrap.Modal(document.getElementById('editGroupModal')).show();
+            return false;
+        }
+
+        // Edit group form
+        document.getElementById('editGroupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            const groupId = data.id;
+            
+            try {
+                const response = await fetch(`/api/session-groups/${groupId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: data.name,
+                        description: data.description
+                    })
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Error updating group: ' + error.message);
+                }
+            } catch (err) {
+                alert('Error updating group: ' + err.message);
+            }
+        });
+
+        // Delete group
+        async function deleteGroup(id, name) {
+            event.preventDefault();
+            if (!confirm(`Are you sure you want to delete the group "${name}"? This action cannot be undone.`)) {
+                return false;
+            }
+            
+            try {
+                const response = await fetch(`/api/session-groups/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    alert('Error deleting group: ' + error.message);
+                }
+            } catch (err) {
+                alert('Error deleting group: ' + err.message);
+            }
+            return false;
+        }
+    </script>
+}

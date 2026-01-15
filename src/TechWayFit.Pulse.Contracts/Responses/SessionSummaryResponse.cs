@@ -11,4 +11,5 @@ public sealed record SessionSummaryResponse(
     SessionStatus Status,
     Guid? CurrentActivityId,
     DateTimeOffset ExpiresAt,
+    Guid? GroupId = null,
     List<JoinFormFieldDto>? JoinFormFields = null);
