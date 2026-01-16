@@ -3,11 +3,17 @@
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Contracts.Enums
 @using Microsoft.Extensions.Logging
+@using System.Net.Http
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Web.Hubs
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject IPulseApiService ApiService
+@inject IHttpClientFactory HttpClientFactory
+@inject IClientTokenService TokenService
 @inject ILogger<Live> Logger
 @rendermode InteractiveServer
+@implements IAsyncDisposable
 
 <main class="py-5">
     <!-- Constrained Container -->
@@ -46,13 +52,27 @@ else if (session != null)
                     </p>
                 </div>
                 <div class="d-flex gap-2 align-items-center">
-                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                    <span class="badge @GetSessionStatusClass() px-3 py-2">
                         <span class="pulse-dot me-2"></span>
-                        Live
+                        @session.Status
                     </span>
-                    <button class="btn btn-outline-danger" @onclick="EndSession" disabled="@isPerformingAction">
-                        @(isPerformingAction ? "Ending..." : "End Session")
-                    </button>
+                    
+                    @if (session.Status == SessionStatus.Draft)
+                    {
+                        <button class="btn btn-success pulse-btn-primary" @onclick="StartSession" disabled="@isPerformingAction">
+                            @(isPerformingAction ? "Starting..." : "Start Session")
+                        </button>
+                    }
+                    else if (session.Status == SessionStatus.Live)
+                    {
+                        <button class="btn btn-outline-danger" @onclick="EndSession" disabled="@isPerformingAction">
+                            @(isPerformingAction ? "Ending..." : "End Session")
+                        </button>
+                    }
+                    else if (session.Status == SessionStatus.Ended)
+                    {
+                        <span class="text-muted">Session has ended</span>
+                    }
                 </div>
             </div>
 
@@ -355,7 +375,7 @@ else if (session != null)
                             </ul>
                         </div>
                     </div>
-                    }
+                    
                 </div>
             </div>
         }
@@ -365,6 +385,9 @@ else if (session != null)
 @code {
     [SupplyParameterFromQuery]
     public string? Code { get; set; }
+    
+    [SupplyParameterFromQuery]
+    public string? Token { get; set; }
 
     private string sessionCode = string.Empty;
     private SessionSummaryResponse? session;
@@ -376,6 +399,7 @@ else if (session != null)
     private bool isPerformingAction = false;
     private bool isGeneratingQR = false;
     private string errorMessage = string.Empty;
+    private HubConnection? hubConnection;
 
     protected override async Task OnInitializedAsync()
     {
@@ -431,6 +455,13 @@ else if (session != null)
                 return;
             }
 
+            // Check for facilitator token (optional for now - TODO: implement proper auth)
+            if (string.IsNullOrWhiteSpace(Token))
+            {
+                Logger.LogWarning("Live page accessed without facilitator token for session {SessionCode}", Code);
+                // Continue loading the session but disable certain actions
+            }
+
             sessionCode = Code;
 
             // Load session data
@@ -440,12 +471,16 @@ else if (session != null)
             activities = (await ApiService.GetAgendaAsync(sessionCode)).ToList();
             currentActivity = activities.FirstOrDefault(a => a.Status == Contracts.Enums.ActivityStatus.Open);
 
-            // TODO: Get actual participant count from API
-            participantCount = 0;
+            // Get actual participant count from session summary
+            // The GetSessionAsync should include participant count in the response
+            participantCount = 0; // Will be updated via SignalR events
 
             // Build join URL
             var uri = new Uri(Navigation.Uri);
-            joinUrl = $"{uri.Scheme}://{uri.Authority}/participant/join?code={sessionCode}";
+            joinUrl = $"{uri.Scheme}://{uri.Authority}/participant/join?sessionCode={sessionCode}";
+
+            // Setup SignalR connection for real-time updates
+            await SetupSignalRConnection();
         }
         catch (Exception ex)
         {
@@ -494,10 +529,20 @@ else if (session != null)
             isPerformingAction = true;
             StateHasChanged();
 
-            // TODO: Call API to end session
-            await Task.Delay(1000); // Placeholder
+            // Get facilitator token from token service
+            var token = await TokenService.GetFacilitatorTokenAsync();
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                StateHasChanged();
+                return;
+            }
 
-            Navigation.NavigateTo("/");
+            // Call API with facilitator token
+            session = await ApiService.EndSessionAsync(sessionCode, token);
+
+            // Session ended successfully - redirect to facilitator dashboard
+            Navigation.NavigateTo("/facilitator/dashboard");
         }
         catch (Exception ex)
         {
@@ -508,6 +553,48 @@ else if (session != null)
             isPerformingAction = false;
             StateHasChanged();
         }
+    }
+
+    private async Task StartSession()
+    {
+        try
+        {
+            isPerformingAction = true;
+            StateHasChanged();
+
+            // Get facilitator token from token service
+            var token = await TokenService.GetFacilitatorTokenAsync();
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                StateHasChanged();
+                return;
+            }
+
+            // Call API with facilitator token
+            session = await ApiService.StartSessionAsync(sessionCode, token);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to start session: {ex.Message}";
+        }
+        finally
+        {
+            isPerformingAction = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetSessionStatusClass()
+    {
+        return session?.Status switch
+        {
+            SessionStatus.Draft => "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25",
+            SessionStatus.Live => "bg-success bg-opacity-10 text-success border border-success border-opacity-25",
+            SessionStatus.Ended => "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25",
+            SessionStatus.Expired => "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25",
+            _ => "bg-light text-dark border"
+        };
     }
 
     private async Task ManualGenerateQR()
@@ -661,5 +748,64 @@ else if (session != null)
         // TODO: Reopen via API
         errorMessage = "Reopening activities requires facilitator authentication (coming soon)";
         StateHasChanged();
+    }
+
+    private async Task SetupSignalRConnection()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                .Build();
+
+            // Handle session state changes (includes participant count)
+            hubConnection.On<SessionStateChangedEvent>("SessionStateChanged", async (sessionEvent) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (session != null && sessionEvent.SessionCode == session.Code)
+                    {
+                        participantCount = sessionEvent.ParticipantCount;
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            // Handle participant joins
+            hubConnection.On<ParticipantJoinedEvent>("ParticipantJoined", async (participantEvent) =>
+            {
+                await InvokeAsync(() =>
+                {
+                    if (session != null && participantEvent.SessionCode == session.Code)
+                    {
+                        participantCount = participantEvent.TotalParticipantCount;
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", sessionCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to setup SignalR connection");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            try
+            {
+                await hubConnection.InvokeAsync("Unsubscribe", sessionCode);
+                await hubConnection.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error disposing SignalR connection");
+            }
+        }
     }
 }

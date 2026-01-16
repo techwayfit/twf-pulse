@@ -1,8 +1,7 @@
-@page "/participant/interactive-join/{sessionCode}"
+@page "/participant/join"
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
-@inject Microsoft.AspNetCore.SignalR.Client.HubConnection? HubConnection
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Contracts.Models
@@ -10,223 +9,397 @@
 
 <PageTitle>Join @sessionSummary?.Title - TechWayFit Pulse</PageTitle>
 
-<main class="wrap">
-    @if (currentState == JoinState.FillForm)
+<main class="py-5">
+  <div class="container" style="max-width: 1200px;">
+    @if (isLoading)
     {
-   <div class="session-wizard">
-      <div class="wizard-header">
-       <h1>@sessionSummary?.Title</h1>
-      @if (!string.IsNullOrEmpty(sessionSummary?.Goal))
-      {
-     <p>@sessionSummary.Goal</p>
-  }
-</div>
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3 text-muted mb-0">Loading session information...</p>
+        </div>
+      </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="alert alert-danger mb-4" role="alert">
+            <strong>Error:</strong> @errorMessage
+          </div>
+          @if (!string.IsNullOrWhiteSpace(sessionCode))
+          {
+            <p class="text-muted mb-3">Session Code: <strong>@sessionCode</strong></p>
+          }
+          <a href="/" class="btn btn-primary pulse-btn-primary">Back to Home</a>
+        </div>
+      </div>
+    }
+    else if (currentState == JoinState.FillForm && sessionSummary != null)
+    {
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <!-- Session Header -->
+          <div class="text-center mb-4">
+            <div class="mb-3">
+              <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                <span class="pulse-dot me-2"></span>
+                @sessionSummary.Status
+              </span>
+            </div>
+            <h1 class="h3 fw-bold mb-2">@sessionSummary.Title</h1>
+            @if (!string.IsNullOrEmpty(sessionSummary.Goal))
+            {
+              <p class="text-muted mb-0">@sessionSummary.Goal</p>
+            }
+            <p class="text-muted small mt-2">Session Code: <strong>@sessionSummary.Code</strong></p>
+          </div>
 
-         <div class="wizard-content">
-      <div class="session-info">
-        <div class="session-meta">
-        <span class="session-code">Code: @sessionSummary?.Code</span>
-     <span class="session-status status-@sessionSummary?.Status.ToString().ToLower()">@sessionSummary?.Status</span>
-           </div>
-         </div>
+          <!-- Join Form -->
+          <div class="row justify-content-center">
+            <div class="col-md-8">
+              <h4 class="h5 fw-semibold mb-3">Your Information</h4>
 
-     <div class="form">
-          <h3>Your Information</h3>
-          
-       <div>
-  <label for="displayName">Display Name</label>
-              <input id="displayName" 
-         class="field" 
-           @bind="displayName" 
-  placeholder="How should others see you? (optional)" 
- maxlength="120" />
- </div>
+              <!-- Display Name -->
+              <div class="mb-3">
+                <label for="displayName" class="form-label">Display Name</label>
+                <input id="displayName" 
+                       type="text" 
+                       class="form-control" 
+                       @bind="displayName" 
+                       placeholder="How should others see you? (optional)" 
+                       maxlength="120" />
+              </div>
 
-  <div class="toggle">
-       <input type="checkbox" id="isAnonymous" @bind="isAnonymous" />
-              <label for="isAnonymous">Join anonymously</label>
-        <small class="subtle">Your responses will be included in results but not linked to you</small>
-       </div>
+              <!-- Anonymous Toggle -->
+              <div class="form-check mb-4">
+                <input type="checkbox" 
+                       class="form-check-input" 
+                       id="isAnonymous" 
+                       @bind="isAnonymous" />
+                <label class="form-check-label" for="isAnonymous">
+                  <strong>Join anonymously</strong>
+                  <small class="d-block text-muted">Your responses will be included in results but not linked to you</small>
+                </label>
+              </div>
 
-     @if (joinFormFields?.Any() == true)
-       {
- <div class="sp"></div>
-       <h4>Additional Information</h4>
-       
-  @foreach (var field in joinFormFields)
-      {
- <div>
- <label for="field-@field.Id" class="@(field.Required ? "required" : "")">
-       @field.Label
-      </label>
-          
-   @if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Text)
-      {
-    <input id="field-@field.Id" 
-         class="field" 
-       @bind="fieldValues[field.Id]" 
-     placeholder="@GetFieldPlaceholder(field)" />
- }
-     // ... other field types
-         </div>
-      }
+              <!-- Additional Fields -->
+              @if (joinFormFields?.Any() == true)
+              {
+                <h5 class="h6 fw-semibold mb-3">Additional Information</h5>
+                
+                @foreach (var field in joinFormFields)
+                {
+                  <div class="mb-3">
+                    @if (field.Type != TechWayFit.Pulse.Contracts.Enums.FieldType.Boolean)
+                    {
+                      <label for="field-@field.Id" class="form-label @(field.Required ? "required" : "")">
+                        @field.Label
+                        @if (field.Required)
+                        {
+                          <span class="text-danger">*</span>
+                        }
+                      </label>
                     }
 
-          @if (!string.IsNullOrEmpty(errorMessage))
-   {
-   <div class="alert alert-error">
-       @errorMessage
-      </div>
-         }
-       </div>
-       </div>
+                    @if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Text)
+                    {
+                      <input id="field-@field.Id" 
+                             type="text"
+                             class="form-control" 
+                             @bind="fieldValues[field.Id]" 
+                             placeholder="@GetFieldPlaceholder(field)" />
+                    }
+                    else if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Dropdown)
+                    {
+                      <select id="field-@field.Id" 
+                              class="form-select" 
+                              @bind="fieldValues[field.Id]">
+                        <option value="">-- Select @field.Label --</option>
+                        @if (field.OptionsList?.Any() == true)
+                        {
+                          @foreach (var option in field.OptionsList)
+                          {
+                            <option value="@option">@option</option>
+                          }
+                        }
+                      </select>
+                    }
+                    else if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Number)
+                    {
+                      <input id="field-@field.Id" 
+                             type="number"
+                             class="form-control" 
+                             @bind="fieldValues[field.Id]" 
+                             placeholder="@GetFieldPlaceholder(field)" />
+                    }
+                    else if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Boolean)
+                    {
+                      <div class="form-check">
+                        <input id="field-@field.Id" 
+                               type="checkbox"
+                               class="form-check-input" 
+                               @bind="fieldValues[field.Id]" />
+                        <label class="form-check-label" for="field-@field.Id">
+                          @field.Label
+                        </label>
+                      </div>
+                    }
+                  </div>
+                }
+              }
 
-     <div class="wizard-actions">
-   <button class="btn ghost large" @onclick="BackToStaticJoin">
- Change Code
-     </button>
-        <button class="btn primary large" 
-         @onclick="JoinSession" 
-     disabled="@(isLoading || !CanJoin)">
-     @if (isLoading)
-     {
-            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-          <span>Joining...</span>
-   }
-       else
-        {
-   <span class="btn-icon">?</span>
-    <span>Join Workshop</span>
-  }
- </button>
-  </div>
-    </div>
-  }
+              <!-- Error Display -->
+              @if (!string.IsNullOrEmpty(errorMessage))
+              {
+                <div class="alert alert-danger mb-4" role="alert">
+                  @errorMessage
+                </div>
+              }
+
+              <!-- Action Buttons -->
+              <div class="d-flex gap-3 justify-content-between">
+                <button type="button" 
+                        class="btn btn-outline-secondary" 
+                        @onclick="BackToStaticJoin">
+                  Change Code
+                </button>
+                <button type="button" 
+                        class="btn btn-primary pulse-btn-primary" 
+                        @onclick="JoinSession" 
+                        disabled="@(isLoading || !CanJoin)">
+                  @if (isLoading)
+                  {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Joining...</span>
+                  }
+                  else
+                  {
+                    <span>Join Workshop</span>
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
     else if (currentState == JoinState.Joined)
     {
-        <!-- Real-time participant experience with SignalR -->
-   <ParticipantDashboard SessionCode="@SessionCode" 
-    ParticipantId="@participantId" 
-       SessionSummary="@sessionSummary" />
+      <!-- Redirect to participant activity page -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+          <div class="text-success mb-3">
+            <i class="fas fa-check-circle fs-1"></i>
+          </div>
+          <h4 class="h5 fw-semibold mb-3">Successfully Joined!</h4>
+          <p class="text-muted mb-4">You have been added to the workshop. Redirecting to activity page...</p>
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
     }
+  </div>
 </main>
 
 @code {
-    [Parameter] public string SessionCode { get; set; } = string.Empty;
+  [Parameter]
+  [SupplyParameterFromQuery]
+  public string sessionCode { get; set; } = string.Empty;
 
-    private enum JoinState
-    {
-  FillForm,
+  private enum JoinState
+  {
+    FillForm,
     Joined
-    }
-
-    private JoinState currentState = JoinState.FillForm;
- private bool isLoading = false;
-    private string errorMessage = "";
-    private SessionSummaryResponse? sessionSummary;
-    private List<JoinFormFieldDto>? joinFormFields;
-    private string displayName = "";
- private bool isAnonymous = false;
- private Dictionary<string, string?> fieldValues = new();
-    private Guid? participantId;
-    private HubConnection? hubConnection;
-
-    protected override async Task OnInitializedAsync()
-  {
-  try
-     {
- // Load session data
- sessionSummary = await ApiService.GetSessionAsync(SessionCode);
-       joinFormFields = sessionSummary?.JoinFormFields ?? new List<JoinFormFieldDto>();
-        
-  // Initialize field values
-   fieldValues.Clear();
- if (joinFormFields?.Any() == true)
-    {
-           foreach (var field in joinFormFields)
-      {
-    fieldValues[field.Id] = "";
   }
-    }
 
-   // Setup SignalR connection for real-time updates
-      await SetupSignalRConnection();
- }
-catch (Exception ex)
-        {
-       errorMessage = $"Could not load session: {ex.Message}";
-        }
-    }
+  private JoinState currentState = JoinState.FillForm;
+  private bool isLoading = true;
+  private string errorMessage = "";
+  private SessionSummaryResponse? sessionSummary;
+  private List<JoinFormFieldDto>? joinFormFields;
+  private string displayName = "";
+  private bool isAnonymous = false;
+  private Dictionary<string, string?> fieldValues = new();
+  private Guid? participantId;
+  private HubConnection? hubConnection;
 
-    private async Task SetupSignalRConnection()
-    {
-    hubConnection = new HubConnectionBuilder()
-      .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
-     .Build();
-
- // Setup event handlers for real-time updates
-   hubConnection.On<object>("SessionStateChanged", async (data) =>
-   {
-    await InvokeAsync(StateHasChanged);
-      });
-
-        await hubConnection.StartAsync();
-  await hubConnection.InvokeAsync("Subscribe", SessionCode);
-    }
-
-private async Task JoinSession()
-    {
-      if (!CanJoin || sessionSummary == null) return;
-
-        isLoading = true;
-  errorMessage = "";
-
-        try
- {
-   var request = new JoinParticipantRequest
+  protected override async Task OnInitializedAsync()
   {
-  DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim(),
-     IsAnonymous = isAnonymous,
-     Dimensions = fieldValues.Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
-    .ToDictionary(kv => kv.Key, kv => kv.Value)
+    // Check if session code is provided
+    if (string.IsNullOrWhiteSpace(sessionCode))
+    {
+      errorMessage = "No session code provided. Please check your link.";
+      isLoading = false;
+      return;
+    }
+
+    try
+    {
+      isLoading = true;
+      
+      // Check if user already joined this session
+      var existingParticipantId = await CheckExistingParticipant();
+      if (existingParticipantId.HasValue)
+      {
+        // User already joined - redirect to activity page
+        participantId = existingParticipantId;
+        Navigation.NavigateTo($"/participant/activity/{sessionCode}");
+        return;
+      }
+      
+      // Load session data for new participants
+      sessionSummary = await ApiService.GetSessionAsync(sessionCode);
+      joinFormFields = sessionSummary?.JoinFormFields ?? new List<JoinFormFieldDto>();
+
+      // Initialize field values
+      fieldValues.Clear();
+      if (joinFormFields?.Any() == true)
+      {
+        foreach (var field in joinFormFields)
+        {
+          fieldValues[field.Id] = "";
+        }
+      }
+
+      // Setup SignalR connection for real-time updates
+      await SetupSignalRConnection();
+      
+      isLoading = false;
+    }
+    catch (Exception ex)
+    {
+      errorMessage = $"Could not load session: {ex.Message}";
+      isLoading = false;
+    }
+  }
+
+  private async Task SetupSignalRConnection()
+  {
+    hubConnection = new HubConnectionBuilder()
+    .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+    .Build();
+
+    // Setup event handlers for real-time updates
+    hubConnection.On<object>("SessionStateChanged", async (data) =>
+    {
+      await InvokeAsync(StateHasChanged);
+    });
+
+    await hubConnection.StartAsync();
+    await hubConnection.InvokeAsync("Subscribe", sessionCode);
+  }
+
+  private async Task JoinSession()
+  {
+    if (!CanJoin || sessionSummary == null) return;
+
+    isLoading = true;
+    errorMessage = "";
+
+    try
+    {
+      var request = new JoinParticipantRequest
+      {
+        DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim(),
+        IsAnonymous = isAnonymous,
+        Dimensions = fieldValues.Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
+      .ToDictionary(kv => kv.Key, kv => kv.Value)
       };
 
-            var response = await ApiService.JoinAsParticipantAsync(sessionSummary.Code, request);
-       participantId = response.ParticipantId;
-  currentState = JoinState.Joined;
- }
- catch (Exception ex)
- {
-            errorMessage = $"Could not join session: {ex.Message}";
-     }
-      finally
-        {
- isLoading = false;
- }
+      var response = await ApiService.JoinAsParticipantAsync(sessionSummary.Code, request);
+      participantId = response.ParticipantId;
+      
+      // Store participant info in browser storage to prevent duplicate joins
+      await StoreParticipantSession(response.ParticipantId, sessionSummary.Code);
+      
+      currentState = JoinState.Joined;
+      
+      // Redirect to activity page after a short delay
+      await Task.Delay(1500);
+      Navigation.NavigateTo($"/participant/activity/{sessionSummary.Code}");
     }
-
-    private void BackToStaticJoin()
+    catch (Exception ex)
     {
- Navigation.NavigateTo($"/static/home/join?code={SessionCode}");
+      errorMessage = $"Could not join session: {ex.Message}";
     }
+    finally
+    {
+      isLoading = false;
+    }
+  }
 
-    private string GetFieldPlaceholder(JoinFormFieldDto field) => 
-        field.Type switch
- {
-  TechWayFit.Pulse.Contracts.Enums.FieldType.Text => "Enter text...",
-            TechWayFit.Pulse.Contracts.Enums.FieldType.Number => "Enter number...",
-  _ => ""
- };
+  private void BackToStaticJoin()
+  {
+    Navigation.NavigateTo($"/participant/join?code={sessionCode}");
+  }
 
-    private bool CanJoin =>
-joinFormFields?.Where(f => f.Required)
-   .All(f => fieldValues.ContainsKey(f.Id) && !string.IsNullOrWhiteSpace(fieldValues[f.Id])) ?? true;
+  private string GetFieldPlaceholder(JoinFormFieldDto field) =>
+  field.Type switch
+  {
+    TechWayFit.Pulse.Contracts.Enums.FieldType.Text => "Enter text...",
+    TechWayFit.Pulse.Contracts.Enums.FieldType.Number => "Enter number...",
+    _ => ""
+  };
 
-    public async ValueTask DisposeAsync()
- {
-   if (hubConnection is not null)
-     {
-        await hubConnection.DisposeAsync();
+  private bool CanJoin =>
+  joinFormFields?.Where(f => f.Required)
+  .All(f => fieldValues.ContainsKey(f.Id) && !string.IsNullOrWhiteSpace(fieldValues[f.Id])) ?? true;
+
+  private async Task<Guid?> CheckExistingParticipant()
+  {
+    try
+    {
+      // Check localStorage for existing participant session
+      var storageKey = $"pulse_participant_{sessionCode}";
+      var participantData = await JS.InvokeAsync<string?>("localStorage.getItem", storageKey);
+      
+      if (!string.IsNullOrEmpty(participantData))
+      {
+        // Parse stored participant ID
+        if (Guid.TryParse(participantData, out var storedParticipantId))
+        {
+          // TODO: Optionally verify with server that participant is still active
+          return storedParticipantId;
         }
- }
+      }
+    }
+    catch (Exception ex)
+    {
+      // If localStorage fails, continue with normal join flow
+      Console.WriteLine($"Failed to check existing participant: {ex.Message}");
+    }
+    
+    return null;
+  }
+
+  private async Task StoreParticipantSession(Guid participantId, string sessionCode)
+  {
+    try
+    {
+      // Store participant ID in localStorage
+      var storageKey = $"pulse_participant_{sessionCode}";
+      await JS.InvokeVoidAsync("localStorage.setItem", storageKey, participantId.ToString());
+      
+      // Also store session timestamp for cleanup
+      var timestampKey = $"pulse_session_time_{sessionCode}";
+      await JS.InvokeVoidAsync("localStorage.setItem", timestampKey, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString());
+    }
+    catch (Exception ex)
+    {
+      // If localStorage fails, continue - not critical
+      Console.WriteLine($"Failed to store participant session: {ex.Message}");
+    }
+  }
+
+  public async ValueTask DisposeAsync()
+  {
+    if (hubConnection is not null)
+    {
+      await hubConnection.DisposeAsync();
+    }
+  }
 }

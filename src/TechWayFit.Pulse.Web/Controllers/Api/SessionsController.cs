@@ -103,9 +103,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPost("{code}/facilitators/join")]
     public async Task<ActionResult<ApiResponse<JoinFacilitatorResponse>>> JoinFacilitator(
-        string code,
-  [FromBody] JoinFacilitatorRequest request,
-        CancellationToken cancellationToken)
+        string code,  [FromBody] JoinFacilitatorRequest request,        CancellationToken cancellationToken)
     {
         var session = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (session is null)

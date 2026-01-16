@@ -122,6 +122,10 @@ builder.Services.AddScoped<ISessionCodeGenerator, SessionCodeGenerator>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ISessionGroupService, SessionGroupService>();
 
+// Token Services
+builder.Services.AddSingleton<IFacilitatorTokenService, FacilitatorTokenService>();
+builder.Services.AddScoped<IClientTokenService, ClientTokenService>();
+
 // Register file service and memory cache for template caching
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IFileService, FileService>();
@@ -191,6 +195,10 @@ app.UseRouting();
 
 // Add authentication & authorization middleware
 app.UseAuthentication();
+
+// Add facilitator token middleware (after authentication, before authorization)
+app.UseMiddleware<TechWayFit.Pulse.Web.Middleware.FacilitatorTokenMiddleware>();
+
 app.UseAuthorization();
 
 // Map API controllers first (highest priority)
