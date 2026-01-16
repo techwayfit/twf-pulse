@@ -40,7 +40,21 @@ public sealed class SessionRepository : ISessionRepository
 
     public async Task UpdateAsync(Session session, CancellationToken cancellationToken = default)
     {
-        _dbContext.Sessions.Update(session.ToRecord());
+        // Find the existing tracked entity or attach if not tracked
+        var existingRecord = await _dbContext.Sessions.FindAsync(new object[] { session.Id }, cancellationToken);
+
+        if (existingRecord == null)
+        {
+            // Entity doesn't exist in database - this shouldn't happen for Update
+            throw new InvalidOperationException($"Session with ID {session.Id} not found.");
+        }
+
+        // Update the existing record's properties from the domain entity
+        var updatedRecord = session.ToRecord();
+
+        // Copy all properties to the tracked entity
+        _dbContext.Entry(existingRecord).CurrentValues.SetValues(updatedRecord);
+
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 

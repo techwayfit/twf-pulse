@@ -73,17 +73,20 @@ builder.Services.AddHttpClient<IPulseApiService, PulseApiService>((serviceProvid
 {
     var httpContext = serviceProvider.GetService<IHttpContextAccessor>()?.HttpContext;
     if (httpContext != null)
-    {
-  var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
-        client.BaseAddress = new Uri(baseUrl);
-    }
+  {
+        var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+client.BaseAddress = new Uri(baseUrl);
+}
     else
     {
-        // Fallback for command line scenarios
-   client.BaseAddress = new Uri("https://localhost:7100");
+     // Fallback for command line scenarios
+      client.BaseAddress = new Uri("https://localhost:7100");
     }
- client.Timeout = TimeSpan.FromSeconds(30);
+    client.Timeout = TimeSpan.FromSeconds(30);
 });
+
+// Add default HttpClientFactory for dev/testing pages
+builder.Services.AddHttpClient();
 
 // Add HttpContextAccessor for dynamic URL resolution
 builder.Services.AddHttpContextAccessor();

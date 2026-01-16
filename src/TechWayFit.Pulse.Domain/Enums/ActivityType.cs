@@ -8,5 +8,6 @@ public enum ActivityType
     QnA = 3,
     Rating = 4,
     Quadrant = 5,
-    FiveWhys = 6
+    FiveWhys = 6,
+    GeneralFeedback = 7
 }
