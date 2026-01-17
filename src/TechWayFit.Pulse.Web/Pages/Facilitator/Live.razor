@@ -205,6 +205,12 @@ else if (session != null)
                                             SessionCode="@sessionCode"
                                             ActivityId="@currentActivity.ActivityId" />
                                     }
+                                    else if (currentActivity.Type == TechWayFit.Pulse.Contracts.Enums.ActivityType.WordCloud)
+                                    {
+                                        <TechWayFit.Pulse.Web.Components.Dashboards.WordCloudDashboard 
+                                            SessionCode="@sessionCode"
+                                            ActivityId="@currentActivity.ActivityId" />
+                                    }
                                     else
                                     {
                                         <div class="text-center">
@@ -385,10 +391,10 @@ else if (session != null)
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item disabled" href="#">
+                                    <a class="dropdown-item" href="/facilitator/activities/create-wordcloud?code=@sessionCode">
                                         <strong>☁️ Word Cloud</strong>
                                         <br />
-                                        <small class="text-muted">Short text responses (coming soon)</small>
+                                        <small class="text-muted">Short text responses</small>
                                     </a>
                                 </li>
                                 <li>

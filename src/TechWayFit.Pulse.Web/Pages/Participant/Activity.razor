@@ -9,6 +9,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Diagnostics
 @using System.Text.Json
+@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
 @implements IAsyncDisposable
 
 <PageTitle>Workshop Activity - @(session?.Title ?? "Loading...")</PageTitle>
@@ -216,6 +217,7 @@ private int contributionsRemaining = -1;
     
     // WordCloud state
     private string? wordCloudText;
+    private WordCloudConfig? wordCloudConfig;
     
     // Rating state
     private int selectedRating = 0;
@@ -312,6 +314,11 @@ private int contributionsRemaining = -1;
                             Debug.WriteLine($"Option: {option.Id} - {option.Label}");
                         }
                     }
+                    break;
+                case ActivityType.WordCloud:
+                    Debug.WriteLine($"Parsing word cloud config: {currentActivity.Config}");
+                    wordCloudConfig = JsonSerializer.Deserialize<WordCloudConfig>(currentActivity.Config, options);
+                    Debug.WriteLine($"Word cloud config parsed. Max words: {wordCloudConfig?.MaxWords ?? 0}");
                     break;
                 case ActivityType.GeneralFeedback:
                     feedbackConfig = JsonSerializer.Deserialize<GeneralFeedbackConfig>(currentActivity.Config, options);
@@ -534,20 +541,32 @@ name="pollChoice"
     private RenderFragment RenderWordCloudActivity() => __builder =>
     {
         <div class="wordcloud-activity card p-4">
-         <h3 class="mb-3">Share your thoughts:</h3>
- <div class="mb-3">
-      <textarea class="form-control" 
-  @bind="wordCloudText" 
-      rows="3"
-         placeholder="Type your response here (1-3 words)..."
-     maxlength="150"></textarea>
-             <small class="text-muted">@((wordCloudText?.Length ?? 0)) / 150 characters</small>
-   </div>
-  <button class="btn btn-primary btn-lg w-100" 
-         @onclick="SubmitWordCloudResponse" 
-    disabled="@(isSubmittingResponse || string.IsNullOrWhiteSpace(wordCloudText) || hasSubmittedResponse)">
-             @GetSubmitButtonText()
-        </button>
+            <h3 class="mb-3">Share your thoughts:</h3>
+            <div class="mb-3">
+                <textarea class="form-control" 
+                    @bind="wordCloudText" 
+                    rows="3"
+                    placeholder="@(wordCloudConfig?.Placeholder ?? "Enter your words here...")"
+                    maxlength="@(wordCloudConfig?.MaxWordLength * wordCloudConfig?.MaxWords ?? 150)"></textarea>
+                <small class="text-muted">
+                    @((wordCloudText?.Length ?? 0)) / @(wordCloudConfig?.MaxWordLength * wordCloudConfig?.MaxWords ?? 150) characters
+                    @if (wordCloudConfig != null)
+                    {
+                        <span class="ms-3">Max @wordCloudConfig.MaxWords words</span>
+                    }
+                </small>
+            </div>
+            <button class="btn btn-primary btn-lg w-100" 
+                @onclick="SubmitWordCloudResponse" 
+                disabled="@(isSubmittingResponse || string.IsNullOrWhiteSpace(wordCloudText) || hasSubmittedResponse || !IsWordCloudInputValid())">
+                @GetSubmitButtonText()
+            </button>
+            @if (wordCloudConfig != null && !IsWordCloudInputValid() && !string.IsNullOrWhiteSpace(wordCloudText))
+            {
+                <div class="alert alert-warning mt-3">
+                    @GetWordCloudValidationMessage()
+                </div>
+            }
         </div>
     };
 
@@ -721,10 +740,52 @@ name="pollChoice"
 
     private async Task SubmitWordCloudResponse()
     {
-   if (currentActivity == null || !Pid.HasValue || string.IsNullOrWhiteSpace(wordCloudText)) return;
+        if (currentActivity == null || !Pid.HasValue || string.IsNullOrWhiteSpace(wordCloudText)) return;
 
-  var payload = new { text = wordCloudText.Trim() };
+        var payload = new { text = wordCloudText.Trim() };
         await SubmitResponse(JsonSerializer.Serialize(payload));
+    }
+
+    private bool IsWordCloudInputValid()
+    {
+        if (string.IsNullOrWhiteSpace(wordCloudText) || wordCloudConfig == null) 
+            return string.IsNullOrWhiteSpace(wordCloudText); // Allow empty if no config
+
+        var words = wordCloudText.Trim().Split(new[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        // Check word count
+        if (words.Length > wordCloudConfig.MaxWords)
+            return false;
+            
+        // Check individual word lengths
+        foreach (var word in words)
+        {
+            if (word.Length < wordCloudConfig.MinWordLength || word.Length > wordCloudConfig.MaxWordLength)
+                return false;
+        }
+
+        return true;
+    }
+
+    private string GetWordCloudValidationMessage()
+    {
+        if (string.IsNullOrWhiteSpace(wordCloudText) || wordCloudConfig == null) 
+            return "";
+
+        var words = wordCloudText.Trim().Split(new[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        if (words.Length > wordCloudConfig.MaxWords)
+            return $"Too many words. Maximum allowed: {wordCloudConfig.MaxWords}, you have: {words.Length}";
+            
+        foreach (var word in words)
+        {
+            if (word.Length < wordCloudConfig.MinWordLength)
+                return $"Word '{word}' is too short. Minimum length: {wordCloudConfig.MinWordLength} characters";
+            if (word.Length > wordCloudConfig.MaxWordLength)
+                return $"Word '{word}' is too long. Maximum length: {wordCloudConfig.MaxWordLength} characters";
+        }
+
+        return "";
     }
 
     // ===================

@@ -22,6 +22,7 @@ public sealed class SessionsController : ControllerBase
     private readonly IResponseService _responses;
     private readonly IDashboardService _dashboards;
     private readonly IPollDashboardService _pollDashboards;
+    private readonly IWordCloudDashboardService _wordCloudDashboards;
     private readonly IFacilitatorTokenStore _facilitatorTokens;
     private readonly ISessionCodeGenerator _codeGenerator;
     private readonly IHubContext<WorkshopHub, IWorkshopClient> _hub;
@@ -34,6 +35,7 @@ public sealed class SessionsController : ControllerBase
         IResponseService responses,
         IDashboardService dashboards,
         IPollDashboardService pollDashboards,
+        IWordCloudDashboardService wordCloudDashboards,
         IFacilitatorTokenStore facilitatorTokens,
         ISessionCodeGenerator codeGenerator,
         IHubContext<WorkshopHub, IWorkshopClient> hub)
@@ -45,6 +47,7 @@ public sealed class SessionsController : ControllerBase
         _responses = responses;
         _dashboards = dashboards;
         _pollDashboards = pollDashboards;
+        _wordCloudDashboards = wordCloudDashboards;
         _facilitatorTokens = facilitatorTokens;
         _codeGenerator = codeGenerator;
         _hub = hub;
@@ -666,6 +669,39 @@ filters ?? new Dictionary<string, string?>(),
         catch (InvalidOperationException ex)
         {
             return BadRequest(Error<PollDashboardResponse>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpGet("{code}/activities/{activityId:guid}/dashboard/wordcloud")]
+    public async Task<ActionResult<ApiResponse<WordCloudDashboardResponse>>> GetWordCloudDashboard(
+        string code,
+        Guid activityId,
+        [FromQuery] Dictionary<string, string?>? filters,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<WordCloudDashboardResponse>("not_found", "Session not found."));
+            }
+
+            var dashboard = await _wordCloudDashboards.GetWordCloudDashboardAsync(
+                session.Id,
+                activityId,
+                filters ?? new Dictionary<string, string?>(),
+                cancellationToken);
+
+            return Ok(Wrap(dashboard));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<WordCloudDashboardResponse>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<WordCloudDashboardResponse>("validation_error", ex.Message));
         }
     }
 

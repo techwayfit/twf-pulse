@@ -1,0 +1,369 @@
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Contracts.Models
+@using TechWayFit.Pulse.Web.Services
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Web.Hubs
+@namespace TechWayFit.Pulse.Web.Components.Dashboards
+@inject IPulseApiService ApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ILogger<WordCloudDashboard> Logger
+@implements IAsyncDisposable
+
+<div class="wordcloud-dashboard">
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mt-3">Loading word cloud results...</div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @errorMessage
+        </div>
+    }
+    else if (dashboard != null)
+    {
+        <!-- WordCloud Dashboard Header -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h4 class="card-title fw-bold mb-1">@dashboard.ActivityTitle</h4>
+                        <div class="text-muted">Word Cloud Results</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mb-2">
+                            Live Results
+                        </div>
+                        @if (dashboard.LastResponseAt.HasValue)
+                        {
+                            <div class="small text-muted">
+                                Last updated: @dashboard.LastResponseAt.Value.ToString("HH:mm:ss")
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3 text-center">
+                            <div class="h4 text-primary mb-0">@dashboard.TotalResponses</div>
+                            <small class="text-muted">Responses</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-info bg-opacity-10 rounded-3 p-3 text-center">
+                            <div class="h4 text-info mb-0">@dashboard.RespondedParticipants</div>
+                            <small class="text-muted">Participants</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3 text-center">
+                            <div class="h4 text-success mb-0">@dashboard.TotalWords</div>
+                            <small class="text-muted">Total Words</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-3 text-center">
+                            <div class="h4 text-warning mb-0">@dashboard.UniqueWords</div>
+                            <small class="text-muted">Unique Words</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Participation Rate -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-semibold">Participation Rate</span>
+                        <span class="text-muted">@dashboard.RespondedParticipants / @dashboard.ParticipantCount participants</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-primary" 
+                             style="width: @(dashboard.ParticipantCount > 0 ? (dashboard.RespondedParticipants * 100.0 / dashboard.ParticipantCount) : 0)%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Word Cloud Visualization -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title fw-semibold mb-0">Word Frequencies</h5>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary @(viewType == "cloud" ? "active" : string.Empty)"
+                                @onclick="@(async () => await SetViewType("cloud"))">
+                            <i class="fas fa-cloud me-1"></i>Cloud
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary @(viewType == "chart" ? "active" : string.Empty)"
+                                @onclick="@(async () => await SetViewType("chart"))">
+                            <i class="fas fa-chart-bar me-1"></i>Chart
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary @(viewType == "list" ? "active" : string.Empty)"
+                                @onclick="@(async () => await SetViewType("list"))">
+                            <i class="fas fa-list me-1"></i>List
+                        </button>
+                    </div>
+                </div>
+
+                @if (dashboard.WordFrequencies.Any())
+                {
+                    @if (viewType == "cloud")
+                    {
+                        <!-- Word Cloud Canvas -->
+                        <div class="text-center mb-4">
+                            <canvas id="wordcloud-@ActivityId" width="600" height="400" style="max-width: 100%; border: 1px solid #dee2e6; border-radius: 8px;"></canvas>
+                        </div>
+                    }
+                    else if (viewType == "chart")
+                    {
+                        <!-- Bar Chart -->
+                        <div class="mb-4">
+                            <canvas id="wordcloud-chart-@ActivityId" width="600" height="400" style="max-width: 100%;"></canvas>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Word List View -->
+                        <div class="row">
+                            @foreach (var word in dashboard.WordFrequencies.Take(20))
+                            {
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-3">
+                                        <span class="fw-semibold">@word.Text</span>
+                                        <span class="badge bg-primary">@word.Count</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        
+                        @if (dashboard.WordFrequencies.Count > 20)
+                        {
+                            <div class="text-center mt-3">
+                                <small class="text-muted">Showing top 20 words out of @dashboard.WordFrequencies.Count unique words</small>
+                            </div>
+                        }
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-cloud fa-3x text-muted"></i>
+                        </div>
+                        <h6 class="text-muted">No words to display yet</h6>
+                        <p class="text-muted mb-0">Word cloud will appear as participants submit their responses.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-cloud fa-3x text-muted"></i>
+            </div>
+            <h6 class="text-muted">No data available</h6>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string SessionCode { get; set; } = string.Empty;
+    [Parameter] public Guid ActivityId { get; set; }
+
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private WordCloudDashboardResponse? dashboard;
+    private HubConnection? hubConnection;
+    private string viewType = "cloud";
+
+    private class WordData
+    {
+        public string Text { get; set; } = string.Empty;
+        public int Count { get; set; }
+    }
+
+    private class ChartData
+    {
+        public string Label { get; set; } = string.Empty;
+        public int Count { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboard();
+        await InitializeSignalR();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ActivityId != Guid.Empty)
+        {
+            await LoadDashboard();
+            await RenderVisualization();
+        }
+    }
+
+    private async Task LoadDashboard()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+
+            var filters = new Dictionary<string, string?>();
+            dashboard = await ApiService.GetWordCloudDashboardAsync(SessionCode, ActivityId, filters);
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.LogError(ex, "HTTP error loading word cloud dashboard for activity {ActivityId}: {StatusCode}", ActivityId, ex.Message);
+            errorMessage = $"Failed to load dashboard: {ex.Message}";
+            dashboard = null;
+        }
+        catch (InvalidOperationException ex)
+        {
+            Logger.LogError(ex, "Invalid operation loading word cloud dashboard for activity {ActivityId}", ActivityId);
+            errorMessage = ex.Message;
+            dashboard = null;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Unexpected error loading word cloud dashboard for activity {ActivityId}", ActivityId);
+            errorMessage = $"Failed to load dashboard: {ex.Message}";
+            dashboard = null;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task InitializeSignalR()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
+            {
+                Logger.LogInformation("WordCloud received ResponseReceived event: SessionCode={SessionCode}, ActivityId={ActivityId}", 
+                    responseEvent.SessionCode, responseEvent.ActivityId);
+                    
+                if (string.Equals(responseEvent.SessionCode, SessionCode, StringComparison.OrdinalIgnoreCase) 
+                    && responseEvent.ActivityId == ActivityId)
+                {
+                    Logger.LogInformation("WordCloud updating for matching activity {ActivityId}", ActivityId);
+                    await InvokeAsync(async () =>
+                    {
+                        await LoadDashboard();
+                        await RenderVisualization();
+                        StateHasChanged();
+                    });
+                }
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to initialize SignalR connection");
+        }
+    }
+
+    private async Task SetViewType(string type)
+    {
+        Logger.LogInformation("Switching view type to: {ViewType}", type);
+        viewType = type;
+        StateHasChanged();
+        await Task.Delay(100); // Allow UI to update
+        await RenderVisualization();
+    }
+
+    private async Task RenderVisualization()
+    {
+        Logger.LogInformation("RenderVisualization called for viewType: {ViewType}, HasData: {HasData}", 
+            viewType, dashboard?.WordFrequencies?.Any() ?? false);
+            
+        if (dashboard?.WordFrequencies?.Any() != true)
+            return;
+
+        try
+        {
+            if (viewType == "cloud")
+            {
+                await RenderWordCloud();
+            }
+            else if (viewType == "chart")
+            {
+                await RenderChart();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to render visualization");
+        }
+    }
+
+    private async Task RenderWordCloud()
+    {
+        var canvasId = $"wordcloud-{ActivityId}";
+        var words = dashboard?.WordFrequencies?
+            .Select(w => new WordData { Text = w.Text, Count = w.Count })
+            .ToArray();
+        
+        Logger.LogInformation("Rendering word cloud for canvas {CanvasId} with {Count} words", canvasId, words?.Length ?? 0);
+        
+        if (words?.Any() == true)
+        {
+            await Task.Delay(200); // Wait for canvas to be fully rendered in DOM
+            await JS.InvokeVoidAsync("renderWordCloud", canvasId, words);
+        }
+    }
+
+    private async Task RenderChart()
+    {
+        var chartId = $"wordcloud-chart-{ActivityId}";
+        var data = dashboard?.WordFrequencies?
+            .Take(10)
+            .Select(w => new ChartData { Label = w.Text, Count = w.Count })
+            .ToArray();
+        
+        Logger.LogInformation("Rendering chart for {ChartId} with {Count} items", chartId, data?.Length ?? 0);
+        
+        if (data?.Any() == true)
+        {
+            await Task.Delay(200); // Wait for canvas to be fully rendered
+            await JS.InvokeVoidAsync("renderWordCloudChart", chartId, data);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection != null)
+        {
+            try
+            {
+                await hubConnection.InvokeAsync("Unsubscribe", SessionCode);
+            }
+            catch
+            {
+                // Ignore errors during cleanup
+            }
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
