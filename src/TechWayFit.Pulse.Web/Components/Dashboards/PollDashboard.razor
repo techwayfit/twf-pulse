@@ -1,0 +1,441 @@
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Web.Services
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Web.Hubs
+@namespace TechWayFit.Pulse.Web.Components.Dashboards
+@inject IPulseApiService ApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ILogger<PollDashboard> Logger
+@implements IAsyncDisposable
+
+<div class="poll-dashboard">
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mt-3">Loading poll results...</div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @errorMessage
+        </div>
+    }
+    else if (dashboard != null)
+    {
+        <!-- Poll Dashboard Header -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h4 class="card-title fw-bold mb-1">@dashboard.ActivityTitle</h4>
+                        <div class="text-muted">Poll Results</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mb-2">
+                            Live Results
+                        </div>
+                        @if (dashboard.LastResponseAt.HasValue)
+                        {
+                            <div class="small text-muted">
+                                Last updated: @dashboard.LastResponseAt.Value.ToString("HH:mm:ss")
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-number text-primary">@dashboard.TotalResponses</div>
+                            <div class="stat-label">Total Responses</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-number text-success">@dashboard.RespondedParticipants</div>
+                            <div class="stat-label">Participants</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-number text-info">@GetParticipationRate()%</div>
+                            <div class="stat-label">Participation Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-number text-warning">@dashboard.Results.Count</div>
+                            <div class="stat-label">Options</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Poll Results -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Vote Distribution
+                </h5>
+
+                @if (dashboard.Results.Any())
+                {
+                    <div class="poll-results">
+                        @foreach (var result in dashboard.Results)
+                        {
+                            <div class="result-item mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="option-label fw-semibold">@result.Label</div>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="badge bg-primary">@result.Count votes</span>
+                                        <span class="percentage fw-bold text-primary">@result.Percentage.ToString("F1")%</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Progress Bar -->
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" 
+                                         role="progressbar" 
+                                         style="width: @result.Percentage%" 
+                                         aria-valuenow="@result.Percentage" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Chart Placeholder -->
+                    <div class="chart-container mt-5">
+                        <h6 class="mb-3">Visual Chart</h6>
+                        <div class="chart-wrapper p-4 border rounded bg-light" style="height: 400px; position: relative;">
+                            <canvas id="@canvasId"></canvas>
+                            <div class="text-muted mt-2 position-absolute" style="bottom: 10px; left: 50%; transform: translateX(-50%);">
+                                <small>Chart ID: @canvasId</small>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <div class="display-4 text-muted mb-3">📊</div>
+                        <h6 class="text-muted">No responses yet</h6>
+                        <p class="text-muted mb-0">Results will appear here once participants start voting.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Real-time Activity Log -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body p-4">
+                <h6 class="card-title">
+                    <i class="fas fa-clock me-2"></i>
+                    Recent Activity
+                </h6>
+                <div class="activity-log">
+                    @if (recentActivities.Any())
+                    {
+                        @foreach (var activity in recentActivities.Take(5))
+                        {
+                            <div class="activity-item d-flex align-items-center py-2">
+                                <div class="activity-icon me-3">
+                                    <i class="fas fa-vote-yea text-success"></i>
+                                </div>
+                                <div class="activity-text small">
+                                    <strong>New response</strong> submitted at @activity.ToString("HH:mm:ss")
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-muted small">No recent activity</div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+.poll-dashboard .stat-card {
+    text-align: center;
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    background: var(--bs-light);
+}
+
+.poll-dashboard .stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.poll-dashboard .stat-label {
+    font-size: 0.875rem;
+    color: var(--bs-secondary);
+    font-weight: 500;
+}
+
+.poll-dashboard .result-item {
+    background: var(--bs-gray-50);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+}
+
+.poll-dashboard .option-label {
+    color: var(--bs-dark);
+}
+
+.poll-dashboard .percentage {
+    font-size: 1.1rem;
+}
+
+.poll-dashboard .progress {
+    border-radius: 4px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.poll-dashboard .activity-item {
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.poll-dashboard .activity-item:last-child {
+    border-bottom: none;
+}
+
+.poll-dashboard .activity-icon {
+    width: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.poll-dashboard .chart-container canvas {
+    max-width: 100%;
+    height: auto;
+}
+</style>
+
+@code {
+    [Parameter] public string SessionCode { get; set; } = "";
+    [Parameter] public Guid ActivityId { get; set; }
+    [Parameter] public Dictionary<string, string?>? Filters { get; set; }
+
+    private readonly string canvasId = $"pollChart_{Guid.NewGuid().ToString("N")[..8]}";
+    private PollDashboardResponse? dashboard;
+    private bool isLoading = true;
+    private string errorMessage = "";
+    private List<DateTimeOffset> recentActivities = new();
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboard();
+        await SetupSignalRConnection();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!isLoading)
+        {
+            await LoadDashboard();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Logger.LogInformation("PollDashboard first render completed with canvas ID: {CanvasId}", canvasId);
+        }
+        
+        if (dashboard?.Results.Any() == true)
+        {
+            try
+            {
+                // Render chart
+                await RenderChart();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to render poll chart");
+            }
+        }
+    }
+
+    private async Task LoadDashboard() 
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = "";
+            StateHasChanged();
+
+            dashboard = await ApiService.GetPollDashboardAsync(SessionCode, ActivityId, Filters);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load poll dashboard: {ex.Message}";
+            Logger.LogError(ex, "Failed to load poll dashboard for session {SessionCode}, activity {ActivityId}", SessionCode, ActivityId);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RenderChart()
+    {
+        if (dashboard?.Results == null || !dashboard.Results.Any())
+        {
+            return;
+        }
+
+        try
+        {
+            // Ensure canvas ID is not null or empty
+            if (string.IsNullOrEmpty(canvasId))
+            {
+                Logger.LogError("Canvas ID is null or empty");
+                return;
+            }
+            
+            // Small delay to ensure DOM is ready
+            await Task.Delay(100);
+            
+            // Check if element exists before calling JavaScript
+            var elementExists = await JS.InvokeAsync<bool>("eval", $"!!document.getElementById('{canvasId}')");
+            if (!elementExists)
+            {
+                Logger.LogWarning("Canvas element with ID {CanvasId} does not exist in DOM", canvasId);
+                return;
+            }
+            
+            var labels = dashboard.Results.Select(r => r.Label).ToArray();
+            var data = dashboard.Results.Select(r => r.Count).ToArray();
+            var colors = GenerateColors(dashboard.Results.Count);
+
+            Logger.LogInformation("Rendering chart with canvas ID: {CanvasId}, Labels: [{Labels}], Data: [{Data}]", 
+                canvasId, string.Join(", ", labels), string.Join(", ", data));
+                
+            await JS.InvokeVoidAsync("renderPollChart", canvasId, labels, data, colors);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to render poll chart");
+        }
+    }
+
+    private string[] GenerateColors(int count)
+    {
+        var colors = new[]
+        {
+            "#0d6efd", "#6610f2", "#6f42c1", "#d63384", "#dc3545",
+            "#fd7e14", "#ffc107", "#198754", "#20c997", "#0dcaf0"
+        };
+
+        return Enumerable.Range(0, count)
+            .Select(i => colors[i % colors.Length])
+            .ToArray();
+    }
+
+    private int GetParticipationRate()
+    {
+        if (dashboard == null || dashboard.ParticipantCount == 0)
+        {
+            return 0;
+        }
+
+        return (int)Math.Round((double)dashboard.RespondedParticipants / dashboard.ParticipantCount * 100);
+    }
+
+    private async Task SetupSignalRConnection()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                .Build();
+
+            // Handle new responses
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (responseEvent.SessionCode == SessionCode && responseEvent.ActivityId == ActivityId)
+                    {
+                        recentActivities.Insert(0, responseEvent.CreatedAt);
+                        if (recentActivities.Count > 10)
+                        {
+                            recentActivities.RemoveAt(recentActivities.Count - 1);
+                        }
+                        
+                        // Reload dashboard data
+                        await LoadDashboard();
+                        
+                        // Ensure UI is updated before rendering chart
+                        StateHasChanged();
+                        
+                        // Re-render chart with smooth animation
+                        await RenderChart();
+                    }
+                });
+            });
+
+            // Handle dashboard updates
+            hubConnection.On<DashboardUpdatedEvent>("DashboardUpdated", async (dashboardEvent) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (dashboardEvent.SessionCode == SessionCode && dashboardEvent.ActivityId == ActivityId)
+                    {
+                        await LoadDashboard();
+                        
+                        // Ensure UI is updated before rendering chart
+                        StateHasChanged();
+                        
+                        await RenderChart();
+                    }
+                });
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to setup SignalR connection");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            try
+            {
+                await hubConnection.InvokeAsync("Unsubscribe", SessionCode);
+                await hubConnection.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error disposing SignalR connection");
+            }
+        }
+    }
+}

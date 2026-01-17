@@ -294,20 +294,35 @@ private int contributionsRemaining = -1;
 
         try
         {
-          switch (currentActivity.Type)
+            var options = new JsonSerializerOptions
             {
-        case ActivityType.Poll:
-        pollConfig = JsonSerializer.Deserialize<PollConfig>(currentActivity.Config);
-             break;
-      case ActivityType.GeneralFeedback:
-      feedbackConfig = JsonSerializer.Deserialize<GeneralFeedbackConfig>(currentActivity.Config);
-  break;
-   }
-  }
+                PropertyNameCaseInsensitive = true
+            };
+            
+            switch (currentActivity.Type)
+            {
+                case ActivityType.Poll:
+                    Debug.WriteLine($"Parsing poll config: {currentActivity.Config}");
+                    pollConfig = JsonSerializer.Deserialize<PollConfig>(currentActivity.Config, options);
+                    Debug.WriteLine($"Poll config parsed. Options count: {pollConfig?.Options?.Count ?? 0}");
+                    if (pollConfig?.Options != null)
+                    {
+                        foreach (var option in pollConfig.Options)
+                        {
+                            Debug.WriteLine($"Option: {option.Id} - {option.Label}");
+                        }
+                    }
+                    break;
+                case ActivityType.GeneralFeedback:
+                    feedbackConfig = JsonSerializer.Deserialize<GeneralFeedbackConfig>(currentActivity.Config, options);
+                    break;
+            }
+        }
         catch (JsonException ex)
         {
-     Debug.WriteLine($"Failed to parse activity config: {ex.Message}");
-   }
+            Debug.WriteLine($"Failed to parse activity config: {ex.Message}");
+            Debug.WriteLine($"Raw config: {currentActivity.Config}");
+        }
  }
 
     private async Task InitializeSignalR()
@@ -384,35 +399,42 @@ await hubConnection.StartAsync();
         <div class="poll-activity card p-4">
   <h3 class="mb-3">@(pollConfig?.AllowMultiple == true ? "Select one or more:" : "Make your choice:")</h3>
   
-     @if (pollConfig != null && pollConfig.Options != null)
+     @if (pollConfig != null && pollConfig.Options != null && pollConfig.Options.Count > 0)
       {
         <div class="poll-options mb-3">
    @foreach (var option in pollConfig.Options)
         {
              var optionId = option.Id;
-      <div class="form-check poll-option mb-2 p-3 border rounded">
+             var isSelected = selectedPollOptionIds.Contains(optionId);
+      <div class="form-check poll-option mb-3 p-4 border rounded-3 position-relative 
+                    @(isSelected ? "border-primary bg-primary bg-opacity-10" : "border-secondary") 
+                    poll-option-interactive" 
+           style="cursor: pointer; transition: all 0.2s ease-in-out;"
+           @onclick="@(async () => await HandlePollOptionClick(optionId, pollConfig.AllowMultiple))">
             @if (pollConfig.AllowMultiple)
   {
-       <input class="form-check-input" 
+       <input class="form-check-input position-absolute" 
       type="checkbox" 
                  id="poll-@optionId"
-                 checked="@selectedPollOptionIds.Contains(optionId)"
+                 checked="@isSelected"
+                 style="top: 1.2rem; left: 1rem;"
           @onchange="@((e) => TogglePollOption(optionId))" />
               }
          else
 {
-   <input class="form-check-input" 
+   <input class="form-check-input position-absolute" 
                  type="radio" 
     name="pollChoice"
          id="poll-@optionId"
-   checked="@selectedPollOptionIds.Contains(optionId)"
+   checked="@isSelected"
+                 style="top: 1.2rem; left: 1rem;"
          @onchange="@((e) => SelectPollOption(optionId))" />
  }
-     <label class="form-check-label w-100" for="poll-@optionId">
-      <strong>@option.Label</strong>
+     <label class="form-check-label w-100 ps-4" for="poll-@optionId" style="cursor: pointer;">
+      <strong class="d-block mb-1">@option.Label</strong>
         @if (!string.IsNullOrEmpty(option.Description))
          {
- <br /><small class="text-muted">@option.Description</small>
+ <small class="text-muted d-block">@option.Description</small>
           }
             </label>
          </div>
@@ -420,32 +442,40 @@ await hubConnection.StartAsync();
   
  @if (pollConfig.AllowCustomOption)
      {
-      <div class="form-check poll-option mb-2 p-3 border rounded">
+              var isCustomSelected = selectedPollOptionIds.Contains("custom");
+      <div class="form-check poll-option mb-3 p-4 border rounded-3 position-relative 
+                    @(isCustomSelected ? "border-primary bg-primary bg-opacity-10" : "border-secondary") 
+                    poll-option-interactive" 
+           style="cursor: pointer; transition: all 0.2s ease-in-out;"
+           @onclick="@(async () => await HandlePollOptionClick("custom", pollConfig.AllowMultiple))">
          @if (pollConfig.AllowMultiple)
     {
-        <input class="form-check-input" 
+        <input class="form-check-input position-absolute" 
   type="checkbox" 
    id="poll-custom"
-              checked="@selectedPollOptionIds.Contains("custom")"
+              checked="@isCustomSelected"
+              style="top: 1.2rem; left: 1rem;"
         @onchange="@((e) => TogglePollOption("custom"))" />
 }
              else
     {
-        <input class="form-check-input" 
+        <input class="form-check-input position-absolute" 
       type="radio" 
 name="pollChoice"
    id="poll-custom"
-       checked="@selectedPollOptionIds.Contains("custom")"
+       checked="@isCustomSelected"
+              style="top: 1.2rem; left: 1rem;"
     @onchange="@((e) => SelectPollOption("custom"))" />
     }
-            <label class="form-check-label w-100" for="poll-custom">
-   <strong>Other</strong>
-@if (selectedPollOptionIds.Contains("custom"))
+            <label class="form-check-label w-100 ps-4" for="poll-custom" style="cursor: pointer;">
+   <strong class="d-block mb-2">Other</strong>
+@if (isCustomSelected)
   {
               <input type="text" 
-   class="form-control mt-2" 
+   class="form-control" 
       placeholder="@pollConfig.CustomOptionPlaceholder"
     @bind="customPollText"
+                     @onclick:stopPropagation="true"
        maxlength="100" />
     }
         </label>
@@ -455,14 +485,49 @@ name="pollChoice"
       }
             else
    {
-         <div class="alert alert-warning">No poll options configured.</div>
+         <div class="alert alert-warning">
+             @if (pollConfig == null)
+             {
+                 <span>Poll configuration is null.</span>
+             }
+             else if (pollConfig.Options == null)
+             {
+                 <span>Poll options are null.</span>
+             }
+             else if (pollConfig.Options.Count == 0)
+             {
+                 <span>No poll options found.</span>
+             }
+             else
+             {
+                 <span>No poll options configured.</span>
+             }
+         </div>
      }
             
  <button class="btn btn-primary btn-lg w-100" 
-        @onclick="SubmitPollResponse" 
+        @onclick="HandleSubmitPollResponse" 
    disabled="@(isSubmittingResponse || selectedPollOptionIds.Count == 0 || hasSubmittedResponse)">
      @GetSubmitButtonText()
           </button>
+
+          <!-- Debug info -->
+          <div class="mt-2 small text-muted">
+              Debug: isSubmitting=@isSubmittingResponse, optionsSelected=@selectedPollOptionIds.Count, hasSubmitted=@hasSubmittedResponse
+          </div>
+          
+          @if (!string.IsNullOrEmpty(submitMessage))
+          {
+              <div class="alert alert-info mt-2">
+                  @submitMessage
+                  @if (submitMessage.Contains("ERROR") && submitMessage.Contains("Pid"))
+                  {
+                      <div class="mt-2">
+                          <a href="/participant/join?code=@SessionCode" class="btn btn-primary btn-sm">Rejoin Session</a>
+                      </div>
+                  }
+              </div>
+          }
         </div>
     };
 
@@ -587,7 +652,7 @@ name="pollChoice"
         selectedPollOptionIds.Clear();
         selectedPollOptionIds.Add(optionId);
         hasSubmittedResponse = false;
-      submitMessage = "";
+        submitMessage = $"Selected option: {optionId}";
     }
 
     private void TogglePollOption(string optionId)
@@ -595,23 +660,56 @@ name="pollChoice"
         if (selectedPollOptionIds.Contains(optionId))
         {
             selectedPollOptionIds.Remove(optionId);
+            submitMessage = $"Deselected option: {optionId}";
         }
         else
         {
-        selectedPollOptionIds.Add(optionId);
+            selectedPollOptionIds.Add(optionId);
+            submitMessage = $"Selected option: {optionId}";
         }
         hasSubmittedResponse = false;
-        submitMessage = "";
+    }
+
+    private async Task HandlePollOptionClick(string optionId, bool allowMultiple)
+    {
+        if (allowMultiple)
+        {
+            TogglePollOption(optionId);
+        }
+        else
+        {
+            SelectPollOption(optionId);
+        }
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleSubmitPollResponse()
+    {
+        try
+        {
+            await SubmitPollResponse();
+        }
+        catch (Exception ex)
+        {
+            submitMessage = $"Error: {ex.Message}";
+            StateHasChanged();
+        }
     }
 
     private async Task SubmitPollResponse()
-    {
-    if (currentActivity == null || !Pid.HasValue) return;
+    {        
+        if (currentActivity == null || !Pid.HasValue) 
+        {
+            submitMessage = "ERROR: currentActivity is null or Pid is not set. Please try rejoining the session.";
+            StateHasChanged();
+            return;
+        }
 
         var payload = new
         {
-      selectedOptionIds = selectedPollOptionIds,
-        customOptionText = selectedPollOptionIds.Contains("custom") ? customPollText : null
+            selectedOptionIds = selectedPollOptionIds,
+            customOptionText = selectedPollOptionIds.Contains("custom") ? customPollText : null
         };
 
         await SubmitResponse(JsonSerializer.Serialize(payload));
@@ -697,40 +795,47 @@ name="pollChoice"
     // ===================
 
     private async Task SubmitResponse(string payload)
-    {
-        if (currentActivity == null || !Pid.HasValue) return;
+    {        
+        if (currentActivity == null || !Pid.HasValue) 
+        {
+            submitMessage = "ERROR: Validation failed in SubmitResponse";
+            StateHasChanged();
+            return;
+        }
 
         isSubmittingResponse = true;
- submitMessage = "";
+        submitMessage = "";
         submitSuccess = false;
+        StateHasChanged();
 
         try
         {
-         var request = new SubmitResponseRequest
-       {
-       ParticipantId = Pid.Value,
-     Payload = payload
+            // Convert to proper request type
+            var request = new TechWayFit.Pulse.Contracts.Requests.SubmitResponseRequest
+            {
+                ParticipantId = Pid.Value,
+                Payload = payload
             };
 
-        await ApiService.SubmitResponseAsync(SessionCode, currentActivity.ActivityId, request);
+            await ApiService.SubmitResponseAsync(SessionCode, currentActivity.ActivityId, request);
 
             hasSubmittedResponse = true;
-     totalResponsesSubmitted++;
-         contributionsRemaining--;
-      submitSuccess = true;
-       submitMessage = "Response submitted successfully!";
-  
+            totalResponsesSubmitted++;
+            contributionsRemaining--;
+            submitSuccess = true;
+            submitMessage = "Response submitted successfully!";
+            
             ResetFormFields();
         }
         catch (Exception ex)
         {
-   submitSuccess = false;
-      submitMessage = $"Failed to submit response: {ex.Message}";
-     }
-finally
+            submitSuccess = false;
+            submitMessage = $"API Error: {ex.Message}";
+        }
+        finally
         {
-       isSubmittingResponse = false;
-         StateHasChanged();
+            isSubmittingResponse = false;
+            StateHasChanged();
         }
     }
 

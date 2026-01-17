@@ -21,6 +21,7 @@ public sealed class SessionsController : ControllerBase
     private readonly IParticipantService _participants;
     private readonly IResponseService _responses;
     private readonly IDashboardService _dashboards;
+    private readonly IPollDashboardService _pollDashboards;
     private readonly IFacilitatorTokenStore _facilitatorTokens;
     private readonly ISessionCodeGenerator _codeGenerator;
     private readonly IHubContext<WorkshopHub, IWorkshopClient> _hub;
@@ -31,7 +32,8 @@ public sealed class SessionsController : ControllerBase
         IActivityService activities,
         IParticipantService participants,
         IResponseService responses,
-      IDashboardService dashboards,
+        IDashboardService dashboards,
+        IPollDashboardService pollDashboards,
         IFacilitatorTokenStore facilitatorTokens,
         ISessionCodeGenerator codeGenerator,
         IHubContext<WorkshopHub, IWorkshopClient> hub)
@@ -42,6 +44,7 @@ public sealed class SessionsController : ControllerBase
         _participants = participants;
         _responses = responses;
         _dashboards = dashboards;
+        _pollDashboards = pollDashboards;
         _facilitatorTokens = facilitatorTokens;
         _codeGenerator = codeGenerator;
         _hub = hub;
@@ -99,6 +102,21 @@ public sealed class SessionsController : ControllerBase
         }
 
         return Ok(Wrap(ApiMapper.ToSummary(session)));
+    }
+
+    [HttpGet("{code}/participants/count")]
+    public async Task<ActionResult<ApiResponse<int>>> GetParticipantCount(
+        string code,
+        CancellationToken cancellationToken)
+    {
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
+        {
+            return NotFound(Error<int>("not_found", "Session not found."));
+        }
+
+        var participants = await _participants.GetBySessionAsync(session.Id, cancellationToken);
+        return Ok(Wrap(participants.Count));
     }
 
     [HttpPost("{code}/facilitators/join")]
@@ -615,6 +633,39 @@ filters ?? new Dictionary<string, string?>(),
         catch (InvalidOperationException ex)
         {
             return BadRequest(Error<DashboardResponse>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpGet("{code}/activities/{activityId:guid}/dashboard/poll")]
+    public async Task<ActionResult<ApiResponse<PollDashboardResponse>>> GetPollDashboard(
+        string code,
+        Guid activityId,
+        [FromQuery] Dictionary<string, string?>? filters,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<PollDashboardResponse>("not_found", "Session not found."));
+            }
+
+            var dashboard = await _pollDashboards.GetPollDashboardAsync(
+                session.Id,
+                activityId,
+                filters ?? new Dictionary<string, string?>(),
+                cancellationToken);
+
+            return Ok(Wrap(dashboard));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<PollDashboardResponse>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<PollDashboardResponse>("validation_error", ex.Message));
         }
     }
 

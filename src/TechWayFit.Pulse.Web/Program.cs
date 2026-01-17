@@ -65,6 +65,17 @@ builder.Services.AddServerSideBlazor(options =>
     options.MaxBufferedUnacknowledgedRenderBatches = 10; // Reduce memory usage
 });
 
+// Add session support for token storage
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(2);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// Add HttpContextAccessor for session access
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<IFacilitatorTokenStore, FacilitatorTokenStore>();
 
@@ -118,6 +129,7 @@ builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IParticipantService, ParticipantService>();
 builder.Services.AddScoped<IResponseService, ResponseService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IPollDashboardService, PollDashboardService>();
 builder.Services.AddScoped<ISessionCodeGenerator, SessionCodeGenerator>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ISessionGroupService, SessionGroupService>();
@@ -192,6 +204,9 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseRouting();
+
+// Add session middleware for facilitator token storage
+app.UseSession();
 
 // Add authentication & authorization middleware
 app.UseAuthentication();

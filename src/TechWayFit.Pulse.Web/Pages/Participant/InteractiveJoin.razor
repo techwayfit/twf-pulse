@@ -247,7 +247,7 @@
       {
         // User already joined - redirect to activity page
         participantId = existingParticipantId;
-        Navigation.NavigateTo($"/participant/activity/{sessionCode}");
+        Navigation.NavigateTo($"/participant/activity/{sessionCode}?Pid={existingParticipantId}");
         return;
       }
       
@@ -320,7 +320,7 @@
       
       // Redirect to activity page after a short delay
       await Task.Delay(1500);
-      Navigation.NavigateTo($"/participant/activity/{sessionSummary.Code}");
+      Navigation.NavigateTo($"/participant/activity/{sessionSummary.Code}?Pid={response.ParticipantId}");
     }
     catch (Exception ex)
     {

@@ -1,6 +1,7 @@
 @page "/facilitator/activities/create-poll"
 @inject NavigationManager Navigation
 @inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
+@inject TechWayFit.Pulse.Web.Services.IClientTokenService TokenService
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Enums
 @using System.Text.Json
@@ -217,19 +218,19 @@
             // Build config
             var config = new
             {
-                options = validOptions.Select((o, i) => new
+                Options = validOptions.Select((o, i) => new
                 {
-                    id = $"opt-{i + 1}",
-                    label = o.Label.Trim(),
-                    description = o.Description?.Trim()
+                    Id = $"opt-{i + 1}",
+                    Label = o.Label.Trim(),
+                    Description = o.Description?.Trim()
                 }).ToArray(),
-                allowMultiple = allowMultiple,
-                minSelections = allowMultiple ? minSelections : 1,
-                maxSelections = allowMultiple ? maxSelections : 1,
-                allowCustomOption = allowCustomOption,
-                customOptionPlaceholder = allowCustomOption ? customOptionPlaceholder : "",
-                randomizeOrder = false,
-                showResultsAfterSubmit = false
+                AllowMultiple = allowMultiple,
+                MinSelections = allowMultiple ? minSelections : 1,
+                MaxSelections = allowMultiple ? maxSelections : 1,
+                AllowCustomOption = allowCustomOption,
+                CustomOptionPlaceholder = allowCustomOption ? customOptionPlaceholder : "",
+                RandomizeOrder = false,
+                ShowResultsAfterSubmit = false
             };
 
             // Get next order number (TODO: Get from API)
@@ -245,7 +246,15 @@
                 JsonSerializer.Serialize(config)
             );
 
-            var activity = await ApiService.CreateActivityAsync(sessionCode, request);
+            // Get facilitator token from token service
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
+            }
+
+            var activity = await ApiService.CreateActivityAsync(sessionCode, request, token);
 
             createdActivityId = activity.ActivityId;
             successMessage = $"Poll activity '{title}' created successfully!";

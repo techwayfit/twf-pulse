@@ -184,12 +184,23 @@ else if (session != null)
                                     </div>
                                 </div>
 
-                                <!-- Placeholder for live preview -->
-                                <div class="bg-light rounded-3 p-4 mb-3 text-center">
-                                    <p class="text-muted mb-0">
-                                        <i class="fas fa-chart-bar me-2"></i>
-                                        Live responses will appear here (dashboard coming soon)
-                                    </p>
+                                <!-- Live Activity Dashboard -->
+                                <div class="bg-light rounded-3 p-4 mb-3">
+                                    @if (currentActivity.Type == TechWayFit.Pulse.Contracts.Enums.ActivityType.Poll)
+                                    {
+                                        <TechWayFit.Pulse.Web.Components.Dashboards.PollDashboard 
+                                            SessionCode="@sessionCode"
+                                            ActivityId="@currentActivity.ActivityId" />
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center">
+                                            <p class="text-muted mb-0">
+                                                <i class="fas fa-chart-bar me-2"></i>
+                                                Live dashboard for @currentActivity.Type activities coming soon
+                                            </p>
+                                        </div>
+                                    }
                                 </div>
 
                                 <!-- Activity Controls -->
@@ -404,6 +415,7 @@ else if (session != null)
     protected override async Task OnInitializedAsync()
     {
         await LoadSession();
+        await EnsureFacilitatorAuthentication();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -435,6 +447,37 @@ else if (session != null)
                     StateHasChanged();
                 }
             }
+        }
+    }
+
+    private async Task EnsureFacilitatorAuthentication()
+    {
+        try
+        {
+            // Check if token was provided in query parameter first
+            if (!string.IsNullOrEmpty(Token))
+            {
+                await TokenService.StoreFacilitatorTokenAsync(sessionCode, Token);
+                Logger.LogDebug("Stored facilitator token from query parameter for session {SessionCode}", sessionCode);
+                return;
+            }
+
+            // Try to get a token (this will automatically join as facilitator if needed)
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (!string.IsNullOrEmpty(token))
+            {
+                Logger.LogInformation("Successfully obtained facilitator token for session {SessionCode}", sessionCode);
+            }
+            else
+            {
+                Logger.LogError("Failed to obtain facilitator token for session {SessionCode}", sessionCode);
+                errorMessage = "Failed to authenticate as facilitator. Please refresh and try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to ensure facilitator authentication for session {SessionCode}", sessionCode);
+            errorMessage = $"Authentication error: {ex.Message}. Please refresh and try again.";
         }
     }
 
@@ -471,9 +514,16 @@ else if (session != null)
             activities = (await ApiService.GetAgendaAsync(sessionCode)).ToList();
             currentActivity = activities.FirstOrDefault(a => a.Status == Contracts.Enums.ActivityStatus.Open);
 
-            // Get actual participant count from session summary
-            // The GetSessionAsync should include participant count in the response
-            participantCount = 0; // Will be updated via SignalR events
+            // Load initial participant count from API
+            try
+            {
+                participantCount = await ApiService.GetParticipantCountAsync(sessionCode);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "Failed to load initial participant count, defaulting to 0");
+                participantCount = 0; // Will be updated via SignalR events
+            }
 
             // Build join URL
             var uri = new Uri(Navigation.Uri);
@@ -530,7 +580,7 @@ else if (session != null)
             StateHasChanged();
 
             // Get facilitator token from token service
-            var token = await TokenService.GetFacilitatorTokenAsync();
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
             if (string.IsNullOrEmpty(token))
             {
                 errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
@@ -563,7 +613,7 @@ else if (session != null)
             StateHasChanged();
 
             // Get facilitator token from token service
-            var token = await TokenService.GetFacilitatorTokenAsync();
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
             if (string.IsNullOrEmpty(token))
             {
                 errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
@@ -638,18 +688,68 @@ else if (session != null)
 
     private async Task OpenActivity(Guid activityId)
     {
-        // TODO: Need facilitator token - for now skip
-        errorMessage = "Opening activities requires facilitator authentication (coming soon)";
-        StateHasChanged();
+        try
+        {
+            isPerformingAction = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
+            }
+
+            await ApiService.OpenActivityAsync(sessionCode, activityId, token);
+            
+            // Reload session to get updated activity status
+            await LoadSession();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to open activity: {ex.Message}";
+            Logger.LogError(ex, "Failed to open activity {ActivityId}", activityId);
+        }
+        finally
+        {
+            isPerformingAction = false;
+            StateHasChanged();
+        }
     }
 
     private async Task CloseCurrentActivity()
     {
         if (currentActivity == null) return;
 
-        // TODO: Need facilitator token
-        errorMessage = "Closing activities requires facilitator authentication (coming soon)";
-        StateHasChanged();
+        try
+        {
+            isPerformingAction = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
+            }
+
+            await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+            
+            // Reload session to get updated activity status
+            await LoadSession();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to close activity: {ex.Message}";
+            Logger.LogError(ex, "Failed to close activity {ActivityId}", currentActivity?.ActivityId);
+        }
+        finally
+        {
+            isPerformingAction = false;
+            StateHasChanged();
+        }
     }
 
     private async Task MoveNext()
@@ -663,9 +763,9 @@ else if (session != null)
         {
             // 1. Find next pending activity
             var nextActivity = activities
-         .Where(a => a.Order > currentActivity.Order && a.Status == Contracts.Enums.ActivityStatus.Pending)
-  .OrderBy(a => a.Order)
-  .FirstOrDefault();
+                .Where(a => a.Order > currentActivity.Order && a.Status == Contracts.Enums.ActivityStatus.Pending)
+                .OrderBy(a => a.Order)
+                .FirstOrDefault();
 
             if (nextActivity == null)
             {
@@ -673,14 +773,21 @@ else if (session != null)
                 return;
             }
 
-            // TODO: Close current and open next via API
-            // For now, just show error
-            errorMessage = "Move Next requires facilitator authentication (coming soon)";
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
+            }
 
-            // Future implementation:
-            // await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, facilitatorToken);
-            // await ApiService.OpenActivityAsync(sessionCode, nextActivity.ActivityId, facilitatorToken);
-            // await LoadSession();
+            // 2. Close current activity
+            await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+            
+            // 3. Open next activity
+            await ApiService.OpenActivityAsync(sessionCode, nextActivity.ActivityId, token);
+            
+            // 4. Reload session
+            await LoadSession();
         }
         catch (Exception ex)
         {
@@ -705,9 +812,9 @@ else if (session != null)
         {
             // 1. Find previous activity (either pending or closed)
             var previousActivity = activities
-             .Where(a => a.Order < currentActivity.Order)
-             .OrderByDescending(a => a.Order)
-           .FirstOrDefault();
+                .Where(a => a.Order < currentActivity.Order)
+                .OrderByDescending(a => a.Order)
+                .FirstOrDefault();
 
             if (previousActivity == null)
             {
@@ -715,13 +822,21 @@ else if (session != null)
                 return;
             }
 
-            // TODO: Close current and open previous via API
-            errorMessage = "Go Back requires facilitator authentication (coming soon)";
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
+            }
 
-            // Future implementation:
-            // await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, facilitatorToken);
-            // await ApiService.OpenActivityAsync(sessionCode, previousActivity.ActivityId, facilitatorToken);
-            // await LoadSession();
+            // 2. Close current activity
+            await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+            
+            // 3. Open previous activity
+            await ApiService.OpenActivityAsync(sessionCode, previousActivity.ActivityId, token);
+            
+            // 4. Reload session
+            await LoadSession();
         }
         catch (Exception ex)
         {
@@ -745,9 +860,34 @@ else if (session != null)
             return;
         }
 
-        // TODO: Reopen via API
-        errorMessage = "Reopening activities requires facilitator authentication (coming soon)";
-        StateHasChanged();
+        try
+        {
+            isPerformingAction = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
+            }
+
+            await ApiService.OpenActivityAsync(sessionCode, activityId, token);
+            
+            // Reload session to get updated activity status
+            await LoadSession();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to reopen activity: {ex.Message}";
+            Logger.LogError(ex, "Failed to reopen activity {ActivityId}", activityId);
+        }
+        finally
+        {
+            isPerformingAction = false;
+            StateHasChanged();
+        }
     }
 
     private async Task SetupSignalRConnection()
@@ -780,6 +920,41 @@ else if (session != null)
                     {
                         participantCount = participantEvent.TotalParticipantCount;
                         StateHasChanged();
+                    }
+                });
+            });
+
+            // Handle response received events (for real-time response tracking)
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
+            {
+                await InvokeAsync(() =>
+                {
+                    if (session != null && responseEvent.SessionCode == session.Code)
+                    {
+                        // Trigger UI refresh - the PollDashboard component handles its own SignalR updates
+                        if (currentActivity != null && 
+                            responseEvent.ActivityId == currentActivity.ActivityId)
+                        {
+                            StateHasChanged();
+                        }
+                    }
+                });
+            });
+
+            // Handle dashboard update events (for real-time dashboard updates)
+            hubConnection.On<DashboardUpdatedEvent>("DashboardUpdated", async (dashboardEvent) =>
+            {
+                await InvokeAsync(() =>
+                {
+                    if (session != null && dashboardEvent.SessionCode == session.Code)
+                    {
+                        // Trigger UI refresh - the dashboard components handle their own updates
+                        if (currentActivity != null && 
+                            dashboardEvent.ActivityId.HasValue &&
+                            dashboardEvent.ActivityId == currentActivity.ActivityId)
+                        {
+                            StateHasChanged();
+                        }
                     }
                 });
             });

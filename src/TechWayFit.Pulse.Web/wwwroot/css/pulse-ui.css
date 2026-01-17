@@ -49,6 +49,62 @@
   --line: rgba(15,36,56,.12);
 }
 
+/* Enhanced Poll Option Styling */
+.poll-option-interactive {
+  transition: all 0.2s ease-in-out;
+  border: 2px solid #e9ecef !important;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.poll-option-interactive:hover {
+  border-color: var(--blue) !important;
+  background: rgba(45, 127, 249, 0.05);
+  box-shadow: 0 4px 12px rgba(45, 127, 249, 0.15);
+  transform: translateY(-2px);
+}
+
+.poll-option-interactive.border-primary {
+  border-color: var(--blue) !important;
+  background: rgba(45, 127, 249, 0.1);
+  box-shadow: 0 4px 16px rgba(45, 127, 249, 0.2);
+}
+
+.poll-option-interactive.border-primary:hover {
+  background: rgba(45, 127, 249, 0.15);
+  box-shadow: 0 6px 20px rgba(45, 127, 249, 0.25);
+  transform: translateY(-3px);
+}
+
+.poll-option-interactive .form-check-input {
+  transform: scale(1.2);
+  border: 2px solid var(--blue);
+}
+
+.poll-option-interactive .form-check-input:checked {
+  background-color: var(--blue);
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(45, 127, 249, 0.2);
+}
+
+.poll-option-interactive label {
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+
+.poll-option-interactive label strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.poll-option-interactive:hover label strong {
+  color: var(--blue);
+}
+
+.poll-option-interactive.border-primary label strong {
+  color: var(--blue);
+}
+
 * { box-sizing: border-box; }
 body {
   margin: 0;

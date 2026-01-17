@@ -10,16 +10,18 @@ public interface IPulseApiService
 {
     Task<CreateSessionResponse> CreateSessionAsync(CreateSessionRequest request, CancellationToken cancellationToken = default);
     Task<SessionSummaryResponse> GetSessionAsync(string code, CancellationToken cancellationToken = default);
+    Task<int> GetParticipantCountAsync(string code, CancellationToken cancellationToken = default);
     Task<JoinFacilitatorResponse> JoinAsFacilitatorAsync(string code, JoinFacilitatorRequest request, CancellationToken cancellationToken = default);
     Task<JoinParticipantResponse> JoinAsParticipantAsync(string code, JoinParticipantRequest request, CancellationToken cancellationToken = default);
     Task<SessionSummaryResponse> StartSessionAsync(string code, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<SessionSummaryResponse> EndSessionAsync(string code, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<ActivityResponse> AddActivityAsync(string code, AddActivityRequest request, string facilitatorToken, CancellationToken cancellationToken = default);
-    Task<ActivityResponse> CreateActivityAsync(string code, CreateActivityRequest request, CancellationToken cancellationToken = default);
+    Task<ActivityResponse> CreateActivityAsync(string code, CreateActivityRequest request, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<ActivityResponse> OpenActivityAsync(string code, Guid activityId, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<ActivityResponse> CloseActivityAsync(string code, Guid activityId, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<AgendaActivityResponse>> GetAgendaAsync(string code, CancellationToken cancellationToken = default);
     Task<SubmitResponseResponse> SubmitResponseAsync(string code, Guid activityId, SubmitResponseRequest request, CancellationToken cancellationToken = default);
+    Task<PollDashboardResponse> GetPollDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
 }
 
 public class PulseApiService : IPulseApiService
@@ -74,6 +76,27 @@ public class PulseApiService : IPulseApiService
 
         var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
         var apiResponse = JsonSerializer.Deserialize<ApiResponse<SessionSummaryResponse>>(responseJson, _jsonOptions);
+
+        if (apiResponse?.Errors?.Any() == true)
+        {
+            throw new InvalidOperationException(string.Join(", ", apiResponse.Errors.Select(e => e.Message)));
+        }
+
+        return apiResponse?.Data ?? throw new InvalidOperationException("Invalid response from server");
+    }
+
+    public async Task<int> GetParticipantCountAsync(string code, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync($"/api/sessions/{Uri.EscapeDataString(code)}/participants/count", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException($"Failed to get participant count: {response.StatusCode} - {errorContent}");
+        }
+
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+        var apiResponse = JsonSerializer.Deserialize<ApiResponse<int>>(responseJson, _jsonOptions);
 
         if (apiResponse?.Errors?.Any() == true)
         {
@@ -207,12 +230,19 @@ public class PulseApiService : IPulseApiService
         return apiResponse?.Data ?? throw new InvalidOperationException("Invalid response from server");
     }
 
-    public async Task<ActivityResponse> CreateActivityAsync(string code, CreateActivityRequest request, CancellationToken cancellationToken = default)
+    public async Task<ActivityResponse> CreateActivityAsync(string code, CreateActivityRequest request, string facilitatorToken, CancellationToken cancellationToken = default)
     {
         var json = JsonSerializer.Serialize(request, _jsonOptions);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync($"/api/sessions/{Uri.EscapeDataString(code)}/activities", content, cancellationToken);
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"/api/sessions/{Uri.EscapeDataString(code)}/activities")
+        {
+            Content = content
+        };
+        
+        httpRequest.Headers.Add("X-Facilitator-Token", facilitatorToken);
+
+        var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -298,6 +328,40 @@ public class PulseApiService : IPulseApiService
         }
 
         return apiResponse?.Data ?? new List<AgendaActivityResponse>();
+    }
+
+    public async Task<PollDashboardResponse> GetPollDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default)
+    {
+        var queryParameters = new List<string>();
+        if (filters != null)
+        {
+            foreach (var filter in filters)
+            {
+                if (!string.IsNullOrEmpty(filter.Value))
+                {
+                    queryParameters.Add($"{Uri.EscapeDataString(filter.Key)}={Uri.EscapeDataString(filter.Value)}");
+                }
+            }
+        }
+
+        var queryString = queryParameters.Count > 0 ? "?" + string.Join("&", queryParameters) : "";
+        var response = await _httpClient.GetAsync($"/api/sessions/{Uri.EscapeDataString(code)}/activities/{activityId}/dashboard/poll{queryString}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException($"Failed to get poll dashboard: {response.StatusCode} - {errorContent}");
+        }
+
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+        var apiResponse = JsonSerializer.Deserialize<ApiResponse<PollDashboardResponse>>(responseJson, _jsonOptions);
+
+        if (apiResponse?.Errors?.Any() == true)
+        {
+            throw new InvalidOperationException(string.Join(", ", apiResponse.Errors.Select(e => e.Message)));
+        }
+
+        return apiResponse?.Data ?? throw new InvalidOperationException("Invalid response from server");
     }
 
     public async Task<SubmitResponseResponse> SubmitResponseAsync(string code, Guid activityId, SubmitResponseRequest request, CancellationToken cancellationToken = default)
