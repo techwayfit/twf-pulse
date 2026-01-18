@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Application.Services;
@@ -13,7 +15,30 @@ using TechWayFit.Pulse.Web.Data;
 using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Services;
 
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+ .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File(
+        path: Path.Combine("App_Data", "logs", "pulse-.txt"),
+rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
+try
+{
+    Log.Information("Starting TechWayFit Pulse application");
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Add Serilog to the application
+builder.Host.UseSerilog();
 
 builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
 // Add authentication services
@@ -195,13 +220,24 @@ app.UseHttpsRedirection();
 app.UseStaticFiles(new StaticFileOptions
 {
     OnPrepareResponse = ctx =>
-    {
-        // Add cache headers for better performance
+{
+  // Add cache headers for better performance
         if (ctx.File.Name.EndsWith(".css") || ctx.File.Name.EndsWith(".js"))
         {
             ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=600");
         }
-    }
+  }
+});
+
+// Add Serilog request logging middleware
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+    options.GetLevel = (httpContext, elapsed, ex) => ex != null
+        ? LogEventLevel.Error
+        : httpContext.Response.StatusCode > 499
+   ? LogEventLevel.Error
+    : LogEventLevel.Information;
 });
 
 app.UseRouting();
@@ -237,4 +273,14 @@ app.MapRazorPages();
 // Blazor pages fallback (only for routes that need interactivity)
 app.MapFallbackToPage("/_Host");
 
+    Log.Information("TechWayFit Pulse application started successfully");
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
