@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TechWayFit Pulse — Engage workshops without losing the data</title>
+  <meta name="description" content="Run engaging workshops—without losing the data. Polls, word clouds, 4-quadrant matrices, and guided 5-Whys—designed to help people open up, and help you leave with measurable outcomes." />
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Inter font (optional) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      /* Brand (tweak easily) */
+      --brand-900:#0b1b3a;
+      --brand-800:#0f2a5a;
+      --brand-700:#14336d;
+      --brand-600:#1b4aa3;
+      --brand-500:#2b6bff;
+      --brand-300:#8ab6ff;
+
+      --accent-500:#ffd54a;
+      --accent-600:#f5c71a;
+
+      --ink-900:#0b1220;
+      --ink-700:#2a3347;
+      --ink-600:#47506a;
+      --ink-500:#6b7694;
+
+      --surface-0:#ffffff;
+      --surface-1:#f6f8fc;
+      --surface-2:#eef3ff;
+
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+
+      --shadow-sm: 0 10px 25px rgba(16, 24, 40, .08);
+      --shadow-md: 0 16px 45px rgba(16, 24, 40, .12);
+      --ring: 0 0 0 .25rem rgba(43,107,255,.2);
+    }
+
+    html,body{height:100%;}
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--ink-900);
+      background: radial-gradient(1200px 600px at 70% -10%, rgba(43,107,255,.18), transparent 55%),
+                  radial-gradient(900px 450px at 10% 10%, rgba(255,213,74,.18), transparent 50%),
+                  linear-gradient(180deg, #ffffff, #ffffff);
+    }
+
+    /* Navbar */
+    .navbar{
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      background: rgba(255,255,255,.75);
+      border-bottom: 1px solid rgba(15,42,90,.08);
+    }
+    .brand-badge{
+      width: 38px; height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand-500), var(--brand-700));
+      box-shadow: 0 10px 24px rgba(43,107,255,.25);
+      display:grid; place-items:center;
+      color:#fff;
+    }
+    .brand-title{font-weight: 800; letter-spacing: -.02em;}
+    .brand-sub{font-size: .78rem; color: var(--ink-500); margin-top:-2px;}
+
+    .nav-link{color: var(--ink-700); font-weight: 600;}
+    .nav-link:hover{color: var(--brand-600);}
+
+    /* Buttons */
+    .btn-brand{
+      --bs-btn-bg: var(--brand-500);
+      --bs-btn-border-color: var(--brand-500);
+      --bs-btn-hover-bg: #1f58e0;
+      --bs-btn-hover-border-color: #1f58e0;
+      --bs-btn-color:#fff;
+      --bs-btn-hover-color:#fff;
+      border-radius: 999px;
+      box-shadow: 0 14px 30px rgba(43,107,255,.25);
+    }
+    .btn-accent{
+      --bs-btn-bg: var(--accent-500);
+      --bs-btn-border-color: var(--accent-500);
+      --bs-btn-hover-bg: var(--accent-600);
+      --bs-btn-hover-border-color: var(--accent-600);
+      --bs-btn-color: #1b1f2a;
+      --bs-btn-hover-color: #1b1f2a;
+      border-radius: 999px;
+      box-shadow: 0 14px 30px rgba(245,199,26,.25);
+    }
+    .btn-ghost{
+      border-radius: 999px;
+      font-weight: 700;
+      color: var(--ink-700);
+      border: 1px solid rgba(11,27,58,.12);
+      background: rgba(255,255,255,.7);
+    }
+    .btn-ghost:hover{border-color: rgba(43,107,255,.35); color: var(--brand-600);}
+
+    /* Hero */
+    .hero{
+      padding-top: 4.6rem;
+      padding-bottom: 3.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero:before{
+      content:"";
+      position:absolute;
+      inset:auto -40% -55% -40%;
+      height: 520px;
+      background: radial-gradient(closest-side, rgba(43,107,255,.12), transparent 60%);
+      filter: blur(1px);
+      pointer-events:none;
+    }
+
+    .hero h1{
+      font-weight: 850;
+      letter-spacing: -0.04em;
+      font-size: clamp(2.25rem, 5vw, 3.35rem);
+      line-height: 1.05;
+    }
+    .hero p.lead{
+      color: var(--ink-600);
+      font-size: 1.1rem;
+      line-height: 1.6;
+      max-width: 44ch;
+    }
+
+    .hero-card{
+      border-radius: var(--radius-xl);
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.65));
+      border: 1px solid rgba(15,42,90,.10);
+      box-shadow: var(--shadow-md);
+      overflow:hidden;
+    }
+    .hero-card .topbar{
+      padding: .9rem 1rem;
+      display:flex;
+      align-items:center;
+      gap:.6rem;
+      border-bottom: 1px solid rgba(15,42,90,.08);
+      background: rgba(246,248,252,.7);
+    }
+    .dot{width:10px;height:10px;border-radius:99px;background:rgba(11,27,58,.18)}
+    .dot:nth-child(1){background:#ff5f57}
+    .dot:nth-child(2){background:#febc2e}
+    .dot:nth-child(3){background:#28c840}
+
+    .canvas{
+      padding: 1rem;
+    }
+
+    /* Fake "live" preview */
+    .mini-panel{
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(15,42,90,.10);
+      background: rgba(255,255,255,.85);
+      box-shadow: var(--shadow-sm);
+    }
+    .mini-panel .hdr{
+      padding: .75rem .9rem;
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      border-bottom: 1px solid rgba(15,42,90,.08);
+    }
+    .badge-soft{
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--brand-700);
+      background: rgba(43,107,255,.10);
+      border: 1px solid rgba(43,107,255,.18);
+      border-radius: 999px;
+      padding: .25rem .55rem;
+    }
+
+    .poll-item{
+      padding: .6rem .9rem;
+      display:grid;
+      grid-template-columns: 1fr 60px;
+      gap:.75rem;
+      align-items:center;
+    }
+    .poll-item + .poll-item{border-top: 1px dashed rgba(15,42,90,.12)}
+
+    .bar{
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(11,27,58,.08);
+      overflow:hidden;
+    }
+    .bar > span{
+      display:block;
+      height:100%;
+      width: 40%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--brand-500), var(--brand-700));
+      transition: width .9s ease;
+    }
+
+    .wordcloud{
+      display:flex;
+      gap:.4rem;
+      flex-wrap: wrap;
+      padding: .9rem;
+    }
+    .word{
+      border-radius: 999px;
+      padding: .22rem .55rem;
+      background: rgba(255,255,255,.85);
+      border: 1px solid rgba(15,42,90,.10);
+      color: var(--ink-700);
+      font-weight: 700;
+      line-height: 1;
+      user-select:none;
+      transform: translateZ(0);
+      transition: transform .18s ease;
+    }
+    .word:hover{transform: translateY(-2px);}
+
+    .quad{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:.75rem;
+      padding: .9rem;
+    }
+    .cell{
+      min-height: 88px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(15,42,90,.10);
+      background: rgba(246,248,252,.65);
+      padding: .6rem;
+      position: relative;
+      overflow:hidden;
+    }
+    .cell .label{
+      font-size:.78rem;
+      font-weight: 800;
+      color: var(--ink-600);
+      margin-bottom:.35rem;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:.35rem;
+      border-radius: 999px;
+      padding: .22rem .55rem;
+      background: rgba(43,107,255,.10);
+      border: 1px solid rgba(43,107,255,.18);
+      color: var(--brand-700);
+      font-weight: 700;
+      font-size: .8rem;
+      margin: .12rem .12rem 0 0;
+    }
+
+    /* Feature pills row */
+    .pill-row{
+      margin-top: 1.75rem;
+      padding: .75rem;
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,.80);
+      border: 1px solid rgba(15,42,90,.10);
+      box-shadow: var(--shadow-sm);
+    }
+    .pill{
+      border-radius: 16px;
+      padding: .8rem .85rem;
+      display:flex;
+      align-items:center;
+      gap:.75rem;
+      height:100%;
+      border: 1px solid rgba(15,42,90,.08);
+      background: rgba(246,248,252,.65);
+    }
+    .pill .ic{
+      width: 40px; height: 40px;
+      border-radius: 14px;
+      display:grid; place-items:center;
+      background: rgba(43,107,255,.10);
+      border: 1px solid rgba(43,107,255,.18);
+      color: var(--brand-700);
+    }
+    .pill .t{font-weight: 800; margin:0;}
+    .pill .d{margin:0; color: var(--ink-600); font-size: .92rem;}
+
+    /* Sections */
+    .section{
+      padding: 4rem 0;
+    }
+    .section-title{
+      font-weight: 850;
+      letter-spacing: -0.03em;
+    }
+    .muted{color: var(--ink-600)}
+
+    /* Feature cards */
+    .feature-card{
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,.85);
+      border: 1px solid rgba(15,42,90,.10);
+      box-shadow: var(--shadow-sm);
+      padding: 1.25rem;
+      height: 100%;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .feature-card:hover{transform: translateY(-3px); box-shadow: var(--shadow-md)}
+    .feature-card .ic{
+      width: 44px; height: 44px;
+      border-radius: 16px;
+      display:grid; place-items:center;
+      background: rgba(255,213,74,.22);
+      border: 1px solid rgba(255,213,74,.35);
+      color: #6a5200;
+      margin-bottom: .8rem;
+    }
+
+    /* Testimonials */
+    .quote{
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(11,27,58,.92), rgba(27,74,163,.92));
+      color:#fff;
+      padding: 1.6rem;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow:hidden;
+    }
+    .quote:before{
+      content:"";
+      position:absolute;
+      inset:-40% -30% auto auto;
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(closest-side, rgba(255,213,74,.18), transparent 60%);
+      pointer-events:none;
+    }
+
+    /* Footer */
+    footer{
+      padding: 2.6rem 0;
+      color: var(--ink-600);
+      border-top: 1px solid rgba(15,42,90,.10);
+      background: rgba(246,248,252,.55);
+    }
+
+    /* Focus styles */
+    .form-control:focus, .btn:focus{
+      box-shadow: var(--ring) !important;
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      *{scroll-behavior:auto !important;}
+      .bar>span, .feature-card{transition:none !important;}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container py-2">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="#top">
+        <span class="brand-badge" aria-hidden="true">
+          <!-- simple pulse mark (no external assets) -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 12h4l2-5 4 10 2-5h6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div class="lh-sm">
+          <div class="brand-title">Pulse</div>
+          <div class="brand-sub">by TechWayFit</div>
+        </div>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="nav">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+          <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+          <li class="nav-item"><a class="nav-link" href="#use-cases">Use cases</a></li>
+          <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
+          <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+          <li class="nav-item ms-lg-2"><a class="btn btn-brand px-4" href="#get-started">Get Started</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header id="top" class="hero">
+    <div class="container">
+      <div class="row align-items-center g-4">
+
+        <div class="col-lg-6">
+          <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded-pill" style="background:rgba(43,107,255,.10); border:1px solid rgba(43,107,255,.18); color:var(--brand-700); font-weight:800;">
+            <span aria-hidden="true">⚡</span>
+            Workshop Engagement Engine
+          </div>
+
+          <h1 class="mt-3">Run engaging workshops—<span style="color:var(--brand-600)">without losing the data</span>.</h1>
+          <p class="lead mt-3">Polls, word clouds, 4-quadrant matrices, and guided 5-Whys—designed to help people open up, and help you leave with measurable outcomes.</p>
+
+          <div class="d-flex flex-wrap gap-2 mt-4">
+            <a class="btn btn-accent px-4 py-2" href="#get-started">Get started free</a>
+            <button class="btn btn-ghost px-4 py-2" id="btnDemo">
+              <span class="me-2" aria-hidden="true">▶</span>Watch demo
+            </button>
+          </div>
+
+          <div class="pill-row mt-4">
+            <div class="row g-2">
+              <div class="col-md-4">
+                <div class="pill">
+                  <div class="ic" aria-hidden="true">📊</div>
+                  <div>
+                    <p class="t">Live polls</p>
+                    <p class="d">Fast decision checks</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="pill">
+                  <div class="ic" aria-hidden="true">☁️</div>
+                  <div>
+                    <p class="t">Word clouds</p>
+                    <p class="d">Surface themes</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="pill">
+                  <div class="ic" aria-hidden="true">🧩</div>
+                  <div>
+                    <p class="t">4-quadrant</p>
+                    <p class="d">Prioritize ideas</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex flex-wrap gap-2 align-items-center">
+            <span class="badge-soft">No installs</span>
+            <span class="badge-soft">Anonymous mode</span>
+            <span class="badge-soft">Export CSV</span>
+            <span class="badge-soft">AI-ready</span>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="hero-card">
+            <div class="topbar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="ms-2 fw-bold" style="color:var(--ink-600)">Live Session Preview</span>
+              <span class="ms-auto badge-soft">Room: PULSE-4821</span>
+            </div>
+
+            <div class="canvas">
+              <div class="row g-3">
+
+                <div class="col-12">
+                  <div class="mini-panel">
+                    <div class="hdr">
+                      <div class="fw-bold">Quick Poll</div>
+                      <span class="badge-soft">Live</span>
+                    </div>
+                    <div class="poll-item">
+                      <div>
+                        <div class="fw-semibold">Which outcome matters most today?</div>
+                        <div class="bar mt-2"><span id="barA" style="width:48%"></span></div>
+                      </div>
+                      <div class="text-end"><span class="fw-bold" id="pctA">48%</span></div>
+                    </div>
+                    <div class="poll-item">
+                      <div>
+                        <div class="fw-semibold">Align on next steps</div>
+                        <div class="bar mt-2"><span id="barB" style="width:32%"></span></div>
+                      </div>
+                      <div class="text-end"><span class="fw-bold" id="pctB">32%</span></div>
+                    </div>
+                    <div class="poll-item">
+                      <div>
+                        <div class="fw-semibold">Capture honest pain points</div>
+                        <div class="bar mt-2"><span id="barC" style="width:20%"></span></div>
+                      </div>
+                      <div class="text-end"><span class="fw-bold" id="pctC">20%</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mini-panel h-100">
+                    <div class="hdr">
+                      <div class="fw-bold">Word Cloud</div>
+                      <span class="badge-soft">Live</span>
+                    </div>
+                    <div class="wordcloud" id="cloud"></div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mini-panel h-100">
+                    <div class="hdr">
+                      <div class="fw-bold">4-Quadrant Matrix</div>
+                      <span class="badge-soft">Draft</span>
+                    </div>
+                    <div class="quad">
+                      <div class="cell">
+                        <div class="label">Keep</div>
+                        <span class="chip">👍 Facilitation flow</span>
+                        <span class="chip">📌 Clear prompts</span>
+                      </div>
+                      <div class="cell">
+                        <div class="label">Improve</div>
+                        <span class="chip">⏱️ Timeboxing</span>
+                        <span class="chip">🧠 AI summary</span>
+                      </div>
+                      <div class="cell">
+                        <div class="label">Stop</div>
+                        <span class="chip">🚫 Side threads</span>
+                      </div>
+                      <div class="cell">
+                        <div class="label">Start</div>
+                        <span class="chip">✅ Action owners</span>
+                        <span class="chip">📤 Export to WSR</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- FEATURES -->
+  <section id="features" class="section">
+    <div class="container">
+      <div class="row align-items-end g-4">
+        <div class="col-lg-6">
+          <h2 class="section-title">Turn passive meetings into <span style="color:var(--brand-600)">measurable outcomes</span>.</h2>
+          <p class="muted mt-2">Pulse keeps facilitators on track with guided flows, clear question types, and exports you can actually use.</p>
+        </div>
+        <div class="col-lg-6">
+          <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+            <span class="badge-soft">Live</span>
+            <span class="badge-soft">Async</span>
+            <span class="badge-soft">Anonymous</span>
+            <span class="badge-soft">CSV / PPT</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-3">
+        <div class="col-md-6 col-lg-3">
+          <div class="feature-card">
+            <div class="ic" aria-hidden="true">📊</div>
+            <h5 class="fw-bold">Live Polls</h5>
+            <p class="muted mb-0">Ask, vote, decide—fast. Great for alignment checks and prioritisation.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="feature-card">
+            <div class="ic" aria-hidden="true">☁️</div>
+            <h5 class="fw-bold">Word Clouds</h5>
+            <p class="muted mb-0">Surface themes instantly. Perfect for warm-ups and uncovering sentiment.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="feature-card">
+            <div class="ic" aria-hidden="true">🧩</div>
+            <h5 class="fw-bold">4-Quadrant Matrices</h5>
+            <p class="muted mb-0">Organise ideas visually—keep/improve/stop/start, impact/effort and more.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="feature-card">
+            <div class="ic" aria-hidden="true">🔍</div>
+            <h5 class="fw-bold">Guided 5-Whys</h5>
+            <p class="muted mb-0">Go beyond symptoms with a structured flow that captures root causes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- USE CASES + TESTIMONIAL -->
+  <section id="use-cases" class="section" style="background: rgba(246,248,252,.55); border-top:1px solid rgba(15,42,90,.08); border-bottom:1px solid rgba(15,42,90,.08);">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <h2 class="section-title">Built for facilitation—<span style="color:var(--brand-600)">not just slides</span>.</h2>
+          <p class="muted mt-2">From discovery workshops to retrospectives and stakeholder alignment sessions, Pulse helps you capture honest input and turn it into clear action.</p>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-6">
+              <div class="feature-card">
+                <h6 class="fw-bold mb-2">Discovery workshops</h6>
+                <p class="muted mb-0">Warm up quickly, collect pain points anonymously, and export themes for your deck.</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="feature-card">
+                <h6 class="fw-bold mb-2">Retrospectives</h6>
+                <p class="muted mb-0">Keep/Improve/Stop/Start quadrants with instant grouping and ownership capture.</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="feature-card">
+                <h6 class="fw-bold mb-2">Stakeholder alignment</h6>
+                <p class="muted mb-0">Rapid polling to reduce debate time and document decisions transparently.</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="feature-card">
+                <h6 class="fw-bold mb-2">Root cause analysis</h6>
+                <p class="muted mb-0">Guided 5-Whys that produces a crisp, shareable outcome summary.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="quote h-100 d-flex flex-column justify-content-between">
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <div class="brand-badge" style="width:44px;height:44px;border-radius:16px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 12h4l2-5 4 10 2-5h6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="fw-bold">Pulse outcomes</div>
+                  <div style="opacity:.8; font-size:.92rem;">Measurable inputs → actions</div>
+                </div>
+              </div>
+
+              <div class="mt-4" style="font-size:1.05rem; line-height:1.7;">
+                “Pulse makes it hard for facilitators to get lost. We finish workshops with clear priorities, themes, and exportable artifacts—without chasing notes later.”
+              </div>
+            </div>
+
+            <div class="mt-4 d-flex align-items-center gap-3">
+              <div style="width:44px; height:44px; border-radius:999px; background: rgba(255,255,255,.18); display:grid; place-items:center; font-weight:800;">MN</div>
+              <div>
+                <div class="fw-bold">Workshop Lead</div>
+                <div style="opacity:.8">Delivery & Transformation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" class="section">
+    <div class="container">
+      <div class="row g-4 align-items-end">
+        <div class="col-lg-7">
+          <h2 class="section-title">Pricing that starts simple.</h2>
+          <p class="muted mt-2">Keep it light for small sessions, scale up when you need multiple rooms and export packs.</p>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-2">
+        <div class="col-lg-4">
+          <div class="feature-card">
+            <h5 class="fw-bold">Starter</h5>
+            <div class="display-6 fw-bold">Free</div>
+            <p class="muted">For trying Pulse with small teams.</p>
+            <ul class="mb-4">
+              <li>1 room</li>
+              <li>Up to 25 participants</li>
+              <li>Polls + Word clouds</li>
+            </ul>
+            <a class="btn btn-ghost w-100" href="#get-started">Start</a>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="feature-card" style="border:1px solid rgba(43,107,255,.25); box-shadow: var(--shadow-md)">
+            <div class="d-flex justify-content-between align-items-start">
+              <h5 class="fw-bold mb-0">Pro</h5>
+              <span class="badge-soft">Most popular</span>
+            </div>
+            <div class="display-6 fw-bold">$19<span class="fs-5 fw-semibold muted">/mo</span></div>
+            <p class="muted">For regular facilitators and teams.</p>
+            <ul class="mb-4">
+              <li>Unlimited rooms</li>
+              <li>Up to 200 participants</li>
+              <li>Quadrants + 5-Whys</li>
+              <li>CSV export</li>
+            </ul>
+            <a class="btn btn-brand w-100" href="#get-started">Go Pro</a>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="feature-card">
+            <h5 class="fw-bold">Enterprise</h5>
+            <div class="display-6 fw-bold">Custom</div>
+            <p class="muted">For organisations with governance needs.</p>
+            <ul class="mb-4">
+              <li>SSO / SCIM</li>
+              <li>Compliance exports</li>
+              <li>Dedicated environments</li>
+              <li>Admin controls</li>
+            </ul>
+            <a class="btn btn-ghost w-100" href="#get-started">Talk to us</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ + CTA -->
+  <section id="faq" class="section" style="background: rgba(246,248,252,.55); border-top:1px solid rgba(15,42,90,.08);">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <h2 class="section-title">FAQ</h2>
+          <p class="muted">A few quick answers before you start.</p>
+
+          <div class="accordion" id="acc">
+            <div class="accordion-item" style="border-radius: 18px; overflow:hidden; border:1px solid rgba(15,42,90,.10)">
+              <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#q1">Can participants be anonymous?</button>
+              </h2>
+              <div id="q1" class="accordion-collapse collapse show" data-bs-parent="#acc">
+                <div class="accordion-body">Yes—run sessions in anonymous mode to encourage honest responses.</div>
+              </div>
+            </div>
+            <div class="accordion-item mt-2" style="border-radius: 18px; overflow:hidden; border:1px solid rgba(15,42,90,.10)">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q2">Do I get exports for reports?</button>
+              </h2>
+              <div id="q2" class="accordion-collapse collapse" data-bs-parent="#acc">
+                <div class="accordion-body">Export results to CSV, and generate workshop summaries you can paste into decks or WSRs.</div>
+              </div>
+            </div>
+            <div class="accordion-item mt-2" style="border-radius: 18px; overflow:hidden; border:1px solid rgba(15,42,90,.10)">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#q3">Is it only for live sessions?</button>
+              </h2>
+              <div id="q3" class="accordion-collapse collapse" data-bs-parent="#acc">
+                <div class="accordion-body">No—Pulse supports async collection too, useful for pre-work and follow-ups.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6" id="get-started">
+          <div class="feature-card" style="box-shadow: var(--shadow-md);">
+            <h3 class="fw-bold">Get started today</h3>
+            <p class="muted">Create a room, pick a question type, and invite participants with a simple code.</p>
+
+            <form class="mt-3" id="startForm">
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Your name</label>
+                  <input class="form-control" placeholder="Facilitator" required />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">Email</label>
+                  <input class="form-control" type="email" placeholder="you@company.com" required />
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">Workshop type</label>
+                  <select class="form-select">
+                    <option>Discovery workshop</option>
+                    <option>Retrospective</option>
+                    <option>Stakeholder alignment</option>
+                    <option>Root cause analysis (5-Whys)</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <button class="btn btn-brand w-100 py-2" type="submit">Create my room</button>
+                </div>
+                <div class="col-12 text-center">
+                  <small class="muted">By continuing, you agree to the basic terms & privacy.</small>
+                </div>
+              </div>
+            </form>
+
+            <div class="alert alert-success mt-3 d-none" id="success">
+              <div class="fw-bold">Room created (demo)</div>
+              <div class="small">In the real app, you’d now be redirected to the facilitator console.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+          <span class="brand-badge" style="width:34px;height:34px;border-radius:12px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 12h4l2-5 4 10 2-5h6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div>
+            <div class="fw-bold">TechWayFit Pulse</div>
+            <div class="small">© <span id="yr"></span> TechWayFit</div>
+          </div>
+        </div>
+        <div class="small">Built for workshops • Designed for outcomes</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Demo modal -->
+  <div class="modal fade" id="demoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content" style="border-radius: var(--radius-xl); overflow:hidden;">
+        <div class="modal-header" style="background: rgba(246,248,252,.75); border-bottom:1px solid rgba(15,42,90,.08)">
+          <h5 class="modal-title fw-bold">Pulse Demo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="ratio ratio-16x9 rounded-4 overflow-hidden" style="background: rgba(11,27,58,.06)">
+            <!-- Placeholder for future video -->
+            <div class="d-flex flex-column align-items-center justify-content-center text-center p-4">
+              <div class="display-6">▶</div>
+              <div class="fw-bold">Add your demo video here</div>
+              <div class="small muted mt-1">Replace this placeholder with an embedded video (YouTube/Vimeo) or a local MP4.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="background: rgba(246,248,252,.75); border-top:1px solid rgba(15,42,90,.08)">
+          <a class="btn btn-brand" href="#get-started" data-bs-dismiss="modal">Create a room</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Smooth-ish in-page nav (respect reduced motion)
+    document.querySelectorAll('a.nav-link[href^="#"]').forEach(a => {
+      a.addEventListener('click', (e) => {
+        const id = a.getAttribute('href');
+        const el = document.querySelector(id);
+        if (!el) return;
+        e.preventDefault();
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        el.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
+      });
+    });
+
+    // Demo modal
+    const btnDemo = document.getElementById('btnDemo');
+    const demoModalEl = document.getElementById('demoModal');
+    const demoModal = new bootstrap.Modal(demoModalEl);
+    btnDemo.addEventListener('click', () => demoModal.show());
+
+    // Word cloud (simple animation)
+    const words = [
+      { t: 'Alignment', w: 1.35 },
+      { t: 'Pain points', w: 1.15 },
+      { t: 'Ownership', w: 1.10 },
+      { t: 'Clarity', w: 1.28 },
+      { t: 'Priorities', w: 1.22 },
+      { t: 'Next steps', w: 1.18 },
+      { t: 'Risks', w: 1.05 },
+      { t: 'Confidence', w: 1.08 },
+      { t: 'Ideas', w: 1.12 },
+      { t: 'Evidence', w: 1.00 },
+      { t: 'Outcomes', w: 1.25 },
+    ];
+
+    const cloud = document.getElementById('cloud');
+    function renderCloud(){
+      cloud.innerHTML = '';
+      words.forEach((x) => {
+        const s = document.createElement('span');
+        s.className = 'word';
+        const size = 12 + Math.round(10 * x.w);
+        s.style.fontSize = size + 'px';
+        s.style.borderColor = 'rgba(43,107,255,' + (0.10 + 0.12*Math.random()).toFixed(2) + ')';
+        s.textContent = x.t;
+        cloud.appendChild(s);
+      });
+    }
+    renderCloud();
+
+    // Poll animation (demo only)
+    const bars = [
+      { bar: document.getElementById('barA'), pct: document.getElementById('pctA'), v: 48 },
+      { bar: document.getElementById('barB'), pct: document.getElementById('pctB'), v: 32 },
+      { bar: document.getElementById('barC'), pct: document.getElementById('pctC'), v: 20 },
+    ];
+
+    function tickPoll(){
+      // small random drift, keep total ~100
+      let a = 40 + Math.round(Math.random()*18);
+      let b = 25 + Math.round(Math.random()*16);
+      let c = 100 - a - b;
+      if (c < 10){ c = 10; b = 100 - a - c; }
+      const vals = [a,b,c];
+      bars.forEach((x,i) => {
+        x.bar.style.width = vals[i] + '%';
+        x.pct.textContent = vals[i] + '%';
+      });
+
+      // rotate cloud emphasis slightly
+      words.sort(() => Math.random() - 0.5);
+      renderCloud();
+    }
+
+    setInterval(() => {
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReduced) tickPoll();
+    }, 3500);
+
+    // Simple form success
+    const form = document.getElementById('startForm');
+    const success = document.getElementById('success');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      success.classList.remove('d-none');
+      success.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+      form.reset();
+    });
+
+    // Footer year
+    document.getElementById('yr').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

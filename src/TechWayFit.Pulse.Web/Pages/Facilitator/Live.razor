@@ -6,6 +6,7 @@
 @using System.Net.Http
 @using Microsoft.AspNetCore.SignalR.Client
 @using TechWayFit.Pulse.Web.Hubs
+@using TechWayFit.Pulse.Web.Components.Dashboards
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject IPulseApiService ApiService
@@ -42,234 +43,253 @@ else if (!string.IsNullOrEmpty(errorMessage))
 }
 else if (session != null)
 {
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                <div>
-                    <h2 class="mb-2">@session.Title</h2>
-                    <p class="text-muted mb-0">
-                        <span class="me-3">Code: <strong>@sessionCode</strong></span>
-                        <span class="me-3">Participants: <strong>@participantCount</strong></span>
-                        <span>TTL: <strong>6h</strong></span>
-                    </p>
+            <!-- Header - Mobile Optimized -->
+            <div class="mb-3">
+                <!-- Desktop Layout -->
+                <div class="d-none d-md-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0 h4">@session.Title</h2>
+                        <div class="text-muted small mt-1">
+                            Code: <span class="badge bg-primary bg-opacity-10 text-primary">@sessionCode</span>
+                            <span class="mx-2">TTL: <strong>4h</strong></span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        @if (session.Status == SessionStatus.Live)
+                        {
+                            <span class="badge bg-success-subtle text-success px-3 py-2">LIVE</span>
+                        }
+                        <button class="btn btn-sm btn-outline-primary" @onclick="ShowQRModal">
+                            <i class="fas fa-qrcode me-1"></i>Show Joining Information
+                        </button>
+                        @if (session.Status == SessionStatus.Live)
+                        {
+                            <button class="btn btn-sm btn-danger" @onclick="EndSession" disabled="@isPerformingAction">
+                                End Session
+                            </button>
+                        }
+                        else if (session.Status == SessionStatus.Draft)
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="StartSession" disabled="@isPerformingAction">
+                                Start Session
+                            </button>
+                        }
+                    </div>
                 </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="badge @GetSessionStatusClass() px-3 py-2">
-                        <span class="pulse-dot me-2"></span>
-                        @session.Status
-                    </span>
-                    
-                    @if (session.Status == SessionStatus.Draft)
-                    {
-                        <button class="btn btn-success pulse-btn-primary" @onclick="StartSession" disabled="@isPerformingAction">
-                            @(isPerformingAction ? "Starting..." : "Start Session")
+                
+                <!-- Mobile Layout -->
+                <div class="d-md-none">
+                    <!-- Line 1: Title + LIVE indicator -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2 class="mb-0 h5 flex-grow-1">@session.Title</h2>
+                        @if (session.Status == SessionStatus.Live)
+                        {
+                            <span class="badge bg-success text-white px-2 py-1">LIVE</span>
+                        }
+                    </div>
+                    <!-- Line 2: Code + TTL -->
+                    <div class="small text-muted mb-2">
+                        Code: <span class="badge bg-primary bg-opacity-10 text-primary">@sessionCode</span>
+                        <span class="ms-2">TTL: <strong>4h</strong></span>
+                    </div>
+                    <!-- Line 3: Buttons -->
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary flex-grow-1" @onclick="ShowQRModal">
+                            <i class="fas fa-qrcode me-1"></i>Join Info
                         </button>
-                    }
-                    else if (session.Status == SessionStatus.Live)
-                    {
-                        <button class="btn btn-outline-danger" @onclick="EndSession" disabled="@isPerformingAction">
-                            @(isPerformingAction ? "Ending..." : "End Session")
-                        </button>
-                    }
-                    else if (session.Status == SessionStatus.Ended)
-                    {
-                        <span class="text-muted">Session has ended</span>
-                    }
+                        @if (session.Status == SessionStatus.Live)
+                        {
+                            <button class="btn btn-sm btn-danger" @onclick="EndSession" disabled="@isPerformingAction">
+                                End Session
+                            </button>
+                        }
+                        else if (session.Status == SessionStatus.Draft)
+                        {
+                            <button class="btn btn-sm btn-success" @onclick="StartSession" disabled="@isPerformingAction">
+                                Start Session
+                            </button>
+                        }
+                    </div>
                 </div>
             </div>
 
-            <!-- Row 1: Session Details + QR Code -->
-            <div class="row g-4 mb-4">
-                <!-- Session Details -->
-                <div class="col-lg-8">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <h5 class="card-title fw-semibold mb-3">Session Information</h5>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="d-flex justify-content-between align-items-center py-2">
-                                        <span class="text-muted">Participants:</span>
-                                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 fs-6">@participantCount</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex justify-content-between align-items-center py-2">
-                                        <span class="text-muted">Total Activities:</span>
-                                        <span class="badge bg-info bg-opacity-10 text-info px-3 py-2 fs-6">@activities.Count</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex justify-content-between align-items-center py-2">
-                                        <span class="text-muted">Active Activities:</span>
-                                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 fs-6">@activities.Count(a => a.Status == Contracts.Enums.ActivityStatus.Open)</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="d-flex justify-content-between align-items-center py-2">
-                                        <span class="text-muted">Completed:</span>
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 fs-6">@activities.Count(a => a.Status == Contracts.Enums.ActivityStatus.Closed)</span>
-                                    </div>
+            <!-- Session Information -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-3">
+                    <h6 class="fw-semibold mb-3">Session Information</h6>
+                    
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-users text-primary"></i>
+                                <div class="d-flex align-items-baseline gap-1">
+                                    <span class="h5 mb-0 text-primary">@participantCount</span>
+                                    <small class="text-muted">Participants</small>
                                 </div>
                             </div>
-                            
-                            <!-- Join URL -->
-                            <div class="mt-4">
-                                <label class="form-label fw-medium">Join URL</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" readonly value="@joinUrl" id="joinUrlInput" />
-                                    <button class="btn btn-outline-secondary" @onclick="CopyJoinUrl" title="Copy to clipboard">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-tasks text-info"></i>
+                                <div class="d-flex align-items-baseline gap-1">
+                                    <span class="h5 mb-0 text-info">@activities.Count</span>
+                                    <small class="text-muted">Activities</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-play-circle text-success"></i>
+                                <div class="d-flex align-items-baseline gap-1">
+                                    <span class="h5 mb-0 text-success">@activities.Count(a => a.Status == Contracts.Enums.ActivityStatus.Open)</span>
+                                    <small class="text-muted">Active</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-check-circle text-secondary"></i>
+                                <div class="d-flex align-items-baseline gap-1">
+                                    <span class="h5 mb-0 text-secondary">@activities.Count(a => a.Status == Contracts.Enums.ActivityStatus.Closed)</span>
+                                    <small class="text-muted">Completed</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- QR Code Section -->
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body p-4 text-center">
-                            <h5 class="card-title fw-semibold mb-3">Join Session</h5>
-
-                            <!-- QR Code Display -->
-                            <div class="mb-3">
-                                <div class="bg-white border rounded-3 p-3 d-inline-block">
-                                    <!-- Auto-generates QR code via data-qr-url attribute -->
-                                    <canvas id="qr-@(sessionCode.Replace("-", ""))"
-                                            data-qr-url="@joinUrl"
-                                            width="160"
-                                            height="160"></canvas>
-                                </div>
+            </div>
+            
+            <!-- Joining Information Modal -->
+            <div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header border-0 pb-0">
+                            <h5 class="modal-title" id="qrModalLabel">Joining Information</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center px-4 pb-4">
+                            <!-- QR Code -->
+                            <div class="bg-white border rounded p-3 d-inline-block mb-3">
+                                <canvas id="qr-modal-@(sessionCode.Replace("-", ""))"
+                                        width="200"
+                                        height="200"></canvas>
                             </div>
-
+                            
                             <!-- Session Code -->
-                            <div class="bg-primary bg-opacity-10 rounded-3 px-3 py-2 mb-3">
+                            <div class="bg-primary bg-opacity-10 rounded px-3 py-2 mb-3">
                                 <div class="h4 mb-0 text-primary fw-bold">@sessionCode</div>
                                 <small class="text-muted">Session Code</small>
                             </div>
-
-                            <!-- Manual Generate Button -->
-                            <button class="btn btn-sm btn-outline-primary" 
-                                    @onclick="ManualGenerateQR"
-                                    disabled="@isGeneratingQR">
-                                @if (isGeneratingQR)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                                    <span>Generating...</span>
-                                }
-                                else
-                                {
-                                    <i class="fas fa-sync-alt me-1"></i>
-                                    <span>Regenerate</span>
-                                }
-                            </button>
-
-                            @if (!string.IsNullOrEmpty(errorMessage) && errorMessage.Contains("QR"))
-                            {
-                                <div class="alert alert-warning mt-2 small" role="alert">
-                                    @errorMessage
-                                </div>
-                            }
+                            
+                            <!-- Divider -->
+                            <div class="text-muted small mb-2">or share this link</div>
+                            
+                            <!-- Join URL -->
+                            <div class="input-group">
+                                <input type="text" class="form-control" readonly value="@joinUrl" id="joinUrlInputModal" />
+                                <button class="btn btn-primary" @onclick="CopyJoinUrl">
+                                    Copy
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Row 2: Full Width Activity Details -->
-            <div class="row">
-                <div class="col-12">
-                    <!-- Current Activity (if open) -->
-                    @if (currentActivity != null)
-                    {
-                        <div class="card border-0 shadow-sm mb-4 border-success">
-                            <div class="card-body p-4">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div>
-                                        <h5 class="card-title fw-semibold mb-2">
-                                            <span class="badge bg-success me-2">
-                                                <span class="pulse-dot me-1"></span>LIVE
-                                            </span>
-                                            @currentActivity.Title
-                                        </h5>
-                                        <p class="text-muted small mb-0">@(currentActivity.Prompt ?? "No prompt")</p>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="small text-muted">Order: #@currentActivity.Order</span>
-                                    </div>
-                                </div>
-
-                                <!-- Live Activity Dashboard -->
-                                <div class="bg-light rounded-3 p-4 mb-3">
-                                    @if (currentActivity.Type == TechWayFit.Pulse.Contracts.Enums.ActivityType.Poll)
-                                    {
-                                        <TechWayFit.Pulse.Web.Components.Dashboards.PollDashboard 
-                                            SessionCode="@sessionCode"
-                                            ActivityId="@currentActivity.ActivityId" />
-                                    }
-                                    else if (currentActivity.Type == TechWayFit.Pulse.Contracts.Enums.ActivityType.WordCloud)
-                                    {
-                                        <TechWayFit.Pulse.Web.Components.Dashboards.WordCloudDashboard 
-                                            SessionCode="@sessionCode"
-                                            ActivityId="@currentActivity.ActivityId" />
-                                    }
-                                    else
-                                    {
-                                        <div class="text-center">
-                                            <p class="text-muted mb-0">
-                                                <i class="fas fa-chart-bar me-2"></i>
-                                                Live dashboard for @currentActivity.Type activities coming soon
-                                            </p>
-                                        </div>
-                                    }
-                                </div>
-
-                                <!-- Activity Controls -->
-                                <div class="d-flex flex-wrap gap-2 align-items-center">
-                                    <!-- Go Back Button -->
-                                    @if (HasPreviousActivity())
-                                    {
-                                        <button class="btn btn-outline-secondary"
-                                                @onclick="GoBack"
-                                                disabled="@isPerformingAction">
-                                            <i class="fas fa-arrow-left me-1"></i>
-                                            @(isPerformingAction ? "Moving..." : "Go Back")
-                                        </button>
-                                    }
-
-                                    <!-- Close Button -->
-                                    <button class="btn btn-warning"
-                                            @onclick="CloseCurrentActivity"
-                                            disabled="@isPerformingAction">
-                                        <i class="fas fa-stop me-1"></i>
-                                        @(isPerformingAction ? "Closing..." : "Close Activity")
-                                    </button>
-
-                                    <!-- Move Next Button -->
-                                    @if (HasNextActivity())
-                                    {
-                                        <button class="btn btn-primary pulse-btn-primary"
-                                                @onclick="MoveNext"
-                                                disabled="@isPerformingAction">
-                                            @(isPerformingAction ? "Moving..." : "Next Activity")
-                                            <i class="fas fa-arrow-right ms-1"></i>
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-info ms-auto">Last Activity</span>
-                                    }
-
-                                    <a class="btn btn-outline-primary ms-auto" href="/facilitator/dashboards">
-                                        <i class="fas fa-chart-bar me-1"></i>View Dashboard
-                                    </a>
-                                </div>
+                
+             
+                 
+                  
+            <!-- Current Activity (if open) -->
+            @if (currentActivity != null)
+            {
+                <div class="card border-0 shadow-sm mb-3 border-start border-success border-3">
+                    <div class="card-body p-3 p-md-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1 h6 h5-md">
+                                    <span class="badge bg-success me-2">
+                                        <span class="pulse-dot me-1"></span>LIVE
+                                    </span>
+                                    @currentActivity.Title
+                                </h5>
+                                <p class="text-muted small mb-0">@(currentActivity.Prompt ?? "No prompt")</p>
                             </div>
+                            <span class="badge bg-light text-dark">#@currentActivity.Order</span>
                         </div>
-                    }
 
-                    <!-- All Activities -->
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-body p-4">
-                            <div class="d-flex justify-content-between align-items-center mb-4">
+                        <!-- Live Activity Dashboard -->
+                        <div class="bg-light rounded-3 p-4 mb-3">
+                            @if (currentActivity.Type == TechWayFit.Pulse.Contracts.Enums.ActivityType.Poll)
+                            {
+                                <PollDashboard 
+                                    SessionCode="@sessionCode"
+                                    ActivityId="@currentActivity.ActivityId" />
+                            }
+                            else if (currentActivity.Type == TechWayFit.Pulse.Contracts.Enums.ActivityType.WordCloud)
+                            {
+                                <WordCloudDashboard 
+                                    SessionCode="@sessionCode"
+                                    ActivityId="@currentActivity.ActivityId" />
+                            }
+                            else
+                            {
+                                <div class="text-center">
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        Live dashboard for @currentActivity.Type activities coming soon
+                                    </p>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Activity Controls -->
+                        <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
+                            <!-- Go Back Button -->
+                            @if (HasPreviousActivity())
+                            {
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        @onclick="GoBack"
+                                        disabled="@isPerformingAction">
+                                    <i class="fas fa-arrow-left"></i>
+                                    <span class="d-none d-md-inline ms-1">@(isPerformingAction ? "Moving..." : "Back")</span>
+                                </button>
+                            }
+
+                            <!-- Close Button -->
+                            <button class="btn btn-sm btn-warning"
+                                    @onclick="CloseCurrentActivity"
+                                    disabled="@isPerformingAction">
+                                <i class="fas fa-stop"></i>
+                                <span class="d-none d-md-inline ms-1">@(isPerformingAction ? "Closing..." : "Close")</span>
+                            </button>
+
+                            <!-- Move Next Button -->
+                            @if (HasNextActivity())
+                            {
+                                <button class="btn btn-sm btn-primary"
+                                        @onclick="MoveNext"
+                                        disabled="@isPerformingAction">
+                                    <span class="d-none d-md-inline me-1">@(isPerformingAction ? "Moving..." : "Next")</span>
+                                    <i class="fas fa-arrow-right"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="badge bg-info ms-auto">Last Activity</span>
+                            }
+
+                            <a class="btn btn-sm btn-outline-primary ms-auto" href="/facilitator/dashboards">
+                                <i class="fas fa-chart-bar me-1"></i>View Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- All Activities -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h5 class="card-title fw-semibold mb-0">Workshop Activities</h5>
                                 <span class="badge bg-primary bg-opacity-10 text-primary">@activities.Count total</span>
                             </div>
@@ -363,54 +383,53 @@ else if (session != null)
                                     <p class="text-muted mb-0">No activities yet. Create your first activity to get started.</p>
                                 </div>
                             }
-                        </div>
+                </div>
 
                         <!-- Add Activity Button -->
-                        <div class="dropdown w-100 mt-4">
-                            <button class="btn btn-primary pulse-btn-primary w-100 dropdown-toggle"
-                                    type="button"
-                                    id="addActivityDropdown"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                <i class="fas fa-plus me-2"></i>Add Activity
-                            </button>
-                            <ul class="dropdown-menu w-100" aria-labelledby="addActivityDropdown">
-                                <li>
-                                    <a class="dropdown-item" href="/facilitator/activities/create-poll?code=@sessionCode">
-                                        <strong>📊 Poll</strong>
-                                        <br />
-                                        <small class="text-muted">Single or multiple choice question</small>
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider" /></li>
-                                <li>
-                                    <a class="dropdown-item disabled" href="#">
-                                        <strong>⭐ Rating</strong>
-                                        <br />
-                                        <small class="text-muted">Numeric scale (coming soon)</small>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="/facilitator/activities/create-wordcloud?code=@sessionCode">
-                                        <strong>☁️ Word Cloud</strong>
-                                        <br />
-                                        <small class="text-muted">Short text responses</small>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item disabled" href="#">
-                                        <strong>💬 General Feedback</strong>
-                                        <br />
-                                        <small class="text-muted">Long-form responses (coming soon)</small>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                <div class="dropdown w-100 mt-4">
+                    <button class="btn btn-primary pulse-btn-primary w-100 dropdown-toggle"
+                            type="button"
+                            id="addActivityDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                        <i class="fas fa-plus me-2"></i>Add Activity
+                    </button>
+                    <ul class="dropdown-menu w-100" aria-labelledby="addActivityDropdown">
+                        <li>
+                            <a class="dropdown-item" href="/facilitator/activities/create-poll?code=@sessionCode">
+                                <strong>📊 Poll</strong>
+                                <br />
+                                <small class="text-muted">Single or multiple choice question</small>
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <a class="dropdown-item disabled" href="#">
+                                <strong>⭐ Rating</strong>
+                                <br />
+                                <small class="text-muted">Numeric scale (coming soon)</small>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/facilitator/activities/create-wordcloud?code=@sessionCode">
+                                <strong>☁️ Word Cloud</strong>
+                                <br />
+                                <small class="text-muted">Short text responses</small>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item disabled" href="#">
+                                <strong>💬 General Feedback</strong>
+                                <br />
+                                <small class="text-muted">Long-form responses (coming soon)</small>
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </div>
-        }
-      </div>
+            }
+        
+    </div>
 </main>
 
 @code {
@@ -444,29 +463,6 @@ else if (session != null)
         {
             // Set page title
             await JS.InvokeVoidAsync("eval", "document.title = 'TechWayFit Pulse — Live Session'");
-
-            if (!string.IsNullOrEmpty(sessionCode) && !string.IsNullOrEmpty(joinUrl))
-            {
-                try
-                {
-                    await Task.Delay(300);
-
-                    var canvasId = $"qr-{sessionCode.Replace("-", "")}";
-                    var wasAutoGenerated = await JS.InvokeAsync<bool>("eval",
-         $"document.getElementById('{canvasId}')?.width > 0 && document.getElementById('{canvasId}')?.getContext('2d').getImageData(0, 0, 1, 1).data[3] !== 0");
-
-                    if (!wasAutoGenerated)
-                    {
-                        await GenerateQRCode();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, "QR code generation failed");
-                    errorMessage = $"QR Code error: {ex.Message}";
-                    StateHasChanged();
-                }
-            }
         }
     }
 
@@ -576,6 +572,26 @@ else if (session != null)
             Logger.LogError(ex, "Failed to generate QR code");
             errorMessage = $"QR generation failed: {ex.Message}";
             StateHasChanged();
+        }
+    }
+
+    private async Task ShowQRModal()
+    {
+        try
+        {
+            // Open the modal
+            await JS.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('qrModal')).show()");
+            
+            // Wait a bit for modal to render
+            await Task.Delay(100);
+            
+            // Generate QR code in the modal
+            var canvasId = $"qr-modal-{sessionCode.Replace("-", "")}";
+            await JS.InvokeVoidAsync("generateQRCode", canvasId, joinUrl);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to show QR modal");
         }
     }
 

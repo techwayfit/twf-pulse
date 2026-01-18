@@ -21,30 +21,45 @@
     
 </head>
 <body class="pulse-body">
-    <!-- Navigation Header - Full Width Background -->
-    <header class="sticky-top border-bottom bg-white bg-opacity-75" style="backdrop-filter: blur(10px);">
-        <!-- Constrained Content -->
+    <!-- Navigation Header - Modern Mobile-Friendly -->
+    <nav class="navbar navbar-expand-lg sticky-top pulse-navbar">
         <div class="container" style="max-width: 1200px;">
-            <div class="d-flex align-items-center justify-content-between py-3 gap-3 flex-wrap">
-                <!-- Brand -->
-                <div class="d-flex align-items-center gap-2 flex-shrink-1">
-                    <div class="pulse-logo"></div>
-                    <div class="lh-sm">
-                        <div class="fw-semibold">TechWayFit Pulse</div>
-                        <div class="text-muted small d-none d-md-block">Make workshops fun. Make insights measurable.</div>
-                    </div>
+            <!-- Brand -->
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <span class="brand-badge" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 12h4l2-5 4 10 2-5h6" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <div class="lh-sm">
+                    <div class="brand-title">Pulse</div>
+                    <div class="brand-sub">by TechWayFit</div>
                 </div>
+            </a>
 
-                <!-- Navigation Buttons -->
-                <nav class="d-flex gap-2 flex-shrink-0 align-items-center">
-                    <a class="btn btn-outline-secondary btn-sm" href="/">Home</a>
+            <!-- Mobile Hamburger Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Collapsible Navigation -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <nav class="navbar-nav ms-auto align-items-lg-center gap-2 py-3 py-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
                     @if (User.Identity?.IsAuthenticated == true)
                     {
-                        <a class="btn btn-outline-secondary btn-sm" href="/facilitator/create">Create Session</a>
-                        <a class="btn btn-outline-secondary btn-sm" href="/facilitator/dashboard">My Sessions</a>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/facilitator/create">Create Session</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/facilitator/dashboard">My Sessions</a>
+                        </li>
                         
                         <!-- User Account Dropdown -->
-                        <div class="dropdown">
+                        <li class="nav-item dropdown ms-lg-2">
                             <button class="btn btn-primary btn-sm pulse-btn-primary d-flex align-items-center gap-2" 
                                     type="button" 
                                     id="userMenuDropdown" 
@@ -93,17 +108,21 @@
                                     </form>
                                 </li>
                             </ul>
-                        </div>
+                        </li>
                     }
                     else
                     {
-                        <a class="btn btn-outline-secondary btn-sm" href="/account/login">Sign In</a>
-                        <a class="btn btn-primary btn-sm pulse-btn-primary" href="/participant/join">Join Workshop</a>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/account/login">Sign In</a>
+                        </li>
+                        <li class="nav-item ms-lg-2">
+                            <a class="btn btn-brand px-4" href="/participant/join">Join Workshop</a>
+                        </li>
                     }
                 </nav>
             </div>
         </div>
-    </header>
+    </nav>
 
     @RenderBody()
 

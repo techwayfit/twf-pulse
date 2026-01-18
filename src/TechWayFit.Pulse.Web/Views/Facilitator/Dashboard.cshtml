@@ -7,93 +7,97 @@
     var sessionGroups = ViewData["Groups"] as IEnumerable<TechWayFit.Pulse.Domain.Entities.SessionGroup>;
 }
 
-<main class="py-5">
+<main class="dashboard-main">
     <div class="container" style="max-width: 1200px;">
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <div>
-                <h2 class="mb-1">My Workshop Sessions</h2>
-                <p class="text-muted mb-0">Welcome back, <strong>@userName</strong></p>
+        <div class="dashboard-header">
+            <div class="dashboard-header-text">
+                <h2 class="dashboard-title">My Workshop Sessions</h2>
+                <p class="dashboard-subtitle">Welcome back, <strong>@userName</strong></p>
             </div>
-            <div class="d-flex gap-2">
-                <a href="@Url.Action("Groups", "Facilitator")" class="btn btn-outline-primary">
-                    📁 Manage Groups
+            <div class="dashboard-header-actions">
+                <a href="@Url.Action("Groups", "Facilitator")" class="btn btn-pulse-outline">
+                    <span class="d-none d-sm-inline">📁 </span>Manage Groups
                 </a>
-                <a href="@Url.Action("Create", "Facilitator")" class="btn btn-primary pulse-btn-primary">
-                    ✨ Create New Session
+                <a href="@Url.Action("Create", "Facilitator")" class="btn btn-pulse-primary">
+                    <span class="d-none d-sm-inline">✨ </span>Create Session
                 </a>
             </div>
         </div>
 
         <!-- Stats Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small">Total Sessions</div>
-                                <div class="h4 mb-0 fw-bold">@Model.Count</div>
-                            </div>
-                            <div class="text-primary fs-2">📊</div>
+        <div class="stat-cards-mobile-wrapper">
+            <div class="row g-3 g-md-4 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-card-body">
+                        <div class="stat-card-content">
+                            <div class="stat-card-label">Total Sessions</div>
+                            <div class="stat-card-value">@Model.Count</div>
                         </div>
+                        <div class="stat-card-icon text-primary">📊</div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small">Live Sessions</div>
-                                <div class="h4 mb-0 fw-bold">@Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Live)</div>
-                            </div>
-                            <div class="text-success fs-2">📡</div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-card-body">
+                        <div class="stat-card-content">
+                            <div class="stat-card-label">Live Sessions</div>
+                            <div class="stat-card-value">@Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Live)</div>
                         </div>
+                        <div class="stat-card-icon text-success">📡</div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small">Draft Sessions</div>
-                                <div class="h4 mb-0 fw-bold">@Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft)</div>
-                            </div>
-                            <div class="text-warning fs-2">📝</div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-card-body">
+                        <div class="stat-card-content">
+                            <div class="stat-card-label">Draft Sessions</div>
+                            <div class="stat-card-value">@Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft)</div>
                         </div>
+                        <div class="stat-card-icon text-warning">📝</div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted small">Completed</div>
-                                <div class="h4 mb-0 fw-bold">@Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended)</div>
-                            </div>
-                            <div class="text-secondary fs-2">✅</div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card">
+                    <div class="stat-card-body">
+                        <div class="stat-card-content">
+                            <div class="stat-card-label">Completed</div>
+                            <div class="stat-card-value">@Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended)</div>
                         </div>
+                        <div class="stat-card-icon text-secondary">✅</div>
                     </div>
                 </div>
             </div>
         </div>
+        </div>
 
-        <!-- Search and Filter Bar -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-3">
-                <div class="row g-3 align-items-center">
-                    <div class="col-md-5">
-                        <input type="text" class="form-control" id="sessionSearch" placeholder="Search by title, code, or goal...">
+        <!-- Collapsible Search and Filter Bar -->
+        <div class="filter-toggle-wrapper d-lg-none">
+            <button class="filter-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
+                <span class="filter-toggle-icon">🔍</span>
+                <span class="filter-toggle-text">Search & Filter</span>
+                <span class="filter-toggle-arrow">▼</span>
+            </button>
+        </div>
+
+        <div class="collapse d-lg-block" id="filterSection">
+            <div class="filter-card">
+                <div class="filter-card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-5">
+                        <label class="form-label fw-semibold d-none d-md-block">Search</label>
+                        <input type="text" class="form-control" id="sessionSearch" placeholder="Search sessions...">
                     </div>
-                    <div class="col-md-5">
-                        <div class="d-flex align-items-center">
-                            <span class="text-muted me-2 small flex-shrink-0">Filter by Group:</span>
+                    <div class="col-12 col-md-5">
+                        <div>
+                            <label class="form-label fw-semibold d-none d-md-block">Filter by Group</label>
                             <div class="flex-grow-1">
                                 @{
                                     var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
@@ -124,27 +128,31 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-2 text-end">
-                        <div class="d-flex gap-2 justify-content-end">
-                            <button type="button" class="btn btn-sm btn-primary" id="applyFilters">
-                                <i class="fas fa-search me-1"></i> Apply
+                    <div class="col-12 col-md-2">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary flex-grow-1" id="applyFilters">
+                                <span class="d-none d-md-inline">Apply</span>
+                                <span class="d-md-none">🔍</span>
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="clearFilters">
-                                <i class="fas fa-times me-1"></i> Clear
+                            <button type="button" class="btn btn-outline-secondary" id="clearFilters">
+                                <span class="d-none d-md-inline">Clear</span>
+                                <span class="d-md-none">✕</span>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        </div>
 
         <!-- Sessions Table -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
+        <div class="sessions-card">
+            <div class="sessions-card-body">
                 @if (Model.Any())
                 {
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="sessionsTable">
+                    <!-- Desktop Table View -->
+                    <div class="d-none d-lg-block">
+                        <table class="sessions-table" id="sessionsTable">
                             <thead>
                                 <tr>
                                     <th>Session Code</th>
@@ -238,8 +246,77 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="text-end mt-3">
-                        <span class="badge bg-primary bg-opacity-10 text-primary" id="sessionCount">
+                    
+                    <!-- Mobile Card View -->
+                    <div class="d-lg-none" id="sessionCards">
+                        @foreach (var session in Model)
+                        {
+                            <div class="session-mobile-card" 
+                                 data-session-id="@session.Id" 
+                                 data-group-id="@(session.GroupId?.ToString() ?? "")" 
+                                 data-search-text="@($"{session.Code} {session.Title} {session.Goal ?? ""}").ToLower()">
+                                <div class="session-mobile-card-header">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2">@session.Code</span>
+                                    @switch (session.Status)
+                                    {
+                                        case TechWayFit.Pulse.Domain.Enums.SessionStatus.Live:
+                                            <span class="badge bg-success">Live</span>
+                                            break;
+                                        case TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft:
+                                            <span class="badge bg-warning text-dark">Draft</span>
+                                            break;
+                                        case TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended:
+                                            <span class="badge bg-secondary">Ended</span>
+                                            break;
+                                        case TechWayFit.Pulse.Domain.Enums.SessionStatus.Expired:
+                                            <span class="badge bg-danger">Expired</span>
+                                            break;
+                                    }
+                                </div>
+                                <div class="session-mobile-card-body">
+                                    <h6 class="session-mobile-title">@session.Title</h6>
+                                    @if (!string.IsNullOrEmpty(session.Goal))
+                                    {
+                                        <p class="session-mobile-goal">@session.Goal</p>
+                                    }
+                                    <div class="session-mobile-meta">
+                                        @if (session.GroupId.HasValue && sessionGroups != null)
+                                        {
+                                            var group = sessionGroups.FirstOrDefault(g => g.Id == session.GroupId.Value);
+                                            if (group != null)
+                                            {
+                                                <span class="session-mobile-group">📁 @group.Name</span>
+                                            }
+                                        }
+                                        <span class="session-mobile-date">Created: @session.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                    </div>
+                                </div>
+                                <div class="session-mobile-card-footer">
+                                    @if (session.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Live)
+                                    {
+                                        <a href="/facilitator/live?Code=@session.Code" class="btn btn-sm btn-success w-100">
+                                            Go Live
+                                        </a>
+                                    }
+                                    else if (session.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft)
+                                    {
+                                        <a href="/facilitator/live?Code=@session.Code" class="btn btn-sm btn-primary w-100">
+                                            Start Session
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a href="/facilitator/live?Code=@session.Code" class="btn btn-sm btn-outline-secondary w-100">
+                                            View
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    
+                    <div class="session-count-badge">
+                        <span id="sessionCount">
                             @Model.Count @(Model.Count == 1 ? "session" : "sessions")
                         </span>
                     </div>
