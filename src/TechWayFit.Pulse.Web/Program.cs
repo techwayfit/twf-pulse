@@ -154,6 +154,7 @@ builder.Services.AddScoped<IContributionCounterRepository, ContributionCounterRe
 builder.Services.AddScoped<IFacilitatorUserRepository, FacilitatorUserRepository>();
 builder.Services.AddScoped<ILoginOtpRepository, LoginOtpRepository>();
 builder.Services.AddScoped<ISessionGroupRepository, SessionGroupRepository>();
+builder.Services.AddScoped<ISessionTemplateRepository, TechWayFit.Pulse.Infrastructure.Repositories.SessionTemplateRepository>();
 
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
@@ -167,6 +168,7 @@ builder.Services.AddScoped<IGeneralFeedbackDashboardService, GeneralFeedbackDash
 builder.Services.AddScoped<ISessionCodeGenerator, SessionCodeGenerator>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ISessionGroupService, SessionGroupService>();
+builder.Services.AddScoped<ISessionTemplateService, TechWayFit.Pulse.Infrastructure.Services.SessionTemplateService>();
 
 // Token Services
 builder.Services.AddSingleton<IFacilitatorTokenService, FacilitatorTokenService>();
@@ -280,6 +282,13 @@ app.MapRazorPages();
 
 // Blazor pages fallback (only for routes that need interactivity)
 app.MapFallbackToPage("/_Host");
+
+// Initialize system templates on startup
+using (var scope = app.Services.CreateScope())
+{
+    var templateService = scope.ServiceProvider.GetRequiredService<ISessionTemplateService>();
+    await templateService.InitializeSystemTemplatesAsync();
+}
 
     Log.Information("TechWayFit Pulse application started successfully");
 app.Run();

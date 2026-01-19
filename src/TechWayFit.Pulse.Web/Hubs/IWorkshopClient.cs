@@ -31,6 +31,11 @@ public interface IWorkshopClient
     /// Dashboard data has been updated with new aggregations
     /// </summary>
     Task DashboardUpdated(DashboardUpdatedEvent evt);
+
+    /// <summary>
+    /// Activity has been deleted
+    /// </summary>
+    Task ActivityDeleted(Guid activityId);
 }
 
 /// <summary>

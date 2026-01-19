@@ -25,6 +25,8 @@ public sealed class PulseDbContext : DbContext
 
     public DbSet<SessionGroupRecord> SessionGroups => Set<SessionGroupRecord>();
 
+    public DbSet<SessionTemplateRecord> SessionTemplates => Set<SessionTemplateRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<SessionRecord>(entity =>
@@ -111,6 +113,19 @@ public sealed class PulseDbContext : DbContext
             entity.HasIndex(x => x.FacilitatorUserId);
             entity.HasIndex(x => x.ParentGroupId);
             entity.HasIndex(x => new { x.FacilitatorUserId, x.Level, x.ParentGroupId });
+        });
+
+        modelBuilder.Entity<SessionTemplateRecord>(entity =>
+        {
+            entity.ToTable("SessionTemplates");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(500).IsRequired();
+            entity.Property(x => x.IconEmoji).HasMaxLength(10).IsRequired();
+            entity.Property(x => x.ConfigJson).HasColumnType("TEXT").IsRequired();
+            entity.HasIndex(x => x.Category);
+            entity.HasIndex(x => x.IsSystemTemplate);
+            entity.HasIndex(x => x.CreatedByUserId);
         });
     }
 }

@@ -85,6 +85,20 @@ public sealed class Session
         UpdatedAt = updatedAt;
     }
 
+    public void Update(string title, string? goal, string? context, DateTimeOffset updatedAt)
+    {
+        Title = title.Trim();
+        Goal = goal;
+        Context = context;
+        UpdatedAt = updatedAt;
+    }
+
+    public void UpdateSettings(SessionSettings settings, DateTimeOffset updatedAt)
+    {
+        Settings = settings;
+        UpdatedAt = updatedAt;
+    }
+
     public void UpdateJoinFormSchema(JoinFormSchema joinFormSchema, DateTimeOffset updatedAt)
     {
         JoinFormSchema = joinFormSchema;

@@ -58,6 +58,13 @@ public sealed class Activity
         Order = order;
     }
 
+    public void Update(string title, string? prompt, string? config)
+    {
+        Title = title.Trim();
+        Prompt = prompt;
+        Config = config;
+    }
+
     public void Open(DateTimeOffset openedAt)
     {
         Status = ActivityStatus.Open;

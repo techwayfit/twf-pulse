@@ -16,6 +16,19 @@ public interface IActivityService
 
     Task<IReadOnlyList<Activity>> GetAgendaAsync(Guid sessionId, CancellationToken cancellationToken = default);
 
+    Task<Activity> UpdateActivityAsync(
+        Guid sessionId,
+        Guid activityId,
+        string title,
+        string? prompt,
+        string? config,
+        CancellationToken cancellationToken = default);
+
+    Task DeleteActivityAsync(
+        Guid sessionId,
+        Guid activityId,
+        CancellationToken cancellationToken = default);
+
     Task OpenAsync(Guid sessionId, Guid activityId, DateTimeOffset openedAt, CancellationToken cancellationToken = default);
 
     Task CloseAsync(Guid sessionId, Guid activityId, DateTimeOffset closedAt, CancellationToken cancellationToken = default);

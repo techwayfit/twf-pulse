@@ -305,6 +305,171 @@ public sealed class SessionsController : ControllerBase
         }
     }
 
+    [HttpPut("{code}")]
+    public async Task<ActionResult<ApiResponse<SessionSummaryResponse>>> UpdateSession(
+        string code,
+        [FromBody] UpdateSessionRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<SessionSummaryResponse>("not_found", "Session not found."));
+            }
+
+            var authError = RequireFacilitatorToken<SessionSummaryResponse>(session);
+            if (authError is not null)
+            {
+                return authError;
+            }
+
+            var updatedSession = await _sessions.UpdateSessionAsync(
+                session.Id,
+                request.Title,
+                request.Goal,
+                request.Context,
+                DateTimeOffset.UtcNow,
+                cancellationToken);
+
+            return Ok(Wrap(ApiMapper.ToSummary(updatedSession)));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<SessionSummaryResponse>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<SessionSummaryResponse>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpPut("{code}/settings")]
+    public async Task<ActionResult<ApiResponse<SessionSummaryResponse>>> UpdateSessionSettings(
+        string code,
+        [FromBody] UpdateSessionSettingsRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<SessionSummaryResponse>("not_found", "Session not found."));
+            }
+
+            var authError = RequireFacilitatorToken<SessionSummaryResponse>(session);
+            if (authError is not null)
+            {
+                return authError;
+            }
+
+            var settings = new TechWayFit.Pulse.Domain.ValueObjects.SessionSettings(
+                request.MaxContributionsPerParticipantPerSession,
+                request.MaxContributionsPerParticipantPerActivity,
+                request.StrictCurrentActivityOnly,
+                request.AllowAnonymous,
+                request.TtlMinutes);
+
+            var updatedSession = await _sessions.UpdateSessionSettingsAsync(
+                session.Id,
+                settings,
+                DateTimeOffset.UtcNow,
+                cancellationToken);
+
+            return Ok(Wrap(ApiMapper.ToSummary(updatedSession)));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<SessionSummaryResponse>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<SessionSummaryResponse>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpPut("{code}/activities/{activityId:guid}")]
+    public async Task<ActionResult<ApiResponse<ActivityResponse>>> UpdateActivity(
+        string code,
+        Guid activityId,
+        [FromBody] UpdateActivityRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
+            }
+
+            var authError = RequireFacilitatorToken<ActivityResponse>(session);
+            if (authError is not null)
+            {
+                return authError;
+            }
+
+            var activity = await _activities.UpdateActivityAsync(
+                session.Id,
+                activityId,
+                request.Title,
+                request.Prompt,
+                request.Config,
+                cancellationToken);
+
+            await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+            return Ok(Wrap(new ActivityResponse(activity.Id)));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpDelete("{code}/activities/{activityId:guid}")]
+    public async Task<ActionResult<ApiResponse<object>>> DeleteActivity(
+        string code,
+        Guid activityId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<object>("not_found", "Session not found."));
+            }
+
+            var authError = RequireFacilitatorToken<object>(session);
+            if (authError is not null)
+            {
+                return authError;
+            }
+
+            await _activities.DeleteActivityAsync(
+                session.Id,
+                activityId,
+                cancellationToken);
+
+            await _hub.Clients.Group(session.Code).ActivityDeleted(activityId);
+            return Ok(Wrap(new { message = "Activity deleted successfully" }));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<object>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<object>("validation_error", ex.Message));
+        }
+    }
+
     [HttpGet("{code}/activities")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<AgendaActivityResponse>>>> GetAgenda(
         string code,

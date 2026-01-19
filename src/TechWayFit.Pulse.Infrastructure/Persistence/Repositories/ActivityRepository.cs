@@ -45,4 +45,10 @@ public sealed class ActivityRepository : IActivityRepository
         _dbContext.Activities.Update(activity.ToRecord());
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task DeleteAsync(Activity activity, CancellationToken cancellationToken = default)
+    {
+        _dbContext.Activities.Remove(activity.ToRecord());
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

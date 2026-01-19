@@ -79,6 +79,79 @@ public sealed class ActivityService : IActivityService
         return _activities.GetBySessionAsync(sessionId, cancellationToken);
     }
 
+    public async Task<Activity> UpdateActivityAsync(
+        Guid sessionId,
+        Guid activityId,
+        string title,
+        string? prompt,
+        string? config,
+        CancellationToken cancellationToken = default)
+    {
+        if (sessionId == Guid.Empty)
+        {
+            throw new ArgumentException("Session id is required.", nameof(sessionId));
+        }
+
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new ArgumentException("Activity title is required.", nameof(title));
+        }
+
+        if (title.Trim().Length > TitleMaxLength)
+        {
+            throw new ArgumentException($"Activity title must be <= {TitleMaxLength} characters.", nameof(title));
+        }
+
+        if (!string.IsNullOrWhiteSpace(prompt) && prompt.Trim().Length > PromptMaxLength)
+        {
+            throw new ArgumentException($"Prompt must be <= {PromptMaxLength} characters.", nameof(prompt));
+        }
+
+        var activity = await _activities.GetByIdAsync(activityId, cancellationToken);
+        if (activity is null)
+        {
+            throw new InvalidOperationException("Activity not found.");
+        }
+
+        if (activity.SessionId != sessionId)
+        {
+            throw new InvalidOperationException("Activity does not belong to the session.");
+        }
+
+        activity.Update(title, prompt, config);
+        await _activities.UpdateAsync(activity, cancellationToken);
+        return activity;
+    }
+
+    public async Task DeleteActivityAsync(
+        Guid sessionId,
+        Guid activityId,
+        CancellationToken cancellationToken = default)
+    {
+        if (sessionId == Guid.Empty)
+        {
+            throw new ArgumentException("Session id is required.", nameof(sessionId));
+        }
+
+        var activity = await _activities.GetByIdAsync(activityId, cancellationToken);
+        if (activity is null)
+        {
+            throw new InvalidOperationException("Activity not found.");
+        }
+
+        if (activity.SessionId != sessionId)
+        {
+            throw new InvalidOperationException("Activity does not belong to the session.");
+        }
+
+        if (activity.Status != ActivityStatus.Pending)
+        {
+            throw new InvalidOperationException("Only pending activities can be deleted.");
+        }
+
+        await _activities.DeleteAsync(activity, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Activity>> ReorderAsync(
         Guid sessionId,
         IReadOnlyList<Guid> orderedActivityIds,

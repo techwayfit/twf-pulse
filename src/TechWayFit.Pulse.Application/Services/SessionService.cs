@@ -83,6 +83,54 @@ public sealed class SessionService : ISessionService
         return _sessions.GetByCodeAsync(code, cancellationToken);
     }
 
+    public async Task<Session> UpdateSessionAsync(
+        Guid sessionId,
+        string title,
+        string? goal,
+        string? context,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new ArgumentException("Session title is required.", nameof(title));
+        }
+
+        if (title.Trim().Length > TitleMaxLength)
+        {
+            throw new ArgumentException($"Session title must be <= {TitleMaxLength} characters.", nameof(title));
+        }
+
+        var session = await _sessions.GetByIdAsync(sessionId, cancellationToken);
+        if (session is null)
+        {
+            throw new InvalidOperationException("Session not found.");
+        }
+
+        session.Update(title, goal, context, now);
+        await _sessions.UpdateAsync(session, cancellationToken);
+        return session;
+    }
+
+    public async Task<Session> UpdateSessionSettingsAsync(
+        Guid sessionId,
+        SessionSettings settings,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        var session = await _sessions.GetByIdAsync(sessionId, cancellationToken);
+        if (session is null)
+        {
+            throw new InvalidOperationException("Session not found.");
+        }
+
+        session.UpdateSettings(settings, now);
+        await _sessions.UpdateAsync(session, cancellationToken);
+        return session;
+    }
+
     public async Task SetStatusAsync(
         Guid sessionId,
         SessionStatus status,

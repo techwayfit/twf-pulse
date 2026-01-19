@@ -20,6 +20,20 @@ public interface ISessionService
 
     Task<Session?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
 
+    Task<Session> UpdateSessionAsync(
+        Guid sessionId,
+        string title,
+        string? goal,
+        string? context,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    Task<Session> UpdateSessionSettingsAsync(
+        Guid sessionId,
+        SessionSettings settings,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
     Task SetStatusAsync(Guid sessionId, SessionStatus status, DateTimeOffset now, CancellationToken cancellationToken = default);
 
     Task SetCurrentActivityAsync(Guid sessionId, Guid? activityId, DateTimeOffset now, CancellationToken cancellationToken = default);
