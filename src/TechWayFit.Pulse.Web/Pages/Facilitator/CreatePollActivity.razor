@@ -2,6 +2,7 @@
 @inject NavigationManager Navigation
 @inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
 @inject TechWayFit.Pulse.Web.Services.IClientTokenService TokenService
+@inject Microsoft.Extensions.Options.IOptions<TechWayFit.Pulse.Web.Configuration.ActivityDefaultsOptions> ActivityDefaults
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Enums
 @using System.Text.Json
@@ -91,6 +92,12 @@
 
                     <!-- Settings -->
                     <div class="mb-3">
+                        <label class="form-label">Max Responses Per Participant</label>
+                        <input type="number" class="form-control" @bind="maxResponsesPerParticipant" min="1" max="100" />
+                        <small class="text-muted">How many times can each participant respond to this poll</small>
+                    </div>
+
+                    <div class="mb-3">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="allowMultiple" @bind="allowMultiple" />
                             <label class="form-check-label" for="allowMultiple">
@@ -153,6 +160,7 @@
     private string customOptionPlaceholder = "Other (please specify)";
     private int minSelections = 1;
     private int maxSelections = 3;
+    private int maxResponsesPerParticipant = 1;
 
     private List<PollOptionInput> pollOptions = new()
     {
@@ -171,6 +179,9 @@
         if (!string.IsNullOrEmpty(Code))
         {
             sessionCode = Code;
+        
+        // Set default from configuration
+        maxResponsesPerParticipant = ActivityDefaults.Value.Poll.MaxResponsesPerParticipant;
         }
     }
 
@@ -228,6 +239,7 @@
                 MinSelections = allowMultiple ? minSelections : 1,
                 MaxSelections = allowMultiple ? maxSelections : 1,
                 AllowCustomOption = allowCustomOption,
+                MaxResponsesPerParticipant = maxResponsesPerParticipant,
                 CustomOptionPlaceholder = allowCustomOption ? customOptionPlaceholder : "",
                 RandomizeOrder = false,
                 ShowResultsAfterSubmit = false

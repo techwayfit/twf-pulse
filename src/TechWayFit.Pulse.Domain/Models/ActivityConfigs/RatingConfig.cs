@@ -15,11 +15,17 @@ public sealed class RatingConfig
         bool commentRequired = false,
         string? commentPlaceholder = null,
      RatingDisplayType displayType = RatingDisplayType.Buttons,
-   bool showAverageAfterSubmit = false)
+   bool showAverageAfterSubmit = false,
+        int maxResponsesPerParticipant = 1)
     {
         if (scale < 2 || scale > 10)
      {
   throw new ArgumentOutOfRangeException(nameof(scale), "Scale must be between 2 and 10.");
+        }
+
+        if (maxResponsesPerParticipant < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxResponsesPerParticipant), "Max responses per participant must be at least 1.");
         }
 
      Scale = scale;
@@ -31,6 +37,7 @@ public sealed class RatingConfig
         CommentPlaceholder = commentPlaceholder ?? "Tell us more (optional)";
       DisplayType = displayType;
         ShowAverageAfterSubmit = showAverageAfterSubmit;
+        MaxResponsesPerParticipant = maxResponsesPerParticipant;
     }
 
     public int Scale { get; }
@@ -42,6 +49,7 @@ public sealed class RatingConfig
     public string CommentPlaceholder { get; }
     public RatingDisplayType DisplayType { get; }
   public bool ShowAverageAfterSubmit { get; }
+    public int MaxResponsesPerParticipant { get; } = 1;
 }
 
 public enum RatingDisplayType

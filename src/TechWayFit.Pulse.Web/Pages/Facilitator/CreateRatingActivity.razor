@@ -2,6 +2,7 @@
 @inject NavigationManager Navigation
 @inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
 @inject TechWayFit.Pulse.Web.Services.IClientTokenService TokenService
+@inject Microsoft.Extensions.Options.IOptions<TechWayFit.Pulse.Web.Configuration.ActivityDefaultsOptions> ActivityDefaults
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Enums
 @using System.Text.Json
@@ -94,6 +95,13 @@
 
                             <!-- Options -->
                             <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Max Responses Per Participant</label>
+                                    <input type="number" class="form-control" @bind="maxResponsesPerParticipant" min="1" max="100" />
+                                    <small class="text-muted">How many times can one participant rate? (Default: 1)</small>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
                                 <div class="col-12">
                                     <div class="form-check">
                                         <input type="checkbox" class="form-check-input" id="showAverage" @bind="showAverage" />
@@ -144,6 +152,7 @@
     private string highLabel = "Extremely";
     private bool showAverage = true;
     private bool allowComments = false;
+    private int maxResponsesPerParticipant = 1;
 
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
@@ -155,6 +164,9 @@
         {
             sessionCode = Code;
         }
+        
+        // Set default from configuration
+        maxResponsesPerParticipant = ActivityDefaults.Value.Rating.MaxResponsesPerParticipant;
     }
 
     private async Task HandleSubmit()
@@ -183,7 +195,8 @@
                 CommentRequired = false,
                 CommentPlaceholder = allowComments ? "Tell us more (optional)" : null,
                 DisplayType = displayType,
-                ShowAverageAfterSubmit = showAverage
+                ShowAverageAfterSubmit = showAverage,
+                MaxResponsesPerParticipant = maxResponsesPerParticipant
             };
 
             // Get next order number (TODO: Get from API)

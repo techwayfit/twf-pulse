@@ -2,6 +2,7 @@
 @inject NavigationManager Navigation
 @inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
 @inject TechWayFit.Pulse.Web.Services.IClientTokenService TokenService
+@inject Microsoft.Extensions.Options.IOptions<TechWayFit.Pulse.Web.Configuration.ActivityDefaultsOptions> ActivityDefaults
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Enums
 @using System.Text.Json
@@ -168,6 +169,9 @@
         {
             sessionCode = Code;
         }
+        
+        // Set default from configuration
+        maxSubmissionsPerParticipant = ActivityDefaults.Value.WordCloud.MaxSubmissionsPerParticipant;
     }
 
     private async Task HandleSubmit()

@@ -14,7 +14,8 @@ int? maxSelections = null,
         bool allowCustomOption = false,
       string? customOptionPlaceholder = null,
         bool randomizeOrder = false,
-        bool showResultsAfterSubmit = false)
+        bool showResultsAfterSubmit = false,
+        int maxResponsesPerParticipant = 1)
     {
    if (options == null || options.Count == 0)
  {
@@ -30,7 +31,10 @@ int? maxSelections = null,
    {
             throw new ArgumentException("Maximum selections cannot be less than minimum selections.");
         }
-
+        if (maxResponsesPerParticipant < 1)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxResponsesPerParticipant), "Max responses per participant must be at least 1.");
+        }
         Options = options;
   AllowMultiple = allowMultiple;
         MinSelections = minSelections;
@@ -39,6 +43,7 @@ int? maxSelections = null,
  CustomOptionPlaceholder = customOptionPlaceholder ?? "Other (please specify)";
         RandomizeOrder = randomizeOrder;
   ShowResultsAfterSubmit = showResultsAfterSubmit;
+        MaxResponsesPerParticipant = maxResponsesPerParticipant;
   }
 
   public List<PollOption> Options { get; }
@@ -49,6 +54,7 @@ int? maxSelections = null,
     public string CustomOptionPlaceholder { get; }
     public bool RandomizeOrder { get; }
     public bool ShowResultsAfterSubmit { get; }
+    public int MaxResponsesPerParticipant { get; } = 1;
 }
 
 public sealed class PollOption

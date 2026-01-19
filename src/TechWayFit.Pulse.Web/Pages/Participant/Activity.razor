@@ -530,7 +530,7 @@ await hubConnection.StartAsync();
             }
           </div>
             
-          <button class="btn btn-primary btn-lg w-100 py-3" 
+          <button class="btn btn-primary btn-lg w-100 py-3" tabindex="1"
             @onclick="HandleSubmitPollResponse" 
             disabled="@(isSubmittingResponse || selectedPollOptionIds.Count == 0 || hasSubmittedResponse)">
             @GetSubmitButtonText()
@@ -580,7 +580,7 @@ await hubConnection.StartAsync();
                     @GetWordCloudValidationMessage()
                 </div>
             }
-            <button class="btn btn-primary btn-lg w-100 py-3" 
+            <button class="btn btn-primary btn-lg w-100 py-3" tabindex="1"
                 @onclick="SubmitWordCloudResponse" 
                 disabled="@(isSubmittingResponse || string.IsNullOrWhiteSpace(wordCloudText) || hasSubmittedResponse || !IsWordCloudInputValid())">
                 @GetSubmitButtonText()
@@ -680,7 +680,7 @@ await hubConnection.StartAsync();
             </div>
           }
           
-          <button class="btn btn-primary btn-lg w-100 py-3" 
+          <button class="btn btn-primary btn-lg w-100 py-3" tabindex="1"
             @onclick="SubmitRatingResponse" 
             disabled="@(isSubmittingResponse || selectedRating == 0 || hasSubmittedResponse || (ratingConfig?.CommentRequired == true && string.IsNullOrWhiteSpace(ratingComment)))">
             @GetSubmitButtonText()
@@ -734,7 +734,7 @@ await hubConnection.StartAsync();
         </div>
       </div>
             
-      <button class="btn btn-primary btn-lg w-100 py-3" 
+      <button class="btn btn-primary btn-lg w-100 py-3" tabindex="1"
         @onclick="SubmitGeneralFeedbackResponse" 
         disabled="@(isSubmittingResponse || IsGeneralFeedbackInvalid() || hasSubmittedResponse)">
         @GetSubmitButtonText()
@@ -759,7 +759,7 @@ await hubConnection.StartAsync();
               maxlength="1000"></textarea>
           </div>
         </div>
-        <button class="btn btn-primary btn-lg w-100 py-3" 
+        <button class="btn btn-primary btn-lg w-100 py-3" tabindex="1"
           @onclick="SubmitGenericResponse" 
           disabled="@(isSubmittingResponse || string.IsNullOrWhiteSpace(genericResponseText) || hasSubmittedResponse)">
           @GetSubmitButtonText()
@@ -1132,6 +1132,7 @@ genericResponseText = "";
     public bool AllowMultiple { get; set; }
         public bool AllowCustomOption { get; set; }
    public string CustomOptionPlaceholder { get; set; } = "Other (please specify)";
+        public int MaxResponsesPerParticipant { get; set; } = 1;
     }
 
  private class PollOption
@@ -1150,6 +1151,7 @@ genericResponseText = "";
         public List<FeedbackCategory> Categories { get; set; } = new();
  public bool RequireCategory { get; set; }
         public bool ShowCharacterCount { get; set; } = true;
+        public int MaxResponsesPerParticipant { get; set; } = 5;
     }
 
     private class FeedbackCategory
@@ -1170,5 +1172,6 @@ genericResponseText = "";
         public string? CommentPlaceholder { get; set; }
         public TechWayFit.Pulse.Domain.Models.ActivityConfigs.RatingDisplayType DisplayType { get; set; }
         public bool ShowAverageAfterSubmit { get; set; }
+        public int MaxResponsesPerParticipant { get; set; } = 1;
     }
 }

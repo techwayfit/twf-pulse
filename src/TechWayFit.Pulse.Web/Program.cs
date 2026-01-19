@@ -14,6 +14,7 @@ using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 using TechWayFit.Pulse.Web.Data;
 using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Services;
+using TechWayFit.Pulse.Web.Configuration;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -41,6 +42,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
 builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
+
+// Configure activity defaults
+builder.Services.Configure<ActivityDefaultsOptions>(
+    builder.Configuration.GetSection(ActivityDefaultsOptions.SectionName));
+
 // Add authentication services
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

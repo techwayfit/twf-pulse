@@ -2,6 +2,7 @@
 @inject NavigationManager Navigation
 @inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
 @inject TechWayFit.Pulse.Web.Services.IClientTokenService TokenService
+@inject Microsoft.Extensions.Options.IOptions<TechWayFit.Pulse.Web.Configuration.ActivityDefaultsOptions> ActivityDefaults
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Enums
 @using System.Text.Json
@@ -79,6 +80,13 @@
                                 <input type="text" class="form-control" @bind="placeholder" placeholder="Share your detailed feedback here..." />
                             </div>
 
+                            <!-- Max Responses -->
+                            <div class="mb-3">
+                                <label class="form-label">Max Responses Per Participant</label>
+                                <input type="number" class="form-control" @bind="maxResponsesPerParticipant" min="1" max="100" />
+                                <small class="text-muted">How many times can each participant provide feedback</small>
+                            </div>
+
                             <!-- Options -->
                             <div class="row mb-3">
                                 <div class="col-12">
@@ -144,6 +152,7 @@
     private string sessionCode = string.Empty;
     private string title = string.Empty;
     private string prompt = string.Empty;
+    private int maxResponsesPerParticipant = 5;
     private int minLength = 0;
     private int maxLength = 2000;
     private string placeholder = "Share your detailed feedback here...";
@@ -161,6 +170,9 @@
         if (!string.IsNullOrEmpty(Code))
         {
             sessionCode = Code;
+        
+        // Set default from configuration
+        maxResponsesPerParticipant = ActivityDefaults.Value.GeneralFeedback.MaxResponsesPerParticipant;
         }
     }
 
@@ -178,6 +190,7 @@
                 maxLength,
                 placeholder,
                 allowAnonymous,
+                MaxResponsesPerParticipant = maxResponsesPerParticipant,
                 showResponses,
                 enableCategories,
                 suggestedCategories
