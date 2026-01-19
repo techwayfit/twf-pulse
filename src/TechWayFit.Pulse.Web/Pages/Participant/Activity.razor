@@ -42,33 +42,35 @@
     {
       <!-- Session Header -->
       <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-          <div class="row align-items-center">
-            <div class="col">
-              <h1 class="h3 fw-bold mb-2">@session.Title</h1>
-              <div class="d-flex flex-wrap gap-2 mb-2">
-                <span class="badge bg-light text-dark border px-3 py-2">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div class="flex-grow-1">
+              <h1 class="h5 fw-semibold mb-2 text-break" style="line-height: 1.3;">@session.Title</h1>
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="badge bg-light text-dark border px-2 py-1 small">
                   <strong>Code:</strong> @session.Code
                 </span>
-                <span class="badge @GetSessionStatusClass() px-3 py-2">
-                  <span class="pulse-dot me-2"></span>
+                <span class="badge @GetSessionStatusClass() px-2 py-1 small">
+                  <span class="pulse-dot me-1"></span>
                   @session.Status
                 </span>
               </div>
             </div>
-            <div class="col-auto text-end">
-              @if (!string.IsNullOrEmpty(participantDisplayName))
-              {
-                <div class="text-muted small mb-1">Participant</div>
-                <div class="fw-semibold">@participantDisplayName</div>
-              }
-              @if (contributionsRemaining >= 0)
-              {
-                <div class="text-primary small mt-1">
-                  @contributionsRemaining contributions remaining
+            @if (!string.IsNullOrEmpty(participantDisplayName))
+            {
+              <div class="text-end flex-shrink-0">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <i class="fas fa-user text-muted small"></i>
+                  <span class="fw-semibold">@participantDisplayName</span>
                 </div>
-              }
-            </div>
+                @if (contributionsRemaining >= 0)
+                {
+                  <div class="text-primary small">
+                    @contributionsRemaining remaining
+                  </div>
+                }
+              </div>
+            }
           </div>
         </div>
       </div>
@@ -78,7 +80,7 @@
       {
         <div class="card border-0 shadow-lg" style="background: linear-gradient(145deg, #fff9e6, #ffffff);">
           <div class="card-body text-center py-5">
-            <div class="display-1 text-warning mb-3">⏱️</div>
+            <div class="display-1 text-warning mb-3">⏱</div>
             <h4 class="h4 fw-bold mb-3">Waiting for facilitator to start...</h4>
             <p class="text-muted mb-0 fs-5">The workshop hasn't started yet. Please wait for the facilitator to begin the session.</p>
           </div>
@@ -114,21 +116,23 @@
         <div class="card border-0 shadow-sm">
           <div class="card-body p-4">
             <!-- Activity Header -->
-            <div class="mb-4">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <h4 class="h5 fw-semibold mb-0">@currentActivity.Title</h4>
-                <div class="d-flex gap-2">
-                  <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+            <div class="mb-4 pb-3 border-bottom">
+              <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                <div class="flex-grow-1">
+                  <h2 class="h4 fw-bold mb-0 text-break" style="line-height: 1.4;">@currentActivity.Title</h2>
+                </div>
+                <div class="d-flex gap-2 flex-shrink-0">
+                  <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2">
                     @currentActivity.Type
                   </span>
-                  <span class="badge @GetActivityStatusClass()">
+                  <span class="badge @GetActivityStatusClass() px-3 py-2">
                     @currentActivity.Status
                   </span>
                 </div>
               </div>
               @if (!string.IsNullOrEmpty(currentActivity.Prompt))
               {
-                <p class="text-muted mb-0">@currentActivity.Prompt</p>
+                <p class="text-muted mb-0 fs-6">@currentActivity.Prompt</p>
               }
             </div>
 
@@ -155,13 +159,6 @@
           {
                 @RenderGenericActivity()
      }
-
-     @if (!string.IsNullOrEmpty(submitMessage))
-        {
- <div class="alert alert-@(submitSuccess ? "success" : "danger") mt-3">
-  @submitMessage
-   </div>
-        }
    </div>
    }
             else
@@ -221,6 +218,8 @@ private int contributionsRemaining = -1;
     
     // Rating state
     private int selectedRating = 0;
+    private RatingConfig? ratingConfig;
+    private string? ratingComment;
     
     // GeneralFeedback state
     private string? feedbackText;
@@ -251,7 +250,18 @@ private int contributionsRemaining = -1;
           if (session.CurrentActivityId.HasValue)
             {
     var activities = await ApiService.GetAgendaAsync(SessionCode);
-    currentActivity = activities.FirstOrDefault(a => a.ActivityId == session.CurrentActivityId);
+    var newActivity = activities.FirstOrDefault(a => a.ActivityId == session.CurrentActivityId);
+         
+          // Reset submission state if activity changed
+          if (newActivity != null && (currentActivity == null || currentActivity.ActivityId != newActivity.ActivityId))
+          {
+              hasSubmittedResponse = false;
+              submitMessage = "";
+              submitSuccess = false;
+              ResetFormFields();
+          }
+          
+          currentActivity = newActivity;
          
           // Parse activity configuration
    if (currentActivity != null)
@@ -319,6 +329,12 @@ private int contributionsRemaining = -1;
                     Debug.WriteLine($"Parsing word cloud config: {currentActivity.Config}");
                     wordCloudConfig = JsonSerializer.Deserialize<WordCloudConfig>(currentActivity.Config, options);
                     Debug.WriteLine($"Word cloud config parsed. Max words: {wordCloudConfig?.MaxWords ?? 0}");
+                    break;
+                case ActivityType.Rating:
+                    Debug.WriteLine($"Parsing rating config: {currentActivity.Config}");
+                    ratingConfig = JsonSerializer.Deserialize<RatingConfig>(currentActivity.Config, options);
+                    Debug.WriteLine($"Rating config parsed. Scale: {ratingConfig?.Scale ?? 0}, DisplayType: {ratingConfig?.DisplayType}");
+                    Debug.WriteLine($"Raw DisplayType value in JSON: {(ratingConfig != null ? JsonSerializer.Serialize(ratingConfig) : "NULL")}");
                     break;
                 case ActivityType.GeneralFeedback:
                     feedbackConfig = JsonSerializer.Deserialize<GeneralFeedbackConfig>(currentActivity.Config, options);
@@ -403,129 +419,126 @@ await hubConnection.StartAsync();
     
     private RenderFragment RenderPollActivity() => __builder =>
     {
-        <div class="poll-activity card p-4">
-  <h3 class="mb-3">@(pollConfig?.AllowMultiple == true ? "Select one or more:" : "Make your choice:")</h3>
+        <div class="poll-activity">
+          <div class="mb-4">
+            <h3 class="h5 fw-semibold text-secondary mb-4">@(pollConfig?.AllowMultiple == true ? "Select one or more:" : "Make your choice:")</h3>
   
-     @if (pollConfig != null && pollConfig.Options != null && pollConfig.Options.Count > 0)
-      {
-        <div class="poll-options mb-3">
-   @foreach (var option in pollConfig.Options)
-        {
-             var optionId = option.Id;
-             var isSelected = selectedPollOptionIds.Contains(optionId);
-      <div class="form-check poll-option mb-3 p-4 border rounded-3 position-relative 
-                    @(isSelected ? "border-primary bg-primary bg-opacity-10" : "border-secondary") 
-                    poll-option-interactive" 
-           style="cursor: pointer; transition: all 0.2s ease-in-out;"
-           @onclick="@(async () => await HandlePollOptionClick(optionId, pollConfig.AllowMultiple))">
-            @if (pollConfig.AllowMultiple)
-  {
-       <input class="form-check-input position-absolute" 
-      type="checkbox" 
-                 id="poll-@optionId"
-                 checked="@isSelected"
-                 style="top: 1.2rem; left: 1rem;"
-          @onchange="@((e) => TogglePollOption(optionId))" />
-              }
-         else
-{
-   <input class="form-check-input position-absolute" 
-                 type="radio" 
-    name="pollChoice"
-         id="poll-@optionId"
-   checked="@isSelected"
-                 style="top: 1.2rem; left: 1rem;"
-         @onchange="@((e) => SelectPollOption(optionId))" />
- }
-     <label class="form-check-label w-100 ps-4" for="poll-@optionId" style="cursor: pointer;">
-      <strong class="d-block mb-1">@option.Label</strong>
-        @if (!string.IsNullOrEmpty(option.Description))
-         {
- <small class="text-muted d-block">@option.Description</small>
-          }
-            </label>
-         </div>
-   }
+            @if (pollConfig != null && pollConfig.Options != null && pollConfig.Options.Count > 0)
+            {
+              <div class="poll-options mb-4">
+                             @foreach (var option in pollConfig.Options)
+                {
+                  var optionId = option.Id;
+                  var isSelected = selectedPollOptionIds.Contains(optionId);
+                  <div class="form-check poll-option mb-3 p-3 border rounded-3 position-relative 
+                        @(isSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-2") 
+                        poll-option-interactive" 
+                    style="cursor: pointer; transition: all 0.2s ease-in-out;"
+                    @onclick="@(async () => await HandlePollOptionClick(optionId, pollConfig.AllowMultiple))">
+                    @if (pollConfig.AllowMultiple)
+                    {
+                      <input class="form-check-input position-absolute" 
+                        type="checkbox" 
+                        id="poll-@optionId"
+                        checked="@isSelected"
+                        style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                        @onchange="@((e) => TogglePollOption(optionId))" />
+                    }
+                    else
+                    {
+                      <input class="form-check-input position-absolute" 
+                        type="radio" 
+                        name="pollChoice"
+                        id="poll-@optionId"
+                        checked="@isSelected"
+                        style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                        @onchange="@((e) => SelectPollOption(optionId))" />
+                    }
+                    <label class="form-check-label w-100 ps-4 ms-1" for="poll-@optionId" style="cursor: pointer;">
+                      <strong class="d-block mb-1 fs-6">@option.Label</strong>
+                      @if (!string.IsNullOrEmpty(option.Description))
+                      {
+                        <small class="text-muted d-block">@option.Description</small>
+                      }
+                    </label>
+                  </div>
+                             }
   
- @if (pollConfig.AllowCustomOption)
-     {
-              var isCustomSelected = selectedPollOptionIds.Contains("custom");
-      <div class="form-check poll-option mb-3 p-4 border rounded-3 position-relative 
-                    @(isCustomSelected ? "border-primary bg-primary bg-opacity-10" : "border-secondary") 
-                    poll-option-interactive" 
-           style="cursor: pointer; transition: all 0.2s ease-in-out;"
-           @onclick="@(async () => await HandlePollOptionClick("custom", pollConfig.AllowMultiple))">
-         @if (pollConfig.AllowMultiple)
-    {
-        <input class="form-check-input position-absolute" 
-  type="checkbox" 
-   id="poll-custom"
-              checked="@isCustomSelected"
-              style="top: 1.2rem; left: 1rem;"
-        @onchange="@((e) => TogglePollOption("custom"))" />
-}
-             else
-    {
-        <input class="form-check-input position-absolute" 
-      type="radio" 
-name="pollChoice"
-   id="poll-custom"
-       checked="@isCustomSelected"
-              style="top: 1.2rem; left: 1rem;"
-    @onchange="@((e) => SelectPollOption("custom"))" />
-    }
-            <label class="form-check-label w-100 ps-4" for="poll-custom" style="cursor: pointer;">
-   <strong class="d-block mb-2">Other</strong>
-@if (isCustomSelected)
-  {
-              <input type="text" 
-   class="form-control" 
-      placeholder="@pollConfig.CustomOptionPlaceholder"
-    @bind="customPollText"
-                     @onclick:stopPropagation="true"
-       maxlength="100" />
-    }
-        </label>
-           </div>
-        }
-     </div>
-      }
+                @if (pollConfig.AllowCustomOption)
+                {
+                  var isCustomSelected = selectedPollOptionIds.Contains("custom");
+                  <div class="form-check poll-option mb-3 p-3 border rounded-3 position-relative 
+                        @(isCustomSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-2") 
+                        poll-option-interactive" 
+                    style="cursor: pointer; transition: all 0.2s ease-in-out;"
+                    @onclick="@(async () => await HandlePollOptionClick("custom", pollConfig.AllowMultiple))">
+                    @if (pollConfig.AllowMultiple)
+                    {
+                      <input class="form-check-input position-absolute" 
+                        type="checkbox" 
+                        id="poll-custom"
+                        checked="@isCustomSelected"
+                        style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                        @onchange="@((e) => TogglePollOption("custom"))" />
+                    }
+                    else
+                    {
+                      <input class="form-check-input position-absolute" 
+                        type="radio" 
+                        name="pollChoice"
+                        id="poll-custom"
+                        checked="@isCustomSelected"
+                        style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                        @onchange="@((e) => SelectPollOption("custom"))" />
+                    }
+                    <label class="form-check-label w-100 ps-4 ms-1" for="poll-custom" style="cursor: pointer;">
+                      <strong class="d-block mb-2 fs-6">Other</strong>
+                      @if (isCustomSelected)
+                      {
+                        <input type="text" 
+                          class="form-control" 
+                          placeholder="@pollConfig.CustomOptionPlaceholder"
+                          @bind="customPollText"
+                          @onclick:stopPropagation="true"
+                          maxlength="100" />
+                      }
+                    </label>
+                  </div>
+                }
+              </div>
+            }
             else
-   {
-         <div class="alert alert-warning">
-             @if (pollConfig == null)
-             {
-                 <span>Poll configuration is null.</span>
-             }
-             else if (pollConfig.Options == null)
-             {
-                 <span>Poll options are null.</span>
-             }
-             else if (pollConfig.Options.Count == 0)
-             {
-                 <span>No poll options found.</span>
-             }
-             else
-             {
-                 <span>No poll options configured.</span>
-             }
-         </div>
-     }
-            
- <button class="btn btn-primary btn-lg w-100" 
-        @onclick="HandleSubmitPollResponse" 
-   disabled="@(isSubmittingResponse || selectedPollOptionIds.Count == 0 || hasSubmittedResponse)">
-     @GetSubmitButtonText()
-          </button>
-
-          <!-- Debug info -->
-          <div class="mt-2 small text-muted">
-              Debug: isSubmitting=@isSubmittingResponse, optionsSelected=@selectedPollOptionIds.Count, hasSubmitted=@hasSubmittedResponse
+            {
+              <div class="alert alert-warning">
+                @if (pollConfig == null)
+                {
+                  <span>Poll configuration is null.</span>
+                }
+                else if (pollConfig.Options == null)
+                {
+                  <span>Poll options are null.</span>
+                }
+                else if (pollConfig.Options.Count == 0)
+                {
+                  <span>No poll options found.</span>
+                }
+                else
+                {
+                  <span>No poll options configured.</span>
+                }
+              </div>
+            }
           </div>
+            
+          <button class="btn btn-primary btn-lg w-100 py-3" 
+            @onclick="HandleSubmitPollResponse" 
+            disabled="@(isSubmittingResponse || selectedPollOptionIds.Count == 0 || hasSubmittedResponse)">
+            @GetSubmitButtonText()
+          </button>
           
           @if (!string.IsNullOrEmpty(submitMessage))
           {
-              <div class="alert alert-info mt-2">
+              <div class="alert @(submitSuccess ? "alert-success" : "alert-danger") mt-3 mb-0">
                   @submitMessage
                   @if (submitMessage.Contains("ERROR") && submitMessage.Contains("Pid"))
                   {
@@ -540,126 +553,218 @@ name="pollChoice"
 
     private RenderFragment RenderWordCloudActivity() => __builder =>
     {
-        <div class="wordcloud-activity card p-4">
-            <h3 class="mb-3">Share your thoughts:</h3>
-            <div class="mb-3">
-                <textarea class="form-control" 
-                    @bind="wordCloudText" 
-                    rows="3"
-                    placeholder="@(wordCloudConfig?.Placeholder ?? "Enter your words here...")"
-                    maxlength="@(wordCloudConfig?.MaxWordLength * wordCloudConfig?.MaxWords ?? 150)"></textarea>
-                <small class="text-muted">
-                    @((wordCloudText?.Length ?? 0)) / @(wordCloudConfig?.MaxWordLength * wordCloudConfig?.MaxWords ?? 150) characters
-                    @if (wordCloudConfig != null)
-                    {
-                        <span class="ms-3">Max @wordCloudConfig.MaxWords words</span>
-                    }
-                </small>
+        <div class="wordcloud-activity">
+            <div class="mb-4">
+              <h3 class="h5 fw-semibold text-secondary mb-3">Share your thoughts:</h3>
+              <label class="form-label fw-semibold">Your words</label>
+              <textarea class="form-control form-control-lg" 
+                  value="@wordCloudText" 
+                  @oninput="OnWordCloudTextChanged"
+                  rows="4"
+                  style="resize: vertical; min-height: 100px;"
+                  placeholder="@(wordCloudConfig?.Placeholder ?? "Enter your words here...")"
+                  maxlength="@(wordCloudConfig?.MaxWordLength * wordCloudConfig?.MaxWords ?? 150)"></textarea>
+              <div class="form-text d-flex justify-content-between">
+                  <span>
+                      @((wordCloudText?.Length ?? 0)) / @(wordCloudConfig?.MaxWordLength * wordCloudConfig?.MaxWords ?? 150) characters
+                  </span>
+                  @if (wordCloudConfig != null)
+                  {
+                      <span>Max @wordCloudConfig.MaxWords words</span>
+                  }
+              </div>
             </div>
-            <button class="btn btn-primary btn-lg w-100" 
+            @if (wordCloudConfig != null && !IsWordCloudInputValid() && !string.IsNullOrWhiteSpace(wordCloudText))
+            {
+                <div class="alert alert-warning mb-3">
+                    @GetWordCloudValidationMessage()
+                </div>
+            }
+            <button class="btn btn-primary btn-lg w-100 py-3" 
                 @onclick="SubmitWordCloudResponse" 
                 disabled="@(isSubmittingResponse || string.IsNullOrWhiteSpace(wordCloudText) || hasSubmittedResponse || !IsWordCloudInputValid())">
                 @GetSubmitButtonText()
             </button>
-            @if (wordCloudConfig != null && !IsWordCloudInputValid() && !string.IsNullOrWhiteSpace(wordCloudText))
-            {
-                <div class="alert alert-warning mt-3">
-                    @GetWordCloudValidationMessage()
-                </div>
-            }
         </div>
     };
 
     private RenderFragment RenderRatingActivity() => __builder =>
     {
-        <div class="rating-activity card p-4">
-   <h3 class="mb-3">Rate this:</h3>
-   <div class="rating-scale d-flex justify-content-center gap-2 mb-4">
-           @for (int i = 1; i <= 5; i++)
-  {
-       var rating = i;
-  <button class="btn btn-outline-primary rating-button @(selectedRating == rating ? "active" : "")"
-   style="width: 60px; height: 60px; font-size: 24px;"
-    @onclick="() => SetRating(rating)">
-    @rating
-     </button>
-       }
-      </div>
-         <button class="btn btn-primary btn-lg w-100" 
+        var scale = ratingConfig?.Scale ?? 5;
+        var displayType = ratingConfig?.DisplayType ?? TechWayFit.Pulse.Domain.Models.ActivityConfigs.RatingDisplayType.Buttons;
+        
+        <div class="rating-activity">
+          <div class="text-center mb-4">
+            <h3 class="h5 fw-semibold text-secondary mb-4">Rate this:</h3>
+            
+            @if (!string.IsNullOrEmpty(ratingConfig?.MinLabel) || !string.IsNullOrEmpty(ratingConfig?.MaxLabel))
+            {
+              <div class="d-flex justify-content-between text-muted small mb-2">
+                <span>@(ratingConfig?.MinLabel ?? "Low")</span>
+                <span>@(ratingConfig?.MaxLabel ?? "High")</span>
+              </div>
+            }
+            
+            @if (displayType == TechWayFit.Pulse.Domain.Models.ActivityConfigs.RatingDisplayType.Stars)
+            {
+              <div class="rating-scale d-flex justify-content-center gap-2 mb-4 flex-wrap">
+                @for (int i = 1; i <= scale; i++)
+                {
+                  var rating = i;
+                  <button type="button" class="btn btn-link rating-star @(selectedRating >= rating ? "active" : "")"
+                    style="font-size: 48px; line-height: 1; padding: 0.25rem; text-decoration: none; color: @(selectedRating >= rating ? "#ffc107" : "#dee2e6"); transition: all 0.2s ease;"
+                    @onclick="() => SetRating(rating)">
+                    @if (selectedRating >= rating)
+                    {
+                      <text>&#9733;</text>
+                    }
+                    else
+                    {
+                      <text>&#9734;</text>
+                    }
+                  </button>
+                }
+              </div>
+            }
+            else if (displayType == TechWayFit.Pulse.Domain.Models.ActivityConfigs.RatingDisplayType.Slider)
+            {
+              <div class="mb-4">
+                <input type="range" class="form-range" 
+                  min="1" max="@scale" 
+                  value="@selectedRating"
+                  @oninput="@((e) => SetRating(int.Parse(e.Value?.ToString() ?? "0")))"
+                  style="height: 8px;" />
+                @if (selectedRating > 0)
+                {
+                  <div class="text-center mt-3">
+                    <span class="badge bg-primary" style="font-size: 24px; padding: 0.5rem 1rem;">@selectedRating</span>
+                  </div>
+                }
+              </div>
+            }
+            else
+            {
+              <div class="rating-scale d-flex justify-content-center gap-3 mb-4 flex-wrap">
+                @for (int i = 1; i <= scale; i++)
+                {
+                  var rating = i;
+                  <button class="btn btn-outline-primary rating-button @(selectedRating == rating ? "active" : "")"
+                    style="width: 70px; height: 70px; font-size: 28px; font-weight: 600; border-width: 2px; transition: all 0.2s ease;"
+                    @onclick="() => SetRating(rating)">
+                    @rating
+                  </button>
+                }
+              </div>
+            }
+            
+            @if (selectedRating > 0)
+            {
+              <div class="text-muted small mb-3">
+                You selected: <strong class="text-primary">@selectedRating</strong>
+              </div>
+            }
+          </div>
+          
+          @if (ratingConfig?.AllowComments == true)
+          {
+            <div class="mb-4">
+              <label class="form-label fw-semibold">
+                Comments @(ratingConfig?.CommentRequired == true ? "<span class='text-danger'>*</span>" : "<span class='text-muted'>(optional)</span>")
+              </label>
+              <textarea class="form-control" 
+                value="@ratingComment" 
+                @oninput="@((e) => { ratingComment = e.Value?.ToString(); if (hasSubmittedResponse) { hasSubmittedResponse = false; submitMessage = ""; } })"
+                rows="3"
+                placeholder="@(ratingConfig?.CommentPlaceholder ?? "Tell us more (optional)")"
+                maxlength="500"></textarea>
+            </div>
+          }
+          
+          <button class="btn btn-primary btn-lg w-100 py-3" 
             @onclick="SubmitRatingResponse" 
-       disabled="@(isSubmittingResponse || selectedRating == 0 || hasSubmittedResponse)">
-       @GetSubmitButtonText()
-     </button>
+            disabled="@(isSubmittingResponse || selectedRating == 0 || hasSubmittedResponse || (ratingConfig?.CommentRequired == true && string.IsNullOrWhiteSpace(ratingComment)))">
+            @GetSubmitButtonText()
+          </button>
         </div>
     };
 
   private RenderFragment RenderGeneralFeedbackActivity() => __builder =>
     {
-    <div class="feedback-activity card p-4">
-      <h3 class="mb-3">Share your feedback:</h3>
+    <div class="feedback-activity">
+      <div class="mb-4">
+        <h3 class="h5 fw-semibold text-secondary mb-3">Share your feedback:</h3>
       
-    @if (feedbackConfig?.CategoriesEnabled == true && feedbackConfig.Categories != null)
-     {
-         <div class="mb-3">
-     <label class="form-label">Category @(feedbackConfig.RequireCategory ? "*" : "(optional)")</label>
-                 <div class="btn-group w-100" role="group">
-          @foreach (var category in feedbackConfig.Categories)
-          {
-   var catId = category.Id;
-    <button type="button" 
-          class="btn btn-outline-secondary @(selectedFeedbackCategory == catId ? "active" : "")"
-             @onclick="() => selectedFeedbackCategory = catId">
-       @if (!string.IsNullOrEmpty(category.Icon))
-     {
-  <span>@category.Icon</span>
-    }
-        @category.Label
-     </button>
-             }
+        @if (feedbackConfig?.CategoriesEnabled == true && feedbackConfig.Categories != null)
+        {
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Category @(feedbackConfig.RequireCategory ? "<span class='text-danger'>*</span>" : "<span class='text-muted'>(optional)</span>")</label>
+            <div class="btn-group w-100" role="group">
+              @foreach (var category in feedbackConfig.Categories)
+              {
+                var catId = category.Id;
+                <button type="button" 
+                  class="btn btn-outline-secondary @(selectedFeedbackCategory == catId ? "active" : "") px-3 py-2"
+                  @onclick="() => selectedFeedbackCategory = catId">
+                  @if (!string.IsNullOrEmpty(category.Icon))
+                  {
+                    <span class="me-1">@category.Icon</span>
+                  }
+                  @category.Label
+                </button>
+              }
             </div>
           </div>
-            }
+        }
       
-     <div class="mb-3">
-    <textarea class="form-control" 
-   @bind="feedbackText" 
-  rows="6"
-      placeholder="@(feedbackConfig?.Placeholder ?? "Share your thoughts, problems, or suggestions...")"
-  maxlength="@(feedbackConfig?.MaxLength ?? 1000)"></textarea>
-   @if (feedbackConfig?.ShowCharacterCount == true)
-     {
-         <small class="text-muted">
-     @((feedbackText?.Length ?? 0)) / @(feedbackConfig?.MaxLength ?? 1000) characters
-          </small>
-       }
-       </div>
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Your feedback</label>
+          <textarea class="form-control form-control-lg" 
+            value="@feedbackText" 
+            @oninput="OnFeedbackTextChanged"
+            rows="6"
+            style="resize: vertical; min-height: 120px;"
+            placeholder="@(feedbackConfig?.Placeholder ?? "Share your thoughts, problems, or suggestions...")"
+            maxlength="@(feedbackConfig?.MaxLength ?? 1000)"></textarea>
+          @if (feedbackConfig?.ShowCharacterCount == true)
+          {
+            <div class="form-text">
+              @((feedbackText?.Length ?? 0)) / @(feedbackConfig?.MaxLength ?? 1000) characters
+            </div>
+          }
+        </div>
+      </div>
             
-    <button class="btn btn-primary btn-lg w-100" 
-           @onclick="SubmitGeneralFeedbackResponse" 
-  disabled="@(isSubmittingResponse || IsGeneralFeedbackInvalid() || hasSubmittedResponse)">
-         @GetSubmitButtonText()
-            </button>
+      <button class="btn btn-primary btn-lg w-100 py-3" 
+        @onclick="SubmitGeneralFeedbackResponse" 
+        disabled="@(isSubmittingResponse || IsGeneralFeedbackInvalid() || hasSubmittedResponse)">
+        @GetSubmitButtonText()
+      </button>
     </div>
     };
 
     private RenderFragment RenderGenericActivity() => __builder =>
     {
-   <div class="generic-activity card p-4">
-       <h3 class="mb-3">Activity type: @currentActivity?.Type</h3>
-          <p class="text-muted">This activity type is not yet fully implemented.</p>
-            <div class="mb-3">
-       <textarea class="form-control" 
-     @bind="genericResponseText" 
-      rows="4"
-        placeholder="Enter your response..."
-      maxlength="1000"></textarea>
-       </div>
-            <button class="btn btn-primary btn-lg w-100" 
-         @onclick="SubmitGenericResponse" 
-              disabled="@(isSubmittingResponse || string.IsNullOrWhiteSpace(genericResponseText) || hasSubmittedResponse)">
- @GetSubmitButtonText()
-            </button>
+      <div class="generic-activity">
+        <div class="mb-4">
+          <h3 class="h5 fw-semibold text-secondary mb-2">Activity type: @currentActivity?.Type</h3>
+          <p class="text-muted small">This activity type is not yet fully implemented.</p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Your response</label>
+            <textarea class="form-control form-control-lg" 
+              value="@genericResponseText" 
+              @oninput="OnGenericTextChanged"
+              rows="5"
+              style="resize: vertical; min-height: 120px;"
+              placeholder="Enter your response..."
+              maxlength="1000"></textarea>
+          </div>
         </div>
+        <button class="btn btn-primary btn-lg w-100 py-3" 
+          @onclick="SubmitGenericResponse" 
+          disabled="@(isSubmittingResponse || string.IsNullOrWhiteSpace(genericResponseText) || hasSubmittedResponse)">
+          @GetSubmitButtonText()
+        </button>
+      </div>
     };
 
     // ===================
@@ -671,7 +776,7 @@ name="pollChoice"
         selectedPollOptionIds.Clear();
         selectedPollOptionIds.Add(optionId);
         hasSubmittedResponse = false;
-        submitMessage = $"Selected option: {optionId}";
+        submitMessage = "";
     }
 
     private void TogglePollOption(string optionId)
@@ -679,14 +784,13 @@ name="pollChoice"
         if (selectedPollOptionIds.Contains(optionId))
         {
             selectedPollOptionIds.Remove(optionId);
-            submitMessage = $"Deselected option: {optionId}";
         }
         else
         {
             selectedPollOptionIds.Add(optionId);
-            submitMessage = $"Selected option: {optionId}";
         }
         hasSubmittedResponse = false;
+        submitMessage = "";
     }
 
     private async Task HandlePollOptionClick(string optionId, bool allowMultiple)
@@ -737,6 +841,16 @@ name="pollChoice"
     // ===================
     // WORD CLOUD METHODS
     // ===================
+
+    private void OnWordCloudTextChanged(ChangeEventArgs e)
+    {
+        wordCloudText = e.Value?.ToString();
+        if (hasSubmittedResponse)
+        {
+            hasSubmittedResponse = false;
+            submitMessage = "";
+        }
+    }
 
     private async Task SubmitWordCloudResponse()
     {
@@ -803,13 +917,27 @@ name="pollChoice"
     {
         if (currentActivity == null || !Pid.HasValue) return;
 
-    var payload = new { rating = selectedRating, scale = 5 };
+        var payload = new { 
+            rating = selectedRating, 
+            scale = ratingConfig?.Scale ?? 5,
+            comment = ratingComment
+        };
         await SubmitResponse(JsonSerializer.Serialize(payload));
     }
 
     // ===================
     // GENERAL FEEDBACK METHODS
     // ===================
+
+    private void OnFeedbackTextChanged(ChangeEventArgs e)
+    {
+        feedbackText = e.Value?.ToString();
+        if (hasSubmittedResponse)
+        {
+            hasSubmittedResponse = false;
+            submitMessage = "";
+        }
+    }
 
     private bool IsGeneralFeedbackInvalid()
     {
@@ -842,6 +970,16 @@ name="pollChoice"
     // ===================
     // GENERIC METHODS
     // ===================
+
+    private void OnGenericTextChanged(ChangeEventArgs e)
+    {
+        genericResponseText = e.Value?.ToString();
+        if (hasSubmittedResponse)
+        {
+            hasSubmittedResponse = false;
+            submitMessage = "";
+        }
+    }
 
     private async Task SubmitGenericResponse()
     {
@@ -914,7 +1052,7 @@ genericResponseText = "";
     private string GetSubmitButtonText()
 {
         if (hasSubmittedResponse)
-          return "Response Submitted ?";
+          return "Response Submitted ✓";
         if (isSubmittingResponse)
             return "Submitting...";
         return "Submit Response";
@@ -1019,5 +1157,18 @@ genericResponseText = "";
         public string Id { get; set; } = "";
         public string Label { get; set; } = "";
         public string? Icon { get; set; }
+    }
+
+    private class RatingConfig
+    {
+        public int Scale { get; set; } = 5;
+        public string? MinLabel { get; set; }
+        public string? MaxLabel { get; set; }
+        public string? MidpointLabel { get; set; }
+        public bool AllowComments { get; set; }
+        public bool CommentRequired { get; set; }
+        public string? CommentPlaceholder { get; set; }
+        public TechWayFit.Pulse.Domain.Models.ActivityConfigs.RatingDisplayType DisplayType { get; set; }
+        public bool ShowAverageAfterSubmit { get; set; }
     }
 }

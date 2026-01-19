@@ -164,15 +164,26 @@
             isSubmitting = true;
             errorMessage = string.Empty;
 
-            // Prepare config
+            // Determine DisplayType based on scaleType
+            var displayType = scaleType switch
+            {
+                "stars" => 2, // RatingDisplayType.Stars
+                "emoji" => 1, // RatingDisplayType.Slider (we'll use slider for emoji for now)
+                _ => 0 // RatingDisplayType.Buttons (numeric)
+            };
+
+            // Prepare config using proper RatingConfig format
             var config = new
             {
-                scaleType,
-                scaleMax,
-                lowLabel,
-                highLabel,
-                showAverage,
-                allowComments
+                Scale = scaleMax,
+                MinLabel = string.IsNullOrWhiteSpace(lowLabel) ? null : lowLabel,
+                MaxLabel = string.IsNullOrWhiteSpace(highLabel) ? null : highLabel,
+                MidpointLabel = (string?)null,
+                AllowComments = allowComments,
+                CommentRequired = false,
+                CommentPlaceholder = allowComments ? "Tell us more (optional)" : null,
+                DisplayType = displayType,
+                ShowAverageAfterSubmit = showAverage
             };
 
             // Get next order number (TODO: Get from API)
