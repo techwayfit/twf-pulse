@@ -23,6 +23,8 @@ public sealed class SessionsController : ControllerBase
     private readonly IDashboardService _dashboards;
     private readonly IPollDashboardService _pollDashboards;
     private readonly IWordCloudDashboardService _wordCloudDashboards;
+    private readonly IRatingDashboardService _ratingDashboards;
+    private readonly IGeneralFeedbackDashboardService _generalFeedbackDashboards;
     private readonly IFacilitatorTokenStore _facilitatorTokens;
     private readonly ISessionCodeGenerator _codeGenerator;
     private readonly IHubContext<WorkshopHub, IWorkshopClient> _hub;
@@ -36,6 +38,8 @@ public sealed class SessionsController : ControllerBase
         IDashboardService dashboards,
         IPollDashboardService pollDashboards,
         IWordCloudDashboardService wordCloudDashboards,
+        IRatingDashboardService ratingDashboards,
+        IGeneralFeedbackDashboardService generalFeedbackDashboards,
         IFacilitatorTokenStore facilitatorTokens,
         ISessionCodeGenerator codeGenerator,
         IHubContext<WorkshopHub, IWorkshopClient> hub)
@@ -48,6 +52,8 @@ public sealed class SessionsController : ControllerBase
         _dashboards = dashboards;
         _pollDashboards = pollDashboards;
         _wordCloudDashboards = wordCloudDashboards;
+        _ratingDashboards = ratingDashboards;
+        _generalFeedbackDashboards = generalFeedbackDashboards;
         _facilitatorTokens = facilitatorTokens;
         _codeGenerator = codeGenerator;
         _hub = hub;
@@ -702,6 +708,72 @@ filters ?? new Dictionary<string, string?>(),
         catch (InvalidOperationException ex)
         {
             return BadRequest(Error<WordCloudDashboardResponse>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpGet("{code}/activities/{activityId:guid}/dashboard/rating")]
+    public async Task<ActionResult<ApiResponse<RatingDashboardResponse>>> GetRatingDashboard(
+        string code,
+        Guid activityId,
+        [FromQuery] Dictionary<string, string?>? filters,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<RatingDashboardResponse>("not_found", "Session not found."));
+            }
+
+            var dashboard = await _ratingDashboards.GetRatingDashboardAsync(
+                session.Id,
+                activityId,
+                filters ?? new Dictionary<string, string?>(),
+                cancellationToken);
+
+            return Ok(Wrap(dashboard));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<RatingDashboardResponse>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<RatingDashboardResponse>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpGet("{code}/activities/{activityId:guid}/dashboard/generalfeedback")]
+    public async Task<ActionResult<ApiResponse<GeneralFeedbackDashboardResponse>>> GetGeneralFeedbackDashboard(
+        string code,
+        Guid activityId,
+        [FromQuery] Dictionary<string, string?>? filters,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<GeneralFeedbackDashboardResponse>("not_found", "Session not found."));
+            }
+
+            var dashboard = await _generalFeedbackDashboards.GetGeneralFeedbackDashboardAsync(
+                session.Id,
+                activityId,
+                filters ?? new Dictionary<string, string?>(),
+                cancellationToken);
+
+            return Ok(Wrap(dashboard));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<GeneralFeedbackDashboardResponse>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<GeneralFeedbackDashboardResponse>("validation_error", ex.Message));
         }
     }
 

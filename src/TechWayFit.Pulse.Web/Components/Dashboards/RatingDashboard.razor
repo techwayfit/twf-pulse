@@ -1,0 +1,286 @@
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Web.Services
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Web.Hubs
+@namespace TechWayFit.Pulse.Web.Components.Dashboards
+@inject IPulseApiService ApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ILogger<RatingDashboard> Logger
+@implements IAsyncDisposable
+
+<div class="rating-dashboard">
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mt-3">Loading rating results...</div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @errorMessage
+        </div>
+    }
+    else if (dashboard != null)
+    {
+        <!-- Rating Dashboard Header -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h4 class="card-title fw-bold mb-1">Rating Results</h4>
+                        <div class="text-muted">⭐ Live Ratings</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mb-2">
+                            Live Results
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="stat-card bg-primary bg-opacity-10 rounded-3 p-3 text-center">
+                            <div class="stat-number text-primary h2 mb-0">@GetAverageRating()</div>
+                            <div class="stat-label text-muted">Average Rating</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card bg-success bg-opacity-10 rounded-3 p-3 text-center">
+                            <div class="stat-number text-success h2 mb-0">@dashboard.TotalResponses</div>
+                            <div class="stat-label text-muted">Total Ratings</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card bg-info bg-opacity-10 rounded-3 p-3 text-center">
+                            <div class="stat-number text-info h2 mb-0">@dashboard.ParticipantCount</div>
+                            <div class="stat-label text-muted">Participants</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card bg-warning bg-opacity-10 rounded-3 p-3 text-center">
+                            <div class="stat-number text-warning h2 mb-0">@GetMedianRating()</div>
+                            <div class="stat-label text-muted">Median Rating</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Distribution -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Rating Distribution
+                </h5>
+
+                @if (dashboard.TotalResponses > 0)
+                {
+                    <div class="rating-distribution">
+                        @foreach (var rating in GetRatingDistribution())
+                        {
+                            <div class="rating-row mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="rating-label fw-semibold">
+                                        @for (int i = 0; i < rating.Value; i++)
+                                        {
+                                            <span class="text-warning">⭐</span>
+                                        }
+                                        <span class="ms-2">@rating.Value</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="badge bg-primary">@rating.Count responses</span>
+                                        <span class="percentage fw-bold text-primary">@rating.Percentage.ToString("F1")%</span>
+                                    </div>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" 
+                                         role="progressbar" 
+                                         style="width: @rating.Percentage%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <div class="display-4 text-muted mb-3">⭐</div>
+                        <h6 class="text-muted">No ratings yet</h6>
+                        <p class="text-muted mb-0">Results will appear here once participants start rating.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Comments -->
+        @if (dashboard.Comments?.Any() == true)
+        {
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h6 class="card-title mb-3">
+                        <i class="fas fa-comments me-2"></i>
+                        Comments (@dashboard.Comments.Count)
+                    </h6>
+                    <div class="comments-list">
+                        @foreach (var comment in dashboard.Comments.Take(10))
+                        {
+                            <div class="comment-item mb-3 p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        @for (int i = 0; i < comment.Rating; i++)
+                                        {
+                                            <span class="text-warning">⭐</span>
+                                        }
+                                    </div>
+                                    <small class="text-muted">@comment.CreatedAt.ToString("HH:mm:ss")</small>
+                                </div>
+                                <p class="mb-0 text-muted">@comment.Comment</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string SessionCode { get; set; } = string.Empty;
+    [Parameter] public Guid ActivityId { get; set; }
+    [Parameter] public Dictionary<string, string?>? Filters { get; set; }
+
+    private RatingDashboardResponse? dashboard;
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private List<DateTimeOffset> recentActivities = new();
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboard();
+        await SetupSignalRConnection();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!isLoading)
+        {
+            await LoadDashboard();
+        }
+    }
+
+    private async Task LoadDashboard()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            dashboard = await ApiService.GetRatingDashboardAsync(SessionCode, ActivityId, Filters);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load rating dashboard: {ex.Message}";
+            Logger.LogError(ex, "Failed to load rating dashboard for session {SessionCode}, activity {ActivityId}", SessionCode, ActivityId);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SetupSignalRConnection()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/workshophub"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (responseEvent.SessionCode == SessionCode && responseEvent.ActivityId == ActivityId)
+                    {
+                        recentActivities.Insert(0, responseEvent.CreatedAt);
+                        if (recentActivities.Count > 10)
+                        {
+                            recentActivities.RemoveAt(recentActivities.Count - 1);
+                        }
+                        
+                        await LoadDashboard();
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            hubConnection.On<DashboardUpdatedEvent>("DashboardUpdated", async (dashboardEvent) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (dashboardEvent.SessionCode == SessionCode && dashboardEvent.ActivityId == ActivityId)
+                    {
+                        await LoadDashboard();
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to setup SignalR connection");
+        }
+    }
+
+    private string GetAverageRating()
+    {
+        return dashboard?.AverageRating.ToString("F1") ?? "0.0";
+    }
+
+    private string GetMedianRating()
+    {
+        return dashboard?.MedianRating.ToString("F1") ?? "0.0";
+    }
+
+    private List<(int Value, int Count, double Percentage)> GetRatingDistribution()
+    {
+        if (dashboard?.Distribution == null || !dashboard.Distribution.Any())
+            return new();
+        
+        return dashboard.Distribution
+            .Select(d => (d.Rating, d.Count, d.Percentage))
+            .OrderByDescending(d => d.Rating)
+            .ToList();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            try
+            {
+                await hubConnection.InvokeAsync("Unsubscribe", SessionCode);
+                await hubConnection.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error disposing SignalR connection");
+            }
+        }
+    }
+}

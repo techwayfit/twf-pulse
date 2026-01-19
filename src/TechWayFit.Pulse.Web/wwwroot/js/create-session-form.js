@@ -58,6 +58,9 @@ if (!this.form || !this.dropZone || !this.submitBtn) {
   });
         });
 
+        // Setup mobile Add button
+        this.setupMobileAddButton();
+
         // Setup drop zone for new fields
  this.dropZone.addEventListener('dragover', (e) => {
  e.preventDefault();
@@ -462,8 +465,8 @@ if (nameLabel) {
     context: contextParts.length > 0 ? contextParts.join(' | ') : null,
     groupId: formData.get('groupId') || null,
             settings: {
-     maxContributionsPerParticipantPerSession: parseInt(formData.get('maxContributions') || '10'),
-  maxContributionsPerParticipantPerActivity: null,
+     maxContributionsPerParticipantPerSession: 999, // High limit to effectively disable session-level cap
+  maxContributionsPerParticipantPerActivity: parseInt(formData.get('maxContributions') || '5'),
    strictCurrentActivityOnly: true,
         allowAnonymous: false,
             ttlMinutes: 360
@@ -473,6 +476,28 @@ if (nameLabel) {
        fields: JSON.parse(formData.get('joinFormFields') || '[]')
           }
     };
+    }
+
+    /**
+     * Setup mobile Add button for adding fields
+     */
+    setupMobileAddButton() {
+        const addBtn = document.getElementById('mobileAddFieldBtn');
+        const select = document.getElementById('mobileFieldTypeSelect');
+        
+        if (addBtn && select) {
+            console.log('Setting up mobile add button');
+            addBtn.addEventListener('click', () => {
+                const fieldType = select.value;
+                if (fieldType) {
+                    console.log('Adding field from mobile:', fieldType);
+                    this.addFormField(fieldType);
+                    select.value = ''; // Reset dropdown
+                } else {
+                    this.showError('Please select a field type');
+                }
+            });
+        }
     }
 
     /**

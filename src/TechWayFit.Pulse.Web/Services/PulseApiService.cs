@@ -23,6 +23,8 @@ public interface IPulseApiService
     Task<SubmitResponseResponse> SubmitResponseAsync(string code, Guid activityId, SubmitResponseRequest request, CancellationToken cancellationToken = default);
     Task<PollDashboardResponse> GetPollDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
     Task<WordCloudDashboardResponse> GetWordCloudDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
+    Task<RatingDashboardResponse> GetRatingDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
+    Task<GeneralFeedbackDashboardResponse> GetGeneralFeedbackDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
 }
 
 public class PulseApiService : IPulseApiService
@@ -390,6 +392,74 @@ public class PulseApiService : IPulseApiService
 
         var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
         var apiResponse = JsonSerializer.Deserialize<ApiResponse<WordCloudDashboardResponse>>(responseJson, _jsonOptions);
+
+        if (apiResponse?.Errors?.Any() == true)
+        {
+            throw new InvalidOperationException(string.Join(", ", apiResponse.Errors.Select(e => e.Message)));
+        }
+
+        return apiResponse?.Data ?? throw new InvalidOperationException("Invalid response from server");
+    }
+
+    public async Task<RatingDashboardResponse> GetRatingDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default)
+    {
+        var queryParameters = new List<string>();
+        if (filters != null)
+        {
+            foreach (var filter in filters)
+            {
+                if (!string.IsNullOrEmpty(filter.Value))
+                {
+                    queryParameters.Add($"{Uri.EscapeDataString(filter.Key)}={Uri.EscapeDataString(filter.Value)}");
+                }
+            }
+        }
+
+        var queryString = queryParameters.Count > 0 ? "?" + string.Join("&", queryParameters) : "";
+        var response = await _httpClient.GetAsync($"/api/sessions/{Uri.EscapeDataString(code)}/activities/{activityId}/dashboard/rating{queryString}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException($"Failed to get rating dashboard: {response.StatusCode} - {errorContent}");
+        }
+
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+        var apiResponse = JsonSerializer.Deserialize<ApiResponse<RatingDashboardResponse>>(responseJson, _jsonOptions);
+
+        if (apiResponse?.Errors?.Any() == true)
+        {
+            throw new InvalidOperationException(string.Join(", ", apiResponse.Errors.Select(e => e.Message)));
+        }
+
+        return apiResponse?.Data ?? throw new InvalidOperationException("Invalid response from server");
+    }
+
+    public async Task<GeneralFeedbackDashboardResponse> GetGeneralFeedbackDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default)
+    {
+        var queryParameters = new List<string>();
+        if (filters != null)
+        {
+            foreach (var filter in filters)
+            {
+                if (!string.IsNullOrEmpty(filter.Value))
+                {
+                    queryParameters.Add($"{Uri.EscapeDataString(filter.Key)}={Uri.EscapeDataString(filter.Value)}");
+                }
+            }
+        }
+
+        var queryString = queryParameters.Count > 0 ? "?" + string.Join("&", queryParameters) : "";
+        var response = await _httpClient.GetAsync($"/api/sessions/{Uri.EscapeDataString(code)}/activities/{activityId}/dashboard/generalfeedback{queryString}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException($"Failed to get general feedback dashboard: {response.StatusCode} - {errorContent}");
+        }
+
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+        var apiResponse = JsonSerializer.Deserialize<ApiResponse<GeneralFeedbackDashboardResponse>>(responseJson, _jsonOptions);
 
         if (apiResponse?.Errors?.Any() == true)
         {

@@ -103,7 +103,7 @@ public sealed class ResponseService : IResponseService
 
             if (activityCount >= session.Settings.MaxContributionsPerParticipantPerActivity.Value)
             {
-                throw new InvalidOperationException("Participant has reached the activity contribution limit.");
+                throw new InvalidOperationException($"You have reached the maximum of {session.Settings.MaxContributionsPerParticipantPerActivity.Value} contributions for this activity.");
             }
         }
 

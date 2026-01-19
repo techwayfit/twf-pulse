@@ -16,7 +16,7 @@
 @rendermode InteractiveServer
 @implements IAsyncDisposable
 
-<main class="py-5">
+<main class="py-5" style="min-height: calc(100vh - 200px); margin-bottom: 2rem;">
     <!-- Constrained Container -->
     <div class="container" style="max-width: 1200px;">
 @if (isLoading)
@@ -231,6 +231,18 @@ else if (session != null)
                                     SessionCode="@sessionCode"
                                     ActivityId="@currentActivity.ActivityId" />
                             }
+                            else if (currentActivity.Type == TechWayFit.Pulse.Contracts.Enums.ActivityType.Rating)
+                            {
+                                <RatingDashboard 
+                                    SessionCode="@sessionCode"
+                                    ActivityId="@currentActivity.ActivityId" />
+                            }
+                            else if (currentActivity.Type == TechWayFit.Pulse.Contracts.Enums.ActivityType.GeneralFeedback)
+                            {
+                                <GeneralFeedbackDashboard 
+                                    SessionCode="@sessionCode"
+                                    ActivityId="@currentActivity.ActivityId" />
+                            }
                             else
                             {
                                 <div class="text-center">
@@ -386,7 +398,7 @@ else if (session != null)
                 </div>
 
                         <!-- Add Activity Button -->
-                <div class="dropdown w-100 mt-4">
+                <div class="dropup w-100 mt-4 mb-5">
                     <button class="btn btn-primary pulse-btn-primary w-100 dropdown-toggle"
                             type="button"
                             id="addActivityDropdown"
@@ -404,10 +416,10 @@ else if (session != null)
                         </li>
                         <li><hr class="dropdown-divider" /></li>
                         <li>
-                            <a class="dropdown-item disabled" href="#">
+                            <a class="dropdown-item" href="/facilitator/activities/create-rating?code=@sessionCode">
                                 <strong>⭐ Rating</strong>
                                 <br />
-                                <small class="text-muted">Numeric scale (coming soon)</small>
+                                <small class="text-muted">Numeric scale rating</small>
                             </a>
                         </li>
                         <li>
@@ -418,10 +430,10 @@ else if (session != null)
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item disabled" href="#">
+                            <a class="dropdown-item" href="/facilitator/activities/create-feedback?code=@sessionCode">
                                 <strong>💬 General Feedback</strong>
                                 <br />
-                                <small class="text-muted">Long-form responses (coming soon)</small>
+                                <small class="text-muted">Long-form text responses</small>
                             </a>
                         </li>
                     </ul>

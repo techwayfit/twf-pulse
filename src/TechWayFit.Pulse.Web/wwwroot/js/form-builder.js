@@ -23,7 +23,25 @@ class FormBuilder {
         this.renderFieldTypes();
         this.renderDropZone();
         this.setupDragAndDrop();
+        this.setupMobileAddButton();
         console.log('Form builder initialized successfully');
+    }
+
+    setupMobileAddButton() {
+        const addBtn = document.getElementById('mobileAddFieldBtn');
+        const select = document.getElementById('mobileFieldTypeSelect');
+        
+        if (addBtn && select) {
+            addBtn.addEventListener('click', () => {
+                const fieldType = select.value;
+                if (fieldType) {
+                    this.addField(fieldType);
+                    select.value = ''; // Reset dropdown
+                } else {
+                    alert('Please select a field type');
+                }
+            });
+        }
     }
 
     renderFieldTypes() {
@@ -155,6 +173,125 @@ class FormBuilder {
 
     setupDragAndDrop() {
         let draggedFieldIndex = null;
+        let touchStartY = 0;
+        let touchStartX = 0;
+        let draggedElement = null;
+        let isDragging = false;
+        let clone = null;
+        let touchTarget = null;
+
+        // Touch event handlers for mobile
+        this.container.addEventListener('touchstart', (e) => {
+            // Match HTML structure: .field-type for available types, .form-field-item for added fields
+            const fieldType = e.target.closest('.field-type');
+            const fieldItem = e.target.closest('.form-field-item, .added-field');
+            
+            if (fieldType || fieldItem) {
+                touchStartY = e.touches[0].clientY;
+                touchStartX = e.touches[0].clientX;
+                draggedElement = fieldType || fieldItem;
+                touchTarget = e.target;
+                
+                if (fieldItem) {
+                    draggedFieldIndex = parseInt(fieldItem.dataset.fieldIndex);
+                }
+            }
+        }, { passive: true });
+
+        this.container.addEventListener('touchmove', (e) => {
+            if (!draggedElement) return;
+            
+            const touch = e.touches[0];
+            const moveY = Math.abs(touch.clientY - touchStartY);
+            const moveX = Math.abs(touch.clientX - touchStartX);
+            
+            // Start dragging if moved more than 10px
+            if (!isDragging && (moveY > 10 || moveX > 10)) {
+                isDragging = true;
+                e.preventDefault();
+                
+                // Create visual clone
+                clone = draggedElement.cloneNode(true);
+                clone.style.position = 'fixed';
+                clone.style.zIndex = '10000';
+                clone.style.opacity = '0.8';
+                clone.style.pointerEvents = 'none';
+                clone.style.width = draggedElement.offsetWidth + 'px';
+                document.body.appendChild(clone);
+                
+                if (draggedElement.classList.contains('form-field-item')) {
+                    draggedElement.style.opacity = '0.4';
+                }
+            }
+            
+            if (isDragging && clone) {
+                e.preventDefault();
+                clone.style.left = touch.clientX - (clone.offsetWidth / 2) + 'px';
+                clone.style.top = touch.clientY - (clone.offsetHeight / 2) + 'px';
+                
+                // Highlight drop targets
+                const dropTargets = this.container.querySelectorAll('.drop-target');
+                dropTargets.forEach(target => {
+                    const rect = target.getBoundingClientRect();
+                    if (touch.clientY >= rect.top && touch.clientY <= rect.bottom &&
+                        touch.clientX >= rect.left && touch.clientX <= rect.right) {
+                        target.classList.add('drop-target-active');
+                    } else {
+                        target.classList.remove('drop-target-active');
+                    }
+                });
+            }
+        }, { passive: false });
+
+        this.container.addEventListener('touchend', (e) => {
+            if (isDragging && clone) {
+                const touch = e.changedTouches[0];
+                const dropTarget = this.container.querySelectorAll('.drop-target');
+                let dropped = false;
+                
+                dropTarget.forEach(target => {
+                    const rect = target.getBoundingClientRect();
+                    if (touch.clientY >= rect.top && touch.clientY <= rect.bottom &&
+                        touch.clientX >= rect.left && touch.clientX <= rect.right) {
+                        const insertBefore = parseInt(target.dataset.insertBefore);
+                        
+                        // Match HTML: field-type has data-type attribute
+                        if (draggedElement.classList.contains('field-type') && draggedElement.dataset.type) {
+                            const fieldType = draggedElement.dataset.type;
+                            this.addFieldAtPosition(fieldType, insertBefore);
+                        } else if (draggedFieldIndex !== null) {
+                            this.reorderFields(draggedFieldIndex, insertBefore);
+                        }
+                        dropped = true;
+                    }
+                    target.classList.remove('drop-target-active');
+                });
+                
+                // If not dropped on a target but in drop zone, add at end
+                if (!dropped && draggedElement.classList.contains('field-type') && draggedElement.dataset.type) {
+                    const dropZone = this.container.querySelector('.form-drop-zone');
+                    if (dropZone) {
+                        const rect = dropZone.getBoundingClientRect();
+                        if (touch.clientY >= rect.top && touch.clientY <= rect.bottom &&
+                            touch.clientX >= rect.left && touch.clientX <= rect.right) {
+                            const fieldType = draggedElement.dataset.type;
+                            this.addField(fieldType);
+                        }
+                    }
+                }
+                
+                clone.remove();
+                clone = null;
+            }
+            
+            if (draggedElement && draggedElement.classList.contains('form-field-item')) {
+                draggedElement.style.opacity = '';
+            }
+            
+            draggedElement = null;
+            isDragging = false;
+            draggedFieldIndex = null;
+        });
 
         // Use event delegation on container for all drag events
         this.container.addEventListener('dragstart', (e) => {

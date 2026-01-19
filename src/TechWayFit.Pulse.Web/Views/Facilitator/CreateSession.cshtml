@@ -52,48 +52,43 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Session Group</label>
-                                    <select class="form-select" name="groupId">
-                                        <option value="">No group (ungrouped)</option>
-                                        @{
-                                            var groups = ViewData["Groups"] as IReadOnlyCollection<TechWayFit.Pulse.Domain.Entities.SessionGroup> ?? new List<TechWayFit.Pulse.Domain.Entities.SessionGroup>();
-                                        }
-                                        @foreach (var group in groups.OrderBy(g => g.Level).ThenBy(g => g.Name))
+                                    @{
+                                        var groups = ViewData["Groups"] as IReadOnlyCollection<TechWayFit.Pulse.Domain.Entities.SessionGroup> ?? new List<TechWayFit.Pulse.Domain.Entities.SessionGroup>();
+                                        var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
+                                        
+                                        foreach (TechWayFit.Pulse.Domain.Entities.SessionGroup group in groups)
                                         {
-                                            <option value="@group.Id">@(new string('—', (group.Level - 1) * 2)) @group.Name</option>
+                                            treeItems.Add(new TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem
+                                            {
+                                                Value = group.Id.ToString(),
+                                                Text = group.Name,
+                                                ParentValue = group.ParentGroupId?.ToString(),
+                                                Level = group.Level - 1,
+                                                HasChildren = groups.Any(g => g.ParentGroupId == group.Id),
+                                                Icon = group.Level == 1 ? "📁" : group.Level == 2 ? "📂" : "📄"
+                                            });
                                         }
-                                    </select>
+                                    }
+                                    @await Component.InvokeAsync("TreeDropdown", new {
+                                        id = "groupId",
+                                        name = "groupId",
+                                        placeholder = "No group (ungrouped)",
+                                        items = treeItems,
+                                        allowClear = true
+                                    })
                                     <div class="form-text">Optional: Organize your session into a group</div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium">Workshop type</label>
-                                    <select class="form-select" name="workshopType">
-                                        <option value="Ops / Process Improvement">Ops / Process Improvement</option>
-                                        <option value="Retro">Retro</option>
-                                        <option value="Discovery">Discovery</option>
-                                        <option value="Incident Review">Incident Review</option>
-                                        <option value="Feedback">Feedback</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label fw-medium">Primary activity</label>
-                                    <select class="form-select" name="primaryActivity">
-                                        <option value="Poll">Poll</option>
-                                        <option value="Word Cloud">Word Cloud</option>
-                                        <option value="Quadrant (2x2 Matrix)">Quadrant (2x2 Matrix)</option>
-                                        <option value="5-Whys">5-Whys</option>
-                                        <option value="Custom/Mixed">Custom/Mixed</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-medium">Max contributions per participant</label>
+                                    <label class="form-label fw-medium">Max contributions per activity</label>
                                     <select class="form-select" name="maxContributions">
                                         <option value="3">3</option>
-                                        <option value="5">5</option>
+                                        <option value="5" selected>5</option>
                                         <option value="8">8</option>
-                                        <option value="10" selected>10</option>
+                                        <option value="10">10</option>
+                                        <option value="15">15</option>
+                                        <option value="20">20</option>
                                     </select>
+                                    <div class="form-text">Maximum responses allowed per participant in each activity</div>
                                 </div>
                             </div>
                         </div>
@@ -161,6 +156,25 @@
                             <div class="d-flex align-items-center mb-3">
                                 <h6 class="fw-semibold mb-0 text-uppercase small text-muted">Available Field Types</h6>
                             </div>
+                            
+                            <!-- Mobile: Dropdown + Add Button -->
+                            <div class="mobile-field-selector d-none">
+                                <div class="d-flex gap-2">
+                                    <select class="form-select" id="mobileFieldTypeSelect">
+                                        <option value="">Select field type...</option>
+                                        <option value="text">📝 Text Box</option>
+                                        <option value="checkbox">☑️ Checkbox</option>
+                                        <option value="dropdown">📋 Dropdown</option>
+                                        <option value="textarea">📄 Text Area</option>
+                                        <option value="radio">◉ Radio Button</option>
+                                    </select>
+                                    <button type="button" class="btn btn-primary" id="mobileAddFieldBtn" style="white-space: nowrap;">
+                                        + Add
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Desktop: Draggable Field Types -->
                             <div class="d-flex flex-column gap-2" id="fieldTypes">
                                 <div class="field-type" draggable="true" data-type="text">
                                     <span class="icon">📝</span>
@@ -231,19 +245,19 @@
     <!-- External JavaScript -->
     <script src="~/js/create-session-form.js" asp-append-version="true"></script>
 
-    <!-- Tab switching functionality -->
+    <!-- Tab switching and Tree Dropdown functionality -->
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-                 // Initialize tab switching
-            const tabButtons = document.querySelectorAll('.custom-tab');
-            const tabPanes = document.querySelectorAll('.tab-pane');
+        // Initialize tab switching
+        const tabButtons = document.querySelectorAll('.custom-tab');
+        const tabPanes = document.querySelectorAll('.tab-pane');
 
-             tabButtons.forEach(button => {
-              button.addEventListener('click', function () {
-                     const targetTab = this.getAttribute('data-tab-target');
-                     // Remove active class from all buttons and panes
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabPanes.forEach(pane => {
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const targetTab = this.getAttribute('data-tab-target');
+                // Remove active class from all buttons and panes
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabPanes.forEach(pane => {
                     pane.classList.remove('active');
                     pane.style.display = 'none';
                 });
@@ -255,8 +269,73 @@
                     targetPane.classList.add('active');
                     targetPane.style.display = 'block';
                 }
-           });
+            });
         });
+
+        // Initialize Tree Dropdown
+        initializeTreeDropdown();
+        
+        function initializeTreeDropdown() {
+            // Handle tree toggle clicks first with capture phase
+            document.addEventListener('click', function(e) {
+                // Tree toggle functionality - handle in capture phase to prevent dropdown from closing
+                if (e.target.closest('.tree-toggle')) {
+                    const toggle = e.target.closest('.tree-toggle');
+                    const targetId = toggle.getAttribute('data-target');
+                    const target = document.getElementById(targetId);
+                    const icon = toggle.querySelector('i');
+                    
+                    if (target) {
+                        if (target.style.display === 'none' || target.style.display === '') {
+                            target.style.display = 'block';
+                            icon.className = 'fas fa-chevron-down';
+                        } else {
+                            target.style.display = 'none';
+                            icon.className = 'fas fa-chevron-right';
+                        }
+                    }
+                    
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            }, true); // Use capture phase
+            
+            // Handle tree item selection in normal phase
+            document.addEventListener('click', function(e) {
+                // Only handle tree item selection if not clicking on toggle
+                if (e.target.closest('.tree-item') && !e.target.closest('.tree-toggle')) {
+                    const treeItem = e.target.closest('.tree-item');
+                    const value = treeItem.getAttribute('data-value');
+                    const text = treeItem.querySelector('.tree-item-text').textContent;
+                    const dropdown = treeItem.closest('.tree-dropdown');
+                    const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+                    const dropdownText = dropdown.querySelector('.dropdown-text');
+                    
+                    // Update value
+                    hiddenInput.value = value;
+                    dropdownText.textContent = value ? text : 'No group (ungrouped)';
+                    
+                    // Close dropdown only when selecting an item
+                    const dropdownElement = new bootstrap.Dropdown(dropdown.querySelector('[data-bs-toggle="dropdown"]'));
+                    dropdownElement.hide();
+                    
+                    // Remove selected class from all items
+                    dropdown.querySelectorAll('.tree-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked item
+                    if (value) {
+                        treeItem.classList.add('selected');
+                    }
+                    
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+        }
     });
     </script>
 }
