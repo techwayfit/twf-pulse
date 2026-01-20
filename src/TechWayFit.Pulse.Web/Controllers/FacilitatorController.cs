@@ -14,6 +14,7 @@ public class FacilitatorController : Controller
     private readonly ISessionRepository _sessionRepository;
     private readonly ISessionService _sessionService;
     private readonly ISessionGroupService _sessionGroupService;
+    private readonly ISessionTemplateService _sessionTemplateService;
     private readonly IAuthenticationService _authService;
     private readonly ILogger<FacilitatorController> _logger;
 
@@ -21,12 +22,14 @@ public class FacilitatorController : Controller
 ISessionRepository sessionRepository,
   ISessionService sessionService,
   ISessionGroupService sessionGroupService,
+   ISessionTemplateService sessionTemplateService,
    IAuthenticationService authService,
    ILogger<FacilitatorController> logger)
     {
         _sessionRepository = sessionRepository;
         _sessionService = sessionService;
         _sessionGroupService = sessionGroupService;
+        _sessionTemplateService = sessionTemplateService;
         _authService = authService;
         _logger = logger;
     }
@@ -87,5 +90,52 @@ ISessionRepository sessionRepository,
         ViewData["UserName"] = User.FindFirst(ClaimTypes.Name)?.Value;
         
         return View(groups);
+    }
+
+    /// <summary>
+    /// Template browser page - list all available templates
+    /// </summary>
+    [HttpGet("templates")]
+    public async Task<IActionResult> Templates(CancellationToken cancellationToken = default)
+    {
+        var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+        if (userId == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var templates = await _sessionTemplateService.GetAllTemplatesAsync(cancellationToken);
+        
+        ViewData["UserEmail"] = User.FindFirst(ClaimTypes.Email)?.Value;
+        ViewData["UserName"] = User.FindFirst(ClaimTypes.Name)?.Value;
+        
+        return View(templates);
+    }
+
+    /// <summary>
+    /// Template customization page - customize template before creating session
+    /// </summary>
+    [HttpGet("templates/{id:guid}/customize")]
+    public async Task<IActionResult> CustomizeTemplate(Guid id, CancellationToken cancellationToken = default)
+    {
+        var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+        if (userId == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var template = await _sessionTemplateService.GetTemplateByIdAsync(id, cancellationToken);
+        if (template == null)
+        {
+            return NotFound();
+        }
+
+        var groups = await _sessionGroupService.GetFacilitatorGroupsAsync(userId.Value, cancellationToken);
+        
+        ViewData["UserEmail"] = User.FindFirst(ClaimTypes.Email)?.Value;
+        ViewData["UserName"] = User.FindFirst(ClaimTypes.Name)?.Value;
+        ViewData["Groups"] = groups;
+        
+        return View(template);
     }
 }

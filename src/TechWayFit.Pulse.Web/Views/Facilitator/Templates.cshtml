@@ -1,0 +1,177 @@
+@model IReadOnlyList<TechWayFit.Pulse.Domain.Entities.SessionTemplate>
+
+@{
+    ViewData["Title"] = "Session Templates - TechWayFit Pulse";
+    var userEmail = ViewData["UserEmail"] as string;
+    var userName = ViewData["UserName"] as string;
+}
+
+<main class="dashboard-main">
+    <div class="container" style="max-width: 1200px;">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="dashboard-header-text">
+                <h2 class="dashboard-title">Session Templates</h2>
+                <p class="dashboard-subtitle">Choose a template to quickly create a workshop session</p>
+            </div>
+            <div class="dashboard-header-actions">
+                <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-pulse-outline">
+                    ← Back to Dashboard
+                </a>
+                <a href="@Url.Action("Create", "Facilitator")" class="btn btn-pulse-secondary">
+                    Create from Scratch
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter by Category -->
+        <div class="mb-4">
+            <div class="btn-group" role="group" aria-label="Filter templates by category">
+                <button type="button" class="btn btn-outline-secondary active" data-filter="all">
+                    All Templates
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-filter="Retrospective">
+                    🔄 Retrospective
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-filter="ProductDiscovery">
+                    💡 Product Discovery
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-filter="IncidentReview">
+                    🚨 Incident Review
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-filter="TeamBuilding">
+                    🤝 Team Building
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-filter="Training">
+                    📚 Training
+                </button>
+            </div>
+        </div>
+
+        <!-- System Templates -->
+        @if (Model.Any(t => t.IsSystemTemplate))
+        {
+            <div class="mb-5">
+                <h3 class="h5 mb-3 fw-semibold">
+                    <span class="badge bg-primary-subtle text-primary me-2">★</span>
+                    System Templates
+                </h3>
+                <div class="row g-4">
+                    @foreach (var template in Model.Where(t => t.IsSystemTemplate).OrderBy(t => t.Name))
+                    {
+                        <div class="col-12 col-md-6 col-lg-4 template-card" data-category="@template.Category">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="fs-1 me-3">@template.IconEmoji</div>
+                                        <div class="flex-grow-1">
+                                            <h5 class="card-title mb-1">@template.Name</h5>
+                                            <span class="badge bg-secondary-subtle text-secondary">@template.Category</span>
+                                        </div>
+                                    </div>
+                                    <p class="card-text text-muted">@template.Description</p>
+                                    
+                                    @{
+                                        var config = System.Text.Json.JsonSerializer.Deserialize<TechWayFit.Pulse.Domain.Models.SessionTemplateConfig>(template.ConfigJson);
+                                        var activityCount = config?.Activities?.Count ?? 0;
+                                    }
+                                    
+                                    <div class="d-flex align-items-center text-muted small mb-3">
+                                        <i class="bi bi-list-task me-1"></i>
+                                        @activityCount @(activityCount == 1 ? "Activity" : "Activities")
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent border-top-0">
+                                    <a href="@Url.Action("CustomizeTemplate", "Facilitator", new { id = template.Id })" 
+                                       class="btn btn-pulse-primary w-100">
+                                        Use Template
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Custom Templates -->
+        @if (Model.Any(t => !t.IsSystemTemplate))
+        {
+            <div class="mb-5">
+                <h3 class="h5 mb-3 fw-semibold">
+                    <span class="badge bg-success-subtle text-success me-2">✎</span>
+                    Custom Templates
+                </h3>
+                <div class="row g-4">
+                    @foreach (var template in Model.Where(t => !t.IsSystemTemplate).OrderBy(t => t.Name))
+                    {
+                        <div class="col-12 col-md-6 col-lg-4 template-card" data-category="@template.Category">
+                            <div class="card h-100 shadow-sm hover-lift">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start mb-3">
+                                        <div class="fs-1 me-3">@template.IconEmoji</div>
+                                        <div class="flex-grow-1">
+                                            <h5 class="card-title mb-1">@template.Name</h5>
+                                            <span class="badge bg-secondary-subtle text-secondary">@template.Category</span>
+                                        </div>
+                                    </div>
+                                    <p class="card-text text-muted">@template.Description</p>
+                                    
+                                    @{
+                                        var config = System.Text.Json.JsonSerializer.Deserialize<TechWayFit.Pulse.Domain.Models.SessionTemplateConfig>(template.ConfigJson);
+                                        var activityCount = config?.Activities?.Count ?? 0;
+                                    }
+                                    
+                                    <div class="d-flex align-items-center text-muted small mb-3">
+                                        <i class="bi bi-list-task me-1"></i>
+                                        @activityCount @(activityCount == 1 ? "Activity" : "Activities")
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent border-top-0">
+                                    <a href="@Url.Action("CustomizeTemplate", "Facilitator", new { id = template.Id })" 
+                                       class="btn btn-pulse-primary w-100">
+                                        Use Template
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- No Templates Found -->
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <div class="fs-1 mb-3">📝</div>
+                <h5 class="text-muted">No templates available</h5>
+                <p class="text-muted">System templates will be initialized on first application startup.</p>
+            </div>
+        }
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        // Template filtering
+        document.querySelectorAll('[data-filter]').forEach(button => {
+            button.addEventListener('click', function() {
+                // Update active button
+                document.querySelectorAll('[data-filter]').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                const filter = this.dataset.filter;
+                const cards = document.querySelectorAll('.template-card');
+                
+                cards.forEach(card => {
+                    if (filter === 'all' || card.dataset.category === filter) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+}

@@ -7,6 +7,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using TechWayFit.Pulse.Web.Hubs
 @using TechWayFit.Pulse.Web.Components.Dashboards
+@using TechWayFit.Pulse.Web.Components.Facilitator
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject IPulseApiService ApiService
@@ -59,6 +60,9 @@ else if (session != null)
                         {
                             <span class="badge bg-success-subtle text-success px-3 py-2">LIVE</span>
                         }
+                        <button class="btn btn-sm btn-outline-secondary" @onclick="ShowEditSessionModal">
+                            <i class="fas fa-edit me-1"></i>Edit Session
+                        </button>
                         <button class="btn btn-sm btn-outline-primary" @onclick="ShowQRModal">
                             <i class="fas fa-qrcode me-1"></i>Show Joining Information
                         </button>
@@ -343,6 +347,10 @@ else if (session != null)
                                                 <div class="d-flex gap-2 align-items-center">
                                                     @if (activity.Status == Contracts.Enums.ActivityStatus.Pending)
                                                     {
+                                                        <button class="btn btn-sm btn-outline-secondary"
+                                                                @onclick="() => ShowEditActivityModal(activity)">
+                                                            <i class="fas fa-edit me-1"></i>Edit
+                                                        </button>
                                                         <!-- Only show Open if no other activity is open -->
                                                         @if (currentActivity == null)
                                                         {
@@ -444,6 +452,18 @@ else if (session != null)
     </div>
 </main>
 
+<!-- Edit Session Modal -->
+<EditSessionModal @ref="editSessionModal" 
+                  SessionCode="@sessionCode" 
+                  Session="@session"
+                  OnSessionUpdated="HandleSessionUpdated" />
+
+<!-- Edit Activity Modal -->
+<EditActivityModal @ref="editActivityModal" 
+                   SessionCode="@sessionCode"
+                   OnActivityUpdated="HandleActivityUpdated"
+                   OnActivityDeleted="HandleActivityDeleted" />
+
 @code {
     [SupplyParameterFromQuery]
     public string? Code { get; set; }
@@ -462,6 +482,10 @@ else if (session != null)
     private bool isGeneratingQR = false;
     private string errorMessage = string.Empty;
     private HubConnection? hubConnection;
+
+    // Modal component references
+    private EditSessionModal? editSessionModal;
+    private EditActivityModal? editActivityModal;
 
     protected override async Task OnInitializedAsync()
     {
@@ -1007,6 +1031,24 @@ else if (session != null)
                 });
             });
 
+            // Handle activity deleted events
+            hubConnection.On<Guid>("ActivityDeleted", async (activityId) =>
+            {
+                await InvokeAsync(() =>
+                {
+                    // Remove the deleted activity from the list
+                    activities.RemoveAll(a => a.ActivityId == activityId);
+                    
+                    // If the deleted activity was the current one, clear it
+                    if (currentActivity?.ActivityId == activityId)
+                    {
+                        currentActivity = null;
+                    }
+                    
+                    StateHasChanged();
+                });
+            });
+
             await hubConnection.StartAsync();
             await hubConnection.InvokeAsync("Subscribe", sessionCode);
         }
@@ -1014,6 +1056,36 @@ else if (session != null)
         {
             Logger.LogError(ex, "Failed to setup SignalR connection");
         }
+    }
+
+    // Modal handler methods
+    private void ShowEditSessionModal()
+    {
+        editSessionModal?.Show();
+    }
+
+    private void ShowEditActivityModal(AgendaActivityResponse activity)
+    {
+        if (editActivityModal != null)
+        {
+            editActivityModal.Activity = activity;
+            editActivityModal.Show();
+        }
+    }
+
+    private async Task HandleSessionUpdated()
+    {
+        await LoadSession();
+    }
+
+    private async Task HandleActivityUpdated()
+    {
+        await LoadSession();
+    }
+
+    private async Task HandleActivityDeleted()
+    {
+        await LoadSession();
     }
 
     public async ValueTask DisposeAsync()

@@ -1,0 +1,273 @@
+@model TechWayFit.Pulse.Domain.Entities.SessionTemplate
+
+@{
+    ViewData["Title"] = $"Customize {Model.Name} - TechWayFit Pulse";
+    var userEmail = ViewData["UserEmail"] as string;
+    var userName = ViewData["UserName"] as string;
+    var groups = ViewData["Groups"] as IEnumerable<TechWayFit.Pulse.Domain.Entities.SessionGroup>;
+    var config = System.Text.Json.JsonSerializer.Deserialize<TechWayFit.Pulse.Domain.Models.SessionTemplateConfig>(Model.ConfigJson);
+}
+
+<main class="dashboard-main">
+    <div class="container" style="max-width: 900px;">
+        <!-- Header -->
+        <div class="dashboard-header mb-4">
+            <div class="dashboard-header-text">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="fs-1 me-3">@Model.IconEmoji</span>
+                    <div>
+                        <h2 class="dashboard-title mb-0">@Model.Name</h2>
+                        <p class="text-muted mb-0">@Model.Description</p>
+                    </div>
+                </div>
+            </div>
+            <div class="dashboard-header-actions">
+                <a href="@Url.Action("Templates", "Facilitator")" class="btn btn-pulse-outline">
+                    ← Back to Templates
+                </a>
+            </div>
+        </div>
+
+        <!-- Customization Form -->
+        <form id="customizeTemplateForm">
+            <input type="hidden" name="templateId" value="@Model.Id" />
+
+            <!-- Session Details -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">📝 Session Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Session Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               value="@config?.Title" maxlength="200" required>
+                        <div class="form-text">Give your session a descriptive title</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="goal" class="form-label">Session Goal</label>
+                        <textarea class="form-control" id="goal" name="goal" rows="2">@config?.Goal</textarea>
+                        <div class="form-text">What do you hope to achieve in this session?</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="context" class="form-label">Session Context</label>
+                        <textarea class="form-control" id="context" name="context" rows="2">@config?.Context</textarea>
+                        <div class="form-text">Any background information participants should know</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="groupId" class="form-label">Session Group (Optional)</label>
+                            <select class="form-select" id="groupId" name="groupId">
+                                <option value="">-- No Group --</option>
+                                @if (groups != null)
+                                {
+                                    @foreach (var group in groups)
+                                    {
+                                        <option value="@group.Id">@group.Name</option>
+                                    }
+                                }
+                            </select>
+                            <div class="form-text">Organize sessions into folders</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="ttlMinutes" class="form-label">Session Duration (minutes)</label>
+                            <input type="number" class="form-control" id="ttlMinutes" name="ttlMinutes" 
+                                   value="@(config?.Settings?.DurationMinutes ?? 120)" min="30" max="480">
+                            <div class="form-text">Auto-expire after this duration</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Session Settings -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">⚙️ Session Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="maxParticipants" class="form-label">Max Participants</label>
+                            <input type="number" class="form-control" id="maxParticipants" 
+                                   name="maxParticipants" 
+                                   value="@(config?.Settings?.MaxParticipants ?? 0)" min="0">
+                            <div class="form-text">0 = unlimited</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="allowAnonymous" 
+                                       name="allowAnonymous" 
+                                       @(config?.Settings?.AllowAnonymous == true ? "checked" : "")>
+                                <label class="form-check-label" for="allowAnonymous">
+                                    Allow Anonymous Participation
+                                </label>
+                                <div class="form-text">Participants can join without providing their name</div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+            <!-- Join Form Schema -->
+            @if (config?.JoinFormSchema?.Fields?.Any() == true)
+            {
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">📋 Join Form Fields</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">These fields will be shown when participants join the session</p>
+                        @foreach (var field in config.JoinFormSchema.Fields)
+                        {
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-secondary-subtle text-secondary me-2">@field.Type</span>
+                                <span class="fw-medium">@field.Label</span>
+                                @if (field.Required)
+                                {
+                                    <span class="badge bg-danger-subtle text-danger ms-2">Required</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Activities Preview -->
+            @if (config?.Activities?.Any() == true)
+            {
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">📋 Activities (@config.Activities.Count)</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">The following activities will be created with this session</p>
+                        <div class="list-group list-group-flush">
+                            @for (int i = 0; i < config.Activities.Count; i++)
+                            {
+                                var activity = config.Activities[i];
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex align-items-start">
+                                        <span class="badge bg-primary-subtle text-primary me-2">@(i + 1)</span>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <span class="fw-medium me-2">@activity.Title</span>
+                                                <span class="badge bg-secondary-subtle text-secondary">@activity.Type</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(activity.Prompt))
+                                            {
+                                                <p class="text-muted small mb-0">@activity.Prompt</p>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Actions -->
+            <div class="d-flex gap-3 mb-4">
+                <button type="submit" class="btn btn-pulse-primary btn-lg flex-grow-1" id="createSessionBtn">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" id="createSpinner"></span>
+                    ✨ Create Session
+                </button>
+                <a href="@Url.Action("Templates", "Facilitator")" class="btn btn-outline-secondary btn-lg">
+                    Cancel
+                </a>
+            </div>
+        </form>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        const form = document.getElementById('customizeTemplateForm');
+        const createBtn = document.getElementById('createSessionBtn');
+        const spinner = document.getElementById('createSpinner');
+        const alertContainer = document.getElementById('alertContainer');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Show loading state
+            createBtn.disabled = true;
+            spinner.classList.remove('d-none');
+            alertContainer.innerHTML = '';
+
+            const formData = new FormData(form);
+            const templateId = formData.get('templateId');
+            
+            // Build customization payload
+            const customization = {
+                title: formData.get('title'),
+                goal: formData.get('goal') || null,
+                context: formData.get('context') || null,
+                groupId: formData.get('groupId') || null,
+                settings: {
+                    maxContributionsPerParticipantPerSession: parseInt(formData.get('maxContributionsPerSession')) || 0,
+                    maxContributionsPerParticipantPerActivity: parseInt(formData.get('maxContributionsPerActivity')) || 0,
+                    strictCurrentActivityOnly: formData.get('strictCurrentActivityOnly') === 'on',
+                    allowAnonymous: formData.get('allowAnonymous') === 'on',
+                    ttlMinutes: parseInt(formData.get('ttlMinutes')) || 120
+                }
+            };
+
+            try {
+                const response = await fetch(`/api/templates/create-session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        templateId: templateId,
+                        customization: customization
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Success - redirect to live facilitator view
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-success">
+                            <strong>✅ Success!</strong> Session created successfully. Redirecting...
+                        </div>
+                    `;
+                    
+                    setTimeout(() => {
+                        window.location.href = `/facilitator/live?code=${result.data.sessionCode}`;
+                    }, 1000);
+                } else {
+                    // Error
+                    const errorMessage = result.error?.message || 'Failed to create session';
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-danger">
+                            <strong>❌ Error:</strong> ${errorMessage}
+                        </div>
+                    `;
+                    createBtn.disabled = false;
+                    spinner.classList.add('d-none');
+                }
+            } catch (error) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>❌ Error:</strong> Network error. Please try again.
+                    </div>
+                `;
+                createBtn.disabled = false;
+                spinner.classList.add('d-none');
+            }
+        });
+    </script>
+}

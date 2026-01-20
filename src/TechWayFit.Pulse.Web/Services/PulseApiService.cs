@@ -25,6 +25,10 @@ public interface IPulseApiService
     Task<WordCloudDashboardResponse> GetWordCloudDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
     Task<RatingDashboardResponse> GetRatingDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
     Task<GeneralFeedbackDashboardResponse> GetGeneralFeedbackDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
+    
+    // Generic methods for custom requests
+    Task<ApiResponse<TResponse>> PutAsync<TRequest, TResponse>(string endpoint, TRequest request, CancellationToken cancellationToken = default);
+    Task<ApiResponse<TResponse>> DeleteAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default);
 }
 
 public class PulseApiService : IPulseApiService
@@ -492,11 +496,41 @@ public class PulseApiService : IPulseApiService
 
         return apiResponse?.Data ?? throw new InvalidOperationException("Invalid response from server");
     }
+
+    public async Task<ApiResponse<TResponse>> PutAsync<TRequest, TResponse>(string endpoint, TRequest request, CancellationToken cancellationToken = default)
+    {
+        var json = JsonSerializer.Serialize(request, _jsonOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PutAsync(endpoint, content, cancellationToken);
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+        var apiResponse = JsonSerializer.Deserialize<ApiResponse<TResponse>>(responseJson, _jsonOptions);
+
+        return apiResponse ?? new ApiResponse<TResponse> 
+        { 
+            Success = false,
+            Errors = new List<ApiError> { new ApiError { Code = "deserialization_error", Message = "Failed to deserialize response" } }
+        };
+    }
+
+    public async Task<ApiResponse<TResponse>> DeleteAsync<TResponse>(string endpoint, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.DeleteAsync(endpoint, cancellationToken);
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+        var apiResponse = JsonSerializer.Deserialize<ApiResponse<TResponse>>(responseJson, _jsonOptions);
+
+        return apiResponse ?? new ApiResponse<TResponse> 
+        { 
+            Success = false,
+            Errors = new List<ApiError> { new ApiError { Code = "deserialization_error", Message = "Failed to deserialize response" } }
+        };
+    }
 }
 
 // Helper class for API responses
 public class ApiResponse<T>
 {
+    public bool Success { get; set; }
     public T? Data { get; set; }
     public List<ApiError>? Errors { get; set; }
 }

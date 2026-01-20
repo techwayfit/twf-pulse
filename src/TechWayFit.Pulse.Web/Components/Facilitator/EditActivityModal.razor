@@ -1,0 +1,276 @@
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Contracts.Requests
+@using TechWayFit.Pulse.Contracts.Enums
+@using TechWayFit.Pulse.Web.Services
+@inject IPulseApiService ApiService
+@inject ILogger<EditActivityModal> Logger
+
+<!-- Edit Activity Modal -->
+<div class="modal fade @(IsVisible ? "show" : "")" id="editActivityModal" tabindex="-1" 
+     style="display: @(IsVisible ? "block" : "none");" aria-modal="@IsVisible">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">✏️ Edit Activity</h5>
+                <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @errorMessage
+                        <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+                    </div>
+                }
+
+                @if (Activity != null)
+                {
+                    <!-- Activity Type Badge -->
+                    <div class="mb-3">
+                        <span class="badge bg-secondary-subtle text-secondary">@Activity.Type</span>
+                        @if (Activity.Status != TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending)
+                        {
+                            <span class="badge bg-warning-subtle text-warning ms-2">
+                                Cannot edit - Activity is @Activity.Status
+                            </span>
+                        }
+                    </div>
+
+                    @if (Activity.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending)
+                    {
+                        <!-- Edit Form (Only for Pending Activities) -->
+                        <div class="mb-3">
+                            <label for="editActivityTitle" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editActivityTitle" 
+                                   @bind="editModel.Title" maxlength="200" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="editActivityPrompt" class="form-label">Prompt</label>
+                            <textarea class="form-control" id="editActivityPrompt" 
+                                      @bind="editModel.Prompt" rows="3" maxlength="1000"></textarea>
+                            <div class="form-text">@(editModel.Prompt?.Length ?? 0) / 1000 characters</div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Activity.Config))
+                        {
+                            <div class="mb-3">
+                                <label for="editActivityConfig" class="form-label">Configuration (JSON)</label>
+                                <textarea class="form-control font-monospace" id="editActivityConfig" 
+                                          @bind="editModel.Config" rows="5"></textarea>
+                                <div class="form-text">Advanced: Activity-specific configuration</div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Read-only View (For In-Progress or Completed Activities) -->
+                        <div class="alert alert-info">
+                            <strong>ℹ️ Note:</strong> Activities can only be edited when they are in Pending status.
+                            This activity is currently <strong>@Activity.Status</strong>.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Title</label>
+                            <p class="form-control-plaintext">@Activity.Title</p>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Activity.Prompt))
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Prompt</label>
+                                <p class="form-control-plaintext">@Activity.Prompt</p>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+            <div class="modal-footer">
+                @if (Activity?.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending)
+                {
+                    <button type="button" class="btn btn-danger me-auto" @onclick="DeleteActivity" 
+                            disabled="@isDeleting">
+                        @if (isDeleting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        🗑️ Delete Activity
+                    </button>
+                }
+                
+                <button type="button" class="btn btn-secondary" @onclick="Close" 
+                        disabled="@(isSaving || isDeleting)">
+                    Close
+                </button>
+                
+                @if (Activity?.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending)
+                {
+                    <button type="button" class="btn btn-primary" @onclick="SaveChanges" 
+                            disabled="@(isSaving || isDeleting)">
+                        @if (isSaving)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Save Changes
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (IsVisible)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public string? SessionCode { get; set; }
+    [Parameter] public AgendaActivityResponse? Activity { get; set; }
+    [Parameter] public EventCallback OnActivityUpdated { get; set; }
+    [Parameter] public EventCallback OnActivityDeleted { get; set; }
+
+    private bool IsVisible { get; set; }
+    private bool isSaving = false;
+    private bool isDeleting = false;
+    private string? errorMessage;
+
+    private UpdateActivityRequest editModel = new();
+
+    public void Show()
+    {
+        if (Activity == null) return;
+
+        // Initialize edit model with current values
+        editModel = new UpdateActivityRequest
+        {
+            Title = Activity.Title,
+            Prompt = Activity.Prompt,
+            Config = Activity.Config
+        };
+
+        IsVisible = true;
+        errorMessage = null;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        IsVisible = false;
+        errorMessage = null;
+        StateHasChanged();
+    }
+
+    private async Task SaveChanges()
+    {
+        if (string.IsNullOrWhiteSpace(SessionCode) || Activity == null)
+        {
+            errorMessage = "Invalid session or activity";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(editModel.Title))
+        {
+            errorMessage = "Title is required";
+            return;
+        }
+
+        if (Activity.Status != TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending)
+        {
+            errorMessage = "Only pending activities can be edited";
+            return;
+        }
+
+        try
+        {
+            isSaving = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            var response = await ApiService.PutAsync<UpdateActivityRequest, ActivityResponse>(
+                $"/api/sessions/{SessionCode}/activities/{Activity.ActivityId}",
+                editModel);
+
+            if (!response.Success)
+            {
+                errorMessage = response.Errors?.FirstOrDefault()?.Message ?? "Failed to update activity";
+                isSaving = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Success
+            await OnActivityUpdated.InvokeAsync();
+            Close();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error updating activity");
+            errorMessage = "An error occurred while updating the activity";
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteActivity()
+    {
+        if (string.IsNullOrWhiteSpace(SessionCode) || Activity == null)
+        {
+            errorMessage = "Invalid session or activity";
+            return;
+        }
+
+        if (Activity.Status != TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending)
+        {
+            errorMessage = "Only pending activities can be deleted";
+            return;
+        }
+
+        if (!await ConfirmDelete())
+        {
+            return;
+        }
+
+        try
+        {
+            isDeleting = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            var response = await ApiService.DeleteAsync<object>(
+                $"/api/sessions/{SessionCode}/activities/{Activity.ActivityId}");
+
+            if (!response.Success)
+            {
+                errorMessage = response.Errors?.FirstOrDefault()?.Message ?? "Failed to delete activity";
+                isDeleting = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Success
+            await OnActivityDeleted.InvokeAsync();
+            Close();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error deleting activity");
+            errorMessage = "An error occurred while deleting the activity";
+        }
+        finally
+        {
+            isDeleting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<bool> ConfirmDelete()
+    {
+        // Simple confirmation - in production, you might want a better modal
+        return await Task.FromResult(true); // For now, always confirm
+        // TODO: Implement proper confirmation dialog
+    }
+}

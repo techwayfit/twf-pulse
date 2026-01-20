@@ -1,0 +1,225 @@
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Contracts.Requests
+@using TechWayFit.Pulse.Web.Services
+@inject IPulseApiService ApiService
+@inject ILogger<EditSessionModal> Logger
+
+<!-- Edit Session Modal -->
+<div class="modal fade @(IsVisible ? "show" : "")" id="editSessionModal" tabindex="-1" 
+     style="display: @(IsVisible ? "block" : "none");" aria-modal="@IsVisible">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">✏️ Edit Session</h5>
+                <button type="button" class="btn-close" @onclick="Close" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @errorMessage
+                        <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+                    </div>
+                }
+
+                <!-- Session Details Form -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold mb-3">Session Details</h6>
+                    
+                    <div class="mb-3">
+                        <label for="editTitle" class="form-label">Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editTitle" 
+                               @bind="editModel.Title" maxlength="200" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editGoal" class="form-label">Goal</label>
+                        <textarea class="form-control" id="editGoal" @bind="editModel.Goal" rows="2"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editContext" class="form-label">Context</label>
+                        <textarea class="form-control" id="editContext" @bind="editModel.Context" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <hr />
+
+                <!-- Session Settings Form -->
+                <div class="mb-3">
+                    <h6 class="fw-semibold mb-3">Session Settings</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editMaxContribPerSession" class="form-label">Max Contributions Per Session</label>
+                            <input type="number" class="form-control" id="editMaxContribPerSession" 
+                                   @bind="editSettings.MaxContributionsPerParticipantPerSession" min="0">
+                            <div class="form-text">0 = unlimited</div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="editMaxContribPerActivity" class="form-label">Max Contributions Per Activity</label>
+                            <input type="number" class="form-control" id="editMaxContribPerActivity" 
+                                   @bind="editSettings.MaxContributionsPerParticipantPerActivity" min="0">
+                            <div class="form-text">0 = unlimited</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editStrictActivity" 
+                                       @bind="editSettings.StrictCurrentActivityOnly">
+                                <label class="form-check-label" for="editStrictActivity">
+                                    Strict Current Activity Only
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editAllowAnonymous" 
+                                       @bind="editSettings.AllowAnonymous">
+                                <label class="form-check-label" for="editAllowAnonymous">
+                                    Allow Anonymous
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="editTtl" class="form-label">Session Duration (minutes)</label>
+                        <input type="number" class="form-control" id="editTtl" 
+                               @bind="editSettings.TtlMinutes" min="30" max="480">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="Close" disabled="@isSaving">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" @onclick="SaveChanges" disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (IsVisible)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public string? SessionCode { get; set; }
+    [Parameter] public SessionSummaryResponse? Session { get; set; }
+    [Parameter] public EventCallback OnSessionUpdated { get; set; }
+
+    private bool IsVisible { get; set; }
+    private bool isSaving = false;
+    private string? errorMessage;
+
+    private UpdateSessionRequest editModel = new();
+    private UpdateSessionSettingsRequest editSettings = new();
+
+    public void Show()
+    {
+        if (Session == null) return;
+
+        // Initialize edit models with current values
+        editModel = new UpdateSessionRequest
+        {
+            Title = Session.Title,
+            Goal = Session.Goal,
+            Context = null  // Context not available in SessionSummaryResponse
+        };
+
+        // Initialize settings from current session
+        editSettings = new UpdateSessionSettingsRequest
+        {
+            MaxContributionsPerParticipantPerSession = 0, // Default values
+            MaxContributionsPerParticipantPerActivity = 0,
+            StrictCurrentActivityOnly = true,
+            AllowAnonymous = false,
+            TtlMinutes = 120
+        };
+
+        IsVisible = true;
+        errorMessage = null;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        IsVisible = false;
+        errorMessage = null;
+        StateHasChanged();
+    }
+
+    private async Task SaveChanges()
+    {
+        if (string.IsNullOrWhiteSpace(SessionCode) || Session == null)
+        {
+            errorMessage = "Invalid session";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(editModel.Title))
+        {
+            errorMessage = "Title is required";
+            return;
+        }
+
+        try
+        {
+            isSaving = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            // Update session details
+            var detailsResponse = await ApiService.PutAsync<UpdateSessionRequest, SessionSummaryResponse>(
+                $"/api/sessions/{SessionCode}",
+                editModel);
+
+            if (!detailsResponse.Success)
+            {
+                errorMessage = detailsResponse.Errors?.FirstOrDefault()?.Message ?? "Failed to update session details";
+                isSaving = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Update session settings
+            var settingsResponse = await ApiService.PutAsync<UpdateSessionSettingsRequest, SessionSummaryResponse>(
+                $"/api/sessions/{SessionCode}/settings",
+                editSettings);
+
+            if (!settingsResponse.Success)
+            {
+                errorMessage = settingsResponse.Errors?.FirstOrDefault()?.Message ?? "Failed to update session settings";
+                isSaving = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Success
+            await OnSessionUpdated.InvokeAsync();
+            Close();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error updating session");
+            errorMessage = "An error occurred while updating the session";
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+}
