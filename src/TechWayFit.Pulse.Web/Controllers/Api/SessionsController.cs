@@ -365,9 +365,7 @@ public sealed class SessionsController : ControllerBase
                 return authError;
             }
 
-            var settings = new TechWayFit.Pulse.Domain.ValueObjects.SessionSettings(
-                request.MaxContributionsPerParticipantPerSession,
-                request.MaxContributionsPerParticipantPerActivity,
+            var settings = new TechWayFit.Pulse.Domain.ValueObjects.SessionSettings( 
                 request.StrictCurrentActivityOnly,
                 request.AllowAnonymous,
                 request.TtlMinutes);

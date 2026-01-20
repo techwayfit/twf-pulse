@@ -1,0 +1,117 @@
+{
+  "name": "Team Building Activity",
+  "description": "Icebreakers and team bonding exercises",
+  "category": "TeamBuilding",
+  "iconEmoji": "🤝",
+  "config": {
+    "title": "Team Building Workshop",
+    "goal": "Build stronger team connections and improve collaboration",
+    "context": "Fun and engaging team building activities",
+    "settings": {
+      "durationMinutes": 90,
+      "allowAnonymous": false,
+      "allowLateJoin": true,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "tenure",
+          "label": "Time with Team",
+          "type": "select",
+          "required": false,
+          "options": [
+            "New (< 3 months)",
+            "3-6 months",
+            "6-12 months",
+            "1-2 years",
+            "2+ years"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Fun Facts",
+        "prompt": "Share something interesting or unique about yourself"
+      },
+      {
+        "order": 2,
+        "type": "Poll",
+        "title": "Team Vibe Check",
+        "prompt": "How's everyone feeling today?",
+        "config": {
+          "options": [
+            "🔥 Energized!",
+            "😊 Good",
+            "😐 Okay",
+            "😴 Tired",
+            "🎉 Excited!"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "Poll",
+        "title": "Working Style",
+        "prompt": "What's your preferred working style?",
+        "config": {
+          "options": [
+            "Early bird (morning)",
+            "Night owl (evening)",
+            "Deep focus blocks",
+            "Collaborative sessions",
+            "Mix of everything"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "type": "Quadrant",
+        "title": "Team Strengths",
+        "prompt": "Map team skills by expertise and interest",
+        "config": {
+          "xAxisLabel": "Current Skill Level",
+          "yAxisLabel": "Interest to Develop",
+          "topLeftLabel": "Want to Learn (Growth Area)",
+          "topRightLabel": "Expert & Passionate (Mentor)",
+          "bottomLeftLabel": "Developing (Practice)",
+          "bottomRightLabel": "Proficient (Stable)"
+        }
+      },
+      {
+        "order": 5,
+        "type": "GeneralFeedback",
+        "title": "Team Improvement Ideas",
+        "prompt": "What would make our team even better?",
+        "config": {
+          "categories": [
+            "Communication",
+            "Processes",
+            "Tools",
+            "Social Activities",
+            "Recognition"
+          ]
+        }
+      },
+      {
+        "order": 6,
+        "type": "Rating",
+        "title": "Team Connection",
+        "prompt": "How connected do you feel to the team?",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Connection Level"
+        }
+      }
+    ]
+  }
+}

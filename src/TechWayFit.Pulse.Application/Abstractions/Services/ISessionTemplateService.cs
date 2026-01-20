@@ -67,7 +67,12 @@ public interface ISessionTemplateService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Initialize system templates on startup
+    /// Initialize system templates on startup from JSON files in App_Data/Templates
     /// </summary>
     Task InitializeSystemTemplatesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Initialize system templates from JSON files at specified path
+    /// </summary>
+    Task InitializeSystemTemplatesAsync(string? templatesPath, CancellationToken cancellationToken = default);
 }

@@ -192,9 +192,7 @@ public sealed class SessionTemplateService : ISessionTemplateService
         }
 
         // Create session settings with default values
-        var sessionSettings = new SessionSettings(
-            maxContributionsPerParticipantPerSession: 100,
-            maxContributionsPerParticipantPerActivity: config.Settings.MaxParticipants ?? null,
+        var sessionSettings = new SessionSettings(  
             strictCurrentActivityOnly: true,
             allowAnonymous: config.Settings.AllowAnonymous,
             ttlMinutes: config.Settings.DurationMinutes ?? 120);
@@ -244,7 +242,7 @@ public sealed class SessionTemplateService : ISessionTemplateService
         foreach (var activityConfig in config.Activities.OrderBy(a => a.Order))
         {
             var activityConfigJson = activityConfig.Config != null
-                ? JsonSerializer.Serialize(activityConfig.Config)
+                ? SerializeActivityConfig(activityConfig.Type, activityConfig.Config)
                 : null;
 
             await _activityService.AddActivityAsync(
@@ -264,40 +262,138 @@ public sealed class SessionTemplateService : ISessionTemplateService
 
     public async Task InitializeSystemTemplatesAsync(CancellationToken cancellationToken = default)
     {
-        var existingTemplates = await _templateRepository.GetSystemTemplatesAsync(cancellationToken);
-        if (existingTemplates.Any())
+        await InitializeSystemTemplatesAsync(null, cancellationToken);
+    }
+
+    public async Task InitializeSystemTemplatesAsync(string? templatesPath, CancellationToken cancellationToken = default)
+    {
+        // Default path if not provided
+        templatesPath ??= Path.Combine(AppContext.BaseDirectory, "App_Data", "Templates");
+        var installedPath = Path.Combine(templatesPath, "installed");
+
+        // Ensure directories exist
+        Directory.CreateDirectory(templatesPath);
+        Directory.CreateDirectory(installedPath);
+
+        // Get all JSON template files
+        var templateFiles = Directory.GetFiles(templatesPath, "*.json", SearchOption.TopDirectoryOnly);
+        
+        if (templateFiles.Length == 0)
         {
-            _logger.LogInformation("System templates already initialized ({Count} templates)", existingTemplates.Count);
+            _logger.LogInformation("No template files found in {Path}", templatesPath);
             return;
         }
 
-        _logger.LogInformation("Initializing system templates...");
+        _logger.LogInformation("Found {Count} template file(s) in {Path}", templateFiles.Length, templatesPath);
 
-        var templates = GetSystemTemplateConfigs();
+        var processedCount = 0;
+        var errorCount = 0;
 
-        foreach (var (name, description, category, iconEmoji, config) in templates)
+        foreach (var filePath in templateFiles)
         {
-            var configJson = JsonSerializer.Serialize(config, new JsonSerializerOptions
+            try
             {
-                WriteIndented = true
-            });
+                var fileName = Path.GetFileName(filePath);
+                _logger.LogInformation("Processing template file: {FileName}", fileName);
 
-            var template = new SessionTemplate(
-                Guid.NewGuid(),
-                name,
-                description,
-                category,
-                iconEmoji,
-                configJson,
-                isSystemTemplate: true,
-                createdByUserId: null,
-                DateTimeOffset.UtcNow,
-                DateTimeOffset.UtcNow);
+                // Read and deserialize JSON
+                var jsonContent = await File.ReadAllTextAsync(filePath, cancellationToken);
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+                };
+                
+                var templateData = JsonSerializer.Deserialize<SystemTemplateDefinition>(jsonContent, jsonOptions);
 
-            await _templateRepository.AddAsync(template, cancellationToken);
+                if (templateData == null)
+                {
+                    _logger.LogWarning("Failed to deserialize template file: {FileName}", fileName);
+                    errorCount++;
+                    continue;
+                }
+
+                // Parse category
+                if (!Enum.TryParse<TemplateCategory>(templateData.Category, true, out var category))
+                {
+                    _logger.LogWarning("Invalid category '{Category}' in template file: {FileName}", templateData.Category, fileName);
+                    errorCount++;
+                    continue;
+                }
+
+                // Check if template already exists (by name)
+                var existingTemplates = await _templateRepository.GetSystemTemplatesAsync(cancellationToken);
+                var existingTemplate = existingTemplates.FirstOrDefault(t => t.Name == templateData.Name);
+
+                if (existingTemplate != null)
+                {
+                    _logger.LogInformation("Template '{Name}' already exists, updating...", templateData.Name);
+                    
+                    // Update existing template
+                    var configJson = JsonSerializer.Serialize(templateData.Config, new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    });
+
+                    existingTemplate.Update(
+                        templateData.Name,
+                        templateData.Description,
+                        category,
+                        templateData.IconEmoji,
+                        configJson);
+
+                    await _templateRepository.UpdateAsync(existingTemplate, cancellationToken);
+                }
+                else
+                {
+                    _logger.LogInformation("Creating new template: {Name}", templateData.Name);
+                    
+                    // Create new template
+                    var configJson = JsonSerializer.Serialize(templateData.Config, new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    });
+
+                    var template = new SessionTemplate(
+                        Guid.NewGuid(),
+                        templateData.Name,
+                        templateData.Description,
+                        category,
+                        templateData.IconEmoji,
+                        configJson,
+                        isSystemTemplate: true,
+                        createdByUserId: null,
+                        DateTimeOffset.UtcNow,
+                        DateTimeOffset.UtcNow);
+
+                    await _templateRepository.AddAsync(template, cancellationToken);
+                }
+
+                processedCount++;
+
+                // Move file to installed folder
+                var destinationPath = Path.Combine(installedPath, fileName);
+                
+                // If file already exists in installed folder, delete it first
+                if (File.Exists(destinationPath))
+                {
+                    File.Delete(destinationPath);
+                }
+
+                File.Move(filePath, destinationPath);
+                _logger.LogInformation("Moved template file to installed folder: {FileName}", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing template file: {FilePath}", filePath);
+                errorCount++;
+            }
         }
 
-        _logger.LogInformation("Initialized {Count} system templates", templates.Count);
+        _logger.LogInformation(
+            "Template initialization complete. Processed: {Processed}, Errors: {Errors}", 
+            processedCount, 
+            errorCount);
     }
 
     private static void MergeSettings(SessionSettingsConfig target, SessionSettingsConfig source)
@@ -321,192 +417,64 @@ public sealed class SessionTemplateService : ISessionTemplateService
         }
     }
 
+    private static string SerializeActivityConfig(ActivityType activityType, object config)
+    {
+        // For Poll activities, transform string array options to PollOption objects
+        if (activityType == ActivityType.Poll && config is ActivityConfigData activityConfig)
+        {
+            if (activityConfig.Options != null && activityConfig.Options.Count > 0)
+            {
+                var options = new List<object>();
+                
+                for (int i = 0; i < activityConfig.Options.Count; i++)
+                {
+                    var label = activityConfig.Options[i];
+                    options.Add(new
+                    {
+                        Id = $"option{i + 1}",
+                        Label = label,
+                        Description = (string?)null
+                    });
+                }
+                
+                // Create poll config with transformed options
+                var transformedConfig = new
+                {
+                    Options = options,
+                    AllowMultiple = activityConfig.MultipleChoice ?? false,
+                    MinSelections = 1,
+                    MaxSelections = (int?)null,
+                    AllowCustomOption = false,
+                    CustomOptionPlaceholder = "Other (please specify)",
+                    RandomizeOrder = false,
+                    ShowResultsAfterSubmit = false,
+                    MaxResponsesPerParticipant = 1
+                };
+                
+                return JsonSerializer.Serialize(transformedConfig);
+            }
+        }
+        
+        // For other activity types, serialize as-is
+        return JsonSerializer.Serialize(config);
+    }
+
     private static List<(string Name, string Description, TemplateCategory Category, string IconEmoji, SessionTemplateConfig Config)> GetSystemTemplateConfigs()
     {
-        return new List<(string, string, TemplateCategory, string, SessionTemplateConfig)>
-        {
-            // Retro Sprint Review
-            ("Retro Sprint Review", "Quick pulse + themes + actions", TemplateCategory.Retrospective, "🔄", new SessionTemplateConfig
-            {
-                Title = "Sprint Retrospective",
-                Goal = "Reflect on the sprint and identify improvements",
-                Context = "Team retrospective for sprint review",
-                Settings = new SessionSettingsConfig
-                {
-                    DurationMinutes = 60,
-                    AllowAnonymous = false,
-                    AllowLateJoin = true,
-                    ShowResultsDuringActivity = true
-                },
-                JoinFormSchema = new JoinFormSchemaConfig
-                {
-                    Fields = new List<JoinFormFieldConfig>
-                    {
-                        new() { Name = "name", Label = "Your Name", Type = "text", Required = true },
-                        new() { Name = "role", Label = "Role", Type = "select", Required = true, Options = new List<string> { "Developer", "Designer", "QA", "Product Owner", "Scrum Master" } }
-                    }
-                },
-                Activities = new List<ActivityTemplateConfig>
-                {
-                    new() { Order = 1, Type = ActivityType.WordCloud, Title = "Sprint in One Word", Prompt = "Describe this sprint in one word" },
-                    new() { Order = 2, Type = ActivityType.Poll, Title = "Sprint Satisfaction", Prompt = "How satisfied are you with this sprint?", Config = new ActivityConfigData
-                    {
-                        Options = new List<string> { "😞 Very Unsatisfied", "😐 Unsatisfied", "🙂 Neutral", "😊 Satisfied", "🎉 Very Satisfied" }
-                    }},
-                    new() { Order = 3, Type = ActivityType.Quadrant, Title = "What Went Well / What Didn't", Prompt = "Share your thoughts", Config = new ActivityConfigData
-                    {
-                        XAxisLabel = "Impact",
-                        YAxisLabel = "Control",
-                        TopLeftLabel = "High Impact, Low Control",
-                        TopRightLabel = "High Impact, High Control",
-                        BottomLeftLabel = "Low Impact, Low Control",
-                        BottomRightLabel = "Low Impact, High Control"
-                    }},
-                    new() { Order = 4, Type = ActivityType.GeneralFeedback, Title = "Action Items", Prompt = "What should we do differently next sprint?", Config = new ActivityConfigData
-                    {
-                        Categories = new List<string> { "Process", "Collaboration", "Tools", "Quality" }
-                    }}
-                }
-            }),
-
-            // Ops Pain Points
-            ("Ops Pain Points", "Impact/Effort + 5-Whys", TemplateCategory.IncidentReview, "⚙️", new SessionTemplateConfig
-            {
-                Title = "Operations Pain Points Workshop",
-                Goal = "Identify and prioritize operational challenges",
-                Context = "Workshop to surface and analyze operational issues",
-                Settings = new SessionSettingsConfig
-                {
-                    DurationMinutes = 90,
-                    AllowAnonymous = false,
-                    AllowLateJoin = false,
-                    ShowResultsDuringActivity = true
-                },
-                JoinFormSchema = new JoinFormSchemaConfig
-                {
-                    Fields = new List<JoinFormFieldConfig>
-                    {
-                        new() { Name = "name", Label = "Your Name", Type = "text", Required = true },
-                        new() { Name = "team", Label = "Team", Type = "text", Required = true }
-                    }
-                },
-                Activities = new List<ActivityTemplateConfig>
-                {
-                    new() { Order = 1, Type = ActivityType.GeneralFeedback, Title = "Pain Point Collection", Prompt = "What operational challenges are you facing?", Config = new ActivityConfigData
-                    {
-                        Categories = new List<string> { "Infrastructure", "Deployment", "Monitoring", "Incidents", "Toil" }
-                    }},
-                    new() { Order = 2, Type = ActivityType.Quadrant, Title = "Impact vs Effort Matrix", Prompt = "Plot pain points by impact and effort to fix", Config = new ActivityConfigData
-                    {
-                        XAxisLabel = "Effort to Fix",
-                        YAxisLabel = "Business Impact",
-                        TopLeftLabel = "High Impact, Low Effort (Quick Wins)",
-                        TopRightLabel = "High Impact, High Effort (Major Projects)",
-                        BottomLeftLabel = "Low Impact, Low Effort (Fill-ins)",
-                        BottomRightLabel = "Low Impact, High Effort (Avoid)"
-                    }},
-                    new() { Order = 3, Type = ActivityType.FiveWhys, Title = "Root Cause Analysis", Prompt = "Let's dig into the top pain point", Config = new ActivityConfigData
-                    {
-                        MaxDepth = 5
-                    }},
-                    new() { Order = 4, Type = ActivityType.GeneralFeedback, Title = "Solutions & Next Steps", Prompt = "What actions can we take?" }
-                }
-            }),
-
-            // Product Discovery
-            ("Product Discovery", "Idea cloud + prioritization", TemplateCategory.ProductDiscovery, "💡", new SessionTemplateConfig
-            {
-                Title = "Product Discovery Session",
-                Goal = "Generate and prioritize product ideas",
-                Context = "Collaborative session for product ideation",
-                Settings = new SessionSettingsConfig
-                {
-                    DurationMinutes = 120,
-                    AllowAnonymous = false,
-                    AllowLateJoin = true,
-                    ShowResultsDuringActivity = true
-                },
-                JoinFormSchema = new JoinFormSchemaConfig
-                {
-                    Fields = new List<JoinFormFieldConfig>
-                    {
-                        new() { Name = "name", Label = "Your Name", Type = "text", Required = true },
-                        new() { Name = "role", Label = "Role", Type = "select", Required = true, Options = new List<string> { "Product Manager", "Designer", "Engineer", "Stakeholder", "User Researcher" } }
-                    }
-                },
-                Activities = new List<ActivityTemplateConfig>
-                {
-                    new() { Order = 1, Type = ActivityType.WordCloud, Title = "Customer Needs", Prompt = "What do our customers need most?" },
-                    new() { Order = 2, Type = ActivityType.GeneralFeedback, Title = "Feature Ideas", Prompt = "Share your product ideas", Config = new ActivityConfigData
-                    {
-                        Categories = new List<string> { "New Feature", "Improvement", "Integration", "UX Enhancement" }
-                    }},
-                    new() { Order = 3, Type = ActivityType.Quadrant, Title = "Value vs Complexity", Prompt = "Let's prioritize these ideas", Config = new ActivityConfigData
-                    {
-                        XAxisLabel = "Implementation Complexity",
-                        YAxisLabel = "User Value",
-                        TopLeftLabel = "High Value, Low Complexity (Do First)",
-                        TopRightLabel = "High Value, High Complexity (Plan)",
-                        BottomLeftLabel = "Low Value, Low Complexity (Maybe)",
-                        BottomRightLabel = "Low Value, High Complexity (Avoid)"
-                    }},
-                    new() { Order = 4, Type = ActivityType.Poll, Title = "Top Priority Vote", Prompt = "Which idea should we build first?", Config = new ActivityConfigData
-                    {
-                        Options = new List<string> { "Idea 1", "Idea 2", "Idea 3", "Idea 4", "Idea 5" }
-                    }},
-                    new() { Order = 5, Type = ActivityType.GeneralFeedback, Title = "Next Steps", Prompt = "What are the action items?" }
-                }
-            }),
-
-            // Incident Review
-            ("Incident Review", "Root cause ladder + fixes", TemplateCategory.IncidentReview, "🚨", new SessionTemplateConfig
-            {
-                Title = "Incident Post-Mortem",
-                Goal = "Learn from the incident and prevent recurrence",
-                Context = "Post-incident review and learning session",
-                Settings = new SessionSettingsConfig
-                {
-                    DurationMinutes = 60,
-                    AllowAnonymous = false,
-                    AllowLateJoin = false,
-                    ShowResultsDuringActivity = true
-                },
-                JoinFormSchema = new JoinFormSchemaConfig
-                {
-                    Fields = new List<JoinFormFieldConfig>
-                    {
-                        new() { Name = "name", Label = "Your Name", Type = "text", Required = true },
-                        new() { Name = "role", Label = "Role", Type = "select", Required = true, Options = new List<string> { "Incident Commander", "Engineer", "SRE", "Support", "Product" } }
-                    }
-                },
-                Activities = new List<ActivityTemplateConfig>
-                {
-                    new() { Order = 1, Type = ActivityType.QnA, Title = "Incident Timeline", Prompt = "Share key events during the incident" },
-                    new() { Order = 2, Type = ActivityType.FiveWhys, Title = "Root Cause Analysis", Prompt = "Why did this incident occur?", Config = new ActivityConfigData
-                    {
-                        MaxDepth = 5
-                    }},
-                    new() { Order = 3, Type = ActivityType.GeneralFeedback, Title = "Contributing Factors", Prompt = "What other factors contributed?", Config = new ActivityConfigData
-                    {
-                        Categories = new List<string> { "Technical", "Process", "Communication", "Monitoring", "Documentation" }
-                    }},
-                    new() { Order = 4, Type = ActivityType.Quadrant, Title = "Remediation Prioritization", Prompt = "Prioritize fixes and improvements", Config = new ActivityConfigData
-                    {
-                        XAxisLabel = "Effort",
-                        YAxisLabel = "Impact on Prevention",
-                        TopLeftLabel = "High Impact, Low Effort (Do Now)",
-                        TopRightLabel = "High Impact, High Effort (Schedule)",
-                        BottomLeftLabel = "Low Impact, Low Effort (Nice to Have)",
-                        BottomRightLabel = "Low Impact, High Effort (Skip)"
-                    }},
-                    new() { Order = 5, Type = ActivityType.GeneralFeedback, Title = "Action Items", Prompt = "What are the concrete next steps?" },
-                    new() { Order = 6, Type = ActivityType.Rating, Title = "Incident Response Rating", Prompt = "How well did we respond?", Config = new ActivityConfigData
-                    {
-                        MaxRating = 5,
-                        RatingLabel = "Response Quality"
-                    }}
-                }
-            })
-        };
+        // DEPRECATED: System templates are now loaded from JSON files in App_Data/Templates
+        // This method is kept for backwards compatibility but should not be used
+        return new List<(string, string, TemplateCategory, string, SessionTemplateConfig)>();
     }
+}
+
+/// <summary>
+/// Definition for a system template loaded from JSON file
+/// </summary>
+internal sealed class SystemTemplateDefinition
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string IconEmoji { get; set; } = string.Empty;
+    public SessionTemplateConfig Config { get; set; } = new();
 }

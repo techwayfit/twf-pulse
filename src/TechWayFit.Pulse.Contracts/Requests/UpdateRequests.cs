@@ -11,9 +11,6 @@ public sealed class UpdateSessionRequest
 
 public sealed class UpdateSessionSettingsRequest
 {
-    public int MaxContributionsPerParticipantPerSession { get; set; }
-
-    public int? MaxContributionsPerParticipantPerActivity { get; set; }
 
     public bool StrictCurrentActivityOnly { get; set; }
 

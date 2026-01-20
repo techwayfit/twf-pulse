@@ -8,6 +8,8 @@
             type="button" 
             id="dropdown-@Model.Id" 
             data-bs-toggle="dropdown" 
+            data-bs-auto-close="outside"
+            data-bs-boundary="viewport"
             aria-expanded="false">
         <span class="dropdown-text">@(string.IsNullOrEmpty(Model.Value) ? Model.Placeholder : GetSelectedText(Model.Items, Model.Value))</span>
     </button>

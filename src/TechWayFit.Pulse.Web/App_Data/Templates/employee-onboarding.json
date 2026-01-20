@@ -1,0 +1,91 @@
+{
+  "name": "Employee Onboarding",
+  "description": "Interactive orientation for new hires",
+  "category": "TeamBuilding",
+  "iconEmoji": "👋",
+  "config": {
+    "title": "Welcome New Team Members",
+    "goal": "Help new employees learn about company culture and feel welcomed",
+    "context": "Interactive orientation session for new hires",
+    "settings": {
+      "durationMinutes": 90,
+      "allowAnonymous": false,
+      "allowLateJoin": true,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "department",
+          "label": "Department",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "startDate",
+          "label": "Start Date",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "First Impressions",
+        "prompt": "Describe your first impression of the company in one word"
+      },
+      {
+        "order": 2,
+        "type": "Poll",
+        "title": "Learning Preference",
+        "prompt": "How do you prefer to learn new things?",
+        "config": {
+          "options": [
+            "Hands-on practice",
+            "Reading documentation",
+            "Watching demos",
+            "Pair programming",
+            "Asking questions"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "Quadrant",
+        "title": "Skills Assessment",
+        "prompt": "Plot your skills based on confidence and experience",
+        "config": {
+          "xAxisLabel": "Experience Level",
+          "yAxisLabel": "Confidence",
+          "topLeftLabel": "High Confidence, Low Experience",
+          "topRightLabel": "Expert (High Confidence & Experience)",
+          "bottomLeftLabel": "Beginner (Learning)",
+          "bottomRightLabel": "Experienced but Unsure"
+        }
+      },
+      {
+        "order": 4,
+        "type": "GeneralFeedback",
+        "title": "Questions & Expectations",
+        "prompt": "What questions or expectations do you have?",
+        "config": {
+          "categories": [
+            "Career Growth",
+            "Team Culture",
+            "Work-Life Balance",
+            "Tools & Technology",
+            "General Questions"
+          ]
+        }
+      }
+    ]
+  }
+}

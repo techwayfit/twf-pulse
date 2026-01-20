@@ -1,0 +1,102 @@
+{
+  "name": "Incident Review",
+  "description": "Root cause ladder + fixes",
+  "category": "IncidentReview",
+  "iconEmoji": "🚨",
+  "config": {
+    "title": "Incident Post-Mortem",
+    "goal": "Learn from the incident and prevent recurrence",
+    "context": "Post-incident review and learning session",
+    "settings": {
+      "durationMinutes": 60,
+      "allowAnonymous": false,
+      "allowLateJoin": false,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Incident Commander",
+            "Engineer",
+            "SRE",
+            "Support",
+            "Product"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "QnA",
+        "title": "Incident Timeline",
+        "prompt": "Share key events during the incident"
+      },
+      {
+        "order": 2,
+        "type": "FiveWhys",
+        "title": "Root Cause Analysis",
+        "prompt": "Why did this incident occur?",
+        "config": {
+          "maxDepth": 5
+        }
+      },
+      {
+        "order": 3,
+        "type": "GeneralFeedback",
+        "title": "Contributing Factors",
+        "prompt": "What other factors contributed?",
+        "config": {
+          "categories": [
+            "Technical",
+            "Process",
+            "Communication",
+            "Monitoring",
+            "Documentation"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "type": "Quadrant",
+        "title": "Remediation Prioritization",
+        "prompt": "Prioritize fixes and improvements",
+        "config": {
+          "xAxisLabel": "Effort",
+          "yAxisLabel": "Impact on Prevention",
+          "topLeftLabel": "High Impact, Low Effort (Do Now)",
+          "topRightLabel": "High Impact, High Effort (Schedule)",
+          "bottomLeftLabel": "Low Impact, Low Effort (Nice to Have)",
+          "bottomRightLabel": "Low Impact, High Effort (Skip)"
+        }
+      },
+      {
+        "order": 5,
+        "type": "GeneralFeedback",
+        "title": "Action Items",
+        "prompt": "What are the concrete next steps?"
+      },
+      {
+        "order": 6,
+        "type": "Rating",
+        "title": "Incident Response Rating",
+        "prompt": "How well did we respond?",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Response Quality"
+        }
+      }
+    ]
+  }
+}

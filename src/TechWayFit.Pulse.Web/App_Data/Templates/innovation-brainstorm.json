@@ -1,0 +1,99 @@
+{
+  "name": "Innovation Brainstorm",
+  "description": "Creative ideation with feasibility analysis",
+  "category": "ProductDiscovery",
+  "iconEmoji": "🚀",
+  "config": {
+    "title": "Innovation Brainstorming Session",
+    "goal": "Generate and evaluate innovative ideas",
+    "context": "Creative thinking workshop for new concepts",
+    "settings": {
+      "durationMinutes": 120,
+      "allowAnonymous": true,
+      "allowLateJoin": true,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "background",
+          "label": "Background",
+          "type": "select",
+          "required": false,
+          "options": [
+            "Product",
+            "Engineering",
+            "Design",
+            "Marketing",
+            "Sales",
+            "Other"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Innovation Themes",
+        "prompt": "What innovation themes excite you most?"
+      },
+      {
+        "order": 2,
+        "type": "GeneralFeedback",
+        "title": "Idea Collection",
+        "prompt": "Share your innovative ideas",
+        "config": {
+          "categories": [
+            "New Product",
+            "Process Improvement",
+            "Technology",
+            "Business Model",
+            "Customer Experience"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "Poll",
+        "title": "Most Exciting Ideas",
+        "prompt": "Vote for the most promising ideas",
+        "config": {
+          "options": [
+            "Idea 1",
+            "Idea 2",
+            "Idea 3",
+            "Idea 4",
+            "Idea 5"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "type": "Quadrant",
+        "title": "Feasibility vs Innovation",
+        "prompt": "Evaluate ideas on feasibility and innovation potential",
+        "config": {
+          "xAxisLabel": "Feasibility",
+          "yAxisLabel": "Innovation Potential",
+          "topLeftLabel": "High Innovation, Low Feasibility (Moonshots)",
+          "topRightLabel": "High Innovation, High Feasibility (Do This!)",
+          "bottomLeftLabel": "Low Innovation, Low Feasibility (Avoid)",
+          "bottomRightLabel": "Low Innovation, High Feasibility (Safe Bets)"
+        }
+      },
+      {
+        "order": 5,
+        "type": "GeneralFeedback",
+        "title": "Implementation Plans",
+        "prompt": "How can we bring the best ideas to life?"
+      }
+    ]
+  }
+}

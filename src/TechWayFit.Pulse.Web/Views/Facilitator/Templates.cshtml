@@ -9,12 +9,12 @@
 <main class="dashboard-main">
     <div class="container" style="max-width: 1200px;">
         <!-- Header -->
-        <div class="dashboard-header">
-            <div class="dashboard-header-text">
+        <div class="dashboard-header flex-column flex-md-row align-items-start align-items-md-center">
+            <div class="dashboard-header-text mb-3 mb-md-0">
                 <h2 class="dashboard-title">Session Templates</h2>
-                <p class="dashboard-subtitle">Choose a template to quickly create a workshop session</p>
+                <p class="dashboard-subtitle d-none d-md-block">Choose a template to quickly create a workshop session</p>
             </div>
-            <div class="dashboard-header-actions">
+            <div class="dashboard-header-actions d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto">
                 <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-pulse-outline">
                     ← Back to Dashboard
                 </a>
@@ -26,23 +26,34 @@
 
         <!-- Filter by Category -->
         <div class="mb-4">
-            <div class="btn-group" role="group" aria-label="Filter templates by category">
-                <button type="button" class="btn btn-outline-secondary active" data-filter="all">
+            <!-- Mobile: Dropdown -->
+            <select class="form-select d-md-none" id="categoryFilterMobile" aria-label="Filter templates by category">
+                <option value="all">All Templates</option>
+                <option value="Retrospective">🔄 Retrospective</option>
+                <option value="ProductDiscovery">💡 Product Discovery</option>
+                <option value="IncidentReview">🚨 Incident Review</option>
+                <option value="TeamBuilding">🤝 Team Building</option>
+                <option value="Training">📚 Training</option>
+            </select>
+            
+            <!-- Desktop: Buttons -->
+            <div class="d-none d-md-flex flex-wrap gap-2" role="group" aria-label="Filter templates by category">
+                <button type="button" class="btn btn-sm btn-outline-secondary active" data-filter="all">
                     All Templates
                 </button>
-                <button type="button" class="btn btn-outline-secondary" data-filter="Retrospective">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="Retrospective">
                     🔄 Retrospective
                 </button>
-                <button type="button" class="btn btn-outline-secondary" data-filter="ProductDiscovery">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="ProductDiscovery">
                     💡 Product Discovery
                 </button>
-                <button type="button" class="btn btn-outline-secondary" data-filter="IncidentReview">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="IncidentReview">
                     🚨 Incident Review
                 </button>
-                <button type="button" class="btn btn-outline-secondary" data-filter="TeamBuilding">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="TeamBuilding">
                     🤝 Team Building
                 </button>
-                <button type="button" class="btn btn-outline-secondary" data-filter="Training">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="Training">
                     📚 Training
                 </button>
             </div>
@@ -56,10 +67,10 @@
                     <span class="badge bg-primary-subtle text-primary me-2">★</span>
                     System Templates
                 </h3>
-                <div class="row g-4">
+                <div class="row g-3 g-md-4">
                     @foreach (var template in Model.Where(t => t.IsSystemTemplate).OrderBy(t => t.Name))
                     {
-                        <div class="col-12 col-md-6 col-lg-4 template-card" data-category="@template.Category">
+                        <div class="col-12 col-sm-6 col-lg-4 template-card" data-category="@template.Category">
                             <div class="card h-100 shadow-sm hover-lift">
                                 <div class="card-body">
                                     <div class="d-flex align-items-start mb-3">
@@ -102,10 +113,10 @@
                     <span class="badge bg-success-subtle text-success me-2">✎</span>
                     Custom Templates
                 </h3>
-                <div class="row g-4">
+                <div class="row g-3 g-md-4">
                     @foreach (var template in Model.Where(t => !t.IsSystemTemplate).OrderBy(t => t.Name))
                     {
-                        <div class="col-12 col-md-6 col-lg-4 template-card" data-category="@template.Category">
+                        <div class="col-12 col-sm-6 col-lg-4 template-card" data-category="@template.Category">
                             <div class="card h-100 shadow-sm hover-lift">
                                 <div class="card-body">
                                     <div class="d-flex align-items-start mb-3">
@@ -154,24 +165,35 @@
 
 @section Scripts {
     <script>
-        // Template filtering
+        // Template filtering function
+        function filterTemplates(filterValue) {
+            const cards = document.querySelectorAll('.template-card');
+            cards.forEach(card => {
+                if (filterValue === 'all' || card.dataset.category === filterValue) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Desktop: Button filtering
         document.querySelectorAll('[data-filter]').forEach(button => {
             button.addEventListener('click', function() {
                 // Update active button
                 document.querySelectorAll('[data-filter]').forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
                 
-                const filter = this.dataset.filter;
-                const cards = document.querySelectorAll('.template-card');
-                
-                cards.forEach(card => {
-                    if (filter === 'all' || card.dataset.category === filter) {
-                        card.style.display = '';
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
+                filterTemplates(this.dataset.filter);
             });
         });
+
+        // Mobile: Dropdown filtering
+        const mobileSelect = document.getElementById('categoryFilterMobile');
+        if (mobileSelect) {
+            mobileSelect.addEventListener('change', function() {
+                filterTemplates(this.value);
+            });
+        }
     </script>
 }

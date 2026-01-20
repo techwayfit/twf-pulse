@@ -1,0 +1,79 @@
+{
+  "name": "Ops Pain Points",
+  "description": "Impact/Effort + 5-Whys",
+  "category": "IncidentReview",
+  "iconEmoji": "⚙️",
+  "config": {
+    "title": "Operations Pain Points Workshop",
+    "goal": "Identify and prioritize operational challenges",
+    "context": "Workshop to surface and analyze operational issues",
+    "settings": {
+      "durationMinutes": 90,
+      "allowAnonymous": false,
+      "allowLateJoin": false,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "team",
+          "label": "Team",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "GeneralFeedback",
+        "title": "Pain Point Collection",
+        "prompt": "What operational challenges are you facing?",
+        "config": {
+          "categories": [
+            "Infrastructure",
+            "Deployment",
+            "Monitoring",
+            "Incidents",
+            "Toil"
+          ]
+        }
+      },
+      {
+        "order": 2,
+        "type": "Quadrant",
+        "title": "Impact vs Effort Matrix",
+        "prompt": "Plot pain points by impact and effort to fix",
+        "config": {
+          "xAxisLabel": "Effort to Fix",
+          "yAxisLabel": "Business Impact",
+          "topLeftLabel": "High Impact, Low Effort (Quick Wins)",
+          "topRightLabel": "High Impact, High Effort (Major Projects)",
+          "bottomLeftLabel": "Low Impact, Low Effort (Fill-ins)",
+          "bottomRightLabel": "Low Impact, High Effort (Avoid)"
+        }
+      },
+      {
+        "order": 3,
+        "type": "FiveWhys",
+        "title": "Root Cause Analysis",
+        "prompt": "Let's dig into the top pain point",
+        "config": {
+          "maxDepth": 5
+        }
+      },
+      {
+        "order": 4,
+        "type": "GeneralFeedback",
+        "title": "Solutions & Next Steps",
+        "prompt": "What actions can we take?"
+      }
+    ]
+  }
+}

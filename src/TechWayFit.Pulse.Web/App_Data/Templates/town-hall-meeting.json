@@ -1,0 +1,101 @@
+{
+  "name": "Town Hall Meeting",
+  "description": "Community engagement with priority voting",
+  "category": "TeamBuilding",
+  "iconEmoji": "🏛️",
+  "config": {
+    "title": "Community Town Hall",
+    "goal": "Gather citizen input on community priorities",
+    "context": "Local governance and community engagement",
+    "settings": {
+      "durationMinutes": 120,
+      "allowAnonymous": false,
+      "allowLateJoin": true,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "neighborhood",
+          "label": "Neighborhood/District",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Community Concerns",
+        "prompt": "What issues matter most to you in our community?"
+      },
+      {
+        "order": 2,
+        "type": "Poll",
+        "title": "Top Priority Issue",
+        "prompt": "Which issue should we address first?",
+        "config": {
+          "options": [
+            "Infrastructure",
+            "Public Safety",
+            "Education",
+            "Environment",
+            "Economic Development"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "GeneralFeedback",
+        "title": "Proposed Solutions",
+        "prompt": "What solutions do you suggest for these issues?",
+        "config": {
+          "categories": [
+            "Infrastructure",
+            "Public Safety",
+            "Education",
+            "Parks & Recreation",
+            "Transportation"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "type": "Quadrant",
+        "title": "Project Prioritization",
+        "prompt": "Map community projects by urgency and impact",
+        "config": {
+          "xAxisLabel": "Urgency",
+          "yAxisLabel": "Community Impact",
+          "topLeftLabel": "High Impact, Not Urgent",
+          "topRightLabel": "High Impact, Urgent (Priority!)",
+          "bottomLeftLabel": "Low Impact, Not Urgent",
+          "bottomRightLabel": "Low Impact, Urgent"
+        }
+      },
+      {
+        "order": 5,
+        "type": "QnA",
+        "title": "Questions for Officials",
+        "prompt": "Ask questions or provide feedback to community leaders"
+      },
+      {
+        "order": 6,
+        "type": "Rating",
+        "title": "Meeting Effectiveness",
+        "prompt": "How effective was this town hall?",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Effectiveness"
+        }
+      }
+    ]
+  }
+}

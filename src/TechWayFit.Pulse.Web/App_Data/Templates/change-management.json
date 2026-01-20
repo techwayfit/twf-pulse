@@ -1,0 +1,112 @@
+{
+  "name": "Change Management Workshop",
+  "description": "Assess readiness and address concerns",
+  "category": "Retrospective",
+  "iconEmoji": "🔄",
+  "config": {
+    "title": "Change Management Session",
+    "goal": "Assess organizational readiness and plan change adoption",
+    "context": "Preparing the organization for upcoming changes",
+    "settings": {
+      "durationMinutes": 90,
+      "allowAnonymous": true,
+      "allowLateJoin": false,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "department",
+          "label": "Department",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "select",
+          "required": false,
+          "options": [
+            "Leadership",
+            "Manager",
+            "Individual Contributor",
+            "Support Staff"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "Poll",
+        "title": "Change Sentiment",
+        "prompt": "How do you feel about the upcoming changes?",
+        "config": {
+          "options": [
+            "😊 Very excited",
+            "🙂 Optimistic",
+            "😐 Neutral",
+            "😟 Concerned",
+            "😨 Very worried"
+          ]
+        }
+      },
+      {
+        "order": 2,
+        "type": "WordCloud",
+        "title": "Concerns & Hopes",
+        "prompt": "What concerns or hopes do you have about the change?"
+      },
+      {
+        "order": 3,
+        "type": "Quadrant",
+        "title": "Impact vs Readiness Analysis",
+        "prompt": "Map areas affected by impact and readiness",
+        "config": {
+          "xAxisLabel": "Current Readiness",
+          "yAxisLabel": "Change Impact",
+          "topLeftLabel": "High Impact, Low Readiness (Needs Focus)",
+          "topRightLabel": "High Impact, High Readiness (Champions)",
+          "bottomLeftLabel": "Low Impact, Low Readiness (Monitor)",
+          "bottomRightLabel": "Low Impact, High Readiness (Quick Wins)"
+        }
+      },
+      {
+        "order": 4,
+        "type": "GeneralFeedback",
+        "title": "Support Needed",
+        "prompt": "What support do you need to successfully adapt?",
+        "config": {
+          "categories": [
+            "Training",
+            "Resources",
+            "Communication",
+            "Time",
+            "Leadership Support"
+          ]
+        }
+      },
+      {
+        "order": 5,
+        "type": "Poll",
+        "title": "Biggest Barrier",
+        "prompt": "What's the biggest barrier to successful change?",
+        "config": {
+          "options": [
+            "Lack of clarity",
+            "Insufficient training",
+            "Time constraints",
+            "Resistance from team",
+            "Technical challenges"
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "name": "Hackathon Coordination",
+  "description": "Tech stack voting + project complexity mapping",
+  "category": "Training",
+  "iconEmoji": "💻",
+  "config": {
+    "title": "Hackathon Planning & Coordination",
+    "goal": "Organize teams and evaluate hackathon projects",
+    "context": "Collaborative hackathon event",
+    "settings": {
+      "durationMinutes": 240,
+      "allowAnonymous": false,
+      "allowLateJoin": true,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "skills",
+          "label": "Primary Skills",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "team",
+          "label": "Team Name",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "Poll",
+        "title": "Project Idea Voting",
+        "prompt": "Which hackathon idea should we pursue?",
+        "config": {
+          "options": [
+            "AI-powered assistant",
+            "Blockchain solution",
+            "IoT application",
+            "Mobile app",
+            "Web platform"
+          ]
+        }
+      },
+      {
+        "order": 2,
+        "type": "WordCloud",
+        "title": "Tech Stack Ideas",
+        "prompt": "What technologies should we use?"
+      },
+      {
+        "order": 3,
+        "type": "Quadrant",
+        "title": "Project Complexity Matrix",
+        "prompt": "Map projects by complexity and impact",
+        "config": {
+          "xAxisLabel": "Technical Complexity",
+          "yAxisLabel": "Potential Impact",
+          "topLeftLabel": "High Impact, Low Complexity (Best ROI)",
+          "topRightLabel": "High Impact, High Complexity (Ambitious)",
+          "bottomLeftLabel": "Low Impact, Low Complexity (Safe)",
+          "bottomRightLabel": "Low Impact, High Complexity (Risky)"
+        }
+      },
+      {
+        "order": 4,
+        "type": "GeneralFeedback",
+        "title": "Implementation Challenges",
+        "prompt": "What challenges do you foresee?",
+        "config": {
+          "categories": [
+            "Technical",
+            "Time",
+            "Resources",
+            "Team Coordination",
+            "Learning Curve"
+          ]
+        }
+      },
+      {
+        "order": 5,
+        "type": "Rating",
+        "title": "Final Project Presentations",
+        "prompt": "Rate the projects on innovation and execution",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Overall Score"
+        }
+      }
+    ]
+  }
+}

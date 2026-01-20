@@ -57,8 +57,6 @@ internal static class PersistenceJson
     {
         var dto = new SessionSettingsDto
         {
-            MaxContributionsPerParticipantPerSession = settings.MaxContributionsPerParticipantPerSession,
-            MaxContributionsPerParticipantPerActivity = settings.MaxContributionsPerParticipantPerActivity,
             StrictCurrentActivityOnly = settings.StrictCurrentActivityOnly,
             AllowAnonymous = settings.AllowAnonymous,
             TtlMinutes = settings.TtlMinutes
@@ -77,9 +75,7 @@ internal static class PersistenceJson
         var dto = JsonSerializer.Deserialize<SessionSettingsDto>(json, Options)
                   ?? throw new InvalidOperationException("Session settings JSON is invalid.");
 
-        return new SessionSettings(
-            dto.MaxContributionsPerParticipantPerSession,
-            dto.MaxContributionsPerParticipantPerActivity,
+        return new SessionSettings( 
             dto.StrictCurrentActivityOnly,
             dto.AllowAnonymous,
             dto.TtlMinutes);

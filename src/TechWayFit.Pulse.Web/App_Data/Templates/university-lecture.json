@@ -1,0 +1,101 @@
+{
+  "name": "University Lecture Engagement",
+  "description": "Interactive learning with polls and concepts",
+  "category": "Training",
+  "iconEmoji": "🎓",
+  "config": {
+    "title": "Interactive University Lecture",
+    "goal": "Engage students and assess comprehension",
+    "context": "Interactive classroom session",
+    "settings": {
+      "durationMinutes": 90,
+      "allowAnonymous": true,
+      "allowLateJoin": true,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "studentId",
+          "label": "Student ID",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "Poll",
+        "title": "Prior Knowledge Check",
+        "prompt": "How familiar are you with today's topic?",
+        "config": {
+          "options": [
+            "Never heard of it",
+            "Heard about it",
+            "Basic understanding",
+            "Good understanding",
+            "Expert level"
+          ]
+        }
+      },
+      {
+        "order": 2,
+        "type": "WordCloud",
+        "title": "Topic Associations",
+        "prompt": "What words or concepts come to mind with this topic?"
+      },
+      {
+        "order": 3,
+        "type": "Poll",
+        "title": "Comprehension Check",
+        "prompt": "Which statement best describes the key concept?",
+        "config": {
+          "options": [
+            "Statement A",
+            "Statement B",
+            "Statement C",
+            "Statement D",
+            "Not sure"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "type": "Quadrant",
+        "title": "Concept Mapping",
+        "prompt": "Map related concepts by familiarity and importance",
+        "config": {
+          "xAxisLabel": "Your Familiarity",
+          "yAxisLabel": "Importance to Course",
+          "topLeftLabel": "Important but Unfamiliar (Need to Study)",
+          "topRightLabel": "Important and Familiar (Core Knowledge)",
+          "bottomLeftLabel": "Less Important, Unfamiliar (Optional)",
+          "bottomRightLabel": "Less Important, Familiar (Review)"
+        }
+      },
+      {
+        "order": 5,
+        "type": "QnA",
+        "title": "Questions & Discussion",
+        "prompt": "Ask questions or share insights about the lecture"
+      },
+      {
+        "order": 6,
+        "type": "Rating",
+        "title": "Lecture Feedback",
+        "prompt": "How clear was today's lecture?",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Clarity"
+        }
+      }
+    ]
+  }
+}

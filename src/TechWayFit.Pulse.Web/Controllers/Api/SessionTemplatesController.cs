@@ -270,7 +270,7 @@ public class SessionTemplatesController : ControllerBase
                     Context = request.Customizations.Context,
                     Settings = request.Customizations.Settings != null ? new SessionSettingsConfig
                     {
-                        MaxParticipants = request.Customizations.Settings.MaxContributionsPerParticipantPerSession
+                        MaxParticipants = 100, // Default value
                     } : new SessionSettingsConfig(),
                     JoinFormSchema = request.Customizations.JoinFormSchema != null ? new JoinFormSchemaConfig
                     {
@@ -343,9 +343,7 @@ public class SessionTemplatesController : ControllerBase
                 Goal = config.Goal,
                 Context = config.Context,
                 Settings = new SessionSettingsDto
-                {
-                    MaxContributionsPerParticipantPerSession = 100,
-                    MaxContributionsPerParticipantPerActivity = config.Settings.MaxParticipants,
+                { 
                     StrictCurrentActivityOnly = true,
                     AllowAnonymous = config.Settings.AllowAnonymous,
                     TtlMinutes = config.Settings.DurationMinutes ?? 120
@@ -413,8 +411,7 @@ public class SessionTemplatesController : ControllerBase
             Goal = dto.Goal,
             Context = dto.Context,
             Settings = new SessionSettingsConfig
-            {
-                MaxParticipants = dto.Settings.MaxContributionsPerParticipantPerActivity,
+            { 
                 DurationMinutes = dto.Settings.TtlMinutes,
                 AllowAnonymous = dto.Settings.AllowAnonymous
             },

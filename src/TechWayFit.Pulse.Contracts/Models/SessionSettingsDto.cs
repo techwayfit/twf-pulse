@@ -1,10 +1,7 @@
 namespace TechWayFit.Pulse.Contracts.Models;
 
 public sealed class SessionSettingsDto
-{
-    public int MaxContributionsPerParticipantPerSession { get; set; }
-
-    public int? MaxContributionsPerParticipantPerActivity { get; set; }
+{ 
 
     public bool StrictCurrentActivityOnly { get; set; }
 

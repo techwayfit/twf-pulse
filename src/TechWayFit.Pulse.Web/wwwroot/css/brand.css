@@ -127,24 +127,7 @@
 
 /* Mobile Brand Adjustments */
 @media (max-width: 767.98px) {
-  .navbar-brand {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 0.625rem !important;
-  }
   
-  .brand-badge {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    max-width: 36px !important;
-    max-height: 36px !important;
-    border-radius: var(--radius-sm) !important;
-    box-shadow: var(--shadow-sm), 0 0 16px rgba(0, 102, 255, 0.2) !important;
-    aspect-ratio: 1 / 1 !important;
-  }
   
   .brand-badge svg {
     width: 18px !important;
@@ -161,20 +144,7 @@
   }
 }
 
-/* Nav Links - Modern Style */
-.navbar-nav .nav-link {
-  color: var(--pulse-gray) !important;
-  font-weight: 600 !important;
-  font-size: 0.9375rem !important;
-  padding: 0.5rem 1rem !important;
-  border-radius: var(--radius-sm) !important;
-  transition: all 0.2s ease !important;
-}
-
-.navbar-nav .nav-link:hover {
-  color: var(--pulse-blue) !important;
-  background: rgba(0, 102, 255, 0.05) !important;
-}
+ 
 
 /* Custom Pulse Buttons - No Bootstrap Override */
 .btn-pulse-primary {
@@ -409,38 +379,7 @@ header.sticky-top {
   border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
   box-shadow: var(--shadow-sm) !important;
 }
-
-/* Card Enhancements */
-.card {
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(15, 23, 42, 0.08) !important;
-  border-radius: var(--radius-lg) !important;
-  box-shadow: var(--shadow-sm) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.card:hover {
-  box-shadow: var(--shadow-md) !important;
-  transform: translateY(-2px) !important;
-}
-
-/* Form Controls - Modern */
-.form-control, .form-select {
-  border: 1.5px solid rgba(100, 116, 139, 0.2) !important;
-  border-radius: var(--radius-sm) !important;
-  padding: 0.625rem 0.875rem !important;
-  font-size: 0.9375rem !important;
-  transition: all 0.2s ease !important;
-  background: rgba(255, 255, 255, 0.9) !important;
-}
-
-.form-control:focus, .form-select:focus {
-  border-color: var(--pulse-blue) !important;
-  box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1) !important;
-  outline: none !important;
-}
-
+ 
 /* Typography - Modern Hierarchy */
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6 {
@@ -719,6 +658,7 @@ a:hover {
   background: linear-gradient(135deg, rgba(0, 102, 255, 0.02), rgba(0, 217, 163, 0.02));
   opacity: 0;
   transition: opacity 0.4s ease;
+  pointer-events: none; /* Don't block clicks */
 }
 
 .hover-lift:hover {
@@ -735,6 +675,18 @@ a:hover {
 
 .hover-lift:hover .card-body {
   background: linear-gradient(135deg, rgba(0, 102, 255, 0.02), rgba(0, 217, 163, 0.02));
+}
+
+/* Ensure card-footer links are always clickable */
+.hover-lift .card-footer {
+  position: relative;
+  z-index: 10;
+}
+
+.hover-lift .card-footer a {
+  position: relative;
+  z-index: 11;
+  pointer-events: auto;
 }
 
 /* User Initials Badge - Modern */
@@ -816,48 +768,47 @@ a:hover {
 }
 
 /* Footer - Modern */
-footer {
-  background: rgba(255, 255, 255, 0.8) !important;
-  backdrop-filter: blur(20px) saturate(180%) !important;
-  border-top: 1px solid rgba(15, 23, 42, 0.08) !important;
+footer.border-top.bg-white {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
   position: relative;
   z-index: 10;
 }
 
 /* Ensure dropdowns appear above footer */
 .dropdown-menu {
-  z-index: 1050 !important;
+  z-index: 1050;
 }
 
 /* Footer mobile - single line */
 @media (max-width: 767.98px) {
-  footer {
-    padding: 1rem 0 !important;
+  footer.border-top.bg-white {
+    padding: 1rem 0;
   }
   
-  footer .container {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-  }
-  
-  footer .d-flex {
-    flex-direction: column !important;
-    align-items: center !important;
-    gap: 0.75rem !important;
+  footer.border-top.bg-white .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }  
+  footer.border-top.bg-white .d-flex {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
     text-align: center;
   }
   
-  footer .text-muted.small {
-    font-size: 0.7rem !important;
+  footer.border-top.bg-white .text-muted.small {
+    font-size: 0.7rem;
   }
   
-  footer .d-flex.gap-3 {
-    flex-direction: row !important;
-    gap: 1rem !important;
+  footer.border-top.bg-white .d-flex.gap-3 {
+    flex-direction: row;
+    gap: 1rem;
   }
   
-  footer .d-flex.gap-3 a {
-    font-size: 0.7rem !important;
+  footer.border-top.bg-white .d-flex.gap-3 a {
+    font-size: 0.7rem;
   }
 }
 
@@ -1552,65 +1503,84 @@ html {
   font-size: 1rem;
   line-height: 1.5;
 }
+ 
 
 .tree-dropdown .dropdown-menu {
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
-  z-index: 1060 !important;
-  display: block;
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 0.2s, visibility 0.2s;
+  z-index: 1050;
   min-width: 100%;
-  position: absolute !important;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.25rem;
+  transform: none !important;
 }
 
 .tree-dropdown .dropdown-menu.show {
-  visibility: visible;
-  opacity: 1;
+  display: block;
+  z-index: 1050;
 }
 
 .tree-dropdown .dropdown-menu-tree {
   width: 100%;
+  max-height: 400px;
+  overflow-y: auto;
+  position: relative;
 }
 
 .tree-item {
   cursor: pointer;
   border: none;
   background: none;
-  padding: 0.5rem 1rem;
+  padding: 0.875rem 1rem;
   display: block;
   width: 100%;
   text-align: left;
+  font-size: 1rem;
+  border-radius: var(--radius-xs);
+  transition: all 0.2s ease;
 }
 
 .tree-item:hover {
-  background-color: #f8f9fa;
+  background-color: rgba(0, 102, 255, 0.05);
 }
 
 .tree-item.selected {
-  background-color: #e7f3ff;
-  color: #0066cc;
+  background-color: rgba(0, 102, 255, 0.1);
+  color: var(--pulse-blue);
+  font-weight: 600;
 }
 
 .tree-toggle {
   cursor: pointer;
-  padding: 2px;
-  border-radius: 3px;
-  min-width: 24px;
-  height: 24px;
+  padding: 4px;
+  border-radius: var(--radius-xs);
+  min-width: 28px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .tree-toggle:hover {
-  background-color: #e9ecef !important;
+  background-color: rgba(0, 102, 255, 0.1);
 }
 
 .tree-toggle:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.2);
+}
+
+.tree-toggle i {
+  font-size: 0.875rem;
+  color: var(--pulse-gray);
+  transition: transform 0.2s ease;
+}
+
+.tree-toggle.expanded i {
+  transform: rotate(90deg);
 }
 
 .tree-children {
@@ -1622,6 +1592,22 @@ html {
   display: inline-block;
 }
 
+.tree-item-text {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--pulse-dark);
+}
+
+.tree-item.selected .tree-item-text {
+  color: var(--pulse-blue);
+  font-weight: 600;
+}
+
+.tree-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
 /* Sessions table transitions */
 #sessionsTable tbody tr {
   transition: opacity 0.2s ease;
@@ -1630,9 +1616,10 @@ html {
 /* Ensure dropdown is visible on mobile */
 @media (max-width: 991.98px) {
   .tree-dropdown .dropdown-menu {
-    position: absolute !important;
-    transform: none !important;
-    inset: 0px auto auto 0px !important;
-    margin: 0 !important;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0.25rem;
   }
 }

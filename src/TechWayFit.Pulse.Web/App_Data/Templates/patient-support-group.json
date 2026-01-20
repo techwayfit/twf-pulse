@@ -1,0 +1,89 @@
+{
+  "name": "Patient Support Group",
+  "description": "Therapeutic session with anonymous sharing",
+  "category": "TeamBuilding",
+  "iconEmoji": "💚",
+  "config": {
+    "title": "Support Group Session",
+    "goal": "Create safe space for sharing and mutual support",
+    "context": "Therapeutic support group meeting",
+    "settings": {
+      "durationMinutes": 60,
+      "allowAnonymous": true,
+      "allowLateJoin": false,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Name or Nickname (Optional)",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "Poll",
+        "title": "How are you feeling today?",
+        "prompt": "Check in with your current emotional state",
+        "config": {
+          "options": [
+            "😊 Great",
+            "🙂 Good",
+            "😐 Okay",
+            "😔 Struggling",
+            "😞 Very difficult"
+          ]
+        }
+      },
+      {
+        "order": 2,
+        "type": "WordCloud",
+        "title": "Shared Experiences",
+        "prompt": "What word describes your journey this week?"
+      },
+      {
+        "order": 3,
+        "type": "GeneralFeedback",
+        "title": "Challenges & Victories",
+        "prompt": "Share your challenges or victories (anonymous)",
+        "config": {
+          "categories": [
+            "Physical Health",
+            "Mental Health",
+            "Relationships",
+            "Work/Life",
+            "Treatment Progress"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "type": "Quadrant",
+        "title": "Coping Strategies",
+        "prompt": "What coping strategies work for you?",
+        "config": {
+          "xAxisLabel": "Ease of Use",
+          "yAxisLabel": "Effectiveness",
+          "topLeftLabel": "Hard but Effective",
+          "topRightLabel": "Easy and Effective (Best!)",
+          "bottomLeftLabel": "Hard and Less Effective",
+          "bottomRightLabel": "Easy but Less Effective"
+        }
+      },
+      {
+        "order": 5,
+        "type": "Rating",
+        "title": "Support Level",
+        "prompt": "How supported do you feel by this group?",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Support Level"
+        }
+      }
+    ]
+  }
+}

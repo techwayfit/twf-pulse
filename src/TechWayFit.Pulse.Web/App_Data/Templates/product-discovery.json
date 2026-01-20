@@ -1,0 +1,97 @@
+{
+  "name": "Product Discovery",
+  "description": "Idea cloud + prioritization",
+  "category": "ProductDiscovery",
+  "iconEmoji": "💡",
+  "config": {
+    "title": "Product Discovery Session",
+    "goal": "Generate and prioritize product ideas",
+    "context": "Collaborative session for product ideation",
+    "settings": {
+      "durationMinutes": 120,
+      "allowAnonymous": false,
+      "allowLateJoin": true,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Product Manager",
+            "Designer",
+            "Engineer",
+            "Stakeholder",
+            "User Researcher"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Customer Needs",
+        "prompt": "What do our customers need most?"
+      },
+      {
+        "order": 2,
+        "type": "GeneralFeedback",
+        "title": "Feature Ideas",
+        "prompt": "Share your product ideas",
+        "config": {
+          "categories": [
+            "New Feature",
+            "Improvement",
+            "Integration",
+            "UX Enhancement"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "Quadrant",
+        "title": "Value vs Complexity",
+        "prompt": "Let's prioritize these ideas",
+        "config": {
+          "xAxisLabel": "Implementation Complexity",
+          "yAxisLabel": "User Value",
+          "topLeftLabel": "High Value, Low Complexity (Do First)",
+          "topRightLabel": "High Value, High Complexity (Plan)",
+          "bottomLeftLabel": "Low Value, Low Complexity (Maybe)",
+          "bottomRightLabel": "Low Value, High Complexity (Avoid)"
+        }
+      },
+      {
+        "order": 4,
+        "type": "Poll",
+        "title": "Top Priority Vote",
+        "prompt": "Which idea should we build first?",
+        "config": {
+          "options": [
+            "Idea 1",
+            "Idea 2",
+            "Idea 3",
+            "Idea 4",
+            "Idea 5"
+          ]
+        }
+      },
+      {
+        "order": 5,
+        "type": "GeneralFeedback",
+        "title": "Next Steps",
+        "prompt": "What are the action items?"
+      }
+    ]
+  }
+}

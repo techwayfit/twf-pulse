@@ -49,21 +49,7 @@
                 <div class="mb-3">
                     <h6 class="fw-semibold mb-3">Session Settings</h6>
                     
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="editMaxContribPerSession" class="form-label">Max Contributions Per Session</label>
-                            <input type="number" class="form-control" id="editMaxContribPerSession" 
-                                   @bind="editSettings.MaxContributionsPerParticipantPerSession" min="0">
-                            <div class="form-text">0 = unlimited</div>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="editMaxContribPerActivity" class="form-label">Max Contributions Per Activity</label>
-                            <input type="number" class="form-control" id="editMaxContribPerActivity" 
-                                   @bind="editSettings.MaxContributionsPerParticipantPerActivity" min="0">
-                            <div class="form-text">0 = unlimited</div>
-                        </div>
-                    </div>
+                    
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -142,8 +128,6 @@
         // Initialize settings from current session
         editSettings = new UpdateSessionSettingsRequest
         {
-            MaxContributionsPerParticipantPerSession = 0, // Default values
-            MaxContributionsPerParticipantPerActivity = 0,
             StrictCurrentActivityOnly = true,
             AllowAnonymous = false,
             TtlMinutes = 120

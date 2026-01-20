@@ -1,0 +1,5 @@
+# Ignore installed templates (processed templates)
+installed/
+
+# Keep this directory in git even if empty
+!.gitkeep

@@ -15,7 +15,7 @@
     <div class="d-flex align-items-center @indentClass">
         @if (Model.HasChildren)
         {
-            <button type="button" class="tree-toggle btn-link border-0 bg-transparent p-1 me-2" data-target="children-@Model.Value">
+            <button type="button" class="tree-toggle btn-link border-0 bg-transparent p-1 me-2" data-target="children-@Model.Value" data-bs-toggle="false">
                 <i class="fas fa-chevron-right" style="font-size: 0.75rem;"></i>
             </button>
         }

@@ -1,0 +1,98 @@
+{
+  "name": "Strategic Planning",
+  "description": "Executive strategy session with prioritization",
+  "category": "ProductDiscovery",
+  "iconEmoji": "🎯",
+  "config": {
+    "title": "Strategic Planning Workshop",
+    "goal": "Align on strategic priorities and action plans",
+    "context": "Executive team strategy session",
+    "settings": {
+      "durationMinutes": 180,
+      "allowAnonymous": false,
+      "allowLateJoin": false,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "select",
+          "required": true,
+          "options": [
+            "CEO/President",
+            "VP/Director",
+            "Manager",
+            "Team Lead",
+            "Contributor"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Vision Keywords",
+        "prompt": "What words best describe our vision for the next year?"
+      },
+      {
+        "order": 2,
+        "type": "GeneralFeedback",
+        "title": "Strategic Initiatives",
+        "prompt": "What strategic initiatives should we pursue?",
+        "config": {
+          "categories": [
+            "Growth",
+            "Innovation",
+            "Efficiency",
+            "Market Expansion",
+            "Culture"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "Quadrant",
+        "title": "Initiative Prioritization",
+        "prompt": "Map initiatives by impact and effort",
+        "config": {
+          "xAxisLabel": "Effort Required",
+          "yAxisLabel": "Strategic Impact",
+          "topLeftLabel": "High Impact, Low Effort (Quick Wins)",
+          "topRightLabel": "High Impact, High Effort (Long-term Bets)",
+          "bottomLeftLabel": "Low Impact, Low Effort (Nice to Have)",
+          "bottomRightLabel": "Low Impact, High Effort (Avoid)"
+        }
+      },
+      {
+        "order": 4,
+        "type": "Poll",
+        "title": "Top Priority Vote",
+        "prompt": "Which strategic direction should we prioritize?",
+        "config": {
+          "options": [
+            "Market expansion",
+            "Product innovation",
+            "Operational excellence",
+            "Talent development",
+            "Customer experience"
+          ]
+        }
+      },
+      {
+        "order": 5,
+        "type": "GeneralFeedback",
+        "title": "Action Plans",
+        "prompt": "What are the concrete next steps for each priority?"
+      }
+    ]
+  }
+}

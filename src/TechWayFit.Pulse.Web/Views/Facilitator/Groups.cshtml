@@ -271,10 +271,10 @@
                     location.reload();
                 } else {
                     const error = await response.json();
-                    alert('Error creating group: ' + error.message);
+                    alert('Error creating group: ' + (error.message || 'Unknown error'));
                 }
             } catch (err) {
-                alert('Error creating group: ' + err.message);
+                alert('Error creating group: ' + (err.message || 'Network error'));
             }
         });
 
@@ -313,10 +313,10 @@
                     location.reload();
                 } else {
                     const error = await response.json();
-                    alert('Error updating group: ' + error.message);
+                    alert('Error updating group: ' + (error.message || 'Unknown error'));
                 }
             } catch (err) {
-                alert('Error updating group: ' + err.message);
+                alert('Error updating group: ' + (err.message || 'Network error'));
             }
         });
 
@@ -336,10 +336,10 @@
                     location.reload();
                 } else {
                     const error = await response.json();
-                    alert('Error deleting group: ' + error.message);
+                    alert('Error deleting group: ' + (error.message || 'Unknown error'));
                 }
             } catch (err) {
-                alert('Error deleting group: ' + err.message);
+                alert('Error deleting group: ' + (err.message || 'Network error'));
             }
             return false;
         }

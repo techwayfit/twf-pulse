@@ -1,0 +1,91 @@
+{
+  "name": "Retro Sprint Review",
+  "description": "Quick pulse + themes + actions",
+  "category": "Retrospective",
+  "iconEmoji": "🔄",
+  "config": {
+    "title": "Sprint Retrospective",
+    "goal": "Reflect on the sprint and identify improvements",
+    "context": "Team retrospective for sprint review",
+    "settings": {
+      "durationMinutes": 60,
+      "allowAnonymous": false,
+      "allowLateJoin": true,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Developer",
+            "Designer",
+            "QA",
+            "Product Owner",
+            "Scrum Master"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Sprint in One Word",
+        "prompt": "Describe this sprint in one word"
+      },
+      {
+        "order": 2,
+        "type": "Poll",
+        "title": "Sprint Satisfaction",
+        "prompt": "How satisfied are you with this sprint?",
+        "config": {
+          "options": [
+            "😞 Very Unsatisfied",
+            "😐 Unsatisfied",
+            "🙂 Neutral",
+            "😊 Satisfied",
+            "🎉 Very Satisfied"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "Quadrant",
+        "title": "What Went Well / What Didn't",
+        "prompt": "Share your thoughts",
+        "config": {
+          "xAxisLabel": "Impact",
+          "yAxisLabel": "Control",
+          "topLeftLabel": "High Impact, Low Control",
+          "topRightLabel": "High Impact, High Control",
+          "bottomLeftLabel": "Low Impact, Low Control",
+          "bottomRightLabel": "Low Impact, High Control"
+        }
+      },
+      {
+        "order": 4,
+        "type": "GeneralFeedback",
+        "title": "Action Items",
+        "prompt": "What should we do differently next sprint?",
+        "config": {
+          "categories": [
+            "Process",
+            "Collaboration",
+            "Tools",
+            "Quality"
+          ]
+        }
+      }
+    ]
+  }
+}

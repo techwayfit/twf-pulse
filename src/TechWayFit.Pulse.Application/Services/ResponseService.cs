@@ -89,21 +89,24 @@ public sealed class ResponseService : IResponseService
 
         var counter = await _counters.GetAsync(participantId, sessionId, cancellationToken);
         var currentTotal = counter?.TotalContributions ?? 0;
-        if (currentTotal >= session.Settings.MaxContributionsPerParticipantPerSession)
+         
+        // Check activity-level limit (e.g., PollConfig.MaxResponsesPerParticipant)
+        if (activity.Config is not null)
         {
-            throw new InvalidOperationException("Participant has reached the session contribution limit.");
-        }
-
-        if (session.Settings.MaxContributionsPerParticipantPerActivity.HasValue)
-        {
-            var activityCount = await _responses.CountByActivityAndParticipantAsync(
-                activityId,
-                participantId,
-                cancellationToken);
-
-            if (activityCount >= session.Settings.MaxContributionsPerParticipantPerActivity.Value)
+            var config = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
+            if (config.TryGetProperty("MaxResponsesPerParticipant", out var maxResponsesProp) && 
+                maxResponsesProp.TryGetInt32(out var maxResponses) && 
+                maxResponses > 0)
             {
-                throw new InvalidOperationException($"You have reached the maximum of {session.Settings.MaxContributionsPerParticipantPerActivity.Value} contributions for this activity.");
+                var activityResponseCount = await _responses.CountByActivityAndParticipantAsync(
+                    activityId,
+                    participantId,
+                    cancellationToken);
+
+                if (activityResponseCount >= maxResponses)
+                {
+                    throw new InvalidOperationException($"You have already submitted {activityResponseCount} response(s) to this activity. Maximum allowed is {maxResponses}.");
+                }
             }
         }
 

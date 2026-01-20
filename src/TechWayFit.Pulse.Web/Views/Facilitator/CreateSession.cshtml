@@ -76,7 +76,16 @@
                                         items = treeItems,
                                         allowClear = true
                                     })
-                                    <div class="form-text">Optional: Organize your session into a group</div>
+                                    @if (!groups.Any())
+                                    {
+                                        <div class="form-text">
+                                            No groups yet. <a href="#" data-bs-toggle="modal" data-bs-target="#createGroupModal">Create your first group</a> to organize sessions.
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="form-text">Optional: Organize your session into a group</div>
+                                    }
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Max contributions per activity</label>
@@ -241,6 +250,38 @@
     </div>
 </main>
 
+<!-- Create Group Modal -->
+<div class="modal fade" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createGroupModalLabel">Create Session Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createGroupForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="groupName" class="form-label">Group Name *</label>
+                        <input type="text" class="form-control" id="groupName" name="name" required maxlength="200">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="groupDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="groupDescription" name="description" rows="2" maxlength="1000" placeholder="Optional description"></textarea>
+                    </div>
+                    
+                    <input type="hidden" name="level" value="1">
+                    <input type="hidden" name="parentGroupId" value="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Group</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <!-- External JavaScript -->
     <script src="~/js/create-session-form.js" asp-append-version="true"></script>
@@ -333,6 +374,39 @@
                     
                     e.preventDefault();
                     e.stopPropagation();
+                }
+            });
+        }
+
+        // Create group form handler
+        const createGroupForm = document.getElementById('createGroupForm');
+        if (createGroupForm) {
+            createGroupForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
+                
+                data.level = 1; // Always create top-level groups from this modal
+                data.parentGroupId = null;
+                
+                try {
+                    const response = await fetch('/api/session-groups', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        const error = await response.json();
+                        alert('Error creating group: ' + (error.message || 'Unknown error'));
+                    }
+                } catch (err) {
+                    alert('Error creating group: ' + err.message);
                 }
             });
         }

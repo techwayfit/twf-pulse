@@ -1,0 +1,123 @@
+{
+  "name": "Customer Feedback Session",
+  "description": "Focus group with feature preferences",
+  "category": "ProductDiscovery",
+  "iconEmoji": "💬",
+  "config": {
+    "title": "Customer Feedback & Discovery",
+    "goal": "Gather customer insights and feature preferences",
+    "context": "Customer focus group and feedback session",
+    "settings": {
+      "durationMinutes": 60,
+      "allowAnonymous": false,
+      "allowLateJoin": true,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "company",
+          "label": "Company",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "customerType",
+          "label": "Customer Type",
+          "type": "select",
+          "required": true,
+          "options": [
+            "New Customer",
+            "Active Customer",
+            "Power User",
+            "Evaluating",
+            "Former Customer"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Product Perception",
+        "prompt": "How would you describe our product in one word?"
+      },
+      {
+        "order": 2,
+        "type": "Poll",
+        "title": "Overall Satisfaction",
+        "prompt": "How satisfied are you with our product?",
+        "config": {
+          "options": [
+            "😞 Very dissatisfied",
+            "😐 Somewhat dissatisfied",
+            "🙂 Neutral",
+            "😊 Satisfied",
+            "🎉 Very satisfied"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "GeneralFeedback",
+        "title": "Feature Requests",
+        "prompt": "What features or improvements would you like to see?",
+        "config": {
+          "categories": [
+            "New Features",
+            "Usability",
+            "Performance",
+            "Integration",
+            "Support"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "type": "Poll",
+        "title": "Top Feature Priority",
+        "prompt": "Which feature would deliver the most value?",
+        "config": {
+          "options": [
+            "Feature A",
+            "Feature B",
+            "Feature C",
+            "Feature D",
+            "Feature E"
+          ]
+        }
+      },
+      {
+        "order": 5,
+        "type": "Quadrant",
+        "title": "Customer Needs Matrix",
+        "prompt": "Map your needs by importance and satisfaction",
+        "config": {
+          "xAxisLabel": "Current Satisfaction",
+          "yAxisLabel": "Importance",
+          "topLeftLabel": "Important but Unsatisfied (Fix First!)",
+          "topRightLabel": "Important and Satisfied (Keep It Up)",
+          "bottomLeftLabel": "Less Important, Unsatisfied (Low Priority)",
+          "bottomRightLabel": "Less Important, Satisfied (Good)"
+        }
+      },
+      {
+        "order": 6,
+        "type": "Rating",
+        "title": "Likelihood to Recommend",
+        "prompt": "How likely are you to recommend us? (NPS)",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Recommendation Likelihood"
+        }
+      }
+    ]
+  }
+}

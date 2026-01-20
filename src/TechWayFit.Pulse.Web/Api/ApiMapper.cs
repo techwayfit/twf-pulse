@@ -27,9 +27,7 @@ internal static class ApiMapper
 
     internal static SessionSettings ToDomain(SessionSettingsDto dto)
     {
-        return new SessionSettings(
-            dto.MaxContributionsPerParticipantPerSession,
-            dto.MaxContributionsPerParticipantPerActivity,
+        return new SessionSettings( 
             dto.StrictCurrentActivityOnly,
             dto.AllowAnonymous,
             dto.TtlMinutes);
