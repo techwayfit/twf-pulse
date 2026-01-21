@@ -35,6 +35,7 @@
         "type": "GeneralFeedback",
         "title": "Pain Point Collection",
         "prompt": "What operational challenges are you facing?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Infrastructure",
@@ -50,6 +51,7 @@
         "type": "Quadrant",
         "title": "Impact vs Effort Matrix",
         "prompt": "Plot pain points by impact and effort to fix",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Effort to Fix",
           "yAxisLabel": "Business Impact",
@@ -64,6 +66,7 @@
         "type": "FiveWhys",
         "title": "Root Cause Analysis",
         "prompt": "Let's dig into the top pain point",
+        "durationMinutes": 15,
         "config": {
           "maxDepth": 5
         }
@@ -72,7 +75,8 @@
         "order": 4,
         "type": "GeneralFeedback",
         "title": "Solutions & Next Steps",
-        "prompt": "What actions can we take?"
+        "prompt": "What actions can we take?",
+        "durationMinutes": 10
       }
     ]
   }

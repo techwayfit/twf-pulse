@@ -14,7 +14,8 @@ public sealed class Activity
         string? config,
         ActivityStatus status,
         DateTimeOffset? openedAt,
-        DateTimeOffset? closedAt)
+        DateTimeOffset? closedAt,
+        int? durationMinutes = null)
     {
         Id = id;
         SessionId = sessionId;
@@ -26,6 +27,7 @@ public sealed class Activity
         Status = status;
         OpenedAt = openedAt;
         ClosedAt = closedAt;
+        DurationMinutes = durationMinutes;
     }
 
     public Guid Id { get; }
@@ -48,6 +50,8 @@ public sealed class Activity
 
     public DateTimeOffset? ClosedAt { get; private set; }
 
+    public int? DurationMinutes { get; private set; }
+
     public void UpdateOrder(int order)
     {
         if (order <= 0)
@@ -58,11 +62,12 @@ public sealed class Activity
         Order = order;
     }
 
-    public void Update(string title, string? prompt, string? config)
+    public void Update(string title, string? prompt, string? config, int? durationMinutes = null)
     {
         Title = title.Trim();
         Prompt = prompt;
         Config = config;
+        DurationMinutes = durationMinutes;
     }
 
     public void Open(DateTimeOffset openedAt)

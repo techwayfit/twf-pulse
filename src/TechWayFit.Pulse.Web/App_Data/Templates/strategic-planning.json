@@ -41,13 +41,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Vision Keywords",
-        "prompt": "What words best describe our vision for the next year?"
+        "prompt": "What words best describe our vision for the next year?",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "GeneralFeedback",
         "title": "Strategic Initiatives",
         "prompt": "What strategic initiatives should we pursue?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Growth",
@@ -63,6 +65,7 @@
         "type": "Quadrant",
         "title": "Initiative Prioritization",
         "prompt": "Map initiatives by impact and effort",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Effort Required",
           "yAxisLabel": "Strategic Impact",
@@ -77,6 +80,7 @@
         "type": "Poll",
         "title": "Top Priority Vote",
         "prompt": "Which strategic direction should we prioritize?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Market expansion",
@@ -91,7 +95,8 @@
         "order": 5,
         "type": "GeneralFeedback",
         "title": "Action Plans",
-        "prompt": "What are the concrete next steps for each priority?"
+        "prompt": "What are the concrete next steps for each priority?",
+        "durationMinutes": 10
       }
     ]
   }

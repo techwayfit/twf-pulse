@@ -47,6 +47,7 @@
         "type": "Poll",
         "title": "Change Sentiment",
         "prompt": "How do you feel about the upcoming changes?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "😊 Very excited",
@@ -61,13 +62,15 @@
         "order": 2,
         "type": "WordCloud",
         "title": "Concerns & Hopes",
-        "prompt": "What concerns or hopes do you have about the change?"
+        "prompt": "What concerns or hopes do you have about the change?",
+        "durationMinutes": 5
       },
       {
         "order": 3,
         "type": "Quadrant",
         "title": "Impact vs Readiness Analysis",
         "prompt": "Map areas affected by impact and readiness",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Current Readiness",
           "yAxisLabel": "Change Impact",
@@ -82,6 +85,7 @@
         "type": "GeneralFeedback",
         "title": "Support Needed",
         "prompt": "What support do you need to successfully adapt?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Training",
@@ -97,6 +101,7 @@
         "type": "Poll",
         "title": "Biggest Barrier",
         "prompt": "What's the biggest barrier to successful change?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Lack of clarity",

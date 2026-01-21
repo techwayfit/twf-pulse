@@ -47,13 +47,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Quarterly Motivation",
-        "prompt": "What word describes your energy for this quarter?"
+        "prompt": "What word describes your energy for this quarter?",
+        "durationMinutes": 3
       },
       {
         "order": 2,
         "type": "Poll",
         "title": "Strategic Focus",
         "prompt": "What should be our primary sales focus this quarter?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "New customer acquisition",
@@ -69,6 +71,7 @@
         "type": "Quadrant",
         "title": "Account Prioritization",
         "prompt": "Map target accounts by deal size and win probability",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Win Probability",
           "yAxisLabel": "Deal Size",
@@ -83,6 +86,7 @@
         "type": "GeneralFeedback",
         "title": "Obstacles & Support Needed",
         "prompt": "What obstacles do you face and what support do you need?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Product Gaps",
@@ -98,6 +102,7 @@
         "type": "Rating",
         "title": "Confidence in Targets",
         "prompt": "How confident are you in hitting this quarter's targets?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 10,
           "ratingLabel": "Confidence Score"

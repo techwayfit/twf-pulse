@@ -290,6 +290,7 @@ public sealed class SessionsController : ControllerBase
                       request.Title,
             request.Prompt,
             request.Config,
+                request.DurationMinutes,
                 cancellationToken);
 
             await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
@@ -415,6 +416,7 @@ public sealed class SessionsController : ControllerBase
                 request.Title,
                 request.Prompt,
                 request.Config,
+                request.DurationMinutes,
                 cancellationToken);
 
             await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
@@ -545,6 +547,58 @@ public sealed class SessionsController : ControllerBase
             }
 
             await _activities.OpenAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
+            await _sessions.SetCurrentActivityAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
+            var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (updated is not null)
+            {
+                await PublishSessionStateChangedAsync(updated, cancellationToken);
+            }
+
+            var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+            var activity = agenda.FirstOrDefault(item => item.Id == activityId);
+            if (activity is not null)
+            {
+                await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+            }
+            return Ok(Wrap(new ActivityResponse(activityId)));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpPost("{code}/activities/{activityId:guid}/reopen")]
+    public async Task<ActionResult<ApiResponse<ActivityResponse>>> ReopenActivity(
+        string code,
+        Guid activityId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
+            }
+
+            var authError = RequireFacilitatorToken<ActivityResponse>(session);
+            if (authError is not null)
+            {
+                return authError;
+            }
+
+            // Close current activity if one is open
+            if (session.CurrentActivityId.HasValue && session.CurrentActivityId.Value != activityId)
+            {
+                await _activities.CloseAsync(session.Id, session.CurrentActivityId.Value, DateTimeOffset.UtcNow, cancellationToken);
+            }
+
+            await _activities.ReopenAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
             await _sessions.SetCurrentActivityAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
             var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
             if (updated is not null)

@@ -42,13 +42,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Innovation Themes",
-        "prompt": "What innovation themes excite you most?"
+        "prompt": "What innovation themes excite you most?",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "GeneralFeedback",
         "title": "Idea Collection",
         "prompt": "Share your innovative ideas",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "New Product",
@@ -64,6 +66,7 @@
         "type": "Poll",
         "title": "Most Exciting Ideas",
         "prompt": "Vote for the most promising ideas",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Idea 1",
@@ -79,6 +82,7 @@
         "type": "Quadrant",
         "title": "Feasibility vs Innovation",
         "prompt": "Evaluate ideas on feasibility and innovation potential",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Feasibility",
           "yAxisLabel": "Innovation Potential",
@@ -92,7 +96,8 @@
         "order": 5,
         "type": "GeneralFeedback",
         "title": "Implementation Plans",
-        "prompt": "How can we bring the best ideas to life?"
+        "prompt": "How can we bring the best ideas to life?",
+        "durationMinutes": 10
       }
     ]
   }

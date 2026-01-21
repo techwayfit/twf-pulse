@@ -55,6 +55,7 @@
         "type": "GeneralFeedback",
         "title": "Requirements Gathering",
         "prompt": "What are the must-have requirements for this solution?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Core Features",
@@ -71,6 +72,7 @@
         "type": "Poll",
         "title": "Initial Vendor Preference",
         "prompt": "Which vendor or solution option do you prefer?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Vendor A",
@@ -86,6 +88,7 @@
         "type": "Quadrant",
         "title": "Solution Comparison Matrix",
         "prompt": "Map vendors by feature completeness and total cost of ownership",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Total Cost of Ownership",
           "yAxisLabel": "Feature Completeness",
@@ -100,6 +103,7 @@
         "type": "Rating",
         "title": "Vendor Capabilities Assessment",
         "prompt": "Rate the leading vendor on key capabilities",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Overall Capability"
@@ -110,6 +114,7 @@
         "type": "GeneralFeedback",
         "title": "Implementation Risks",
         "prompt": "What risks or concerns do you have about implementation?",
+        "durationMinutes": 8,
         "config": {
           "categories": [
             "Technical Integration",
@@ -125,6 +130,7 @@
         "type": "Poll",
         "title": "Final Recommendation",
         "prompt": "Based on the evaluation, what is your recommendation?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Proceed with top vendor",

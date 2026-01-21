@@ -45,13 +45,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Company Culture",
-        "prompt": "Describe our company culture in one word"
+        "prompt": "Describe our company culture in one word",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "Poll",
         "title": "Strategic Priority",
         "prompt": "What should be our top strategic priority this quarter?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Revenue growth",
@@ -66,13 +68,15 @@
         "order": 3,
         "type": "QnA",
         "title": "Ask Leadership Anything",
-        "prompt": "Submit your questions for the leadership team (anonymous option available)"
+        "prompt": "Submit your questions for the leadership team (anonymous option available)",
+        "durationMinutes": 10
       },
       {
         "order": 4,
         "type": "GeneralFeedback",
         "title": "Ideas & Suggestions",
         "prompt": "Share your ideas for improving the company",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Product/Innovation",
@@ -89,6 +93,7 @@
         "type": "Rating",
         "title": "Leadership Communication",
         "prompt": "How effective is leadership communication?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Communication Effectiveness"
@@ -99,6 +104,7 @@
         "type": "Poll",
         "title": "Employee Sentiment",
         "prompt": "How do you feel about the company's direction?",
+        "durationMinutes": 3,
         "config": {
           "options": [
             "Very optimistic",

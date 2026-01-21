@@ -47,13 +47,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Budget Priorities",
-        "prompt": "What should be our top budget priority this period?"
+        "prompt": "What should be our top budget priority this period?",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "GeneralFeedback",
         "title": "Funding Requests",
         "prompt": "Submit your funding requests and justification",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Headcount",
@@ -70,6 +72,7 @@
         "type": "Poll",
         "title": "Allocation Approach",
         "prompt": "What approach should we use for budget allocation?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Equal distribution across teams",
@@ -85,6 +88,7 @@
         "type": "Quadrant",
         "title": "Cost vs Business Value",
         "prompt": "Map initiatives by total cost and business value",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Total Cost",
           "yAxisLabel": "Business Value",
@@ -98,13 +102,15 @@
         "order": 5,
         "type": "GeneralFeedback",
         "title": "Budget Constraints & Risks",
-        "prompt": "What constraints or risks should we consider?"
+        "prompt": "What constraints or risks should we consider?",
+        "durationMinutes": 10
       },
       {
         "order": 6,
         "type": "Rating",
         "title": "Stakeholder Confidence",
         "prompt": "How confident are you in this budget plan?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Confidence Level"

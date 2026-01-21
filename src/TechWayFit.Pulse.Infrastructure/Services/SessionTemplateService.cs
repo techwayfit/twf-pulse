@@ -252,6 +252,7 @@ public sealed class SessionTemplateService : ISessionTemplateService
                 activityConfig.Title,
                 activityConfig.Prompt,
                 activityConfigJson,
+                activityConfig.DurationMinutes,
                 cancellationToken);
         }
 

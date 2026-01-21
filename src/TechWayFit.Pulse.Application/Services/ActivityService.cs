@@ -25,6 +25,7 @@ public sealed class ActivityService : IActivityService
         string title,
         string? prompt,
         string? config,
+        int? durationMinutes = null,
         CancellationToken cancellationToken = default)
     {
         if (sessionId == Guid.Empty)
@@ -52,6 +53,11 @@ public sealed class ActivityService : IActivityService
             throw new ArgumentException($"Prompt must be <= {PromptMaxLength} characters.", nameof(prompt));
         }
 
+        if (durationMinutes.HasValue && durationMinutes.Value <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(durationMinutes), "Duration must be greater than zero.");
+        }
+
         var session = await _sessions.GetByIdAsync(sessionId, cancellationToken);
         if (session is null)
         {
@@ -68,7 +74,8 @@ public sealed class ActivityService : IActivityService
             config,
             ActivityStatus.Pending,
             null,
-            null);
+            null,
+            durationMinutes);
 
         await _activities.AddAsync(activity, cancellationToken);
         return activity;
@@ -85,6 +92,7 @@ public sealed class ActivityService : IActivityService
         string title,
         string? prompt,
         string? config,
+        int? durationMinutes = null,
         CancellationToken cancellationToken = default)
     {
         if (sessionId == Guid.Empty)
@@ -107,6 +115,11 @@ public sealed class ActivityService : IActivityService
             throw new ArgumentException($"Prompt must be <= {PromptMaxLength} characters.", nameof(prompt));
         }
 
+        if (durationMinutes.HasValue && durationMinutes.Value <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(durationMinutes), "Duration must be greater than zero.");
+        }
+
         var activity = await _activities.GetByIdAsync(activityId, cancellationToken);
         if (activity is null)
         {
@@ -118,7 +131,7 @@ public sealed class ActivityService : IActivityService
             throw new InvalidOperationException("Activity does not belong to the session.");
         }
 
-        activity.Update(title, prompt, config);
+        activity.Update(title, prompt, config, durationMinutes);
         await _activities.UpdateAsync(activity, cancellationToken);
         return activity;
     }
@@ -234,6 +247,37 @@ public sealed class ActivityService : IActivityService
         if (activity.Status == ActivityStatus.Open)
         {
             return;
+        }
+
+        activity.Open(openedAt);
+        await _activities.UpdateAsync(activity, cancellationToken);
+    }
+
+    public async Task ReopenAsync(
+        Guid sessionId,
+        Guid activityId,
+        DateTimeOffset openedAt,
+        CancellationToken cancellationToken = default)
+    {
+        if (sessionId == Guid.Empty)
+        {
+            throw new ArgumentException("Session id is required.", nameof(sessionId));
+        }
+
+        var activity = await _activities.GetByIdAsync(activityId, cancellationToken);
+        if (activity is null)
+        {
+            throw new InvalidOperationException("Activity not found.");
+        }
+
+        if (activity.SessionId != sessionId)
+        {
+            throw new InvalidOperationException("Activity does not belong to the session.");
+        }
+
+        if (activity.Status != ActivityStatus.Closed)
+        {
+            throw new InvalidOperationException("Only closed activities can be reopened.");
         }
 
         activity.Open(openedAt);

@@ -92,6 +92,12 @@
 
                     <!-- Settings -->
                     <div class="mb-3">
+                        <label class="form-label">Expected Duration (minutes)</label>
+                        <input type="number" class="form-control" @bind="durationMinutes" min="1" max="120" placeholder="e.g., 5" />
+                        <small class="text-muted">Optional: How long do you expect this activity to take? Timer will start when activity opens.</small>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Max Responses Per Participant</label>
                         <input type="number" class="form-control" @bind="maxResponsesPerParticipant" min="1" max="100" />
                         <small class="text-muted">How many times can each participant respond to this poll</small>
@@ -161,6 +167,7 @@
     private int minSelections = 1;
     private int maxSelections = 3;
     private int maxResponsesPerParticipant = 1;
+    private int? durationMinutes = null;
 
     private List<PollOptionInput> pollOptions = new()
     {
@@ -255,7 +262,8 @@
                 order,
                 title.Trim(),
                 prompt?.Trim(),
-                JsonSerializer.Serialize(config)
+                JsonSerializer.Serialize(config),
+                durationMinutes
             );
 
             // Get facilitator token from token service

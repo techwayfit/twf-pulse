@@ -29,6 +29,7 @@
         "type": "Poll",
         "title": "How are you feeling today?",
         "prompt": "Check in with your current emotional state",
+        "durationMinutes": 3,
         "config": {
           "options": [
             "😊 Great",
@@ -43,13 +44,15 @@
         "order": 2,
         "type": "WordCloud",
         "title": "Shared Experiences",
-        "prompt": "What word describes your journey this week?"
+        "prompt": "What word describes your journey this week?",
+        "durationMinutes": 5
       },
       {
         "order": 3,
         "type": "GeneralFeedback",
         "title": "Challenges & Victories",
         "prompt": "Share your challenges or victories (anonymous)",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Physical Health",
@@ -65,6 +68,7 @@
         "type": "Quadrant",
         "title": "Coping Strategies",
         "prompt": "What coping strategies work for you?",
+        "durationMinutes": 12,
         "config": {
           "xAxisLabel": "Ease of Use",
           "yAxisLabel": "Effectiveness",
@@ -79,6 +83,7 @@
         "type": "Rating",
         "title": "Support Level",
         "prompt": "How supported do you feel by this group?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Support Level"

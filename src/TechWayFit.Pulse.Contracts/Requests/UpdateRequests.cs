@@ -26,4 +26,6 @@ public sealed class UpdateActivityRequest
     public string? Prompt { get; set; }
 
     public string? Config { get; set; }
+
+    public int? DurationMinutes { get; set; }
 }

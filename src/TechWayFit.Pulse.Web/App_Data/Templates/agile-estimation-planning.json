@@ -41,13 +41,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Sprint Goals",
-        "prompt": "What should be the theme or goal for this sprint?"
+        "prompt": "What should be the theme or goal for this sprint?",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "Poll",
         "title": "Story Point Estimation",
         "prompt": "Vote on story points for user story (use Fibonacci sequence)",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "1 - Trivial",
@@ -65,6 +67,7 @@
         "type": "GeneralFeedback",
         "title": "Technical Risks & Dependencies",
         "prompt": "What technical risks or dependencies should we consider?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Technical Complexity",
@@ -80,6 +83,7 @@
         "type": "Quadrant",
         "title": "Backlog Prioritization",
         "prompt": "Map user stories by business value and effort",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Development Effort",
           "yAxisLabel": "Business Value",
@@ -94,6 +98,7 @@
         "type": "Rating",
         "title": "Team Confidence",
         "prompt": "How confident is the team in completing the sprint commitment?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Confidence Level"

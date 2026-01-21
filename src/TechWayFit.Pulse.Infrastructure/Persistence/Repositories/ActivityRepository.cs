@@ -42,7 +42,24 @@ public sealed class ActivityRepository : IActivityRepository
 
     public async Task UpdateAsync(Activity activity, CancellationToken cancellationToken = default)
     {
-        _dbContext.Activities.Update(activity.ToRecord());
+        var record = await _dbContext.Activities.FindAsync(new object[] { activity.Id }, cancellationToken);
+        if (record is null)
+        {
+            throw new InvalidOperationException($"Activity with ID {activity.Id} not found.");
+        }
+
+        // Update properties
+        record.SessionId = activity.SessionId;
+        record.Order = activity.Order;
+        record.Type = (int)activity.Type;
+        record.Title = activity.Title;
+        record.Prompt = activity.Prompt;
+        record.ConfigJson = activity.Config;
+        record.Status = (int)activity.Status;
+        record.OpenedAt = activity.OpenedAt;
+        record.ClosedAt = activity.ClosedAt;
+        record.DurationMinutes = activity.DurationMinutes;
+
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 

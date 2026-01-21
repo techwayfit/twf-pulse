@@ -21,4 +21,6 @@ public sealed class ActivityRecord
     public DateTimeOffset? OpenedAt { get; set; }
 
     public DateTimeOffset? ClosedAt { get; set; }
+
+    public int? DurationMinutes { get; set; }
 }

@@ -41,13 +41,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Fun Facts",
-        "prompt": "Share something interesting or unique about yourself"
+        "prompt": "Share something interesting or unique about yourself",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "Poll",
         "title": "Team Vibe Check",
         "prompt": "How's everyone feeling today?",
+        "durationMinutes": 3,
         "config": {
           "options": [
             "🔥 Energized!",
@@ -63,6 +65,7 @@
         "type": "Poll",
         "title": "Working Style",
         "prompt": "What's your preferred working style?",
+        "durationMinutes": 3,
         "config": {
           "options": [
             "Early bird (morning)",
@@ -78,6 +81,7 @@
         "type": "Quadrant",
         "title": "Team Strengths",
         "prompt": "Map team skills by expertise and interest",
+        "durationMinutes": 12,
         "config": {
           "xAxisLabel": "Current Skill Level",
           "yAxisLabel": "Interest to Develop",
@@ -92,6 +96,7 @@
         "type": "GeneralFeedback",
         "title": "Team Improvement Ideas",
         "prompt": "What would make our team even better?",
+        "durationMinutes": 8,
         "config": {
           "categories": [
             "Communication",
@@ -107,6 +112,7 @@
         "type": "Rating",
         "title": "Team Connection",
         "prompt": "How connected do you feel to the team?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Connection Level"

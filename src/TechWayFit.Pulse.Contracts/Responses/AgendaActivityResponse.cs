@@ -11,4 +11,5 @@ public sealed record AgendaActivityResponse(
     string? Config,
     ActivityStatus Status,
     DateTimeOffset? OpenedAt,
-    DateTimeOffset? ClosedAt);
+    DateTimeOffset? ClosedAt,
+    int? DurationMinutes);

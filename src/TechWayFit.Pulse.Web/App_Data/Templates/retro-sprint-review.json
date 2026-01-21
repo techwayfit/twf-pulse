@@ -41,13 +41,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Sprint in One Word",
-        "prompt": "Describe this sprint in one word"
+        "prompt": "Describe this sprint in one word",
+        "durationMinutes": 3
       },
       {
         "order": 2,
         "type": "Poll",
         "title": "Sprint Satisfaction",
         "prompt": "How satisfied are you with this sprint?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "😞 Very Unsatisfied",
@@ -63,6 +65,7 @@
         "type": "Quadrant",
         "title": "What Went Well / What Didn't",
         "prompt": "Share your thoughts",
+        "durationMinutes": 12,
         "config": {
           "xAxisLabel": "Impact",
           "yAxisLabel": "Control",
@@ -77,6 +80,7 @@
         "type": "GeneralFeedback",
         "title": "Action Items",
         "prompt": "What should we do differently next sprint?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Process",

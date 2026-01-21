@@ -47,13 +47,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Team Strengths",
-        "prompt": "What are the key strengths you see across the team?"
+        "prompt": "What are the key strengths you see across the team?",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "Quadrant",
         "title": "Talent Mapping (9-Box)",
         "prompt": "Map team members by performance and potential (anonymous)",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Current Performance",
           "yAxisLabel": "Future Potential",
@@ -68,6 +70,7 @@
         "type": "GeneralFeedback",
         "title": "Development Needs",
         "prompt": "What development areas should we focus on?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Leadership Skills",
@@ -84,6 +87,7 @@
         "type": "Poll",
         "title": "Rating Distribution Check",
         "prompt": "Does our rating distribution align with organizational guidelines?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Yes, well distributed",
@@ -98,13 +102,15 @@
         "order": 5,
         "type": "GeneralFeedback",
         "title": "Promotion & Succession Planning",
-        "prompt": "Who are the promotion candidates and succession plan considerations?"
+        "prompt": "Who are the promotion candidates and succession plan considerations?",
+        "durationMinutes": 10
       },
       {
         "order": 6,
         "type": "Rating",
         "title": "Calibration Fairness",
         "prompt": "How confident are you that this calibration is fair and unbiased?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Fairness Confidence"

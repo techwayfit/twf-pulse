@@ -34,13 +34,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Community Concerns",
-        "prompt": "What issues matter most to you in our community?"
+        "prompt": "What issues matter most to you in our community?",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "Poll",
         "title": "Top Priority Issue",
         "prompt": "Which issue should we address first?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Infrastructure",
@@ -56,6 +58,7 @@
         "type": "GeneralFeedback",
         "title": "Proposed Solutions",
         "prompt": "What solutions do you suggest for these issues?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Infrastructure",
@@ -71,6 +74,7 @@
         "type": "Quadrant",
         "title": "Project Prioritization",
         "prompt": "Map community projects by urgency and impact",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Urgency",
           "yAxisLabel": "Community Impact",
@@ -84,13 +88,15 @@
         "order": 5,
         "type": "QnA",
         "title": "Questions for Officials",
-        "prompt": "Ask questions or provide feedback to community leaders"
+        "prompt": "Ask questions or provide feedback to community leaders",
+        "durationMinutes": 10
       },
       {
         "order": 6,
         "type": "Rating",
         "title": "Meeting Effectiveness",
         "prompt": "How effective was this town hall?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Effectiveness"

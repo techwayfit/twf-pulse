@@ -41,13 +41,15 @@
         "order": 1,
         "type": "QnA",
         "title": "Incident Timeline",
-        "prompt": "Share key events during the incident"
+        "prompt": "Share key events during the incident",
+        "durationMinutes": 8
       },
       {
         "order": 2,
         "type": "FiveWhys",
         "title": "Root Cause Analysis",
         "prompt": "Why did this incident occur?",
+        "durationMinutes": 15,
         "config": {
           "maxDepth": 5
         }
@@ -57,6 +59,7 @@
         "type": "GeneralFeedback",
         "title": "Contributing Factors",
         "prompt": "What other factors contributed?",
+        "durationMinutes": 8,
         "config": {
           "categories": [
             "Technical",
@@ -72,6 +75,7 @@
         "type": "Quadrant",
         "title": "Remediation Prioritization",
         "prompt": "Prioritize fixes and improvements",
+        "durationMinutes": 12,
         "config": {
           "xAxisLabel": "Effort",
           "yAxisLabel": "Impact on Prevention",
@@ -85,13 +89,15 @@
         "order": 5,
         "type": "GeneralFeedback",
         "title": "Action Items",
-        "prompt": "What are the concrete next steps?"
+        "prompt": "What are the concrete next steps?",
+        "durationMinutes": 8
       },
       {
         "order": 6,
         "type": "Rating",
         "title": "Incident Response Rating",
         "prompt": "How well did we respond?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Response Quality"

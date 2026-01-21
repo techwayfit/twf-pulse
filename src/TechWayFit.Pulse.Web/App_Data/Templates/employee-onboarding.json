@@ -40,13 +40,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "First Impressions",
-        "prompt": "Describe your first impression of the company in one word"
+        "prompt": "Describe your first impression of the company in one word",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "Poll",
         "title": "Learning Preference",
         "prompt": "How do you prefer to learn new things?",
+        "durationMinutes": 3,
         "config": {
           "options": [
             "Hands-on practice",
@@ -62,6 +64,7 @@
         "type": "Quadrant",
         "title": "Skills Assessment",
         "prompt": "Plot your skills based on confidence and experience",
+        "durationMinutes": 12,
         "config": {
           "xAxisLabel": "Experience Level",
           "yAxisLabel": "Confidence",
@@ -76,6 +79,7 @@
         "type": "GeneralFeedback",
         "title": "Questions & Expectations",
         "prompt": "What questions or expectations do you have?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Career Growth",

@@ -35,6 +35,7 @@
         "type": "Poll",
         "title": "Prior Knowledge Check",
         "prompt": "How familiar are you with today's topic?",
+        "durationMinutes": 3,
         "config": {
           "options": [
             "Never heard of it",
@@ -49,13 +50,15 @@
         "order": 2,
         "type": "WordCloud",
         "title": "Topic Associations",
-        "prompt": "What words or concepts come to mind with this topic?"
+        "prompt": "What words or concepts come to mind with this topic?",
+        "durationMinutes": 5
       },
       {
         "order": 3,
         "type": "Poll",
         "title": "Comprehension Check",
         "prompt": "Which statement best describes the key concept?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Statement A",
@@ -71,6 +74,7 @@
         "type": "Quadrant",
         "title": "Concept Mapping",
         "prompt": "Map related concepts by familiarity and importance",
+        "durationMinutes": 12,
         "config": {
           "xAxisLabel": "Your Familiarity",
           "yAxisLabel": "Importance to Course",
@@ -84,13 +88,15 @@
         "order": 5,
         "type": "QnA",
         "title": "Questions & Discussion",
-        "prompt": "Ask questions or share insights about the lecture"
+        "prompt": "Ask questions or share insights about the lecture",
+        "durationMinutes": 10
       },
       {
         "order": 6,
         "type": "Rating",
         "title": "Lecture Feedback",
         "prompt": "How clear was today's lecture?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Clarity"

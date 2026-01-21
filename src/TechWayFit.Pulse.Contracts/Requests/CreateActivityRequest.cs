@@ -7,5 +7,6 @@ public sealed record CreateActivityRequest(
     int Order,
     string Title,
     string? Prompt,
-    string Config
+    string Config,
+    int? DurationMinutes = null
 );

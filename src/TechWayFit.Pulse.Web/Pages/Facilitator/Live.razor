@@ -1,6 +1,7 @@
 @page "/facilitator/live"
 @using TechWayFit.Pulse.Web.Services
 @using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Enums
 @using Microsoft.Extensions.Logging
 @using System.Net.Http
@@ -199,6 +200,39 @@ else if (session != null)
                     </div>
                 </div>
             </div>
+
+            <!-- Set Timer Modal -->
+            <div class="modal fade" id="setTimerModal" tabindex="-1" aria-labelledby="setTimerModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="setTimerModalLabel">
+                                <i class="fas fa-clock me-2"></i>Set Activity Timer
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-muted mb-3">How many minutes for this activity?</p>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Duration (minutes)</label>
+                                <input type="number" 
+                                       class="form-control form-control-lg text-center" 
+                                       @bind="timerDurationInput" 
+                                       min="1" 
+                                       max="120" 
+                                       placeholder="e.g., 5" />
+                                <small class="text-muted">Timer will start immediately</small>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-lg btn-primary" @onclick="() => SetActivityTimer(timerDurationInput)" disabled="@(timerDurationInput <= 0)">
+                                    <i class="fas fa-play me-2"></i>Start Timer
+                                </button>
+                                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
                 
              
                  
@@ -218,7 +252,32 @@ else if (session != null)
                                 </h5>
                                 <p class="text-muted small mb-0">@(currentActivity.Prompt ?? "No prompt")</p>
                             </div>
-                            <span class="badge bg-light text-dark">#@currentActivity.Order</span>
+                            <div class="d-flex gap-2 align-items-center">
+                                @if (currentActivity.DurationMinutes.HasValue && currentActivity.OpenedAt.HasValue)
+                                {
+                                    <div id="activity-timer" 
+                                         data-duration="@currentActivity.DurationMinutes.Value" 
+                                         data-opened-at="@currentActivity.OpenedAt.Value.ToString("o")"
+                                         class="timer-display">
+                                        <i class="fas fa-clock me-1"></i>
+                                        <span class="timer-text">--:--</span>
+                                    </div>
+                                }
+                                else if (currentActivity.DurationMinutes.HasValue)
+                                {
+                                    <div class="text-muted small">
+                                        <i class="fas fa-clock me-1"></i>
+                                        <span>Duration: @currentActivity.DurationMinutes.Value min</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-outline-secondary" @onclick="ShowSetTimerModal">
+                                        <i class="fas fa-clock me-1"></i>Set Timer
+                                    </button>
+                                }
+                                <span class="badge bg-light text-dark">#@currentActivity.Order</span>
+                            </div>
                         </div>
 
                         <!-- Live Activity Dashboard -->
@@ -482,6 +541,7 @@ else if (session != null)
     private bool isGeneratingQR = false;
     private string errorMessage = string.Empty;
     private HubConnection? hubConnection;
+    private int timerDurationInput = 5;
 
     // Modal component references
     private EditSessionModal? editSessionModal;
@@ -499,6 +559,82 @@ else if (session != null)
         {
             // Set page title
             await JS.InvokeVoidAsync("eval", "document.title = 'TechWayFit Pulse — Live Session'");
+            
+            // Initialize activity timer
+            await JS.InvokeVoidAsync("eval", @"
+                window.initActivityTimer = function() {
+                    let timerInterval = null;
+
+                    function startActivityTimer() {
+                        console.log('startActivityTimer called');
+                        const timerEl = document.getElementById('activity-timer');
+                        console.log('Timer element:', timerEl);
+                        
+                        if (!timerEl) {
+                            console.log('No timer element found');
+                            return;
+                        }
+
+                        const durationMinutes = parseInt(timerEl.dataset.duration);
+                        const openedAt = new Date(timerEl.dataset.openedAt);
+                        const timerText = timerEl.querySelector('.timer-text');
+
+                        console.log('Duration:', durationMinutes, 'OpenedAt:', openedAt, 'TimerText:', timerText);
+
+                        if (timerInterval) clearInterval(timerInterval);
+
+                        function updateTimer() {
+                            const now = new Date();
+                            const elapsedMs = now - openedAt;
+                            const elapsedSeconds = Math.floor(elapsedMs / 1000);
+                            const totalSeconds = durationMinutes * 60;
+                            const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+
+                            const minutes = Math.floor(remainingSeconds / 60);
+                            const seconds = remainingSeconds % 60;
+
+                            timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                            // Visual feedback
+                            if (remainingSeconds === 0) {
+                                timerEl.classList.add('timer-expired');
+                                timerText.textContent = 'Times Up!';
+                            } else if (remainingSeconds <= 60) {
+                                timerEl.classList.add('timer-warning');
+                                timerEl.classList.remove('timer-expired');
+                            } else {
+                                timerEl.classList.remove('timer-warning', 'timer-expired');
+                            }
+                        }
+
+                        updateTimer();
+                        timerInterval = setInterval(updateTimer, 1000);
+                    }
+
+                    // Auto-start timer
+                    startActivityTimer();
+
+                    // Restart timer on Blazor re-render (only when element is added)
+                    let lastTimerElement = document.getElementById('activity-timer');
+                    const observer = new MutationObserver(() => {
+                        const currentTimerElement = document.getElementById('activity-timer');
+                        if (currentTimerElement && !lastTimerElement) {
+                            startActivityTimer();
+                        } else if (!currentTimerElement && timerInterval) {
+                            clearInterval(timerInterval);
+                            timerInterval = null;
+                        }
+                        lastTimerElement = currentTimerElement;
+                    });
+
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true
+                    });
+                };
+                
+                window.initActivityTimer();
+            ");
         }
     }
 
@@ -565,6 +701,9 @@ else if (session != null)
             // Load activities
             activities = (await ApiService.GetAgendaAsync(sessionCode)).ToList();
             currentActivity = activities.FirstOrDefault(a => a.Status == Contracts.Enums.ActivityStatus.Open);
+            
+            Logger.LogInformation("LoadSession completed - currentActivity: {Title}, DurationMinutes: {Duration}, OpenedAt: {OpenedAt}",
+                currentActivity?.Title, currentActivity?.DurationMinutes, currentActivity?.OpenedAt);
 
             // Load initial participant count from API
             try
@@ -924,12 +1063,36 @@ else if (session != null)
 
     private async Task ReopenActivity(Guid activityId)
     {
-        // Can only reopen if no other activity is currently open
-        if (currentActivity != null)
+        // Cannot reopen if session has ended
+        if (session?.Status == SessionStatus.Ended || session?.Status == SessionStatus.Expired)
         {
-            errorMessage = "Close the current activity before reopening another.";
+            errorMessage = "Cannot reopen activities. The session has ended.";
             StateHasChanged();
             return;
+        }
+
+        // Close current activity if one is open
+        if (currentActivity != null)
+        {
+            try
+            {
+                var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+                if (string.IsNullOrEmpty(token))
+                {
+                    errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                    StateHasChanged();
+                    return;
+                }
+                
+                await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Failed to close current activity: {ex.Message}";
+                Logger.LogError(ex, "Failed to close current activity {ActivityId} before reopening", currentActivity.ActivityId);
+                StateHasChanged();
+                return;
+            }
         }
 
         try
@@ -945,7 +1108,7 @@ else if (session != null)
                 return;
             }
 
-            await ApiService.OpenActivityAsync(sessionCode, activityId, token);
+            await ApiService.ReopenActivityAsync(sessionCode, activityId, token);
             
             // Reload session to get updated activity status
             await LoadSession();
@@ -1088,6 +1251,97 @@ else if (session != null)
         await LoadSession();
     }
 
+    private async Task ShowSetTimerModal()
+    {
+        // Reset input to current duration or default
+        timerDurationInput = currentActivity?.DurationMinutes ?? 5;
+        StateHasChanged();
+        
+        // Show modal using Bootstrap
+        await JS.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('setTimerModal')).show()");
+    }
+
+    private async Task SetActivityTimer(int minutes)
+    {
+        if (currentActivity == null) return;
+
+        try
+        {
+            isPerformingAction = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
+            }
+
+            // Update the activity with the new duration
+            var updateRequest = new UpdateActivityRequest
+            {
+                Title = currentActivity.Title,
+                Prompt = currentActivity.Prompt,
+                Config = currentActivity.Config,
+                DurationMinutes = minutes
+            };
+
+            await ApiService.UpdateActivityAsync(sessionCode, currentActivity.ActivityId, updateRequest, token);
+
+            // Give the database a moment to commit the transaction
+            await Task.Delay(100);
+
+            // Reload session to get updated activity
+            await LoadSession();
+
+            Logger.LogInformation("After LoadSession - currentActivity.DurationMinutes: {Duration}, OpenedAt: {OpenedAt}", 
+                currentActivity?.DurationMinutes, currentActivity?.OpenedAt);
+
+            // Close modal and remove backdrop
+            await JS.InvokeVoidAsync("eval", @"
+                var modalEl = document.getElementById('setTimerModal');
+                var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.hide();
+                // Remove backdrop manually
+                setTimeout(() => {
+                    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('padding-right');
+                }, 200);
+            ");
+
+            // Wait for modal to close and Blazor to re-render, then start timer
+            await Task.Delay(300);
+            StateHasChanged();
+            await Task.Delay(100);
+            await JS.InvokeVoidAsync("eval", @"
+                console.log('Attempting to start timer...');
+                var timerEl = document.getElementById('activity-timer');
+                console.log('Timer element:', timerEl);
+                if (timerEl) {
+                    console.log('Timer data - duration:', timerEl.dataset.duration, 'openedAt:', timerEl.dataset.openedAt);
+                }
+                if (typeof startActivityTimer === 'function') {
+                    startActivityTimer();
+                } else {
+                    console.log('startActivityTimer function not found');
+                }
+            ");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to set timer: {ex.Message}";
+            Logger.LogError(ex, "Failed to set timer for activity {ActivityId}", currentActivity.ActivityId);
+        }
+        finally
+        {
+            isPerformingAction = false;
+            StateHasChanged();
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (hubConnection is not null)
@@ -1104,3 +1358,113 @@ else if (session != null)
         }
     }
 }
+
+<style>
+    .timer-display {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        min-width: 100px;
+        text-align: center;
+    }
+
+    .timer-display.timer-warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    .timer-display.timer-expired {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        animation: pulse-glow 1s ease-in-out infinite;
+    }
+
+    @@keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3); }
+        50% { box-shadow: 0 4px 16px rgba(245, 87, 108, 0.6); }
+    }
+
+    .timer-text {
+        font-variant-numeric: tabular-nums;
+    }
+</style>
+
+<script>
+    let timerInterval = null;
+
+    function startActivityTimer() {
+        console.log('startActivityTimer called');
+        const timerEl = document.getElementById('activity-timer');
+        console.log('Timer element:', timerEl);
+        
+        if (!timerEl) {
+            console.log('No timer element found');
+            return;
+        }
+
+        const durationMinutes = parseInt(timerEl.dataset.duration);
+        const openedAt = new Date(timerEl.dataset.openedAt);
+        const timerText = timerEl.querySelector('.timer-text');
+
+        console.log('Duration:', durationMinutes, 'OpenedAt:', openedAt, 'TimerText:', timerText);
+
+        if (timerInterval) clearInterval(timerInterval);
+
+        function updateTimer() {
+            const now = new Date();
+            const elapsedMs = now - openedAt;
+            const elapsedSeconds = Math.floor(elapsedMs / 1000);
+            const totalSeconds = durationMinutes * 60;
+            const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+
+            timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            // Visual feedback
+            if (remainingSeconds === 0) {
+                timerEl.classList.add('timer-expired');
+                timerText.textContent = 'Time\\'s Up!';
+            } else if (remainingSeconds <= 60) {
+                timerEl.classList.add('timer-warning');
+                timerEl.classList.remove('timer-expired');
+            } else {
+                timerEl.classList.remove('timer-warning', 'timer-expired');
+            }
+        }
+
+        updateTimer();
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    // Auto-start timer when page loads
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startActivityTimer);
+    } else {
+        startActivityTimer();
+    }
+
+    // Restart timer on Blazor re-render - but only when timer element is added/removed
+    let lastTimerElement = document.getElementById('activity-timer');
+    const observer = new MutationObserver(() => {
+        const currentTimerElement = document.getElementById('activity-timer');
+        
+        // Only restart timer if the element was added (wasn't there before, now it is)
+        if (currentTimerElement && !lastTimerElement) {
+            startActivityTimer();
+        } 
+        // Clear timer if element was removed
+        else if (!currentTimerElement && lastTimerElement && timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        
+        lastTimerElement = currentTimerElement;
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+</script>

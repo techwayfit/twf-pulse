@@ -41,13 +41,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Customer Needs",
-        "prompt": "What do our customers need most?"
+        "prompt": "What do our customers need most?",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "GeneralFeedback",
         "title": "Feature Ideas",
         "prompt": "Share your product ideas",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "New Feature",
@@ -62,6 +64,7 @@
         "type": "Quadrant",
         "title": "Value vs Complexity",
         "prompt": "Let's prioritize these ideas",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Implementation Complexity",
           "yAxisLabel": "User Value",
@@ -76,6 +79,7 @@
         "type": "Poll",
         "title": "Top Priority Vote",
         "prompt": "Which idea should we build first?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Idea 1",
@@ -90,7 +94,8 @@
         "order": 5,
         "type": "GeneralFeedback",
         "title": "Next Steps",
-        "prompt": "What are the action items?"
+        "prompt": "What are the action items?",
+        "durationMinutes": 8
       }
     ]
   }

@@ -41,6 +41,7 @@
         "type": "Poll",
         "title": "Project Idea Voting",
         "prompt": "Which hackathon idea should we pursue?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "AI-powered assistant",
@@ -55,13 +56,15 @@
         "order": 2,
         "type": "WordCloud",
         "title": "Tech Stack Ideas",
-        "prompt": "What technologies should we use?"
+        "prompt": "What technologies should we use?",
+        "durationMinutes": 5
       },
       {
         "order": 3,
         "type": "Quadrant",
         "title": "Project Complexity Matrix",
         "prompt": "Map projects by complexity and impact",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Technical Complexity",
           "yAxisLabel": "Potential Impact",
@@ -76,6 +79,7 @@
         "type": "GeneralFeedback",
         "title": "Implementation Challenges",
         "prompt": "What challenges do you foresee?",
+        "durationMinutes": 8,
         "config": {
           "categories": [
             "Technical",
@@ -91,6 +95,7 @@
         "type": "Rating",
         "title": "Final Project Presentations",
         "prompt": "Rate the projects on innovation and execution",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Overall Score"

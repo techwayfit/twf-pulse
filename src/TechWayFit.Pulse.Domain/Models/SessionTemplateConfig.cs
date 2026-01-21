@@ -62,6 +62,8 @@ public sealed class ActivityTemplateConfig
 
     public string? Prompt { get; set; }
 
+    public int? DurationMinutes { get; set; }
+
     public ActivityConfigData? Config { get; set; }
 }
 

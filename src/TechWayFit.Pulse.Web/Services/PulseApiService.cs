@@ -18,7 +18,9 @@ public interface IPulseApiService
     Task<ActivityResponse> AddActivityAsync(string code, AddActivityRequest request, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<ActivityResponse> CreateActivityAsync(string code, CreateActivityRequest request, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<ActivityResponse> OpenActivityAsync(string code, Guid activityId, string facilitatorToken, CancellationToken cancellationToken = default);
+    Task<ActivityResponse> ReopenActivityAsync(string code, Guid activityId, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<ActivityResponse> CloseActivityAsync(string code, Guid activityId, string facilitatorToken, CancellationToken cancellationToken = default);
+    Task<ActivityResponse> UpdateActivityAsync(string code, Guid activityId, UpdateActivityRequest request, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<AgendaActivityResponse>> GetAgendaAsync(string code, CancellationToken cancellationToken = default);
     Task<SubmitResponseResponse> SubmitResponseAsync(string code, Guid activityId, SubmitResponseRequest request, CancellationToken cancellationToken = default);
     Task<PollDashboardResponse> GetPollDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
@@ -292,6 +294,30 @@ public class PulseApiService : IPulseApiService
         return apiResponse?.Data ?? throw new InvalidOperationException("Invalid response from server");
     }
 
+    public async Task<ActivityResponse> ReopenActivityAsync(string code, Guid activityId, string facilitatorToken, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, $"/api/sessions/{Uri.EscapeDataString(code)}/activities/{activityId}/reopen");
+        request.Headers.Add("X-Facilitator-Token", facilitatorToken);
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException($"Failed to reopen activity: {response.StatusCode} - {errorContent}");
+        }
+
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+        var apiResponse = JsonSerializer.Deserialize<ApiResponse<ActivityResponse>>(responseJson, _jsonOptions);
+
+        if (apiResponse?.Errors?.Any() == true)
+        {
+            throw new InvalidOperationException(string.Join(", ", apiResponse.Errors.Select(e => e.Message)));
+        }
+
+        return apiResponse?.Data ?? throw new InvalidOperationException("Invalid response from server");
+    }
+
     public async Task<ActivityResponse> CloseActivityAsync(string code, Guid activityId, string facilitatorToken, CancellationToken cancellationToken = default)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"/api/sessions/{Uri.EscapeDataString(code)}/activities/{activityId}/close");
@@ -303,6 +329,36 @@ public class PulseApiService : IPulseApiService
         {
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
             throw new HttpRequestException($"Failed to close activity: {response.StatusCode} - {errorContent}");
+        }
+
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+        var apiResponse = JsonSerializer.Deserialize<ApiResponse<ActivityResponse>>(responseJson, _jsonOptions);
+
+        if (apiResponse?.Errors?.Any() == true)
+        {
+            throw new InvalidOperationException(string.Join(", ", apiResponse.Errors.Select(e => e.Message)));
+        }
+
+        return apiResponse?.Data ?? throw new InvalidOperationException("Invalid response from server");
+    }
+
+    public async Task<ActivityResponse> UpdateActivityAsync(string code, Guid activityId, UpdateActivityRequest request, string facilitatorToken, CancellationToken cancellationToken = default)
+    {
+        var json = JsonSerializer.Serialize(request, _jsonOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        
+        var httpRequest = new HttpRequestMessage(HttpMethod.Put, $"/api/sessions/{Uri.EscapeDataString(code)}/activities/{activityId}")
+        {
+            Content = content
+        };
+        httpRequest.Headers.Add("X-Facilitator-Token", facilitatorToken);
+
+        var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException($"Failed to update activity: {response.StatusCode} - {errorContent}");
         }
 
         var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);

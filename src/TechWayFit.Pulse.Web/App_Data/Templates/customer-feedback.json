@@ -47,13 +47,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Product Perception",
-        "prompt": "How would you describe our product in one word?"
+        "prompt": "How would you describe our product in one word?",
+        "durationMinutes": 3
       },
       {
         "order": 2,
         "type": "Poll",
         "title": "Overall Satisfaction",
         "prompt": "How satisfied are you with our product?",
+        "durationMinutes": 3,
         "config": {
           "options": [
             "😞 Very dissatisfied",
@@ -69,6 +71,7 @@
         "type": "GeneralFeedback",
         "title": "Feature Requests",
         "prompt": "What features or improvements would you like to see?",
+        "durationMinutes": 8,
         "config": {
           "categories": [
             "New Features",
@@ -84,6 +87,7 @@
         "type": "Poll",
         "title": "Top Feature Priority",
         "prompt": "Which feature would deliver the most value?",
+        "durationMinutes": 3,
         "config": {
           "options": [
             "Feature A",
@@ -99,6 +103,7 @@
         "type": "Quadrant",
         "title": "Customer Needs Matrix",
         "prompt": "Map your needs by importance and satisfaction",
+        "durationMinutes": 12,
         "config": {
           "xAxisLabel": "Current Satisfaction",
           "yAxisLabel": "Importance",
@@ -113,6 +118,7 @@
         "type": "Rating",
         "title": "Likelihood to Recommend",
         "prompt": "How likely are you to recommend us? (NPS)",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "Recommendation Likelihood"

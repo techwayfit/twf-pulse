@@ -52,13 +52,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "Product Perception",
-        "prompt": "What one word comes to mind when using our product?"
+        "prompt": "What one word comes to mind when using our product?",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "GeneralFeedback",
         "title": "User Pain Points",
         "prompt": "What challenges or frustrations do you experience?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Navigation/Usability",
@@ -75,6 +77,7 @@
         "type": "Poll",
         "title": "Top UX Improvement",
         "prompt": "Which improvement would add the most value for you?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "Simplified navigation",
@@ -90,6 +93,7 @@
         "type": "Quadrant",
         "title": "Feature Prioritization",
         "prompt": "Map features by usability and business value",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Ease of Use",
           "yAxisLabel": "Business Value",
@@ -104,6 +108,7 @@
         "type": "Rating",
         "title": "Overall User Satisfaction",
         "prompt": "How would you rate your overall experience?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 10,
           "ratingLabel": "Satisfaction Score (NPS)"

@@ -41,13 +41,15 @@
         "order": 1,
         "type": "WordCloud",
         "title": "API Design Principles",
-        "prompt": "What principles should guide our API design?"
+        "prompt": "What principles should guide our API design?",
+        "durationMinutes": 5
       },
       {
         "order": 2,
         "type": "GeneralFeedback",
         "title": "Endpoint Proposals",
         "prompt": "Share proposed API endpoints and their purpose",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "User Management",
@@ -64,6 +66,7 @@
         "type": "Poll",
         "title": "Naming Convention",
         "prompt": "What naming convention should we standardize on?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "RESTful (plural nouns: /users, /posts)",
@@ -79,6 +82,7 @@
         "type": "Poll",
         "title": "API Versioning Strategy",
         "prompt": "How should we handle API versioning?",
+        "durationMinutes": 5,
         "config": {
           "options": [
             "URI versioning (/v1/users)",
@@ -94,6 +98,7 @@
         "type": "Quadrant",
         "title": "Endpoint Complexity Assessment",
         "prompt": "Map endpoints by implementation complexity and developer utility",
+        "durationMinutes": 15,
         "config": {
           "xAxisLabel": "Implementation Complexity",
           "yAxisLabel": "Developer Utility",
@@ -108,6 +113,7 @@
         "type": "GeneralFeedback",
         "title": "Standards & Best Practices",
         "prompt": "What other API standards should we adopt?",
+        "durationMinutes": 10,
         "config": {
           "categories": [
             "Authentication/Security",
@@ -124,6 +130,7 @@
         "type": "Rating",
         "title": "Developer Experience Rating",
         "prompt": "How would you rate the proposed API design for developer experience?",
+        "durationMinutes": 5,
         "config": {
           "maxRating": 5,
           "ratingLabel": "DX Quality"

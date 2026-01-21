@@ -58,7 +58,8 @@ internal static class RecordMapper
             record.ConfigJson,
             (ActivityStatus)record.Status,
             record.OpenedAt,
-            record.ClosedAt);
+            record.ClosedAt,
+            record.DurationMinutes);
     }
 
     internal static ActivityRecord ToRecord(this Activity activity)
@@ -74,7 +75,8 @@ internal static class RecordMapper
             ConfigJson = activity.Config,
             Status = (int)activity.Status,
             OpenedAt = activity.OpenedAt,
-            ClosedAt = activity.ClosedAt
+            ClosedAt = activity.ClosedAt,
+            DurationMinutes = activity.DurationMinutes
         };
     }
 

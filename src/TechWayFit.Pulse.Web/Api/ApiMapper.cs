@@ -69,7 +69,8 @@ internal static class ApiMapper
             activity.Config,
             MapActivityStatus(activity.Status),
             activity.OpenedAt,
-            activity.ClosedAt);
+            activity.ClosedAt,
+            activity.DurationMinutes);
     }
 
     internal static TechWayFit.Pulse.Domain.Enums.ActivityType MapActivityType(ActivityType type)
