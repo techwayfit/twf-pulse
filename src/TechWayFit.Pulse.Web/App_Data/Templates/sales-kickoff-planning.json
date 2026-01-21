@@ -1,0 +1,108 @@
+{
+  "name": "Sales Kickoff Planning",
+  "description": "Territory planning with account prioritization",
+  "category": "ProductDiscovery",
+  "iconEmoji": "📈",
+  "config": {
+    "title": "Sales Kickoff & Pipeline Planning",
+    "goal": "Align sales team on strategy, territories, and quarterly targets",
+    "context": "Quarterly or annual sales kickoff meeting",
+    "settings": {
+      "durationMinutes": 90,
+      "allowAnonymous": false,
+      "allowLateJoin": true,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Account Executive",
+            "Sales Development Rep",
+            "Sales Manager",
+            "Sales Engineer",
+            "Customer Success"
+          ]
+        },
+        {
+          "name": "region",
+          "label": "Region/Territory",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Quarterly Motivation",
+        "prompt": "What word describes your energy for this quarter?"
+      },
+      {
+        "order": 2,
+        "type": "Poll",
+        "title": "Strategic Focus",
+        "prompt": "What should be our primary sales focus this quarter?",
+        "config": {
+          "options": [
+            "New customer acquisition",
+            "Expansion in existing accounts",
+            "Channel/partner sales",
+            "Product cross-sell/upsell",
+            "Enterprise deals"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "Quadrant",
+        "title": "Account Prioritization",
+        "prompt": "Map target accounts by deal size and win probability",
+        "config": {
+          "xAxisLabel": "Win Probability",
+          "yAxisLabel": "Deal Size",
+          "topLeftLabel": "Large Deal, Low Probability (Long Shot)",
+          "topRightLabel": "Large Deal, High Probability (Focus Here)",
+          "bottomLeftLabel": "Small Deal, Low Probability (Deprioritize)",
+          "bottomRightLabel": "Small Deal, High Probability (Quick Wins)"
+        }
+      },
+      {
+        "order": 4,
+        "type": "GeneralFeedback",
+        "title": "Obstacles & Support Needed",
+        "prompt": "What obstacles do you face and what support do you need?",
+        "config": {
+          "categories": [
+            "Product Gaps",
+            "Pricing/Competition",
+            "Marketing Support",
+            "Sales Tools",
+            "Training Needed"
+          ]
+        }
+      },
+      {
+        "order": 5,
+        "type": "Rating",
+        "title": "Confidence in Targets",
+        "prompt": "How confident are you in hitting this quarter's targets?",
+        "config": {
+          "maxRating": 10,
+          "ratingLabel": "Confidence Score"
+        }
+      }
+    ]
+  }
+}

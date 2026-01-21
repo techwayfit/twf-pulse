@@ -1,0 +1,140 @@
+{
+  "name": "Technology & Vendor Evaluation",
+  "description": "Structured vendor selection with feature-cost analysis",
+  "category": "ProductDiscovery",
+  "iconEmoji": "🔍",
+  "config": {
+    "title": "Technology Selection & Vendor Evaluation",
+    "goal": "Evaluate and select the best technology solution or vendor",
+    "context": "Technology evaluation, RFP review, or build vs buy decision",
+    "settings": {
+      "durationMinutes": 120,
+      "allowAnonymous": false,
+      "allowLateJoin": false,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Engineering/Technical",
+            "Product Management",
+            "Architecture",
+            "Security",
+            "Operations",
+            "Finance/Procurement"
+          ]
+        },
+        {
+          "name": "stakeholder",
+          "label": "Stakeholder Type",
+          "type": "select",
+          "required": false,
+          "options": [
+            "Decision Maker",
+            "Technical Evaluator",
+            "End User",
+            "Budget Approver"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "GeneralFeedback",
+        "title": "Requirements Gathering",
+        "prompt": "What are the must-have requirements for this solution?",
+        "config": {
+          "categories": [
+            "Core Features",
+            "Integration/API",
+            "Security/Compliance",
+            "Scalability/Performance",
+            "Support/SLA",
+            "Cost/Licensing"
+          ]
+        }
+      },
+      {
+        "order": 2,
+        "type": "Poll",
+        "title": "Initial Vendor Preference",
+        "prompt": "Which vendor or solution option do you prefer?",
+        "config": {
+          "options": [
+            "Vendor A",
+            "Vendor B",
+            "Vendor C",
+            "Build In-House",
+            "Need More Information"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "Quadrant",
+        "title": "Solution Comparison Matrix",
+        "prompt": "Map vendors by feature completeness and total cost of ownership",
+        "config": {
+          "xAxisLabel": "Total Cost of Ownership",
+          "yAxisLabel": "Feature Completeness",
+          "topLeftLabel": "Feature-Rich, Low Cost (Best Value)",
+          "topRightLabel": "Feature-Rich, High Cost (Premium)",
+          "bottomLeftLabel": "Limited Features, Low Cost (Basic)",
+          "bottomRightLabel": "Limited Features, High Cost (Avoid)"
+        }
+      },
+      {
+        "order": 4,
+        "type": "Rating",
+        "title": "Vendor Capabilities Assessment",
+        "prompt": "Rate the leading vendor on key capabilities",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Overall Capability"
+        }
+      },
+      {
+        "order": 5,
+        "type": "GeneralFeedback",
+        "title": "Implementation Risks",
+        "prompt": "What risks or concerns do you have about implementation?",
+        "config": {
+          "categories": [
+            "Technical Integration",
+            "Migration Complexity",
+            "Vendor Lock-in",
+            "Training/Adoption",
+            "Ongoing Costs"
+          ]
+        }
+      },
+      {
+        "order": 6,
+        "type": "Poll",
+        "title": "Final Recommendation",
+        "prompt": "Based on the evaluation, what is your recommendation?",
+        "config": {
+          "options": [
+            "Proceed with top vendor",
+            "Need more evaluation",
+            "Request additional demos",
+            "Consider alternative approach",
+            "Build in-house instead"
+          ]
+        }
+      }
+    ]
+  }
+}

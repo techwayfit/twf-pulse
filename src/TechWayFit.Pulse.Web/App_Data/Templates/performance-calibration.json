@@ -1,0 +1,115 @@
+{
+  "name": "Performance Review Calibration",
+  "description": "Talent mapping with fair rating alignment",
+  "category": "TeamBuilding",
+  "iconEmoji": "⭐",
+  "config": {
+    "title": "Performance Calibration Session",
+    "goal": "Align managers on fair and consistent performance ratings",
+    "context": "Manager calibration for performance review cycle",
+    "settings": {
+      "durationMinutes": 120,
+      "allowAnonymous": true,
+      "allowLateJoin": false,
+      "showResultsDuringActivity": false
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Director",
+            "Senior Manager",
+            "Manager",
+            "Team Lead",
+            "HR Partner"
+          ]
+        },
+        {
+          "name": "department",
+          "label": "Department",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Team Strengths",
+        "prompt": "What are the key strengths you see across the team?"
+      },
+      {
+        "order": 2,
+        "type": "Quadrant",
+        "title": "Talent Mapping (9-Box)",
+        "prompt": "Map team members by performance and potential (anonymous)",
+        "config": {
+          "xAxisLabel": "Current Performance",
+          "yAxisLabel": "Future Potential",
+          "topLeftLabel": "High Potential, Developing Performance",
+          "topRightLabel": "High Potential, High Performance (Stars)",
+          "bottomLeftLabel": "Low Potential, Low Performance (Action Needed)",
+          "bottomRightLabel": "Solid Performance, Limited Growth"
+        }
+      },
+      {
+        "order": 3,
+        "type": "GeneralFeedback",
+        "title": "Development Needs",
+        "prompt": "What development areas should we focus on?",
+        "config": {
+          "categories": [
+            "Leadership Skills",
+            "Technical Skills",
+            "Communication",
+            "Strategic Thinking",
+            "Collaboration",
+            "Domain Expertise"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "type": "Poll",
+        "title": "Rating Distribution Check",
+        "prompt": "Does our rating distribution align with organizational guidelines?",
+        "config": {
+          "options": [
+            "Yes, well distributed",
+            "Too many high ratings",
+            "Too many low ratings",
+            "Needs adjustment",
+            "Unsure"
+          ]
+        }
+      },
+      {
+        "order": 5,
+        "type": "GeneralFeedback",
+        "title": "Promotion & Succession Planning",
+        "prompt": "Who are the promotion candidates and succession plan considerations?"
+      },
+      {
+        "order": 6,
+        "type": "Rating",
+        "title": "Calibration Fairness",
+        "prompt": "How confident are you that this calibration is fair and unbiased?",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Fairness Confidence"
+        }
+      }
+    ]
+  }
+}

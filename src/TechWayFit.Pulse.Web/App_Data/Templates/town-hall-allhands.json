@@ -1,0 +1,114 @@
+{
+  "name": "Town Hall / All-Hands",
+  "description": "Company-wide engagement with Q&A and feedback",
+  "category": "TeamBuilding",
+  "iconEmoji": "🏢",
+  "config": {
+    "title": "Company Town Hall / All-Hands Meeting",
+    "goal": "Engage the entire organization and gather company-wide feedback",
+    "context": "Quarterly or monthly all-hands meeting for company updates",
+    "settings": {
+      "durationMinutes": 60,
+      "allowAnonymous": true,
+      "allowLateJoin": true,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": false
+        },
+        {
+          "name": "department",
+          "label": "Department",
+          "type": "select",
+          "required": false,
+          "options": [
+            "Engineering",
+            "Product",
+            "Sales",
+            "Marketing",
+            "Customer Success",
+            "Operations",
+            "Finance",
+            "HR",
+            "Other"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Company Culture",
+        "prompt": "Describe our company culture in one word"
+      },
+      {
+        "order": 2,
+        "type": "Poll",
+        "title": "Strategic Priority",
+        "prompt": "What should be our top strategic priority this quarter?",
+        "config": {
+          "options": [
+            "Revenue growth",
+            "Product innovation",
+            "Customer satisfaction",
+            "Operational efficiency",
+            "Team development"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "QnA",
+        "title": "Ask Leadership Anything",
+        "prompt": "Submit your questions for the leadership team (anonymous option available)"
+      },
+      {
+        "order": 4,
+        "type": "GeneralFeedback",
+        "title": "Ideas & Suggestions",
+        "prompt": "Share your ideas for improving the company",
+        "config": {
+          "categories": [
+            "Product/Innovation",
+            "Processes",
+            "Culture/People",
+            "Customer Experience",
+            "Tools/Technology",
+            "Other"
+          ]
+        }
+      },
+      {
+        "order": 5,
+        "type": "Rating",
+        "title": "Leadership Communication",
+        "prompt": "How effective is leadership communication?",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Communication Effectiveness"
+        }
+      },
+      {
+        "order": 6,
+        "type": "Poll",
+        "title": "Employee Sentiment",
+        "prompt": "How do you feel about the company's direction?",
+        "config": {
+          "options": [
+            "Very optimistic",
+            "Optimistic",
+            "Neutral",
+            "Concerned",
+            "Very concerned"
+          ]
+        }
+      }
+    ]
+  }
+}

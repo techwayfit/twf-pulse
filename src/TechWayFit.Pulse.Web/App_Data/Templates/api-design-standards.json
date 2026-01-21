@@ -1,0 +1,134 @@
+{
+  "name": "API Design & Technical Standards",
+  "description": "API design review with complexity assessment",
+  "category": "Training",
+  "iconEmoji": "🔌",
+  "config": {
+    "title": "API Design & Standards Workshop",
+    "goal": "Define API standards and review endpoint designs",
+    "context": "Platform team API design and technical standards session",
+    "settings": {
+      "durationMinutes": 90,
+      "allowAnonymous": false,
+      "allowLateJoin": false,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Backend Engineer",
+            "Frontend Engineer",
+            "API Architect",
+            "DevOps/Platform",
+            "Product Manager"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "API Design Principles",
+        "prompt": "What principles should guide our API design?"
+      },
+      {
+        "order": 2,
+        "type": "GeneralFeedback",
+        "title": "Endpoint Proposals",
+        "prompt": "Share proposed API endpoints and their purpose",
+        "config": {
+          "categories": [
+            "User Management",
+            "Data/Resources",
+            "Authentication",
+            "Webhooks/Events",
+            "Admin/Internal",
+            "Other"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "Poll",
+        "title": "Naming Convention",
+        "prompt": "What naming convention should we standardize on?",
+        "config": {
+          "options": [
+            "RESTful (plural nouns: /users, /posts)",
+            "RPC-style (verbs: /getUser, /createPost)",
+            "GraphQL-style (single endpoint)",
+            "Hybrid approach",
+            "Domain-driven naming"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "type": "Poll",
+        "title": "API Versioning Strategy",
+        "prompt": "How should we handle API versioning?",
+        "config": {
+          "options": [
+            "URI versioning (/v1/users)",
+            "Header versioning (Accept: application/vnd.api+json;version=1)",
+            "Query parameter (?version=1)",
+            "No versioning (breaking changes in new endpoints)",
+            "Needs discussion"
+          ]
+        }
+      },
+      {
+        "order": 5,
+        "type": "Quadrant",
+        "title": "Endpoint Complexity Assessment",
+        "prompt": "Map endpoints by implementation complexity and developer utility",
+        "config": {
+          "xAxisLabel": "Implementation Complexity",
+          "yAxisLabel": "Developer Utility",
+          "topLeftLabel": "High Utility, Low Complexity (Build First)",
+          "topRightLabel": "High Utility, High Complexity (Prioritize)",
+          "bottomLeftLabel": "Low Utility, Low Complexity (Nice to Have)",
+          "bottomRightLabel": "Low Utility, High Complexity (Skip)"
+        }
+      },
+      {
+        "order": 6,
+        "type": "GeneralFeedback",
+        "title": "Standards & Best Practices",
+        "prompt": "What other API standards should we adopt?",
+        "config": {
+          "categories": [
+            "Authentication/Security",
+            "Error Handling",
+            "Pagination",
+            "Rate Limiting",
+            "Documentation",
+            "Testing"
+          ]
+        }
+      },
+      {
+        "order": 7,
+        "type": "Rating",
+        "title": "Developer Experience Rating",
+        "prompt": "How would you rate the proposed API design for developer experience?",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "DX Quality"
+        }
+      }
+    ]
+  }
+}

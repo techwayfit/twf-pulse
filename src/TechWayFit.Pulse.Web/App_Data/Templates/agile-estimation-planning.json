@@ -1,0 +1,104 @@
+{
+  "name": "Agile Estimation & Planning",
+  "description": "Story point estimation with backlog prioritization",
+  "category": "Retrospective",
+  "iconEmoji": "⚡",
+  "config": {
+    "title": "Sprint Planning & Estimation",
+    "goal": "Estimate user stories and prioritize sprint backlog",
+    "context": "Agile sprint planning and backlog refinement session",
+    "settings": {
+      "durationMinutes": 90,
+      "allowAnonymous": false,
+      "allowLateJoin": false,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Developer",
+            "QA/Tester",
+            "Product Owner",
+            "Scrum Master",
+            "Designer"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Sprint Goals",
+        "prompt": "What should be the theme or goal for this sprint?"
+      },
+      {
+        "order": 2,
+        "type": "Poll",
+        "title": "Story Point Estimation",
+        "prompt": "Vote on story points for user story (use Fibonacci sequence)",
+        "config": {
+          "options": [
+            "1 - Trivial",
+            "2 - Simple",
+            "3 - Medium",
+            "5 - Complex",
+            "8 - Very Complex",
+            "13 - Extremely Complex",
+            "21 - Needs Breaking Down"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "GeneralFeedback",
+        "title": "Technical Risks & Dependencies",
+        "prompt": "What technical risks or dependencies should we consider?",
+        "config": {
+          "categories": [
+            "Technical Complexity",
+            "External Dependencies",
+            "Unknown Requirements",
+            "Infrastructure Needs",
+            "Testing Challenges"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "type": "Quadrant",
+        "title": "Backlog Prioritization",
+        "prompt": "Map user stories by business value and effort",
+        "config": {
+          "xAxisLabel": "Development Effort",
+          "yAxisLabel": "Business Value",
+          "topLeftLabel": "High Value, Low Effort (Do First)",
+          "topRightLabel": "High Value, High Effort (Plan Carefully)",
+          "bottomLeftLabel": "Low Value, Low Effort (Fill-in Work)",
+          "bottomRightLabel": "Low Value, High Effort (Backlog)"
+        }
+      },
+      {
+        "order": 5,
+        "type": "Rating",
+        "title": "Team Confidence",
+        "prompt": "How confident is the team in completing the sprint commitment?",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Confidence Level"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "name": "Budget & Resource Allocation",
+  "description": "Financial planning with cost-benefit prioritization",
+  "category": "ProductDiscovery",
+  "iconEmoji": "💰",
+  "config": {
+    "title": "Budget Planning & Resource Allocation",
+    "goal": "Prioritize budget allocation and resource distribution across initiatives",
+    "context": "Quarterly or annual budget planning session",
+    "settings": {
+      "durationMinutes": 120,
+      "allowAnonymous": false,
+      "allowLateJoin": false,
+      "showResultsDuringActivity": true
+    },
+    "joinFormSchema": {
+      "fields": [
+        {
+          "name": "name",
+          "label": "Your Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "department",
+          "label": "Department/Team",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "role",
+          "label": "Role",
+          "type": "select",
+          "required": true,
+          "options": [
+            "Executive/VP",
+            "Director",
+            "Manager",
+            "Team Lead",
+            "Finance"
+          ]
+        }
+      ]
+    },
+    "activities": [
+      {
+        "order": 1,
+        "type": "WordCloud",
+        "title": "Budget Priorities",
+        "prompt": "What should be our top budget priority this period?"
+      },
+      {
+        "order": 2,
+        "type": "GeneralFeedback",
+        "title": "Funding Requests",
+        "prompt": "Submit your funding requests and justification",
+        "config": {
+          "categories": [
+            "Headcount",
+            "Technology/Tools",
+            "Marketing/Sales",
+            "Infrastructure",
+            "Training/Development",
+            "Other"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "type": "Poll",
+        "title": "Allocation Approach",
+        "prompt": "What approach should we use for budget allocation?",
+        "config": {
+          "options": [
+            "Equal distribution across teams",
+            "Priority-based allocation",
+            "ROI-driven approach",
+            "Growth areas first",
+            "Maintain current ratios"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "type": "Quadrant",
+        "title": "Cost vs Business Value",
+        "prompt": "Map initiatives by total cost and business value",
+        "config": {
+          "xAxisLabel": "Total Cost",
+          "yAxisLabel": "Business Value",
+          "topLeftLabel": "High Value, Low Cost (Fund First)",
+          "topRightLabel": "High Value, High Cost (Strategic Investment)",
+          "bottomLeftLabel": "Low Value, Low Cost (Nice to Have)",
+          "bottomRightLabel": "Low Value, High Cost (Avoid)"
+        }
+      },
+      {
+        "order": 5,
+        "type": "GeneralFeedback",
+        "title": "Budget Constraints & Risks",
+        "prompt": "What constraints or risks should we consider?"
+      },
+      {
+        "order": 6,
+        "type": "Rating",
+        "title": "Stakeholder Confidence",
+        "prompt": "How confident are you in this budget plan?",
+        "config": {
+          "maxRating": 5,
+          "ratingLabel": "Confidence Level"
+        }
+      }
+    ]
+  }
+}

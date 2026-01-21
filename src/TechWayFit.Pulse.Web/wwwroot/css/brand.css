@@ -315,7 +315,6 @@
   border: none !important;
   color: white !important;
   font-weight: 600 !important;
-  padding: 0.625rem 1.25rem !important;
   border-radius: var(--radius-sm) !important;
   box-shadow: var(--shadow-sm) !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -1510,11 +1509,12 @@ html {
   overflow-y: auto;
   z-index: 1050;
   min-width: 100%;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 0.25rem;
-  transform: none !important;
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  margin-top: 0.25rem !important;
+  transform: translate(0, 0) !important;
+  will-change: transform;
 }
 
 .tree-dropdown .dropdown-menu.show {
