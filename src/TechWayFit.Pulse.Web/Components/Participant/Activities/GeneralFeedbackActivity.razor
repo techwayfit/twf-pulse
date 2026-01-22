@@ -7,7 +7,7 @@
     {
         <!-- Success confirmation -->
     <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
-            <div class="me-3 fs-4">?</div>
+            <div class="me-3 fs-4">✓</div>
    <div>
            <strong>Feedback submitted successfully!</strong>
          <div class="small">Thank you for your input. Waiting for the next activity...</div>
@@ -78,7 +78,7 @@
       disabled="@(Parameters.IsSubmitting || IsInputInvalid() || Parameters.HasSubmitted)">
         @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
    {
-  <text>? Feedback Submitted</text>
+  <text>Feedback Submitted</text>
     }
     else
    {
@@ -146,7 +146,7 @@
 
         var payload = new
      {
-            text = feedbackText!.Trim(),
+            content = feedbackText!.Trim(),
        category = selectedCategory,
        isAnonymous = false,
         characterCount = feedbackText.Length

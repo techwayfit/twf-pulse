@@ -28,149 +28,291 @@
     }
     else if (dashboard != null)
     {
-        <!-- Feedback Dashboard Header -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h4 class="card-title fw-bold mb-1">Feedback Responses</h4>
-                        <div class="text-muted">💬 General Feedback</div>
-                    </div>
-                    <div class="text-end">
-                        <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mb-2">
-                            Live Results
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Summary Stats -->
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="stat-card bg-primary bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="stat-number text-primary h2 mb-0">@dashboard.TotalResponses</div>
-                            <div class="stat-label text-muted">Total Responses</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card bg-success bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="stat-number text-success h2 mb-0">@dashboard.ParticipantCount</div>
-                            <div class="stat-label text-muted">Participants</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card bg-info bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="stat-number text-info h2 mb-0">@GetAverageWordCount()</div>
-                            <div class="stat-label text-muted">Avg Words</div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Sort Controls -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">
+                <i class="fas fa-comments me-2"></i>All Responses
+            </h5>
+            <div class="btn-group shadow-sm">
+                <button class="btn btn-sm @(sortOrder == "recent" ? "btn-primary" : "btn-outline-secondary")" 
+                        @onclick='() => sortOrder = "recent"'>
+                    <i class="fas fa-clock me-1"></i>Most Recent
+                </button>
+                <button class="btn btn-sm @(sortOrder == "longest" ? "btn-primary" : "btn-outline-secondary")" 
+                        @onclick='() => sortOrder = "longest"'>
+                    <i class="fas fa-sort-amount-down me-1"></i>Longest First
+                </button>
             </div>
         </div>
 
         <!-- Feedback Responses -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-comments me-2"></i>
-                        All Responses
-                    </h5>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn @(sortOrder == "recent" ? "btn-primary" : "btn-outline-primary")" 
-                                @onclick='() => sortOrder = "recent"'>
-                            Most Recent
-                        </button>
-                        <button class="btn @(sortOrder == "longest" ? "btn-primary" : "btn-outline-primary")" 
-                                @onclick='() => sortOrder = "longest"'>
-                            Longest First
-                        </button>
-                    </div>
-                </div>
-
-                @if (dashboard.TotalResponses > 0)
+        @if (dashboard.TotalResponses > 0)
+        {
+            <div class="feedback-list">
+                @foreach (var feedback in GetSortedResponses())
                 {
-                    <div class="feedback-list">
-                        @foreach (var feedback in GetSortedResponses())
-                        {
-                            <div class="card mb-3 border">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            @if (!feedback.IsAnonymous)
-                                            {
-                                                <span class="badge bg-light text-dark">
-                                                    <i class="fas fa-user me-1"></i>
-                                                    Participant
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                                    <i class="fas fa-user-secret me-1"></i>
-                                                    Anonymous
-                                                </span>
-                                            }
-                                            <span class="badge bg-primary bg-opacity-10 text-primary">
-                                                <i class="fas fa-font me-1"></i>
-                                                @feedback.WordCount words
-                                            </span>
-                                            @if (!string.IsNullOrEmpty(feedback.Category))
-                                            {
-                                                <span class="badge bg-info bg-opacity-10 text-info">
-                                                    @feedback.Category
-                                                </span>
-                                            }
-                                        </div>
-                                        <small class="text-muted">@feedback.CreatedAt.ToString("HH:mm:ss")</small>
-                                    </div>
-                                    <p class="mb-0">@feedback.Content</p>
-                                </div>
+                    <div class="feedback-item">
+                        <div class="feedback-item-header">
+                            <div class="feedback-meta">
+                                @if (!feedback.IsAnonymous)
+                                {
+                                    <span class="meta-badge">
+                                        <i class="fas fa-user"></i>
+                                        Participant
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="meta-badge">
+                                        <i class="fas fa-user-secret"></i>
+                                        Anonymous
+                                    </span>
+                                }
+                                <span class="meta-badge">
+                                    <i class="fas fa-font"></i>
+                                    @feedback.WordCount words
+                                </span>
+                                @if (!string.IsNullOrEmpty(feedback.Category))
+                                {
+                                    <span class="meta-badge badge-category">
+                                        <i class="fas fa-tag"></i>
+                                        @feedback.Category
+                                    </span>
+                                }
                             </div>
-                        }
-                        
-                        @if (displayCount < dashboard.Feedbacks.Count)
-                        {
-                            <div class="text-center mt-3">
-                                <button class="btn btn-outline-primary" @onclick="LoadMore">
-                                    Load More (@(dashboard.Feedbacks.Count - displayCount) remaining)
-                                </button>
+                            <div class="feedback-time">
+                                <i class="fas fa-clock me-1"></i>
+                                @feedback.CreatedAt.ToString("HH:mm:ss")
                             </div>
-                        }
+                        </div>
+                        <div class="feedback-content">
+                            @feedback.Content
+                        </div>
                     </div>
                 }
-                else
+                
+                @if (displayCount < dashboard.Feedbacks.Count)
                 {
-                    <div class="text-center py-5">
-                        <div class="display-4 text-muted mb-3">💬</div>
-                        <h6 class="text-muted">No feedback yet</h6>
-                        <p class="text-muted mb-0">Feedback will appear here once participants start responding.</p>
+                    <div class="text-center mt-4">
+                        <button class="btn btn-outline-primary px-5 py-2" @onclick="LoadMore">
+                            Load More (@(dashboard.Feedbacks.Count - displayCount) remaining)
+                        </button>
                     </div>
                 }
             </div>
-        </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <h5 class="empty-title">No feedback yet</h5>
+                <p class="empty-text">Responses will appear here as participants share their thoughts</p>
+            </div>
+        }
 
-        <!-- Word Frequency (Optional Enhancement) -->
+        <!-- Keywords Section -->
         @if (dashboard.TotalResponses > 0)
         {
-            <div class="card border-0 shadow-sm mt-4">
-                <div class="card-body p-4">
-                    <h6 class="card-title mb-3">
-                        <i class="fas fa-chart-line me-2"></i>
-                        Common Keywords
-                    </h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        @foreach (var keyword in GetTopKeywords().Take(15))
-                        {
-                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
-                                @keyword.Word <span class="badge bg-primary ms-1">@keyword.Count</span>
-                            </span>
-                        }
-                    </div>
+            <div class="keywords-section mt-4">
+                <div class="keywords-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Common Keywords
+                    </h5>
+                </div>
+                <div class="keywords-cloud">
+                    @{
+                        var keywords = GetTopKeywords().Take(15).ToList();
+                        var maxCount = keywords.Any() ? keywords.Max(k => k.Count) : 1;
+                    }
+                    @foreach (var keyword in keywords)
+                    {
+                        var size = keyword.Item2 == maxCount ? "keyword-large" : 
+                                   keyword.Item2 >= maxCount * 0.6 ? "keyword-medium" : "keyword-small";
+                        
+                        <span class="keyword-badge @size">
+                            @keyword.Word
+                            <span class="keyword-count">@keyword.Count</span>
+                        </span>
+                    }
                 </div>
             </div>
         }
     }
 </div>
+
+<style>
+    /* Feedback Items */
+    .feedback-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .feedback-item {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 20px;
+        transition: all 0.2s ease;
+    }
+
+    .feedback-item:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .feedback-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .feedback-meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .meta-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+
+    .meta-badge i {
+        font-size: 11px;
+    }
+
+    .badge-category {
+        background: #e0f2fe;
+        color: #0369a1;
+        border-color: #bae6fd;
+    }
+
+    .feedback-time {
+        color: #94a3b8;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .feedback-content {
+        font-size: 15px;
+        line-height: 1.6;
+        color: #334155;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .empty-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 20px;
+        background: #f1f5f9;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: #94a3b8;
+    }
+
+    .empty-title {
+        color: #475569;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .empty-text {
+        color: #94a3b8;
+        margin: 0;
+    }
+
+    /* Keywords Section */
+    .keywords-section {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+    }
+
+    .keywords-header {
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .keywords-header h5 {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .keywords-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .keyword-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 20px;
+        font-weight: 500;
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .keyword-badge:hover {
+        background: #e0e7ff;
+        border-color: #c7d2fe;
+        color: #4f46e5;
+    }
+
+    .keyword-large {
+        font-size: 16px;
+        padding: 10px 16px;
+    }
+
+    .keyword-medium {
+        font-size: 15px;
+    }
+
+    .keyword-small {
+        font-size: 14px;
+    }
+
+    .keyword-count {
+        background: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6366f1;
+    }
+</style>
 
 @code {
     [Parameter] public string SessionCode { get; set; } = string.Empty;
@@ -226,7 +368,7 @@
         try
         {
             hubConnection = new HubConnectionBuilder()
-                .WithUrl(Navigation.ToAbsoluteUri("/workshophub"))
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
                 .WithAutomaticReconnect()
                 .Build();
 

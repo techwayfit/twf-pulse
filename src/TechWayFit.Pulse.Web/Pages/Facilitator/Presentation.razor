@@ -8,8 +8,8 @@
 @if (isLoading)
 {
     <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 }
@@ -18,7 +18,7 @@ else if (!string.IsNullOrEmpty(errorMessage))
     <div class="container mt-5">
         <div class="alert alert-danger">
             <i class="fas fa-exclamation-triangle me-2"></i>
-    @errorMessage
+            @errorMessage
         </div>
         <a href="/facilitator/live?code=@SessionCode" class="btn btn-primary">Return to Live View</a>
     </div>
@@ -28,148 +28,136 @@ else if (activity != null)
     <!-- Presenter Mode Full Screen -->
     <div class="presenter-mode-page">
         <!-- Compact Header -->
-<div class="presenter-header">
-          <div class="container-fluid">
-       <div class="d-flex justify-content-between align-items-center">
- <div class="d-flex align-items-center gap-3">
-        <span class="badge bg-success presenter-badge-live">
-         <span class="pulse-dot me-2"></span>LIVE
-            </span>
-       <h1 class="mb-0 presenter-title">@activity.Title</h1>
-       @if (!string.IsNullOrEmpty(activity.Prompt))
-               {
-       <span class="presenter-subtitle">• @activity.Prompt</span>
-     }
-        </div>
-    <div class="d-flex align-items-center gap-3">
-      @if (activity.DurationMinutes.HasValue && activity.OpenedAt.HasValue)
-        {
-    <div id="activity-timer-presenter"
-       data-duration="@activity.DurationMinutes.Value"
-          data-opened-at="@activity.OpenedAt.Value.ToString("o")"
-     class="timer-display-presenter">
-             <i class="fas fa-clock me-2"></i>
-     <span class="timer-text">--:--</span>
-              </div>
-      }
-      <span class="badge bg-light text-dark presenter-badge-order">#@activity.Order</span>
-      <button class="btn btn-danger presenter-exit-btn" @onclick="ExitPresenterMode">
-         <i class="fas fa-times-circle me-2"></i><span class="d-none d-lg-inline">Exit Presenter Mode</span><span class="d-inline d-lg-none">Exit</span>
-      </button>
-         </div>
-     </div>
+        <div class="presenter-header">
+            <div class="container-fluid">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-success presenter-badge-live">
+                            <span class="pulse-dot me-2"></span>LIVE
+                        </span>
+                        <h1 class="mb-0 presenter-title">@activity.Title</h1>
+                        @if (!string.IsNullOrEmpty(activity.Prompt))
+                        {
+                            <span class="presenter-subtitle">@activity.Prompt</span>
+                        }
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        @if (activity.DurationMinutes.HasValue && activity.OpenedAt.HasValue)
+                        {
+                            <div id="activity-timer-presenter" data-duration="@activity.DurationMinutes.Value"
+                                data-opened-at="@activity.OpenedAt.Value.ToString("o")" class="timer-display-presenter">
+                                <i class="fas fa-clock me-2"></i>
+                                <span class="timer-text">--:--</span>
+                            </div>
+                        }
+                        <span class="badge bg-light text-dark presenter-badge-order">#@activity.Order</span>
+                        <button class="btn btn-danger presenter-exit-btn" @onclick="ExitPresenterMode">
+                            <i class="fas fa-times-circle me-2"></i><span class="d-none d-lg-inline">Exit Presenter
+                                Mode</span><span class="d-inline d-lg-none">Exit</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
-      <!-- Main Content: 10-2 Layout -->
-   <div class="presenter-content">
+        <!-- Main Content: 10-2 Layout -->
+        <div class="presenter-content">
             <div class="container-fluid h-100">
-             <div class="row g-0 h-100">
-        <!-- Dashboard (10/12) -->
-         <div class="col-10 presenter-main-column">
-         <div class="presenter-dashboard-wrapper">
-          @if (activity.Type == ActivityType.Poll)
-          {
-        <PollDashboard SessionCode="@SessionCode"
-          ActivityId="@activity.ActivityId" />
-    }
-          else if (activity.Type == ActivityType.WordCloud)
-     {
-    <WordCloudDashboard SessionCode="@SessionCode"
-      ActivityId="@activity.ActivityId" />
-  }
-     else if (activity.Type == ActivityType.Rating)
-                  {
- <RatingDashboard SessionCode="@SessionCode"
-        ActivityId="@activity.ActivityId" />
-        }
-      else if (activity.Type == ActivityType.GeneralFeedback)
-     {
- <GeneralFeedbackDashboard SessionCode="@SessionCode"
-          ActivityId="@activity.ActivityId" />
-          }
-      else
-       {
-       <div class="text-center py-5">
-           <p class="presenter-empty-message">
-     <i class="fas fa-chart-bar me-3"></i>
-     Live dashboard for @activity.Type activities coming soon
-        </p>
-        </div>
-      }
- </div>
- </div>
+                <div class="row g-0 h-100">
+                    <!-- Dashboard (10/12) -->
+                    <div class="col-10 presenter-main-column">
+                        <div class="presenter-dashboard-wrapper">
+                            @if (activity.Type == ActivityType.Poll)
+                            {
+                                <PollDashboard SessionCode="@SessionCode" ActivityId="@activity.ActivityId" />
+                            }
+                            else if (activity.Type == ActivityType.WordCloud)
+                            {
+                                <WordCloudDashboard SessionCode="@SessionCode" ActivityId="@activity.ActivityId" />
+                            }
+                            else if (activity.Type == ActivityType.Rating)
+                            {
+                                <RatingDashboard SessionCode="@SessionCode" ActivityId="@activity.ActivityId" />
+                            }
+                            else if (activity.Type == ActivityType.GeneralFeedback)
+                            {
+                                <GeneralFeedbackDashboard SessionCode="@SessionCode" ActivityId="@activity.ActivityId" />
+                            }
+                            else
+                            {
+                                <div class="text-center py-5">
+                                    <p class="presenter-empty-message">
+                                        <i class="fas fa-chart-bar me-3"></i>
+                                        Live dashboard for @activity.Type activities coming soon
+                                    </p>
+                                </div>
+                            }
+                        </div>
+                    </div>
 
-    <!-- Stats Sidebar (2/12) -->
-              <div class="col-2 presenter-sidebar-column">
-<div class="presenter-sidebar-content">
-       <div class="presenter-stat-card">
-      <div class="stat-icon">
-      <i class="fas fa-users"></i>
- </div>
-              <div class="stat-value">@participantCount</div>
-   <div class="stat-label">Participants</div>
-    </div>
+                    <!-- Stats Sidebar (2/12) -->
+                    <div class="col-2 presenter-sidebar-column">
+                        <div class="presenter-sidebar-content">
+                            <div class="presenter-stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-value">@participantCount</div>
+                                <div class="stat-label">Participants</div>
+                            </div>
 
-   <div class="presenter-stat-card">
-         <div class="stat-icon text-primary">
-       <i class="fas fa-comment-dots"></i>
-     </div>
-       <div class="stat-value text-primary">@responseCount</div>
-  <div class="stat-label">Responses</div>
-              </div>
+                            <div class="presenter-stat-card">
+                                <div class="stat-icon text-primary">
+                                    <i class="fas fa-comment-dots"></i>
+                                </div>
+                                <div class="stat-value text-primary">@responseCount</div>
+                                <div class="stat-label">Responses</div>
+                            </div>
 
-      <div class="presenter-feed-section">
-    <h6 class="feed-title">
-        <i class="fas fa-stream me-2"></i>Live Feed
-      </h6>
-  <LiveSubmissionsFeed SessionCode="@SessionCode"
-          ActivityId="@activity.ActivityId" />
+                            <div class="presenter-feed-section">
+                                <h6 class="feed-title">
+                                    <i class="fas fa-stream me-2"></i>Live Feed
+                                </h6>
+                                <LiveSubmissionsFeed SessionCode="@SessionCode" ActivityId="@activity.ActivityId" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-         </div>
-      </div>
-           </div>
-       </div>
-     </div>
-
-  <!-- Footer Controls -->
-  <div class="presenter-footer">
-      <div class="container-fluid">
-   <div class="d-flex justify-content-between align-items-center">
-  <div class="d-flex gap-2">
-  @if (hasPrevious)
-    {
-    <button class="btn btn-outline-light presenter-control-btn"
-   @onclick="GoBack"
- disabled="@isPerformingAction">
-            <i class="fas fa-arrow-left me-2"></i>Previous
-        </button>
-    }
- <button class="btn btn-warning presenter-control-btn"
-@onclick="CloseActivity"
-   disabled="@isPerformingAction">
-  <i class="fas fa-stop me-2"></i>Close Activity
-      </button>
-          @if (hasNext)
-     {
-<button class="btn btn-primary presenter-control-btn"
-   @onclick="MoveNext"
-        disabled="@isPerformingAction">
-   Next<i class="fas fa-arrow-right ms-2"></i>
-         </button>
-          }
-    </div>
-   <div class="presenter-footer-hint">
-      <kbd class="kbd-large">ESC</kbd> to exit | <button class="btn btn-link text-white fw-bold p-0 text-decoration-underline" @onclick="ExitPresenterMode">Return to Live View</button>
-  </div>
-  </div>
-     </div>
         </div>
 
-  <!-- Floating ESC Hint (Top Left) -->
-   <div class="floating-esc-hint">
-            <kbd>ESC</kbd> to exit
+        <!-- Footer Controls -->
+        <div class="presenter-footer">
+            <div class="container-fluid">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex gap-2">
+                        @if (hasPrevious)
+                        {
+                            <button class="btn btn-outline-light presenter-control-btn" @onclick="GoBack"
+                                disabled="@isPerformingAction">
+                                <i class="fas fa-arrow-left me-2"></i>Previous
+                            </button>
+                        }
+                        <button class="btn btn-warning presenter-control-btn" @onclick="CloseActivity"
+                            disabled="@isPerformingAction">
+                            <i class="fas fa-stop me-2"></i>Close Activity
+                        </button>
+
+                    </div>
+                    <div class="presenter-footer-hint">
+                        @if (hasNext)
+                        {
+                            <button class="btn btn-primary presenter-control-btn" @onclick="MoveNext"
+                                disabled="@isPerformingAction">
+                                Next<i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
+
+
     </div>
 }
 
@@ -184,20 +172,23 @@ else if (activity != null)
         inset: 0;
         background: #f8f9fa;
         display: flex;
-  flex-direction: column;
-        z-index: 1000;
-  padding-top: 0; /* Start from absolute top */
+        flex-direction: column;
+        z-index: 10100;
+        padding-top: 0;
+        /* Start from absolute top */
     }
 
     /* Header */
     .presenter-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-        padding: 1rem 0; /* Increased padding */
- box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        color: white;
+        padding: 1rem 0;
+        /* Increased padding */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         flex-shrink: 0;
- position: relative;
-        z-index: 10001; /* Above everything */
+        position: relative;
+        z-index: 10101;
+        /* Above everything */
     }
 
     .presenter-title {
@@ -206,27 +197,27 @@ else if (activity != null)
     }
 
     .presenter-subtitle {
-   font-size: 1.25rem;
-     color: rgba(255, 255, 255, 0.9);
-  }
+        font-size: 1.25rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
 
     .presenter-badge-live {
         font-size: 1rem;
- padding: 0.6rem 1rem;
- font-weight: 600;
- }
+        padding: 0.6rem 1rem;
+        font-weight: 600;
+    }
 
     .presenter-badge-order {
         font-size: 1.1rem;
-      padding: 0.6rem 0.9rem;
+        padding: 0.6rem 0.9rem;
         font-weight: 600;
     }
 
     .presenter-exit-btn {
         font-size: 1.1rem;
-     padding: 0.6rem 1.2rem;
-      font-weight: 700;
-  background: #dc3545 !important;
+        padding: 0.6rem 1.2rem;
+        font-weight: 700;
+        background: #dc3545 !important;
         color: white !important;
         border: 2px solid white !important;
         transition: all 0.2s ease;
@@ -234,7 +225,7 @@ else if (activity != null)
     }
 
     .presenter-exit-btn:hover {
-     background: #c82333 !important;
+        background: #c82333 !important;
         transform: scale(1.08);
         box-shadow: 0 6px 16px rgba(220, 53, 69, 0.6) !important;
     }
@@ -245,39 +236,46 @@ else if (activity != null)
         padding: 0.6rem 1.2rem;
         border-radius: 10px;
         font-weight: 700;
-     font-size: 1.5rem;
- min-width: 120px;
+        font-size: 1.5rem;
+        min-width: 120px;
         text-align: center;
         backdrop-filter: blur(10px);
     }
 
-  .timer-display-presenter.timer-warning {
+    .timer-display-presenter.timer-warning {
         background: rgba(245, 87, 108, 0.3);
         animation: pulse-glow 2s ease-in-out infinite;
     }
 
     .timer-display-presenter.timer-expired {
         background: rgba(254, 225, 64, 0.3);
-  animation: pulse-glow 1s ease-in-out infinite;
+        animation: pulse-glow 1s ease-in-out infinite;
     }
 
- @@keyframes pulse-glow {
-        0%, 100% { box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3); }
-        50% { box-shadow: 0 4px 16px rgba(255, 255, 255, 0.6); }
+    @@keyframes pulse-glow {
+
+        0%,
+        100% {
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+        }
+
+        50% {
+            box-shadow: 0 4px 16px rgba(255, 255, 255, 0.6);
+        }
     }
 
     /* Content */
     .presenter-content {
- flex: 1;
-     overflow: hidden;
+        flex: 1;
+        overflow: hidden;
         min-height: 0;
-     padding: 1rem 0;
+        padding: 1rem 0;
     }
 
     .presenter-main-column {
         height: 100%;
         padding-right: 0.5rem;
- }
+    }
 
     .presenter-dashboard-wrapper {
         height: 100%;
@@ -285,9 +283,9 @@ else if (activity != null)
         border-radius: 12px;
         padding: 1.5rem;
         overflow-y: auto;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         display: flex;
-  flex-direction: column;
+        flex-direction: column;
     }
 
     /* Hide stat tiles from dashboard */
@@ -300,8 +298,8 @@ else if (activity != null)
     }
 
     /* Maximize chart and make text bigger */
- .presenter-dashboard-wrapper canvas {
-      max-height: 70vh !important;
+    .presenter-dashboard-wrapper canvas {
+        max-height: 70vh !important;
         width: 100% !important;
     }
 
@@ -321,7 +319,7 @@ else if (activity != null)
     .presenter-dashboard-wrapper span,
     .presenter-dashboard-wrapper div {
         font-size: 1.25rem !important;
- }
+    }
 
     .presenter-dashboard-wrapper .badge {
         font-size: 1.1rem !important;
@@ -329,30 +327,30 @@ else if (activity != null)
     }
 
     .presenter-dashboard-wrapper .btn {
- font-size: 1.2rem !important;
-      padding: 0.7rem 1.4rem !important;
+        font-size: 1.2rem !important;
+        padding: 0.7rem 1.4rem !important;
     }
 
     /* Sidebar */
     .presenter-sidebar-column {
         height: 100%;
-      padding-left: 0.5rem;
+        padding-left: 0.5rem;
     }
 
     .presenter-sidebar-content {
- height: 100%;
+        height: 100%;
         background: white;
         border-radius: 12px;
         padding: 1rem;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         display: flex;
-    flex-direction: column;
+        flex-direction: column;
         gap: 1rem;
         overflow-y: auto;
     }
 
     .presenter-stat-card {
-     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         border-radius: 12px;
         padding: 1rem;
         text-align: center;
@@ -360,15 +358,15 @@ else if (activity != null)
 
     .stat-icon {
         font-size: 2rem;
-color: #2BC48A;
-  margin-bottom: 0.5rem;
+        color: #2BC48A;
+        margin-bottom: 0.5rem;
     }
 
     .stat-value {
-font-size: 3rem;
+        font-size: 3rem;
         font-weight: 800;
         color: #2BC48A;
-line-height: 1;
+        line-height: 1;
     }
 
     .stat-label {
@@ -379,30 +377,30 @@ line-height: 1;
 
     .presenter-feed-section {
         flex: 1;
-      min-height: 0;
- border-top: 2px solid #e9ecef;
- padding-top: 1rem;
+        min-height: 0;
+        border-top: 2px solid #e9ecef;
+        padding-top: 1rem;
     }
 
- .feed-title {
+    .feed-title {
         font-size: 1.1rem;
-font-weight: 700;
-      margin-bottom: 0.75rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
     }
 
     /* Footer */
     .presenter-footer {
-   background: #343a40;
+        background: #343a40;
         color: white;
-   padding: 0.75rem 0;
+        padding: 0.75rem 0;
         box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
         flex-shrink: 0;
     }
 
-  .presenter-control-btn {
-     font-size: 1.1rem;
+    .presenter-control-btn {
+        font-size: 1.1rem;
         padding: 0.7rem 1.5rem;
- font-weight: 600;
+        font-weight: 600;
     }
 
     .presenter-footer-hint {
@@ -415,26 +413,27 @@ font-weight: 700;
     }
 
     .presenter-footer-hint .kbd-large {
- font-size: 1.15rem;
+        font-size: 1.15rem;
         padding: 0.5rem 0.8rem;
         background: #495057;
         color: white;
         border-radius: 6px;
         border: 1px solid #6c757d;
-    font-weight: 700;
+        font-weight: 700;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
-/* Floating ESC Hint */
+
+    /* Floating ESC Hint */
     .floating-esc-hint {
-   position: fixed;
+        position: fixed;
         top: 1rem;
         left: 1rem;
         z-index: 10000;
         background: rgba(52, 58, 64, 0.95);
-      color: white;
+        color: white;
         padding: 0.7rem 1.2rem;
         border-radius: 8px;
-  font-size: 1.1rem;
+        font-size: 1.1rem;
         font-weight: 600;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         backdrop-filter: blur(10px);
@@ -446,7 +445,7 @@ font-weight: 700;
         color: #ffc107;
         padding: 0.4rem 0.7rem;
         border-radius: 4px;
-      border: 1px solid #6c757d;
+        border: 1px solid #6c757d;
         font-size: 1rem;
         font-weight: 700;
         margin-right: 0.4rem;
@@ -456,10 +455,88 @@ font-weight: 700;
         from {
             opacity: 0;
             transform: translateX(-20px);
-      }
-  to {
- opacity: 1;
-          transform: translateX(0);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
         }
     }
 </style>
+
+<script>
+    let presenterTimerInterval = null;
+
+    function startPresenterTimer() {
+        console.log('startPresenterTimer called');
+        const timerEl = document.getElementById('activity-timer-presenter');
+        console.log('Presenter timer element:', timerEl);
+
+        if (!timerEl) {
+            console.log('No presenter timer element found');
+            return;
+        }
+
+        const durationMinutes = parseInt(timerEl.dataset.duration);
+        const openedAt = new Date(timerEl.dataset.openedAt);
+        const timerText = timerEl.querySelector('.timer-text');
+
+        console.log('Duration:', durationMinutes, 'OpenedAt:', openedAt, 'TimerText:', timerText);
+
+        if (presenterTimerInterval) clearInterval(presenterTimerInterval);
+
+        function updateTimer() {
+            const now = new Date();
+            const elapsedMs = now - openedAt;
+            const elapsedSeconds = Math.floor(elapsedMs / 1000);
+            const totalSeconds = durationMinutes * 60;
+            const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+
+            timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            // Visual feedback
+            if (remainingSeconds === 0) {
+                timerEl.classList.add('timer-expired');
+                timerText.textContent = "Time's Up!";
+            } else if (remainingSeconds <= 60) {
+                timerEl.classList.add('timer-warning');
+                timerEl.classList.remove('timer-expired');
+            } else {
+                timerEl.classList.remove('timer-warning', 'timer-expired');
+            }
+        }
+
+        updateTimer();
+        presenterTimerInterval = setInterval(updateTimer, 1000);
+    }
+
+    // Auto-start timer when page loads
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startPresenterTimer);
+    } else {
+        startPresenterTimer();
+    }
+
+    // Restart timer on Blazor re-render
+    let lastPresenterTimerElement = document.getElementById('activity-timer-presenter');
+    const presenterObserver = new MutationObserver(() => {
+        const currentTimerElement = document.getElementById('activity-timer-presenter');
+
+        // Only restart timer if the element was added
+        if (currentTimerElement && !lastPresenterTimerElement) {
+            startPresenterTimer();
+        }
+        // Clear timer if element was removed
+        else if (!currentTimerElement && lastPresenterTimerElement && presenterTimerInterval) {
+            clearInterval(presenterTimerInterval);
+            presenterTimerInterval = null;
+        }
+
+        lastPresenterTimerElement = currentTimerElement;
+    });
+
+    presenterObserver.observe(document.body, { childList: true, subtree: true });
+</script>
