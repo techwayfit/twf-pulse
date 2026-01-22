@@ -1,0 +1,123 @@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<button class="btn btn-sm fullscreen-toggle-btn"
+        @onclick="ToggleFullscreen"
+        title="@(isFullscreen ? "Exit Full Screen (F11)" : "Enter Full Screen (F11)")">
+    <span class="icon-expand">
+        <i class="fas fa-expand me-2"></i>
+        <span class="d-none d-md-inline">Full Screen</span>
+    </span>
+    <span class="icon-compress">
+        <i class="fas fa-compress me-2"></i>
+        <span class="d-none d-md-inline">Exit Full Screen</span>
+    </span>
+</button>
+
+@if (isFullscreen && showBanner)
+{
+    <div class="fullscreen-info-banner">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="flex-grow-1">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Presentation Mode Active</strong>
+                <span class="d-none d-md-inline ms-2">• Press F11 or ESC to exit</span>
+            </div>
+            <button class="close-banner" @onclick="DismissBanner" type="button">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool ShowInfoBanner { get; set; } = true;
+
+    private bool isFullscreen = false;
+    private bool showBanner = true;
+    private DotNetObjectReference<FullscreenToggle>? dotNetRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                // Enable fullscreen keyboard shortcuts on this page
+                await JS.InvokeVoidAsync("eval", "document.body.dataset.fullscreenEnabled = 'true'");
+
+                // Create reference for JS interop callbacks
+                dotNetRef = DotNetObjectReference.Create(this);
+
+                // Check initial fullscreen state
+                isFullscreen = await JS.InvokeAsync<bool>("fullscreenMode.isActive");
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fullscreen initialization error: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task ToggleFullscreen()
+    {
+        try
+        {
+            var result = await JS.InvokeAsync<bool>("fullscreenMode.toggle");
+
+            // Wait a bit for the change to take effect
+            await Task.Delay(100);
+
+            // Update state
+            isFullscreen = await JS.InvokeAsync<bool>("fullscreenMode.isActive");
+
+            // Reset banner visibility when entering fullscreen
+            if (isFullscreen && ShowInfoBanner)
+            {
+                showBanner = true;
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Fullscreen toggle error: {ex.Message}");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnFullscreenChanged(bool active)
+    {
+        isFullscreen = active;
+
+        if (active && ShowInfoBanner)
+        {
+            showBanner = true;
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void DismissBanner()
+    {
+        showBanner = false;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        dotNetRef?.Dispose();
+
+        try
+        {
+            // Cleanup: disable fullscreen shortcuts
+            await JS.InvokeVoidAsync("eval", "document.body.dataset.fullscreenEnabled = 'false'");
+        }
+        catch
+        {
+            // Ignore disposal errors
+        }
+    }
+}

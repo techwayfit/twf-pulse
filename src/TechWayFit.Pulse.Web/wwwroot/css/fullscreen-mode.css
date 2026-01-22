@@ -1,0 +1,172 @@
+/**
+ * Full-Screen Mode Styles
+ * Enhanced presentation mode for workshop sessions
+ */
+
+/* Hide navigation and footer in full-screen mode */
+body.fullscreen-active .pulse-navbar,
+body.fullscreen-active footer {
+    display: none !important;
+}
+
+/* Full viewport height when in full-screen */
+body.fullscreen-active main {
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 2rem 0 !important;
+}
+
+/* Adjust container in full-screen */
+body.fullscreen-active .container {
+    max-width: 95% !important;
+}
+
+/* Full-screen toggle button */
+.fullscreen-toggle-btn {
+ position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1050;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.fullscreen-toggle-btn:hover {
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.fullscreen-toggle-btn:active {
+ transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Pulsing animation for the button to draw attention on first load */
+@keyframes subtle-pulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); }
+    50% { box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3); }
+}
+
+.fullscreen-toggle-btn.attention {
+    animation: subtle-pulse 2s ease-in-out 3;
+}
+
+/* Show different icon when in full-screen */
+body.fullscreen-active .fullscreen-toggle-btn .icon-expand {
+    display: none;
+}
+
+body.fullscreen-active .fullscreen-toggle-btn .icon-compress {
+    display: inline;
+}
+
+body:not(.fullscreen-active) .fullscreen-toggle-btn .icon-expand {
+    display: inline;
+}
+
+body:not(.fullscreen-active) .fullscreen-toggle-btn .icon-compress {
+    display: none;
+}
+
+/* Enhance activity display in full-screen */
+body.fullscreen-active .card {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Larger text in full-screen for better readability */
+body.fullscreen-active h1,
+body.fullscreen-active h2,
+body.fullscreen-active h3 {
+    font-size: calc(1.1 * var(--bs-font-size-base, 1rem));
+}
+
+/* Better spacing in full-screen */
+body.fullscreen-active .card-body {
+    padding: 2rem !important;
+}
+
+/* Hide less important elements in full-screen */
+body.fullscreen-active .small-text-only {
+    display: none;
+}
+
+/* Optimize dashboard charts for full-screen */
+body.fullscreen-active canvas {
+    max-height: 70vh !important;
+}
+
+/* Full-screen notification banner */
+.fullscreen-info-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  padding: 0.5rem 1rem;
+    text-align: center;
+    z-index: 1040;
+    font-size: 0.875rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+ opacity: 1;
+    }
+}
+
+.fullscreen-info-banner .close-banner {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.fullscreen-info-banner .close-banner:hover {
+    opacity: 1;
+}
+
+/* Adjust main content when banner is visible */
+body.fullscreen-active.has-banner main {
+    padding-top: 4rem !important;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+    body.fullscreen-active .container {
+        max-width: 100% !important;
+        padding: 0 1rem !important;
+    }
+    
+    .fullscreen-toggle-btn {
+        top: 0.5rem;
+right: 0.5rem;
+   padding: 0.5rem !important;
+    }
+}
+
+/* Print styles - disable full-screen effects when printing */
+@media print {
+    body.fullscreen-active .fullscreen-toggle-btn,
+    .fullscreen-info-banner {
+        display: none !important;
+    }
+    
+    body.fullscreen-active main {
+    min-height: auto !important;
+    }
+}

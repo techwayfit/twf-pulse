@@ -1,0 +1,239 @@
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Web.Hubs
+@using TechWayFit.Pulse.Web.Services
+@using TechWayFit.Pulse.Contracts.Responses
+@inject NavigationManager Navigation
+@inject IPulseApiService ApiService
+@inject ILogger<LiveSubmissionsFeed> Logger
+@implements IAsyncDisposable
+
+<div class="live-submissions-feed">
+    @if (submissions.Any())
+    {
+        <div class="submissions-list">
+          @foreach (var submission in submissions.Take(20).Reverse())
+            {
+         <div class="submission-item @GetSubmissionClass(submission)" @key="submission.Timestamp">
+                    <div class="submission-header">
+         <span class="submission-time">@GetTimeAgo(submission.Timestamp)</span>
+    @if (!string.IsNullOrEmpty(submission.ParticipantName))
+              {
+           <span class="submission-participant">@submission.ParticipantName</span>
+           }
+</div>
+             <div class="submission-content">
+          @GetSubmissionPreview(submission)
+       </div>
+       </div>
+       }
+        </div>
+    }
+    else
+    {
+      <div class="text-center py-4">
+  <div class="mb-2">
+         <i class="fas fa-inbox fa-2x text-muted"></i>
+     </div>
+    <p class="text-muted small mb-0">
+       Waiting for responses...
+  </p>
+        </div>
+    }
+</div>
+
+<style>
+    .live-submissions-feed {
+   height: 100%;
+      display: flex;
+    flex-direction: column;
+    }
+
+    .submissions-list {
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 0.75rem;
+    }
+
+    .submission-item {
+        background: white;
+     border-left: 3px solid #0d6efd;
+        padding: 0.75rem;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        animation: slideInRight 0.3s ease;
+        transition: all 0.2s ease;
+    }
+
+    .submission-item:hover {
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        transform: translateX(-2px);
+    }
+
+    .submission-item.recent {
+        border-left-color: #198754;
+ background: linear-gradient(to right, #d1f4dd 0%, white 20%);
+    }
+
+    @@keyframes slideInRight {
+        from {
+opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+ opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .submission-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .submission-time {
+        color: #6c757d;
+        font-weight: 500;
+}
+
+ .submission-participant {
+        color: #495057;
+        font-weight: 600;
+        max-width: 100px;
+        overflow: hidden;
+     text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .submission-content {
+        font-size: 0.875rem;
+     color: #212529;
+        word-break: break-word;
+    }
+
+    .submission-content .badge {
+        font-size: 0.75rem;
+     margin-right: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public string SessionCode { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Guid ActivityId { get; set; }
+
+    private List<SubmissionItem> submissions = new();
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SetupSignalRConnection();
+    }
+
+    private async Task SetupSignalRConnection()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+     .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+          .WithAutomaticReconnect()
+           .Build();
+
+            // Handle response received events
+ hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
+     {
+             await InvokeAsync(() =>
+{
+  if (responseEvent.SessionCode == SessionCode && responseEvent.ActivityId == ActivityId)
+           {
+// Add new submission to the list
+         submissions.Add(new SubmissionItem
+             {
+        Timestamp = responseEvent.CreatedAt.DateTime,
+       ParticipantId = responseEvent.ParticipantId,
+ ParticipantName = $"Participant {submissions.Count + 1}", // Generic name since we don't have it
+   ResponseId = responseEvent.ResponseId,
+     IsRecent = true
+   });
+
+          // Mark old submissions as not recent
+            foreach (var sub in submissions.Where(s => s.Timestamp < DateTime.UtcNow.AddSeconds(-5)))
+      {
+     sub.IsRecent = false;
+ }
+
+        // Keep only last 50 submissions
+      if (submissions.Count > 50)
+ {
+   submissions = submissions.TakeLast(50).ToList();
+       }
+
+    StateHasChanged();
+    }
+     });
+ });
+
+            await hubConnection.StartAsync();
+   await hubConnection.InvokeAsync("Subscribe", SessionCode);
+     }
+        catch (Exception ex)
+        {
+  Logger.LogError(ex, "Failed to setup SignalR connection for live submissions feed");
+        }
+    }
+
+    private string GetSubmissionClass(SubmissionItem submission)
+    {
+        return submission.IsRecent ? "recent" : "";
+    }
+
+    private string GetTimeAgo(DateTime timestamp)
+    {
+        var elapsed = DateTime.UtcNow - timestamp;
+
+        if (elapsed.TotalSeconds < 5)
+          return "just now";
+        if (elapsed.TotalSeconds < 60)
+            return $"{(int)elapsed.TotalSeconds}s ago";
+        if (elapsed.TotalMinutes < 60)
+            return $"{(int)elapsed.TotalMinutes}m ago";
+
+        return timestamp.ToString("HH:mm");
+    }
+
+    private MarkupString GetSubmissionPreview(SubmissionItem submission)
+ {
+  // Show generic response received message
+        return new MarkupString($"<div class='text-success'><i class='fas fa-check me-1'></i>Response submitted</div>");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+  if (hubConnection is not null)
+     {
+            try
+{
+       await hubConnection.InvokeAsync("Unsubscribe", SessionCode);
+             await hubConnection.DisposeAsync();
+   }
+    catch (Exception ex)
+       {
+         Logger.LogError(ex, "Error disposing SignalR connection");
+         }
+     }
+    }
+
+    private class SubmissionItem
+    {
+        public DateTime Timestamp { get; set; }
+    public Guid ParticipantId { get; set; }
+    public Guid ResponseId { get; set; }
+public string? ParticipantName { get; set; }
+    public bool IsRecent { get; set; }
+    }
+}

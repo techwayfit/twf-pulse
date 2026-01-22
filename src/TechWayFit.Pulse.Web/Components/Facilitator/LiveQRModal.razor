@@ -1,0 +1,49 @@
+@inject IJSRuntime JS
+
+<!-- Joining Information Modal -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="qrModalLabel">Joining Information</h5>
+  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  </div>
+         <div class="modal-body text-center px-4 pb-4">
+  <!-- QR Code -->
+         <div class="bg-white border rounded p-3 d-inline-block mb-3">
+        <canvas id="qr-modal-@(SessionCode.Replace("-", ""))"
+        width="200"
+     height="200"></canvas>
+       </div>
+
+         <!-- Session Code -->
+          <div class="bg-primary bg-opacity-10 rounded px-3 py-2 mb-3">
+    <div class="h4 mb-0 text-primary fw-bold">@SessionCode</div>
+   <small class="text-muted">Session Code</small>
+</div>
+
+  <!-- Divider -->
+   <div class="text-muted small mb-2">or share this link</div>
+
+        <!-- Join URL -->
+          <div class="input-group">
+   <input type="text" class="form-control" readonly value="@JoinUrl" id="joinUrlInputModal" />
+      <button class="btn btn-primary" @onclick="OnCopyUrl">
+         Copy
+ </button>
+    </div>
+  </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string SessionCode { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string JoinUrl { get; set; } = default!;
+
+[Parameter]
+    public EventCallback OnCopyUrl { get; set; }
+}

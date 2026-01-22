@@ -1,0 +1,44 @@
+<!-- Set Timer Modal -->
+<div class="modal fade" id="setTimerModal" tabindex="-1" aria-labelledby="setTimerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+  <div class="modal-header">
+        <h5 class="modal-title" id="setTimerModalLabel">
+      <i class="fas fa-clock me-2"></i>Set Activity Timer
+       </h5>
+  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+     </div>
+        <div class="modal-body">
+    <p class="text-muted mb-3">How many minutes for this activity?</p>
+  <div class="mb-3">
+     <label class="form-label fw-semibold">Duration (minutes)</label>
+         <input type="number"
+     class="form-control form-control-lg text-center"
+         value="@TimerDuration"
+       @oninput="@((e) => OnTimerDurationChanged.InvokeAsync(int.Parse(e.Value?.ToString() ?? "0")))"
+  min="1"
+   max="120"
+      placeholder="e.g., 5" />
+      <small class="text-muted">Timer will start immediately</small>
+      </div>
+        <div class="d-grid gap-2">
+        <button class="btn btn-lg btn-primary" @onclick="@(() => OnSetTimer.InvokeAsync(TimerDuration))" disabled="@(TimerDuration <= 0)">
+       <i class="fas fa-play me-2"></i>Start Timer
+    </button>
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+   </div>
+  </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+ public int TimerDuration { get; set; } = 5;
+
+  [Parameter]
+ public EventCallback<int> OnTimerDurationChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnSetTimer { get; set; }
+}
