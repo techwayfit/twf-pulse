@@ -209,6 +209,15 @@
         if (ActivityId != Guid.Empty)
         {
             await LoadDashboard();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (dashboard?.WordFrequencies?.Any() == true && viewType == "cloud")
+        {
+            // Single render attempt - canvas should be ready in DOM
+            await Task.Delay(300);
             await RenderVisualization();
         }
     }

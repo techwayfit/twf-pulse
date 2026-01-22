@@ -5,7 +5,7 @@ window.renderWordCloud = function (canvasId, words) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) {
         console.error('Canvas not found:', canvasId);
-        return;
+    return;
     }
 
     const ctx = canvas.getContext('2d');
@@ -13,14 +13,14 @@ window.renderWordCloud = function (canvasId, words) {
     if (!words || words.length === 0) {
         ctx.fillStyle = '#6c757d';
         ctx.font = '16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('No words to display yet', canvas.width / 2, canvas.height / 2);
+ ctx.textAlign = 'center';
+  ctx.fillText('No words to display yet', canvas.width / 2, canvas.height / 2);
         return;
     }
 
     // Destroy existing chart if it exists
     if (window.wordCloudInstances && window.wordCloudInstances[canvasId]) {
-        window.wordCloudInstances[canvasId].destroy();
+ window.wordCloudInstances[canvasId].destroy();
     }
 
     // Initialize charts storage
@@ -28,45 +28,69 @@ window.renderWordCloud = function (canvasId, words) {
         window.wordCloudInstances = {};
     }
 
-    console.log('Rendering word cloud with data:', words);
+  console.log('Rendering word cloud with data:', words);
 
-    // Color palette for word cloud
+ // Color palette for word cloud
     const colors = [
         '#0d6efd', // Blue
         '#6610f2', // Purple
-        '#6f42c1', // Indigo
+      '#6f42c1', // Indigo
         '#d63384', // Pink
         '#dc3545', // Red
         '#fd7e14', // Orange
         '#ffc107', // Yellow
-        '#198754', // Green
+    '#198754', // Green
         '#20c997', // Teal
-        '#0dcaf0'  // Cyan
+   '#0dcaf0'  // Cyan
     ];
 
-    // Create word cloud chart with custom colors
+    // Check if we're in presenter mode (larger fonts)
+    const isPresenterMode = document.querySelector('.presenter-mode-page') !== null;
+const sizeMultiplier = isPresenterMode ? 30 : 10; // 3x larger in presenter mode
+    const fontSizeRange = isPresenterMode ? [24, 80] : [12, 48]; // Larger font range
+
+    // Create word cloud chart with custom colors and larger fonts
     window.wordCloudInstances[canvasId] = new Chart(ctx, {
         type: 'wordCloud',
         data: {
-            labels: words.map(w => w.text || w.Text),
-            datasets: [{
-                label: '',
-                data: words.map(w => (w.count || w.Count) * 10),
-                color: colors,
-                backgroundColor: (context) => {
-                    return colors[context.dataIndex % colors.length];
-                }
-            }]
+     labels: words.map(w => w.text || w.Text),
+   datasets: [{
+       label: '',
+     data: words.map(w => (w.count || w.Count) * sizeMultiplier),
+    color: colors,
+   backgroundColor: (context) => {
+     return colors[context.dataIndex % colors.length];
+       }
+ }]
         },
         options: {
-            title: {
-                display: false
-            },
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
+    title: {
+      display: false
+},
+        plugins: {
+        legend: {
+    display: false
+          },
+     tooltip: {
+         enabled: true,
+        callbacks: {
+                   label: function(context) {
+     return context.label + ': ' + Math.round(context.parsed.y / sizeMultiplier);
+    }
+              }
+       }
+         },
+       // Word cloud specific options
+            elements: {
+      word: {
+           fontFamily: 'Arial, sans-serif',
+           fontWeight: 'bold',
+     padding: isPresenterMode ? 4 : 2,
+            minRotation: 0,
+        maxRotation: 0, // Keep words horizontal for better readability
+          rotate: 0
+   }
+          }
         }
     });
 };
