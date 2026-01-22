@@ -17,7 +17,7 @@ public class SessionServiceTests
     public SessionServiceTests()
     {
         _sessionRepositoryMock = new Mock<ISessionRepository>();
-      _sessionService = new SessionService(_sessionRepositoryMock.Object);
+        _sessionService = new SessionService(_sessionRepositoryMock.Object);
     }
 
     [Fact]
@@ -27,28 +27,28 @@ public class SessionServiceTests
         var code = "TEST-2024";
         var title = "Test Session";
         var goal = "Test Goal";
-var context = "Test Context";
-var settings = new SessionSettings(5, null, true, true, 360);
+        var context = "Test Context";
+        var settings = new SessionSettings(true, false, 360);
         var joinFormSchema = new JoinFormSchema(5, new List<JoinFormField>());
-      var now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var facilitatorUserId = Guid.NewGuid();
 
         _sessionRepositoryMock
-            .Setup(x => x.GetByCodeAsync(code, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Session?)null);
+     .Setup(x => x.GetByCodeAsync(code, It.IsAny<CancellationToken>()))
+  .ReturnsAsync((Session?)null);
 
-      _sessionRepositoryMock
- .Setup(x => x.AddAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()))
-    .Returns(Task.CompletedTask);
+        _sessionRepositoryMock
+   .Setup(x => x.AddAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()))
+      .Returns(Task.CompletedTask);
 
-     // Act
+        // Act
         var result = await _sessionService.CreateSessionAsync(
-            code, title, goal, context, settings, joinFormSchema, now, facilitatorUserId);
+         code, title, goal, context, settings, joinFormSchema, now, facilitatorUserId);
 
-     // Assert
+        // Assert
         result.Should().NotBeNull();
         result.Code.Should().Be(code);
-  result.Title.Should().Be(title);
+        result.Title.Should().Be(title);
         result.Goal.Should().Be(goal);
         result.Context.Should().Be(context);
         result.Settings.Should().Be(settings);
@@ -56,25 +56,25 @@ var settings = new SessionSettings(5, null, true, true, 360);
         result.Status.Should().Be(SessionStatus.Draft);
         result.CreatedAt.Should().Be(now);
         result.FacilitatorUserId.Should().Be(facilitatorUserId);
-    result.ExpiresAt.Should().Be(now.AddMinutes(360));
+        result.ExpiresAt.Should().Be(now.AddMinutes(360));
 
-  _sessionRepositoryMock.Verify(
-            x => x.AddAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()),
-        Times.Once);
+        _sessionRepositoryMock.Verify(
+           x => x.AddAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()),
+              Times.Once);
     }
 
-[Fact]
+    [Fact]
     public async Task CreateSessionAsync_Should_Throw_When_Code_Already_Exists()
     {
         // Arrange
         var code = "EXISTING-CODE";
         var title = "Test Session";
-    var settings = new SessionSettings(5, null, true, true, 360);
+        var settings = new SessionSettings(true, false, 360);
         var joinFormSchema = new JoinFormSchema(5, new List<JoinFormField>());
         var existingSession = CreateTestSession(code);
 
         _sessionRepositoryMock
-            .Setup(x => x.GetByCodeAsync(code, It.IsAny<CancellationToken>()))
+         .Setup(x => x.GetByCodeAsync(code, It.IsAny<CancellationToken>()))
 .ReturnsAsync(existingSession);
 
         // Act & Assert
@@ -96,14 +96,14 @@ var settings = new SessionSettings(5, null, true, true, 360);
      string code, string title)
     {
         // Arrange
-        var settings = new SessionSettings(5, null, true, true, 360);
-      var joinFormSchema = new JoinFormSchema(5, new List<JoinFormField>());
+        var settings = new SessionSettings(true, false, 360);
+        var joinFormSchema = new JoinFormSchema(5, new List<JoinFormField>());
 
-   // Act & Assert
+        // Act & Assert
         var act = async () => await _sessionService.CreateSessionAsync(
  code, title, null, null, settings, joinFormSchema, DateTimeOffset.UtcNow);
 
- await act.Should().ThrowAsync<ArgumentException>();
+        await act.Should().ThrowAsync<ArgumentException>();
     }
 
     [Fact]
@@ -111,47 +111,47 @@ var settings = new SessionSettings(5, null, true, true, 360);
     {
         // Arrange
         var longCode = new string('A', 33); // 33 characters, max is 32
-var title = "Valid Title";
-     var settings = new SessionSettings(5, null, true, true, 360);
+        var title = "Valid Title";
+        var settings = new SessionSettings(true, false, 360);
         var joinFormSchema = new JoinFormSchema(5, new List<JoinFormField>());
 
         // Act & Assert
-   var act = async () => await _sessionService.CreateSessionAsync(
-            longCode, title, null, null, settings, joinFormSchema, DateTimeOffset.UtcNow);
+        var act = async () => await _sessionService.CreateSessionAsync(
+               longCode, title, null, null, settings, joinFormSchema, DateTimeOffset.UtcNow);
 
-     await act.Should().ThrowAsync<ArgumentException>()
-     .WithMessage("*Session code must be <= 32 characters*");
+        await act.Should().ThrowAsync<ArgumentException>()
+           .WithMessage("*Session code must be <= 32 characters*");
     }
 
     [Fact]
     public async Task CreateSessionAsync_Should_Throw_When_Title_Too_Long()
     {
- // Arrange
+        // Arrange
         var code = "VALID-CODE";
         var longTitle = new string('A', 201); // 201 characters, max is 200
-        var settings = new SessionSettings(5, null, true, true, 360);
+        var settings = new SessionSettings(true, false, 360);
         var joinFormSchema = new JoinFormSchema(5, new List<JoinFormField>());
 
         // Act & Assert
- var act = async () => await _sessionService.CreateSessionAsync(
-      code, longTitle, null, null, settings, joinFormSchema, DateTimeOffset.UtcNow);
+        var act = async () => await _sessionService.CreateSessionAsync(
+         code, longTitle, null, null, settings, joinFormSchema, DateTimeOffset.UtcNow);
 
-     await act.Should().ThrowAsync<ArgumentException>()
+        await act.Should().ThrowAsync<ArgumentException>()
             .WithMessage("*Session title must be <= 200 characters*");
     }
 
     [Fact]
-  public async Task SetStatusAsync_Should_Update_Status_Successfully()
+    public async Task SetStatusAsync_Should_Update_Status_Successfully()
     {
-   // Arrange
+        // Arrange
         var sessionId = Guid.NewGuid();
         var session = CreateTestSession("TEST-CODE", sessionId);
         var newStatus = SessionStatus.Live;
         var now = DateTimeOffset.UtcNow;
 
-      _sessionRepositoryMock
-            .Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(session);
+        _sessionRepositoryMock
+   .Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
+      .ReturnsAsync(session);
 
         _sessionRepositoryMock
    .Setup(x => x.UpdateAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()))
@@ -165,42 +165,42 @@ var title = "Valid Title";
         session.UpdatedAt.Should().Be(now);
 
         _sessionRepositoryMock.Verify(
-            x => x.UpdateAsync(session, It.IsAny<CancellationToken>()),
-       Times.Once);
+    x => x.UpdateAsync(session, It.IsAny<CancellationToken>()),
+ Times.Once);
     }
 
     [Fact]
- public async Task SetStatusAsync_Should_Throw_When_Session_Not_Found()
- {
-      // Arrange
+    public async Task SetStatusAsync_Should_Throw_When_Session_Not_Found()
+    {
+        // Arrange
         var sessionId = Guid.NewGuid();
 
         _sessionRepositoryMock
-     .Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
-     .ReturnsAsync((Session?)null);
+        .Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
+        .ReturnsAsync((Session?)null);
 
         // Act & Assert
-     var act = async () => await _sessionService.SetStatusAsync(
-            sessionId, SessionStatus.Live, DateTimeOffset.UtcNow);
+        var act = async () => await _sessionService.SetStatusAsync(
+           sessionId, SessionStatus.Live, DateTimeOffset.UtcNow);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
        .WithMessage("Session not found.");
-  }
+    }
 
     [Fact]
     public async Task UpdateJoinFormSchemaAsync_Should_Update_Schema_Successfully()
     {
-    // Arrange
+        // Arrange
         var sessionId = Guid.NewGuid();
         var session = CreateTestSession("TEST-CODE", sessionId);
         var newSchema = new JoinFormSchema(5, new List<JoinFormField>
         {
      new JoinFormField("department", "Department", FieldType.Text, true, null, true)
-        });
+ });
         var now = DateTimeOffset.UtcNow;
 
         _sessionRepositoryMock
-       .Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
+   .Setup(x => x.GetByIdAsync(sessionId, It.IsAny<CancellationToken>()))
        .ReturnsAsync(session);
 
         _sessionRepositoryMock
@@ -211,29 +211,29 @@ var title = "Valid Title";
         var result = await _sessionService.UpdateJoinFormSchemaAsync(sessionId, newSchema, now);
 
         // Assert
-    result.Should().Be(session);
-   session.JoinFormSchema.Should().Be(newSchema);
+        result.Should().Be(session);
+        session.JoinFormSchema.Should().Be(newSchema);
    session.UpdatedAt.Should().Be(now);
 
    _sessionRepositoryMock.Verify(
      x => x.UpdateAsync(session, It.IsAny<CancellationToken>()),
-            Times.Once);
+     Times.Once);
     }
 
     private static Session CreateTestSession(string code = "TEST-2024", Guid? id = null)
     {
         return new Session(
           id ?? Guid.NewGuid(),
-            code,
+     code,
         "Test Session",
-    "Test Goal",
-            "Test Context",
-     new SessionSettings(5, null, true, true, 360),
+ "Test Goal",
+"Test Context",
+     new SessionSettings(true, false, 360),
   new JoinFormSchema(5, new List<JoinFormField>()),
    SessionStatus.Draft,
-        null,
-         DateTimeOffset.UtcNow,
-     DateTimeOffset.UtcNow,
+ null,
+       DateTimeOffset.UtcNow,
+   DateTimeOffset.UtcNow,
             DateTimeOffset.UtcNow.AddMinutes(360));
     }
 }

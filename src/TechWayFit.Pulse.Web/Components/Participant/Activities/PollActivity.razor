@@ -1,0 +1,191 @@
+﻿@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using System.Text.Json
+@using System.Diagnostics
+
+<div class="poll-activity">
+    <div class="mb-4">
+        <h3 class="h5 fw-semibold text-secondary mb-4">@(pollConfig?.AllowMultiple == true ? "Select one or more:" : "Make your choice:")</h3>
+
+        @if (pollConfig != null && pollConfig.Options != null && pollConfig.Options.Count > 0)
+        {
+            <div class="poll-options mb-4">
+                @foreach (var option in pollConfig.Options)
+                {
+                    var optionId = option.Id;
+                    var isSelected = selectedOptionIds.Contains(optionId);
+                    <div class="form-check poll-option mb-3 p-3 border rounded-3 position-relative
+          @(isSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-2")
+                 poll-option-interactive"
+                         style="cursor: pointer; transition: all 0.2s ease-in-out;"
+                         @onclick="@(async () => await HandleOptionClick(optionId))">
+                        @if (pollConfig.AllowMultiple)
+                        {
+                            <input class="form-check-input position-absolute"
+                                   type="checkbox"
+                                   id="poll-@optionId"
+                                   checked="@isSelected"
+                                   style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                                   @onchange="@((e) => ToggleOption(optionId))" />
+                        }
+                        else
+                        {
+                            <input class="form-check-input position-absolute"
+                                   type="radio"
+                                   name="pollChoice"
+                                   id="poll-@optionId"
+                                   checked="@isSelected"
+                                   style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                                   @onchange="@((e) => SelectOption(optionId))" />
+                        }
+                        <label class="form-check-label w-100 ps-4 ms-1" for="poll-@optionId" style="cursor: pointer;">
+                            <strong class="d-block mb-1 fs-6">@option.Label</strong>
+                            @if (!string.IsNullOrEmpty(option.Description))
+                            {
+                                <small class="text-muted d-block">@option.Description</small>
+                            }
+                        </label>
+                    </div>
+                }
+
+                @if (pollConfig.AllowCustomOption)
+                {
+                    var isCustomSelected = selectedOptionIds.Contains("custom");
+                    <div class="form-check poll-option mb-3 p-3 border rounded-3 position-relative
+           @(isCustomSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-2")
+                    poll-option-interactive"
+                         style="cursor: pointer; transition: all 0.2s ease-in-out;"
+                         @onclick="@(async () => await HandleOptionClick("custom"))">
+                        @if (pollConfig.AllowMultiple)
+                        {
+                            <input class="form-check-input position-absolute"
+                                   type="checkbox"
+                                   id="poll-custom"
+                                   checked="@isCustomSelected"
+                                   style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                                   @onchange="@((e) => ToggleOption("custom"))" />
+                        }
+                        else
+                        {
+                            <input class="form-check-input position-absolute"
+                                   type="radio"
+                                   name="pollChoice"
+                                   id="poll-custom"
+                                   checked="@isCustomSelected"
+                                   style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                                   @onchange="@((e) => SelectOption("custom"))" />
+                        }
+                        <label class="form-check-label w-100 ps-4 ms-1" for="poll-custom" style="cursor: pointer;">
+                            <strong class="d-block mb-2 fs-6">Other</strong>
+                            @if (isCustomSelected)
+                            {
+                                <input type="text"
+                                       class="form-control"
+                                       placeholder="@pollConfig.CustomOptionPlaceholder"
+                                       @bind="customText"
+                                       @onclick:stopPropagation="true"
+                                       maxlength="100" />
+                            }
+                        </label>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                <span>No poll options configured.</span>
+            </div>
+        }
+    </div>
+
+    <button class="btn btn-primary btn-lg w-100 py-3" tabindex="1"
+            @onclick="HandleSubmit"
+            disabled="@(Parameters.IsSubmitting || selectedOptionIds.Count == 0 || Parameters.HasSubmitted)">
+        @GetSubmitButtonText()
+    </button>
+
+    @if (!string.IsNullOrEmpty(Parameters.SubmitMessage))
+    {
+        <div class="alert @(Parameters.SubmitSuccess ? "alert-success" : "alert-danger") mt-3 mb-0">
+            @Parameters.SubmitMessage
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ParticipantActivityParameters Parameters { get; set; }
+
+    private PollConfig? pollConfig;
+    private List<string> selectedOptionIds = new();
+    private string? customText;
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(Parameters.Config))
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                pollConfig = JsonSerializer.Deserialize<PollConfig>(Parameters.Config, options);
+                Debug.WriteLine($"Poll config parsed. Options count: {pollConfig?.Options?.Count ?? 0}");
+            }
+            catch (JsonException ex)
+            {
+                Debug.WriteLine($"Failed to parse poll config: {ex.Message}");
+            }
+        }
+    }
+
+    private void SelectOption(string optionId)
+    {
+        selectedOptionIds.Clear();
+        selectedOptionIds.Add(optionId);
+    }
+
+    private void ToggleOption(string optionId)
+    {
+        if (selectedOptionIds.Contains(optionId))
+        {
+            selectedOptionIds.Remove(optionId);
+        }
+        else
+        {
+            selectedOptionIds.Add(optionId);
+        }
+    }
+
+    private async Task HandleOptionClick(string optionId)
+    {
+        if (pollConfig?.AllowMultiple == true)
+        {
+            ToggleOption(optionId);
+        }
+        else
+        {
+            SelectOption(optionId);
+        }
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleSubmit()
+    {
+        var payload = new
+        {
+            selectedOptionIds = selectedOptionIds,
+            customOptionText = selectedOptionIds.Contains("custom") ? customText : null
+        };
+
+        await Parameters.OnSubmit(JsonSerializer.Serialize(payload));
+    }
+
+    private string GetSubmitButtonText()
+    {
+        if (Parameters.HasSubmitted)
+            return "Response Submitted ✓";
+        if (Parameters.IsSubmitting)
+            return "Submitting...";
+        return "Submit Response";
+    }
+}

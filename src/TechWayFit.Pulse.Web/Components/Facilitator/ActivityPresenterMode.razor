@@ -7,7 +7,7 @@
 <button class="btn btn-primary activity-presenter-toggle" 
   @onclick="TogglePresenterMode"
         title="@(isPresenterMode ? "Exit Presenter Mode (ESC)" : "Present Activity Full-Screen")">
-    <span class="icon-expand">
+  <span class="icon-expand">
         <i class="fas fa-tv me-2"></i>
         <span class="d-none d-md-inline">Presenter Mode</span>
     </span>
@@ -22,141 +22,142 @@
 {
     <div class="activity-presenter-overlay" @onclick:stopPropagation="true">
      <div class="activity-presenter-container">
-            <!-- Header Bar -->
-            <div class="presenter-header">
-            <div class="d-flex justify-content-between align-items-center">
+          <!-- Header Bar -->
+     <div class="presenter-header">
+    <div class="d-flex justify-content-between align-items-center">
   <div class="d-flex align-items-center gap-3">
-  <span class="badge bg-success">
-           <span class="pulse-dot me-1"></span>LIVE
+  <span class="badge bg-success presenter-badge-live">
+  <span class="pulse-dot me-2"></span>LIVE
              </span>
-            <h3 class="mb-0 h5">@Activity.Title</h3>
-            @if (!string.IsNullOrEmpty(Activity.Prompt))
-            {
-         <span class="text-muted">• @Activity.Prompt</span>
-                }
+      <h1 class="mb-0 presenter-title">@Activity.Title</h1>
+      @if (!string.IsNullOrEmpty(Activity.Prompt))
+      {
+         <span class="presenter-subtitle">• @Activity.Prompt</span>
+    }
         </div>
   <div class="d-flex align-items-center gap-3">
        @if (Activity.DurationMinutes.HasValue && Activity.OpenedAt.HasValue)
-        {
+  {
       <div id="activity-timer-presenter"
  data-duration="@Activity.DurationMinutes.Value"
-           data-opened-at="@Activity.OpenedAt.Value.ToString("o")"
-            class="timer-display-presenter">
-              <i class="fas fa-clock me-1"></i>
+       data-opened-at="@Activity.OpenedAt.Value.ToString("o")"
+        class="timer-display-presenter">
+         <i class="fas fa-clock me-2"></i>
  <span class="timer-text">--:--</span>
-            </div>
+ </div>
   }
-        <span class="badge bg-light text-dark">#@Activity.Order</span>
-            <button class="btn btn-sm btn-outline-light" @onclick="TogglePresenterMode">
-    <i class="fas fa-times me-1"></i>Exit Presenter Mode
+     <span class="badge bg-light text-dark presenter-badge-order">#@Activity.Order</span>
+      <button class="btn btn-lg btn-outline-light presenter-exit-btn" @onclick="TogglePresenterMode">
+    <i class="fas fa-times me-2"></i>Exit Presenter Mode
        </button>
          </div>
          </div>
    </div>
 
-            <!-- Main Content Area: 2-Column Layout -->
-            <div class="presenter-content">
-<div class="row g-0 h-100">
-       <!-- Left Column: Activity Dashboard (10 cols) -->
-           <div class="col-lg-10 presenter-main-content">
-         <div class="h-100 p-4 overflow-auto">
-    @if (Activity.Type == ActivityType.Poll)
-         {
-         <PollDashboard
+   <!-- Main Content Area: Full Width Dashboard -->
+         <div class="presenter-content">
+       <div class="presenter-main-content">
+      <div class="presenter-dashboard-wrapper">
+@if (Activity.Type == ActivityType.Poll)
+    {
+     <PollDashboard
        SessionCode="@SessionCode"
-               ActivityId="@Activity.ActivityId" />
+     ActivityId="@Activity.ActivityId" />
       }
-        else if (Activity.Type == ActivityType.WordCloud)
+  else if (Activity.Type == ActivityType.WordCloud)
       {
         <WordCloudDashboard
-         SessionCode="@SessionCode"
+     SessionCode="@SessionCode"
           ActivityId="@Activity.ActivityId" />
           }
-           else if (Activity.Type == ActivityType.Rating)
+ else if (Activity.Type == ActivityType.Rating)
      {
-      <RatingDashboard
+   <RatingDashboard
  SessionCode="@SessionCode"
     ActivityId="@Activity.ActivityId" />
-        }
+ }
     else if (Activity.Type == ActivityType.GeneralFeedback)
       {
-              <GeneralFeedbackDashboard
+      <GeneralFeedbackDashboard
    SessionCode="@SessionCode"
  ActivityId="@Activity.ActivityId" />
           }
-          else
-         {
-        <div class="text-center py-5">
-    <p class="text-muted mb-0">
-   <i class="fas fa-chart-bar me-2"></i>
+        else
+  {
+    <div class="text-center py-5">
+    <p class="presenter-empty-message">
+   <i class="fas fa-chart-bar me-3"></i>
          Live dashboard for @Activity.Type activities coming soon
     </p>
         </div>
-               }
+        }
   </div>
+     
+         <!-- Stats Sidebar - Fixed Position -->
+      <div class="presenter-stats-sidebar">
+      <div class="presenter-stats-card">
+          <div class="presenter-stats-header">
+      <i class="fas fa-users me-2"></i>Live Activity
+    </div>
+      <div class="presenter-stats-content">
+       <div class="presenter-stat-item">
+       <div class="presenter-stat-value">@ParticipantCount</div>
+ <div class="presenter-stat-label">Participants</div>
+      </div>
+  <div class="presenter-stat-item">
+ <div class="presenter-stat-value text-primary">@ResponseCount</div>
+       <div class="presenter-stat-label">Responses</div>
+  </div>
+            </div>
+  </div>
+                   
+<LiveSubmissionsFeed 
+  SessionCode="@SessionCode"
+     ActivityId="@Activity.ActivityId" />
+   </div>
 </div>
 
-  <!-- Right Column: Live Submissions Sidebar (2 cols) -->
-            <div class="col-lg-2 presenter-sidebar">
-          <div class="h-100 p-3 overflow-auto">
-        <div class="sidebar-header mb-3">
-       <h6 class="fw-bold mb-1">
-      <i class="fas fa-users me-2"></i>Live Activity
-        </h6>
-        <div class="d-flex align-items-center gap-2">
-        <span class="badge bg-success-subtle text-success">
-       @ParticipantCount participants
-              </span>
-        <span class="badge bg-primary-subtle text-primary">
-            @ResponseCount responses
-              </span>
-        </div>
-        </div>
-
-            <LiveSubmissionsFeed 
-         SessionCode="@SessionCode"
-    ActivityId="@Activity.ActivityId" />
-         </div>
-        </div>
-        </div>
-   </div>
-
   <!-- Footer Controls -->
-            <div class="presenter-footer">
+       <div class="presenter-footer">
       <div class="d-flex justify-content-between align-items-center">
-           <div class="d-flex gap-2">
+      <div class="d-flex gap-3">
              @if (HasPrevious)
           {
-          <button class="btn btn-sm btn-outline-light"
+  <button class="btn btn-lg btn-outline-light presenter-control-btn"
                 @onclick="OnGoBack"
-         disabled="@IsPerformingAction">
-         <i class="fas fa-arrow-left me-1"></i>Previous
+       disabled="@IsPerformingAction">
+         <i class="fas fa-arrow-left me-2"></i>Previous
      </button>
        }
-    <button class="btn btn-sm btn-warning"
-              @onclick="OnClose"
+    <button class="btn btn-lg btn-warning presenter-control-btn"
+      @onclick="OnClose"
      disabled="@IsPerformingAction">
-           <i class="fas fa-stop me-1"></i>Close Activity
-      </button>
-             @if (HasNext)
-     {
-    <button class="btn btn-sm btn-primary"
-       @onclick="OnMoveNext"
-       disabled="@IsPerformingAction">
-         Next<i class="fas fa-arrow-right ms-1"></i>
+ <i class="fas fa-stop me-2"></i>Close Activity
 </button>
-              }
+ @if (HasNext)
+     {
+    <button class="btn btn-lg btn-primary presenter-control-btn"
+       @onclick="OnMoveNext"
+   disabled="@IsPerformingAction">
+         Next<i class="fas fa-arrow-right ms-2"></i>
+</button>
+        }
           </div>
-                 <div class="text-white-50 small">
+   <div class="presenter-footer-hint">
     Press <kbd>ESC</kbd> to exit presenter mode
-        </div>
+   </div>
       </div>
  </div>
-        </div>
+  </div>
+    </div>
     </div>
 }
 
 <style>
+    /* ========================================
+       PRESENTER MODE - ENHANCED STYLES
+       ======================================== */
+    
     .activity-presenter-toggle {
         position: fixed;
  top: 1rem;
@@ -167,11 +168,11 @@
     }
 
     .activity-presenter-toggle:hover {
-        transform: translateY(-2px);
+     transform: translateY(-2px);
    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    /* Show/hide icons based on state */
+ /* Show/hide icons based on state */
     body:not(.presenter-mode-active) .activity-presenter-toggle .icon-expand {
         display: inline;
     }
@@ -185,10 +186,10 @@
     }
 
     body.presenter-mode-active .activity-presenter-toggle .icon-compress {
-        display: inline;
+     display: inline;
     }
 
-    /* Presenter Mode Overlay */
+  /* Presenter Mode Overlay */
     .activity-presenter-overlay {
         position: fixed;
       top: 0;
@@ -207,36 +208,72 @@
 opacity: 0;
      }
      to {
-        opacity: 1;
+      opacity: 1;
         }
     }
 
     .activity-presenter-container {
-        display: flex;
+ display: flex;
         flex-direction: column;
-     height: 100vh;
-        width: 100%;
-    }
+ height: 100vh;
+   width: 100%;
+ }
 
-    /* Header */
+    /* ========================================
+       HEADER - ENHANCED
+       ======================================== */
     .presenter-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-        padding: 1rem 2rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  color: white;
+padding: 1.5rem 3rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         z-index: 10;
+    }
+
+    .presenter-title {
+        font-size: 2rem;
+        font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .presenter-subtitle {
+        font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+        font-weight: 400;
+    }
+
+    .presenter-badge-live {
+        font-size: 1rem;
+        padding: 0.75rem 1.25rem;
+      font-weight: 600;
+    }
+
+    .presenter-badge-order {
+        font-size: 1.1rem;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+    }
+
+    .presenter-exit-btn {
+font-size: 1rem;
+      padding: 0.75rem 1.5rem;
+        font-weight: 600;
     }
 
     .timer-display-presenter {
       background: rgba(255, 255, 255, 0.2);
-        color: white;
-  padding: 0.5rem 1rem;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 1rem;
-   min-width: 100px;
-        text-align: center;
-        backdrop-filter: blur(10px);
+  color: white;
+  padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.5rem;
+   min-width: 140px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+
+    .timer-display-presenter .fa-clock {
+    font-size: 1.25rem;
     }
 
     .timer-display-presenter.timer-warning {
@@ -245,79 +282,260 @@ opacity: 0;
     }
 
     .timer-display-presenter.timer-expired {
-        background: rgba(254, 225, 64, 0.3);
+      background: rgba(254, 225, 64, 0.3);
         animation: pulse-glow-presenter 1s ease-in-out infinite;
     }
 
     @@keyframes pulse-glow-presenter {
-        0%, 100% {
-            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+     0%, 100% {
+ box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
         }
-        50% {
+ 50% {
         box-shadow: 0 4px 16px rgba(255, 255, 255, 0.6);
   }
     }
 
-    /* Main Content Area */
+    /* ========================================
+       MAIN CONTENT - REDESIGNED LAYOUT
+     ======================================== */
     .presenter-content {
-    flex: 1;
-        overflow: hidden;
+ flex: 1;
+      overflow: hidden;
    background: #f8f9fa;
+  position: relative;
     }
 
     .presenter-main-content {
- background: white;
-        border-right: 1px solid #dee2e6;
+        height: 100%;
+        display: flex;
+      gap: 1.5rem;
+        padding: 2rem;
     }
 
-    .presenter-sidebar {
+  /* Dashboard takes most space */
+  .presenter-dashboard-wrapper {
+     flex: 1;
+        background: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        overflow-y: auto;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Larger fonts for all dashboard content */
+    .presenter-dashboard-wrapper h2,
+    .presenter-dashboard-wrapper h3,
+    .presenter-dashboard-wrapper h4,
+    .presenter-dashboard-wrapper h5,
+    .presenter-dashboard-wrapper .h2,
+    .presenter-dashboard-wrapper .h3,
+    .presenter-dashboard-wrapper .h4,
+    .presenter-dashboard-wrapper .h5 {
+      font-size: 2rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    .presenter-dashboard-wrapper .card-title {
+      font-size: 2rem !important;
+    }
+
+    .presenter-dashboard-wrapper p,
+    .presenter-dashboard-wrapper .text-muted,
+    .presenter-dashboard-wrapper small,
+    .presenter-dashboard-wrapper .small {
+ font-size: 1.25rem !important;
+    }
+
+    .presenter-dashboard-wrapper .badge {
+        font-size: 1.1rem !important;
+        padding: 0.5rem 1rem !important;
+    }
+
+ /* Stat boxes larger */
+    .presenter-dashboard-wrapper .bg-primary,
+    .presenter-dashboard-wrapper .bg-info,
+  .presenter-dashboard-wrapper .bg-success,
+    .presenter-dashboard-wrapper .bg-warning {
+        padding: 2rem !important;
+    }
+
+    .presenter-dashboard-wrapper .h4 {
+        font-size: 3rem !important;
+        font-weight: 800 !important;
+    }
+
+    /* Word Cloud specific enhancements */
+    .presenter-dashboard-wrapper canvas {
+    min-height: 500px !important;
+    }
+
+    .presenter-dashboard-wrapper .btn {
+        font-size: 1.1rem !important;
+        padding: 0.75rem 1.5rem !important;
+    }
+
+    .presenter-empty-message {
+      font-size: 1.75rem !important;
+    color: #6c757d;
+        margin: 0;
+    }
+
+    /* ========================================
+       STATS SIDEBAR - FIXED RIGHT SIDE
+       ======================================== */
+    .presenter-stats-sidebar {
+        width: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+flex-shrink: 0;
+    }
+
+    .presenter-stats-card {
+        background: white;
+        border-radius: 16px;
+     padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .presenter-stats-header {
+  font-size: 1.25rem;
+        font-weight: 700;
+     color: #0F2438;
+    margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .presenter-stats-content {
+        display: flex;
+     flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .presenter-stat-item {
+        text-align: center;
+        padding: 1rem;
         background: #f8f9fa;
-  border-left: 1px solid #dee2e6;
+        border-radius: 12px;
     }
 
-    .sidebar-header {
-        position: sticky;
-        top: 0;
-        background: #f8f9fa;
-        z-index: 5;
- padding-bottom: 0.5rem;
-        border-bottom: 2px solid #dee2e6;
+    .presenter-stat-value {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #2BC48A;
+   line-height: 1;
+     margin-bottom: 0.5rem;
     }
 
-    /* Footer */
+    .presenter-stat-label {
+        font-size: 1rem;
+     color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    font-weight: 600;
+    }
+
+    /* ========================================
+       FOOTER - ENHANCED
+       ======================================== */
     .presenter-footer {
         background: #343a40;
         color: white;
-   padding: 1rem 2rem;
-     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
-        z-index: 10;
+   padding: 1.5rem 3rem;
+     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+   z-index: 10;
+  }
+
+    .presenter-control-btn {
+        font-size: 1.1rem;
+        padding: 0.75rem 1.75rem;
+        font-weight: 600;
+    }
+
+    .presenter-footer-hint {
+  color: rgba(255, 255, 255, 0.7);
+        font-size: 1rem;
     }
 
     .presenter-footer kbd {
         background: #495057;
         color: white;
-        padding: 0.25rem 0.5rem;
-   border-radius: 4px;
-        border: 1px solid #6c757d;
+        padding: 0.5rem 0.75rem;
+ border-radius: 6px;
+     border: 1px solid #6c757d;
+        font-size: 1rem;
  }
 
-    /* Responsive */
-    @@media (max-width: 991px) {
-        .presenter-sidebar {
+    /* ========================================
+       RESPONSIVE ADJUSTMENTS
+       ======================================== */
+    @@media (max-width: 1400px) {
+        .presenter-stats-sidebar {
+   width: 280px;
+        }
+
+        .presenter-title {
+        font-size: 1.75rem;
+        }
+
+        .presenter-subtitle {
+ font-size: 1.1rem;
+        }
+  }
+
+  @@media (max-width: 1200px) {
+        .presenter-main-content {
+       flex-direction: column;
+        }
+
+        .presenter-stats-sidebar {
+         width: 100%;
+    flex-direction: row;
+        }
+
+        .presenter-stats-card {
+    flex: 1;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .presenter-header {
+   padding: 1rem 1.5rem;
+        }
+
+    .presenter-title {
+            font-size: 1.5rem;
+   }
+
+        .presenter-subtitle {
   display: none;
         }
 
         .presenter-main-content {
-  width: 100%;
+            padding: 1rem;
         }
-  }
+
+        .presenter-dashboard-wrapper {
+     padding: 1.5rem;
+        }
+
+        .presenter-footer {
+      padding: 1rem 1.5rem;
+        }
+
+.presenter-stats-sidebar {
+            flex-direction: column;
+        }
+}
 
     /* Hide other elements when presenter mode is active */
     body.presenter-mode-active .pulse-navbar,
     body.presenter-mode-active footer,
     body.presenter-mode-active .fullscreen-toggle-btn {
-        display: none !important;
-    }
+  display: none !important;
+ }
 </style>
 
 <script>
@@ -325,24 +543,24 @@ opacity: 0;
 
     function startPresenterTimer() {
    console.log('startPresenterTimer called');
-        const timerEl = document.getElementById('activity-timer-presenter');
+    const timerEl = document.getElementById('activity-timer-presenter');
 
         if (!timerEl) {
             console.log('No presenter timer element found');
   return;
-        }
+  }
 
-        const durationMinutes = parseInt(timerEl.dataset.duration);
+     const durationMinutes = parseInt(timerEl.dataset.duration);
         const openedAt = new Date(timerEl.dataset.openedAt);
         const timerText = timerEl.querySelector('.timer-text');
 
-        if (presenterTimerInterval) clearInterval(presenterTimerInterval);
+     if (presenterTimerInterval) clearInterval(presenterTimerInterval);
 
         function updateTimer() {
-            const now = new Date();
+       const now = new Date();
             const elapsedMs = now - openedAt;
-            const elapsedSeconds = Math.floor(elapsedMs / 1000);
-            const totalSeconds = durationMinutes * 60;
+       const elapsedSeconds = Math.floor(elapsedMs / 1000);
+  const totalSeconds = durationMinutes * 60;
  const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
 
      const minutes = Math.floor(remainingSeconds / 60);
@@ -370,32 +588,32 @@ opacity: 0;
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && document.body.classList.contains('presenter-mode-active')) {
      // Trigger Blazor callback to close presenter mode
-    const closeButton = document.querySelector('.activity-presenter-overlay .btn-outline-light');
+    const closeButton = document.querySelector('.activity-presenter-overlay .presenter-exit-btn');
    if (closeButton) {
-              closeButton.click();
+    closeButton.click();
         }
       }
     });
 
     // Auto-start presenter timer when element appears
   const presenterObserver = new MutationObserver(() => {
-        const presenterTimerElement = document.getElementById('activity-timer-presenter');
+   const presenterTimerElement = document.getElementById('activity-timer-presenter');
         if (presenterTimerElement && !presenterTimerInterval) {
             startPresenterTimer();
-        } else if (!presenterTimerElement && presenterTimerInterval) {
+    } else if (!presenterTimerElement && presenterTimerInterval) {
   clearInterval(presenterTimerInterval);
-            presenterTimerInterval = null;
+      presenterTimerInterval = null;
         }
  });
 
-    presenterObserver.observe(document.body, { childList: true, subtree: true });
+presenterObserver.observe(document.body, { childList: true, subtree: true });
 </script>
 
 @code {
-    [Parameter, EditorRequired]
+  [Parameter, EditorRequired]
     public AgendaActivityResponse? Activity { get; set; }
 
-    [Parameter, EditorRequired]
+  [Parameter, EditorRequired]
     public string SessionCode { get; set; } = default!;
 
     [Parameter]
@@ -408,16 +626,16 @@ opacity: 0;
     public bool IsPerformingAction { get; set; }
 
     [Parameter]
-    public bool HasPrevious { get; set; }
+ public bool HasPrevious { get; set; }
 
     [Parameter]
     public bool HasNext { get; set; }
 
-    [Parameter]
+ [Parameter]
     public EventCallback OnClose { get; set; }
 
   [Parameter]
-    public EventCallback OnGoBack { get; set; }
+ public EventCallback OnGoBack { get; set; }
 
     [Parameter]
     public EventCallback OnMoveNext { get; set; }
@@ -429,13 +647,13 @@ opacity: 0;
   isPresenterMode = !isPresenterMode;
 
    // Add/remove body class for CSS styling
-        if (isPresenterMode)
+      if (isPresenterMode)
    {
-          await JS.InvokeVoidAsync("eval", "document.body.classList.add('presenter-mode-active')");
+        await JS.InvokeVoidAsync("eval", "document.body.classList.add('presenter-mode-active')");
         }
         else
         {
-          await JS.InvokeVoidAsync("eval", "document.body.classList.remove('presenter-mode-active')");
+ await JS.InvokeVoidAsync("eval", "document.body.classList.remove('presenter-mode-active')");
      }
 
         StateHasChanged();

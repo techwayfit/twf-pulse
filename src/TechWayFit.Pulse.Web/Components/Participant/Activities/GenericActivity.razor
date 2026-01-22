@@ -1,0 +1,94 @@
+@using System.Text.Json
+
+<div class="generic-activity">
+    @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
+    {
+      <!-- Success confirmation -->
+        <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+          <div class="me-3 fs-4">?</div>
+    <div>
+     <strong>Response submitted successfully!</strong>
+        <div class="small">Your input has been recorded. Waiting for the next activity...</div>
+          </div>
+        </div>
+    }
+    else
+    {
+        <div class="mb-4">
+      <h3 class="h5 fw-semibold text-secondary mb-2">Activity type: @activityType</h3>
+      <p class="text-muted small">This activity type is not yet fully implemented.</p>
+            
+     <div class="mb-3">
+      <label class="form-label fw-semibold">Your response</label>
+          <textarea class="form-control form-control-lg" 
+    value="@responseText" 
+      @oninput="OnTextChanged"
+      rows="5"
+   style="resize: vertical; min-height: 120px;"
+    placeholder="Enter your response..."
+     maxlength="1000"
+    disabled="@Parameters.HasSubmitted"></textarea>
+            </div>
+      </div>
+    }
+    
+    <button class="@(Parameters.HasSubmitted && Parameters.SubmitSuccess ? "btn-success" : "btn-primary") btn-lg w-100 py-3" 
+   tabindex="1"
+     @onclick="HandleSubmit" 
+  disabled="@(Parameters.IsSubmitting || string.IsNullOrWhiteSpace(responseText) || Parameters.HasSubmitted)">
+        @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
+      {
+     <text>? Response Submitted</text>
+      }
+   else
+        {
+            <text>@GetSubmitButtonText()</text>
+     }
+    </button>
+    
+    @if (!string.IsNullOrEmpty(Parameters.SubmitMessage) && !Parameters.SubmitSuccess)
+    {
+      <div class="alert alert-danger mt-3 mb-0">
+ @Parameters.SubmitMessage
+  </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ParticipantActivityParameters Parameters { get; set; }
+
+    [Parameter]
+    public string ActivityType { get; set; } = "Unknown";
+
+    private string? responseText;
+    private string activityType = "Unknown";
+
+    protected override void OnParametersSet()
+    {
+        activityType = ActivityType;
+    }
+
+    private void OnTextChanged(ChangeEventArgs e)
+    {
+        responseText = e.Value?.ToString();
+        StateHasChanged();
+    }
+
+    private async Task HandleSubmit()
+    {
+if (string.IsNullOrWhiteSpace(responseText)) return;
+
+        var payload = new { text = responseText.Trim() };
+        await Parameters.OnSubmit(JsonSerializer.Serialize(payload));
+    }
+
+    private string GetSubmitButtonText()
+    {
+        if (Parameters.HasSubmitted)
+            return "Response Submitted ?";
+        if (Parameters.IsSubmitting)
+    return "Submitting...";
+        return "Submit Response";
+    }
+}

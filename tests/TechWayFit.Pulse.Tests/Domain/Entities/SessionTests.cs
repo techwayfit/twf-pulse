@@ -17,29 +17,29 @@ public class SessionTests
         var title = "Test Session";
         var goal = "Test Goal";
         var context = "Test Context";
-        var settings = new SessionSettings(5, null, true, true, 360);
+        var settings = new SessionSettings(true, false, 360);
         var joinFormSchema = new JoinFormSchema(5, new List<JoinFormField>());
         var status = SessionStatus.Draft;
         var createdAt = DateTimeOffset.UtcNow;
-     var updatedAt = DateTimeOffset.UtcNow;
+        var updatedAt = DateTimeOffset.UtcNow;
         var expiresAt = DateTimeOffset.UtcNow.AddMinutes(360);
 
         // Act
         var session = new Session(
-            id, code, title, goal, context, settings, joinFormSchema, 
+            id, code, title, goal, context, settings, joinFormSchema,
             status, null, createdAt, updatedAt, expiresAt);
 
         // Assert
         session.Id.Should().Be(id);
-      session.Code.Should().Be(code);
+        session.Code.Should().Be(code);
         session.Title.Should().Be(title);
         session.Goal.Should().Be(goal);
         session.Context.Should().Be(context);
-      session.Settings.Should().Be(settings);
+        session.Settings.Should().Be(settings);
         session.JoinFormSchema.Should().Be(joinFormSchema);
         session.Status.Should().Be(status);
-session.CurrentActivityId.Should().BeNull();
-  session.CreatedAt.Should().Be(createdAt);
+        session.CurrentActivityId.Should().BeNull();
+        session.CreatedAt.Should().Be(createdAt);
         session.UpdatedAt.Should().Be(updatedAt);
         session.ExpiresAt.Should().Be(expiresAt);
     }
@@ -48,7 +48,7 @@ session.CurrentActivityId.Should().BeNull();
     public void SetStatus_Should_Update_Status_And_UpdatedAt()
     {
         // Arrange
-      var session = CreateTestSession();
+        var session = CreateTestSession();
         var newStatus = SessionStatus.Live;
         var newUpdatedAt = DateTimeOffset.UtcNow.AddMinutes(1);
 
@@ -57,36 +57,36 @@ session.CurrentActivityId.Should().BeNull();
 
         // Assert
         session.Status.Should().Be(newStatus);
-    session.UpdatedAt.Should().Be(newUpdatedAt);
+        session.UpdatedAt.Should().Be(newUpdatedAt);
     }
 
-  [Fact]
+    [Fact]
     public void SetCurrentActivity_Should_Update_CurrentActivityId_And_UpdatedAt()
     {
         // Arrange
-      var session = CreateTestSession();
-   var activityId = Guid.NewGuid();
-     var newUpdatedAt = DateTimeOffset.UtcNow.AddMinutes(1);
+        var session = CreateTestSession();
+        var activityId = Guid.NewGuid();
+        var newUpdatedAt = DateTimeOffset.UtcNow.AddMinutes(1);
 
-      // Act
+        // Act
         session.SetCurrentActivity(activityId, newUpdatedAt);
 
         // Assert
         session.CurrentActivityId.Should().Be(activityId);
-    session.UpdatedAt.Should().Be(newUpdatedAt);
+        session.UpdatedAt.Should().Be(newUpdatedAt);
     }
 
     private static Session CreateTestSession()
     {
         return new Session(
-        Guid.NewGuid(),
+    Guid.NewGuid(),
    "TEST-2024",
   "Test Session",
     "Test Goal",
    "Test Context",
-    new SessionSettings(5, null, true, true, 360),
+    new SessionSettings(true, false, 360),
      new JoinFormSchema(5, new List<JoinFormField>()),
-      SessionStatus.Draft,
+    SessionStatus.Draft,
   null,
     DateTimeOffset.UtcNow,
   DateTimeOffset.UtcNow,

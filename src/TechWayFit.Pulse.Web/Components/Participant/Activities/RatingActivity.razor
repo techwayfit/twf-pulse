@@ -1,0 +1,196 @@
+@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using System.Text.Json
+@using System.Diagnostics
+
+<div class="rating-activity">
+    @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
+    {
+        <!-- Success confirmation -->
+        <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+         <div class="me-3 fs-4">?</div>
+            <div>
+<strong>Rating submitted successfully!</strong>
+  <div class="small">Thank you for your feedback. Waiting for the next activity...</div>
+         </div>
+     </div>
+    }
+  else
+    {
+        <div class="text-center mb-4">
+            <h3 class="h5 fw-semibold text-secondary mb-4">Rate this:</h3>
+        
+  @if (!string.IsNullOrEmpty(config?.MinLabel) || !string.IsNullOrEmpty(config?.MaxLabel))
+   {
+         <div class="d-flex justify-content-between text-muted small mb-2">
+     <span>@(config?.MinLabel ?? "Low")</span>
+         <span>@(config?.MaxLabel ?? "High")</span>
+     </div>
+         }
+  
+      @if (displayType == RatingDisplayType.Stars)
+            {
+   <div class="rating-scale d-flex justify-content-center gap-2 mb-4 flex-wrap">
+@for (int i = 1; i <= scale; i++)
+           {
+          var rating = i;
+              <button type="button" 
+                 class="btn btn-link rating-star @(selectedRating >= rating ? "active" : "")"
+         style="font-size: 48px; line-height: 1; padding: 0.25rem; text-decoration: none; color: @(selectedRating >= rating ? "#ffc107" : "#dee2e6"); transition: all 0.2s ease;"
+    disabled="@Parameters.HasSubmitted"
+       @onclick="() => SetRating(rating)">
+     @if (selectedRating >= rating)
+   {
+          <text>&#9733;</text>
+        }
+        else
+  {
+     <text>&#9734;</text>
+           }
+      </button>
+      }
+           </div>
+            }
+else if (displayType == RatingDisplayType.Slider)
+            {
+         <div class="mb-4">
+        <input type="range" class="form-range" 
+       min="1" max="@scale" 
+            value="@selectedRating"
+   disabled="@Parameters.HasSubmitted"
+             @oninput="@((e) => SetRating(int.Parse(e.Value?.ToString() ?? "0")))"
+       style="height: 8px;" />
+       @if (selectedRating > 0)
+              {
+     <div class="text-center mt-3">
+           <span class="badge bg-primary" style="font-size: 24px; padding: 0.5rem 1rem;">@selectedRating</span>
+         </div>
+             }
+      </div>
+            }
+   else
+       {
+          <div class="rating-scale d-flex justify-content-center gap-3 mb-4 flex-wrap">
+  @for (int i = 1; i <= scale; i++)
+           {
+var rating = i;
+       <button class="btn btn-outline-primary rating-button @(selectedRating == rating ? "active" : "")"
+ style="width: 70px; height: 70px; font-size: 28px; font-weight: 600; border-width: 2px; transition: all 0.2s ease;"
+    disabled="@Parameters.HasSubmitted"
+   @onclick="() => SetRating(rating)">
+              @rating
+    </button>
+            }
+  </div>
+  }
+            
+   @if (selectedRating > 0)
+    {
+  <div class="text-muted small mb-3">
+          You selected: <strong class="text-primary">@selectedRating</strong>
+  </div>
+     }
+        </div>
+        
+        @if (config?.AllowComments == true)
+   {
+          <div class="mb-4">
+   <label class="form-label fw-semibold">
+ Comments 
+   @if (config?.CommentRequired == true)
+    {
+            <span class='text-danger'>*</span>
+         }
+else
+ {
+           <span class='text-muted'>(optional)</span>
+            }
+   </label>
+ <textarea class="form-control" 
+    value="@comment" 
+       @oninput="@((e) => comment = e.Value?.ToString())"
+rows="3"
+      disabled="@Parameters.HasSubmitted"
+      placeholder="@(config?.CommentPlaceholder ?? "Tell us more (optional)")"
+      maxlength="500"></textarea>
+            </div>
+        }
+    }
+    
+    <button class="@(Parameters.HasSubmitted && Parameters.SubmitSuccess ? "btn-success" : "btn-primary") btn-lg w-100 py-3" 
+     tabindex="1"
+ @onclick="HandleSubmit" 
+    disabled="@(Parameters.IsSubmitting || selectedRating == 0 || Parameters.HasSubmitted || (config?.CommentRequired == true && string.IsNullOrWhiteSpace(comment)))">
+    @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
+        {
+        <text>? Rating Submitted</text>
+}
+        else
+        {
+  <text>@GetSubmitButtonText()</text>
+        }
+    </button>
+
+    @if (!string.IsNullOrEmpty(Parameters.SubmitMessage) && !Parameters.SubmitSuccess)
+    {
+        <div class="alert alert-danger mt-3 mb-0">
+       @Parameters.SubmitMessage
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ParticipantActivityParameters Parameters { get; set; }
+
+    private RatingConfig? config;
+    private int selectedRating = 0;
+    private string? comment;
+    private int scale = 5;
+    private RatingDisplayType displayType = RatingDisplayType.Buttons;
+
+    protected override void OnParametersSet()
+    {
+ if (!string.IsNullOrEmpty(Parameters.Config))
+ {
+       try
+            {
+     var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+  config = JsonSerializer.Deserialize<RatingConfig>(Parameters.Config, options);
+          scale = config?.Scale ?? 5;
+     displayType = config?.DisplayType ?? RatingDisplayType.Buttons;
+           Debug.WriteLine($"Rating config parsed. Scale: {scale}, DisplayType: {displayType}");
+            }
+ catch (JsonException ex)
+    {
+          Debug.WriteLine($"Failed to parse rating config: {ex.Message}");
+            }
+     }
+    }
+
+    private void SetRating(int rating)
+    {
+        selectedRating = rating;
+        StateHasChanged();
+    }
+
+    private async Task HandleSubmit()
+    {
+        var payload = new
+      {
+     rating = selectedRating,
+            scale = scale,
+ comment = comment
+        };
+
+    await Parameters.OnSubmit(JsonSerializer.Serialize(payload));
+    }
+
+    private string GetSubmitButtonText()
+  {
+     if (Parameters.HasSubmitted)
+    return "Rating Submitted ?";
+     if (Parameters.IsSubmitting)
+          return "Submitting...";
+        return "Submit Rating";
+ }
+}
