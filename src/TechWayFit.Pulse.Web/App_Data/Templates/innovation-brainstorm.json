@@ -52,13 +52,41 @@
         "prompt": "Share your innovative ideas",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "New Product",
-            "Process Improvement",
-            "Technology",
-            "Business Model",
-            "Customer Experience"
-          ]
+            {
+              "id": "new-product",
+              "label": "New Product",
+              "icon": "💡"
+            },
+            {
+              "id": "process-improvement",
+              "label": "Process Improvement",
+              "icon": "⚙️"
+            },
+            {
+              "id": "technology",
+              "label": "Technology",
+              "icon": "💻"
+            },
+            {
+              "id": "business-model",
+              "label": "Business Model",
+              "icon": "💼"
+            },
+            {
+              "id": "customer-experience",
+              "label": "Customer Experience",
+              "icon": "😊"
+            }
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe your innovative idea...",
+          "allowAnonymous": true,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -69,12 +97,40 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "Idea 1",
-            "Idea 2",
-            "Idea 3",
-            "Idea 4",
-            "Idea 5"
-          ]
+            {
+              "id": "idea-1",
+              "label": "Idea 1",
+              "description": "To be defined during session"
+            },
+            {
+              "id": "idea-2",
+              "label": "Idea 2",
+              "description": null
+            },
+            {
+              "id": "idea-3",
+              "label": "Idea 3",
+              "description": null
+            },
+            {
+              "id": "idea-4",
+              "label": "Idea 4",
+              "description": null
+            },
+            {
+              "id": "idea-5",
+              "label": "Idea 5",
+              "description": null
+            }
+          ],
+          "allowMultiple": true,
+          "minSelections": 1,
+          "maxSelections": 3,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other idea (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -97,7 +153,16 @@
         "type": "GeneralFeedback",
         "title": "Implementation Plans",
         "prompt": "How can we bring the best ideas to life?",
-        "durationMinutes": 10
+        "durationMinutes": 10,
+        "config": {
+          "categoriesEnabled": false,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Share your implementation ideas...",
+          "allowAnonymous": true,
+          "maxResponsesPerParticipant": 5
+        }
       }
     ]
   }

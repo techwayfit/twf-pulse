@@ -45,12 +45,40 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "Infrastructure",
-            "Public Safety",
-            "Education",
-            "Environment",
-            "Economic Development"
-          ]
+            {
+              "id": "infrastructure",
+              "label": "Infrastructure",
+              "description": null
+            },
+            {
+              "id": "public-safety",
+              "label": "Public Safety",
+              "description": null
+            },
+            {
+              "id": "education",
+              "label": "Education",
+              "description": null
+            },
+            {
+              "id": "environment",
+              "label": "Environment",
+              "description": null
+            },
+            {
+              "id": "economic-development",
+              "label": "Economic Development",
+              "description": null
+            }
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other issue (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -60,13 +88,41 @@
         "prompt": "What solutions do you suggest for these issues?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Infrastructure",
-            "Public Safety",
-            "Education",
-            "Parks & Recreation",
-            "Transportation"
-          ]
+            {
+              "id": "infrastructure",
+              "label": "Infrastructure",
+              "icon": "🏗️"
+            },
+            {
+              "id": "public-safety",
+              "label": "Public Safety",
+              "icon": "🚨"
+            },
+            {
+              "id": "education",
+              "label": "Education",
+              "icon": "🎓"
+            },
+            {
+              "id": "parks-recreation",
+              "label": "Parks & Recreation",
+              "icon": "🌳"
+            },
+            {
+              "id": "transportation",
+              "label": "Transportation",
+              "icon": "🚌"
+            }
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe your proposed solution...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -98,8 +154,16 @@
         "prompt": "How effective was this town hall?",
         "durationMinutes": 5,
         "config": {
-          "maxRating": 5,
-          "ratingLabel": "Effectiveness"
+          "scale": 5,
+          "minLabel": "1 - Not Effective",
+          "maxLabel": "5 - Very Effective",
+          "midpointLabel": "3 - Moderately Effective",
+          "allowComments": true,
+          "commentRequired": false,
+          "commentPlaceholder": "How can we improve future town halls?",
+          "displayType": "Stars",
+          "showAverageAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

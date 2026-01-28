@@ -52,12 +52,40 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "😞 Very Unsatisfied",
-            "😐 Unsatisfied",
-            "🙂 Neutral",
-            "😊 Satisfied",
-            "🎉 Very Satisfied"
-          ]
+            {
+              "id": "very-unsatisfied",
+              "label": "😞 Very Unsatisfied",
+              "description": null
+            },
+            {
+              "id": "unsatisfied",
+              "label": "😐 Unsatisfied",
+              "description": null
+            },
+            {
+              "id": "neutral",
+              "label": "🙂 Neutral",
+              "description": null
+            },
+            {
+              "id": "satisfied",
+              "label": "😊 Satisfied",
+              "description": null
+            },
+            {
+              "id": "very-satisfied",
+              "label": "🎉 Very Satisfied",
+              "description": null
+            }
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": false,
+          "customOptionPlaceholder": "Other (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -82,12 +110,36 @@
         "prompt": "What should we do differently next sprint?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Process",
-            "Collaboration",
-            "Tools",
-            "Quality"
-          ]
+            {
+              "id": "process",
+              "label": "Process",
+              "icon": "⚙️"
+            },
+            {
+              "id": "collaboration",
+              "label": "Collaboration",
+              "icon": "🤝"
+            },
+            {
+              "id": "tools",
+              "label": "Tools",
+              "icon": "🔧"
+            },
+            {
+              "id": "quality",
+              "label": "Quality",
+              "icon": "✨"
+            }
+          ],
+          "requireCategory": false,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Share your thoughts...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       }
     ]

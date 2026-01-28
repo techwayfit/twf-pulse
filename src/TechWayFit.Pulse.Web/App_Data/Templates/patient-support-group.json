@@ -32,12 +32,20 @@
         "durationMinutes": 3,
         "config": {
           "options": [
-            "😊 Great",
-            "🙂 Good",
-            "😐 Okay",
-            "😔 Struggling",
-            "😞 Very difficult"
-          ]
+            {"id": "great", "label": "😊 Great", "description": null},
+            {"id": "good", "label": "🙂 Good", "description": null},
+            {"id": "okay", "label": "😐 Okay", "description": null},
+            {"id": "struggling", "label": "😔 Struggling", "description": null},
+            {"id": "very-difficult", "label": "😞 Very difficult", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": false,
+          "customOptionPlaceholder": "Other (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -54,13 +62,21 @@
         "prompt": "Share your challenges or victories (anonymous)",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Physical Health",
-            "Mental Health",
-            "Relationships",
-            "Work/Life",
-            "Treatment Progress"
-          ]
+            {"id": "physical-health", "label": "Physical Health", "icon": "💪"},
+            {"id": "mental-health", "label": "Mental Health", "icon": "🧠"},
+            {"id": "relationships", "label": "Relationships", "icon": "❤️"},
+            {"id": "work-life", "label": "Work/Life", "icon": "⚖️"},
+            {"id": "treatment-progress", "label": "Treatment Progress", "icon": "📈"}
+          ],
+          "requireCategory": false,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Share at your comfort level...",
+          "allowAnonymous": true,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -85,8 +101,16 @@
         "prompt": "How supported do you feel by this group?",
         "durationMinutes": 5,
         "config": {
-          "maxRating": 5,
-          "ratingLabel": "Support Level"
+          "scale": 5,
+          "minLabel": "1 - Not Supported",
+          "maxLabel": "5 - Very Supported",
+          "midpointLabel": "3 - Somewhat Supported",
+          "allowComments": true,
+          "commentRequired": false,
+          "commentPlaceholder": "What helps you feel supported?",
+          "displayType": "Stars",
+          "showAverageAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

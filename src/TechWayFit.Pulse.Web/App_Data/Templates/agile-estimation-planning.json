@@ -52,14 +52,50 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "1 - Trivial",
-            "2 - Simple",
-            "3 - Medium",
-            "5 - Complex",
-            "8 - Very Complex",
-            "13 - Extremely Complex",
-            "21 - Needs Breaking Down"
-          ]
+            {
+              "id": "1-trivial",
+              "label": "1 - Trivial",
+              "description": null
+            },
+            {
+              "id": "2-simple",
+              "label": "2 - Simple",
+              "description": null
+            },
+            {
+              "id": "3-medium",
+              "label": "3 - Medium",
+              "description": null
+            },
+            {
+              "id": "5-complex",
+              "label": "5 - Complex",
+              "description": null
+            },
+            {
+              "id": "8-very-complex",
+              "label": "8 - Very Complex",
+              "description": null
+            },
+            {
+              "id": "13-extremely-complex",
+              "label": "13 - Extremely Complex",
+              "description": null
+            },
+            {
+              "id": "21-needs-breaking",
+              "label": "21 - Needs Breaking Down",
+              "description": null
+            }
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": false,
+          "customOptionPlaceholder": "Other (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -69,13 +105,41 @@
         "prompt": "What technical risks or dependencies should we consider?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Technical Complexity",
-            "External Dependencies",
-            "Unknown Requirements",
-            "Infrastructure Needs",
-            "Testing Challenges"
-          ]
+            {
+              "id": "technical-complexity",
+              "label": "Technical Complexity",
+              "icon": "💻"
+            },
+            {
+              "id": "external-dependencies",
+              "label": "External Dependencies",
+              "icon": "🔗"
+            },
+            {
+              "id": "unknown-requirements",
+              "label": "Unknown Requirements",
+              "icon": "❓"
+            },
+            {
+              "id": "infrastructure-needs",
+              "label": "Infrastructure Needs",
+              "icon": "🖥️"
+            },
+            {
+              "id": "testing-challenges",
+              "label": "Testing Challenges",
+              "icon": "🧪"
+            }
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the risk or dependency...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -100,8 +164,16 @@
         "prompt": "How confident is the team in completing the sprint commitment?",
         "durationMinutes": 5,
         "config": {
-          "maxRating": 5,
-          "ratingLabel": "Confidence Level"
+          "scale": 5,
+          "minLabel": "1 - Not Confident",
+          "maxLabel": "5 - Very Confident",
+          "midpointLabel": "3 - Moderately Confident",
+          "allowComments": true,
+          "commentRequired": false,
+          "commentPlaceholder": "What concerns do you have?",
+          "displayType": "Stars",
+          "showAverageAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

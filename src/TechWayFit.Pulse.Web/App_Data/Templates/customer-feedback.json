@@ -58,12 +58,20 @@
         "durationMinutes": 3,
         "config": {
           "options": [
-            "😞 Very dissatisfied",
-            "😐 Somewhat dissatisfied",
-            "🙂 Neutral",
-            "😊 Satisfied",
-            "🎉 Very satisfied"
-          ]
+            {"id": "very-dissatisfied", "label": "😞 Very dissatisfied", "description": null},
+            {"id": "somewhat-dissatisfied", "label": "😐 Somewhat dissatisfied", "description": null},
+            {"id": "neutral", "label": "🙂 Neutral", "description": null},
+            {"id": "satisfied", "label": "😊 Satisfied", "description": null},
+            {"id": "very-satisfied", "label": "🎉 Very satisfied", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": false,
+          "customOptionPlaceholder": "Other (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -73,13 +81,21 @@
         "prompt": "What features or improvements would you like to see?",
         "durationMinutes": 8,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "New Features",
-            "Usability",
-            "Performance",
-            "Integration",
-            "Support"
-          ]
+            {"id": "new-features", "label": "New Features", "icon": "✨"},
+            {"id": "usability", "label": "Usability", "icon": "🎨"},
+            {"id": "performance", "label": "Performance", "icon": "⚡"},
+            {"id": "integration", "label": "Integration", "icon": "🔗"},
+            {"id": "support", "label": "Support", "icon": "🆘"}
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe your feature request...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -90,12 +106,20 @@
         "durationMinutes": 3,
         "config": {
           "options": [
-            "Feature A",
-            "Feature B",
-            "Feature C",
-            "Feature D",
-            "Feature E"
-          ]
+            {"id": "feature-a", "label": "Feature A", "description": "To be defined during session"},
+            {"id": "feature-b", "label": "Feature B", "description": null},
+            {"id": "feature-c", "label": "Feature C", "description": null},
+            {"id": "feature-d", "label": "Feature D", "description": null},
+            {"id": "feature-e", "label": "Feature E", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other feature (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -120,8 +144,16 @@
         "prompt": "How likely are you to recommend us? (NPS)",
         "durationMinutes": 5,
         "config": {
-          "maxRating": 5,
-          "ratingLabel": "Recommendation Likelihood"
+          "scale": 5,
+          "minLabel": "1 - Not Likely",
+          "maxLabel": "5 - Very Likely",
+          "midpointLabel": "3 - Neutral",
+          "allowComments": true,
+          "commentRequired": false,
+          "commentPlaceholder": "Why did you choose this rating?",
+          "displayType": "Stars",
+          "showAverageAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

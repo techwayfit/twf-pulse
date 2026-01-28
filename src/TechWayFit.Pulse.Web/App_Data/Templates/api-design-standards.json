@@ -51,14 +51,22 @@
         "prompt": "Share proposed API endpoints and their purpose",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "User Management",
-            "Data/Resources",
-            "Authentication",
-            "Webhooks/Events",
-            "Admin/Internal",
-            "Other"
-          ]
+            {"id": "user-management", "label": "User Management", "icon": "👥"},
+            {"id": "data-resources", "label": "Data/Resources", "icon": "📦"},
+            {"id": "authentication", "label": "Authentication", "icon": "🔐"},
+            {"id": "webhooks-events", "label": "Webhooks/Events", "icon": "🔔"},
+            {"id": "admin-internal", "label": "Admin/Internal", "icon": "⚙️"},
+            {"id": "other", "label": "Other", "icon": "📝"}
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the API endpoint...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -69,12 +77,20 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "RESTful (plural nouns: /users, /posts)",
-            "RPC-style (verbs: /getUser, /createPost)",
-            "GraphQL-style (single endpoint)",
-            "Hybrid approach",
-            "Domain-driven naming"
-          ]
+            {"id": "restful", "label": "RESTful (plural nouns: /users, /posts)", "description": null},
+            {"id": "rpc-style", "label": "RPC-style (verbs: /getUser, /createPost)", "description": null},
+            {"id": "graphql", "label": "GraphQL-style (single endpoint)", "description": null},
+            {"id": "hybrid", "label": "Hybrid approach", "description": null},
+            {"id": "domain-driven", "label": "Domain-driven naming", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other convention (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -85,12 +101,20 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "URI versioning (/v1/users)",
-            "Header versioning (Accept: application/vnd.api+json;version=1)",
-            "Query parameter (?version=1)",
-            "No versioning (breaking changes in new endpoints)",
-            "Needs discussion"
-          ]
+            {"id": "uri-versioning", "label": "URI versioning (/v1/users)", "description": null},
+            {"id": "header-versioning", "label": "Header versioning (Accept: application/vnd.api+json;version=1)", "description": null},
+            {"id": "query-param", "label": "Query parameter (?version=1)", "description": null},
+            {"id": "no-versioning", "label": "No versioning (breaking changes in new endpoints)", "description": null},
+            {"id": "needs-discussion", "label": "Needs discussion", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other strategy (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -115,14 +139,22 @@
         "prompt": "What other API standards should we adopt?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Authentication/Security",
-            "Error Handling",
-            "Pagination",
-            "Rate Limiting",
-            "Documentation",
-            "Testing"
-          ]
+            {"id": "auth-security", "label": "Authentication/Security", "icon": "🔒"},
+            {"id": "error-handling", "label": "Error Handling", "icon": "⚠️"},
+            {"id": "pagination", "label": "Pagination", "icon": "📄"},
+            {"id": "rate-limiting", "label": "Rate Limiting", "icon": "⏱️"},
+            {"id": "documentation", "label": "Documentation", "icon": "📚"},
+            {"id": "testing", "label": "Testing", "icon": "🧪"}
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the API standard...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -132,8 +164,16 @@
         "prompt": "How would you rate the proposed API design for developer experience?",
         "durationMinutes": 5,
         "config": {
-          "maxRating": 5,
-          "ratingLabel": "DX Quality"
+          "scale": 5,
+          "minLabel": "1 - Poor DX",
+          "maxLabel": "5 - Excellent DX",
+          "midpointLabel": "3 - Good DX",
+          "allowComments": true,
+          "commentRequired": false,
+          "commentPlaceholder": "What would improve the developer experience?",
+          "displayType": "Stars",
+          "showAverageAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

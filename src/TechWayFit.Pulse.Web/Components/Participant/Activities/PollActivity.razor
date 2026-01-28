@@ -126,13 +126,14 @@
         {
             try
             {
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, IncludeFields = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
                 pollConfig = JsonSerializer.Deserialize<PollConfig>(Parameters.Config, options);
                 Debug.WriteLine($"Poll config parsed. Options count: {pollConfig?.Options?.Count ?? 0}");
             }
             catch (JsonException ex)
             {
                 Debug.WriteLine($"Failed to parse poll config: {ex.Message}");
+                Debug.WriteLine($"Config JSON: {Parameters.Config}");
             }
         }
     }

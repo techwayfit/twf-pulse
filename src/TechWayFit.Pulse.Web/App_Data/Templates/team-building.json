@@ -52,12 +52,20 @@
         "durationMinutes": 3,
         "config": {
           "options": [
-            "🔥 Energized!",
-            "😊 Good",
-            "😐 Okay",
-            "😴 Tired",
-            "🎉 Excited!"
-          ]
+            {"id": "energized", "label": "🔥 Energized!", "description": null},
+            {"id": "good", "label": "😊 Good", "description": null},
+            {"id": "okay", "label": "😐 Okay", "description": null},
+            {"id": "tired", "label": "😴 Tired", "description": null},
+            {"id": "excited", "label": "🎉 Excited!", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": false,
+          "customOptionPlaceholder": "Other (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -68,12 +76,20 @@
         "durationMinutes": 3,
         "config": {
           "options": [
-            "Early bird (morning)",
-            "Night owl (evening)",
-            "Deep focus blocks",
-            "Collaborative sessions",
-            "Mix of everything"
-          ]
+            {"id": "early-bird", "label": "Early bird (morning)", "description": null},
+            {"id": "night-owl", "label": "Night owl (evening)", "description": null},
+            {"id": "deep-focus", "label": "Deep focus blocks", "description": null},
+            {"id": "collaborative", "label": "Collaborative sessions", "description": null},
+            {"id": "mix", "label": "Mix of everything", "description": null}
+          ],
+          "allowMultiple": true,
+          "minSelections": 1,
+          "maxSelections": 3,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other style (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -98,13 +114,21 @@
         "prompt": "What would make our team even better?",
         "durationMinutes": 8,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Communication",
-            "Processes",
-            "Tools",
-            "Social Activities",
-            "Recognition"
-          ]
+            {"id": "communication", "label": "Communication", "icon": "💬"},
+            {"id": "processes", "label": "Processes", "icon": "⚙️"},
+            {"id": "tools", "label": "Tools", "icon": "🔧"},
+            {"id": "social", "label": "Social Activities", "icon": "🎉"},
+            {"id": "recognition", "label": "Recognition", "icon": "🏆"}
+          ],
+          "requireCategory": false,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Share your idea...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -114,8 +138,16 @@
         "prompt": "How connected do you feel to the team?",
         "durationMinutes": 5,
         "config": {
-          "maxRating": 5,
-          "ratingLabel": "Connection Level"
+          "scale": 5,
+          "minLabel": "1 - Not Connected",
+          "maxLabel": "5 - Very Connected",
+          "midpointLabel": "3 - Somewhat Connected",
+          "allowComments": true,
+          "commentRequired": false,
+          "commentPlaceholder": "What would help you feel more connected?",
+          "displayType": "Stars",
+          "showAverageAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

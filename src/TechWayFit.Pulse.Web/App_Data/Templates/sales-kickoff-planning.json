@@ -58,12 +58,20 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "New customer acquisition",
-            "Expansion in existing accounts",
-            "Channel/partner sales",
-            "Product cross-sell/upsell",
-            "Enterprise deals"
-          ]
+            {"id": "new-acquisition", "label": "New customer acquisition", "description": null},
+            {"id": "expansion", "label": "Expansion in existing accounts", "description": null},
+            {"id": "channel-partner", "label": "Channel/partner sales", "description": null},
+            {"id": "cross-sell-upsell", "label": "Product cross-sell/upsell", "description": null},
+            {"id": "enterprise-deals", "label": "Enterprise deals", "description": null}
+          ],
+          "allowMultiple": true,
+          "minSelections": 1,
+          "maxSelections": 3,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other focus (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -88,13 +96,21 @@
         "prompt": "What obstacles do you face and what support do you need?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Product Gaps",
-            "Pricing/Competition",
-            "Marketing Support",
-            "Sales Tools",
-            "Training Needed"
-          ]
+            {"id": "product-gaps", "label": "Product Gaps", "icon": "⚠️"},
+            {"id": "pricing-competition", "label": "Pricing/Competition", "icon": "💰"},
+            {"id": "marketing-support", "label": "Marketing Support", "icon": "📢"},
+            {"id": "sales-tools", "label": "Sales Tools", "icon": "🛠️"},
+            {"id": "training-needed", "label": "Training Needed", "icon": "📚"}
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the obstacle or support needed...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -104,8 +120,16 @@
         "prompt": "How confident are you in hitting this quarter's targets?",
         "durationMinutes": 5,
         "config": {
-          "maxRating": 10,
-          "ratingLabel": "Confidence Score"
+          "scale": 10,
+          "minLabel": "1 - Not Confident",
+          "maxLabel": "10 - Very Confident",
+          "midpointLabel": "5 - Moderately Confident",
+          "allowComments": true,
+          "commentRequired": false,
+          "commentPlaceholder": "What would increase your confidence?",
+          "displayType": "Slider",
+          "showAverageAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

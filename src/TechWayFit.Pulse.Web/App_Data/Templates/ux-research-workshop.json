@@ -62,14 +62,22 @@
         "prompt": "What challenges or frustrations do you experience?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Navigation/Usability",
-            "Performance/Speed",
-            "Missing Features",
-            "Confusing Interface",
-            "Mobile Experience",
-            "Other"
-          ]
+            {"id": "navigation-usability", "label": "Navigation/Usability", "icon": "🧭"},
+            {"id": "performance-speed", "label": "Performance/Speed", "icon": "⚡"},
+            {"id": "missing-features", "label": "Missing Features", "icon": "❌"},
+            {"id": "confusing-interface", "label": "Confusing Interface", "icon": "😕"},
+            {"id": "mobile-experience", "label": "Mobile Experience", "icon": "📱"},
+            {"id": "other", "label": "Other", "icon": "📝"}
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the pain point you experience...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -80,12 +88,20 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "Simplified navigation",
-            "Faster load times",
-            "Better mobile experience",
-            "More customization options",
-            "Improved search/filters"
-          ]
+            {"id": "simplified-navigation", "label": "Simplified navigation", "description": null},
+            {"id": "faster-load-times", "label": "Faster load times", "description": null},
+            {"id": "better-mobile", "label": "Better mobile experience", "description": null},
+            {"id": "more-customization", "label": "More customization options", "description": null},
+            {"id": "improved-search", "label": "Improved search/filters", "description": null}
+          ],
+          "allowMultiple": true,
+          "minSelections": 1,
+          "maxSelections": 3,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other improvement (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -110,8 +126,16 @@
         "prompt": "How would you rate your overall experience?",
         "durationMinutes": 5,
         "config": {
-          "maxRating": 10,
-          "ratingLabel": "Satisfaction Score (NPS)"
+          "scale": 10,
+          "minLabel": "0 - Detractor",
+          "maxLabel": "10 - Promoter",
+          "midpointLabel": "5 - Passive",
+          "allowComments": true,
+          "commentRequired": false,
+          "commentPlaceholder": "What's the main reason for your score?",
+          "displayType": "Slider",
+          "showAverageAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

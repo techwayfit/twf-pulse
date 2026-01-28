@@ -38,12 +38,20 @@
         "durationMinutes": 3,
         "config": {
           "options": [
-            "Never heard of it",
-            "Heard about it",
-            "Basic understanding",
-            "Good understanding",
-            "Expert level"
-          ]
+            {"id": "never-heard", "label": "Never heard of it", "description": null},
+            {"id": "heard-about", "label": "Heard about it", "description": null},
+            {"id": "basic", "label": "Basic understanding", "description": null},
+            {"id": "good", "label": "Good understanding", "description": null},
+            {"id": "expert", "label": "Expert level", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": false,
+          "customOptionPlaceholder": "Other (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -61,12 +69,20 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "Statement A",
-            "Statement B",
-            "Statement C",
-            "Statement D",
-            "Not sure"
-          ]
+            {"id": "statement-a", "label": "Statement A", "description": null},
+            {"id": "statement-b", "label": "Statement B", "description": null},
+            {"id": "statement-c", "label": "Statement C", "description": null},
+            {"id": "statement-d", "label": "Statement D", "description": null},
+            {"id": "not-sure", "label": "Not sure", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": false,
+          "customOptionPlaceholder": "Other (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -98,8 +114,16 @@
         "prompt": "How clear was today's lecture?",
         "durationMinutes": 5,
         "config": {
-          "maxRating": 5,
-          "ratingLabel": "Clarity"
+          "scale": 5,
+          "minLabel": "1 - Very Confusing",
+          "maxLabel": "5 - Very Clear",
+          "midpointLabel": "3 - Moderately Clear",
+          "allowComments": true,
+          "commentRequired": false,
+          "commentPlaceholder": "What could make it clearer?",
+          "displayType": "Stars",
+          "showAverageAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

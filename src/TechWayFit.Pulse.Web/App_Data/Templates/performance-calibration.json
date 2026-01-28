@@ -72,14 +72,22 @@
         "prompt": "What development areas should we focus on?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Leadership Skills",
-            "Technical Skills",
-            "Communication",
-            "Strategic Thinking",
-            "Collaboration",
-            "Domain Expertise"
-          ]
+            {"id": "leadership", "label": "Leadership Skills", "icon": "👔"},
+            {"id": "technical", "label": "Technical Skills", "icon": "💻"},
+            {"id": "communication", "label": "Communication", "icon": "💬"},
+            {"id": "strategic", "label": "Strategic Thinking", "icon": "🎯"},
+            {"id": "collaboration", "label": "Collaboration", "icon": "🤝"},
+            {"id": "domain-expertise", "label": "Domain Expertise", "icon": "📚"}
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the development need...",
+          "allowAnonymous": true,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -90,12 +98,20 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "Yes, well distributed",
-            "Too many high ratings",
-            "Too many low ratings",
-            "Needs adjustment",
-            "Unsure"
-          ]
+            {"id": "well-distributed", "label": "Yes, well distributed", "description": null},
+            {"id": "too-many-high", "label": "Too many high ratings", "description": null},
+            {"id": "too-many-low", "label": "Too many low ratings", "description": null},
+            {"id": "needs-adjustment", "label": "Needs adjustment", "description": null},
+            {"id": "unsure", "label": "Unsure", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": false,
+          "customOptionPlaceholder": "Other (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -103,7 +119,16 @@
         "type": "GeneralFeedback",
         "title": "Promotion & Succession Planning",
         "prompt": "Who are the promotion candidates and succession plan considerations?",
-        "durationMinutes": 10
+        "durationMinutes": 10,
+        "config": {
+          "categoriesEnabled": false,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Share your succession planning thoughts...",
+          "allowAnonymous": true,
+          "maxResponsesPerParticipant": 5
+        }
       },
       {
         "order": 6,
@@ -112,8 +137,16 @@
         "prompt": "How confident are you that this calibration is fair and unbiased?",
         "durationMinutes": 5,
         "config": {
-          "maxRating": 5,
-          "ratingLabel": "Fairness Confidence"
+          "scale": 5,
+          "minLabel": "1 - Not Confident",
+          "maxLabel": "5 - Very Confident",
+          "midpointLabel": "3 - Moderately Confident",
+          "allowComments": true,
+          "commentRequired": false,
+          "commentPlaceholder": "What concerns do you have?",
+          "displayType": "Stars",
+          "showAverageAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

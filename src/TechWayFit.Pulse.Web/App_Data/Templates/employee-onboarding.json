@@ -51,12 +51,40 @@
         "durationMinutes": 3,
         "config": {
           "options": [
-            "Hands-on practice",
-            "Reading documentation",
-            "Watching demos",
-            "Pair programming",
-            "Asking questions"
-          ]
+            {
+              "id": "hands-on",
+              "label": "Hands-on practice",
+              "description": null
+            },
+            {
+              "id": "reading",
+              "label": "Reading documentation",
+              "description": null
+            },
+            {
+              "id": "demos",
+              "label": "Watching demos",
+              "description": null
+            },
+            {
+              "id": "pair-programming",
+              "label": "Pair programming",
+              "description": null
+            },
+            {
+              "id": "asking-questions",
+              "label": "Asking questions",
+              "description": null
+            }
+          ],
+          "allowMultiple": true,
+          "minSelections": 1,
+          "maxSelections": 3,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other learning method (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -81,13 +109,41 @@
         "prompt": "What questions or expectations do you have?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Career Growth",
-            "Team Culture",
-            "Work-Life Balance",
-            "Tools & Technology",
-            "General Questions"
-          ]
+            {
+              "id": "career-growth",
+              "label": "Career Growth",
+              "icon": "📈"
+            },
+            {
+              "id": "team-culture",
+              "label": "Team Culture",
+              "icon": "🤝"
+            },
+            {
+              "id": "work-life-balance",
+              "label": "Work-Life Balance",
+              "icon": "⚖️"
+            },
+            {
+              "id": "tools-tech",
+              "label": "Tools & Technology",
+              "icon": "🛠️"
+            },
+            {
+              "id": "general",
+              "label": "General Questions",
+              "icon": "❓"
+            }
+          ],
+          "requireCategory": false,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Share your questions or expectations...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       }
     ]

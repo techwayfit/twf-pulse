@@ -37,13 +37,41 @@
         "prompt": "What operational challenges are you facing?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Infrastructure",
-            "Deployment",
-            "Monitoring",
-            "Incidents",
-            "Toil"
-          ]
+            {
+              "id": "infrastructure",
+              "label": "Infrastructure",
+              "icon": "🖥️"
+            },
+            {
+              "id": "deployment",
+              "label": "Deployment",
+              "icon": "🚀"
+            },
+            {
+              "id": "monitoring",
+              "label": "Monitoring",
+              "icon": "📊"
+            },
+            {
+              "id": "incidents",
+              "label": "Incidents",
+              "icon": "🚨"
+            },
+            {
+              "id": "toil",
+              "label": "Toil",
+              "icon": "⚙️"
+            }
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the operational challenge...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -76,7 +104,16 @@
         "type": "GeneralFeedback",
         "title": "Solutions & Next Steps",
         "prompt": "What actions can we take?",
-        "durationMinutes": 10
+        "durationMinutes": 10,
+        "config": {
+          "categoriesEnabled": false,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Share your solution ideas...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
+        }
       }
     ]
   }

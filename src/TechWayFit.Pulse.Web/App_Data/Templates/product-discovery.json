@@ -51,12 +51,36 @@
         "prompt": "Share your product ideas",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "New Feature",
-            "Improvement",
-            "Integration",
-            "UX Enhancement"
-          ]
+            {
+              "id": "new-feature",
+              "label": "New Feature",
+              "icon": "✨"
+            },
+            {
+              "id": "improvement",
+              "label": "Improvement",
+              "icon": "🔧"
+            },
+            {
+              "id": "integration",
+              "label": "Integration",
+              "icon": "🔗"
+            },
+            {
+              "id": "ux-enhancement",
+              "label": "UX Enhancement",
+              "icon": "🎨"
+            }
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe your product idea...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -82,12 +106,40 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "Idea 1",
-            "Idea 2",
-            "Idea 3",
-            "Idea 4",
-            "Idea 5"
-          ]
+            {
+              "id": "idea-1",
+              "label": "Idea 1",
+              "description": "To be filled during session"
+            },
+            {
+              "id": "idea-2",
+              "label": "Idea 2",
+              "description": null
+            },
+            {
+              "id": "idea-3",
+              "label": "Idea 3",
+              "description": null
+            },
+            {
+              "id": "idea-4",
+              "label": "Idea 4",
+              "description": null
+            },
+            {
+              "id": "idea-5",
+              "label": "Idea 5",
+              "description": null
+            }
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other idea (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -95,7 +147,16 @@
         "type": "GeneralFeedback",
         "title": "Next Steps",
         "prompt": "What are the action items?",
-        "durationMinutes": 8
+        "durationMinutes": 8,
+        "config": {
+          "categoriesEnabled": false,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Share your action item ideas...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
+        }
       }
     ]
   }

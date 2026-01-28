@@ -50,12 +50,20 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "😊 Very excited",
-            "🙂 Optimistic",
-            "😐 Neutral",
-            "😟 Concerned",
-            "😨 Very worried"
-          ]
+            {"id": "very-excited", "label": "😊 Very excited", "description": null},
+            {"id": "optimistic", "label": "🙂 Optimistic", "description": null},
+            {"id": "neutral", "label": "😐 Neutral", "description": null},
+            {"id": "concerned", "label": "😟 Concerned", "description": null},
+            {"id": "very-worried", "label": "😨 Very worried", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": false,
+          "customOptionPlaceholder": "Other (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -87,13 +95,21 @@
         "prompt": "What support do you need to successfully adapt?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Training",
-            "Resources",
-            "Communication",
-            "Time",
-            "Leadership Support"
-          ]
+            {"id": "training", "label": "Training", "icon": "📚"},
+            {"id": "resources", "label": "Resources", "icon": "🛠️"},
+            {"id": "communication", "label": "Communication", "icon": "💬"},
+            {"id": "time", "label": "Time", "icon": "⏰"},
+            {"id": "leadership-support", "label": "Leadership Support", "icon": "👔"}
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the support you need...",
+          "allowAnonymous": true,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -104,12 +120,20 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "Lack of clarity",
-            "Insufficient training",
-            "Time constraints",
-            "Resistance from team",
-            "Technical challenges"
-          ]
+            {"id": "lack-clarity", "label": "Lack of clarity", "description": null},
+            {"id": "insufficient-training", "label": "Insufficient training", "description": null},
+            {"id": "time-constraints", "label": "Time constraints", "description": null},
+            {"id": "team-resistance", "label": "Resistance from team", "description": null},
+            {"id": "technical-challenges", "label": "Technical challenges", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other barrier (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

@@ -57,14 +57,22 @@
         "prompt": "What are the must-have requirements for this solution?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Core Features",
-            "Integration/API",
-            "Security/Compliance",
-            "Scalability/Performance",
-            "Support/SLA",
-            "Cost/Licensing"
-          ]
+            {"id": "core-features", "label": "Core Features", "icon": "✨"},
+            {"id": "integration-api", "label": "Integration/API", "icon": "🔗"},
+            {"id": "security-compliance", "label": "Security/Compliance", "icon": "🔒"},
+            {"id": "scalability-performance", "label": "Scalability/Performance", "icon": "⚡"},
+            {"id": "support-sla", "label": "Support/SLA", "icon": "🆘"},
+            {"id": "cost-licensing", "label": "Cost/Licensing", "icon": "💰"}
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the requirement...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -75,12 +83,20 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "Vendor A",
-            "Vendor B",
-            "Vendor C",
-            "Build In-House",
-            "Need More Information"
-          ]
+            {"id": "vendor-a", "label": "Vendor A", "description": null},
+            {"id": "vendor-b", "label": "Vendor B", "description": null},
+            {"id": "vendor-c", "label": "Vendor C", "description": null},
+            {"id": "build-inhouse", "label": "Build In-House", "description": null},
+            {"id": "need-more-info", "label": "Need More Information", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other vendor (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -105,8 +121,16 @@
         "prompt": "Rate the leading vendor on key capabilities",
         "durationMinutes": 5,
         "config": {
-          "maxRating": 5,
-          "ratingLabel": "Overall Capability"
+          "scale": 5,
+          "minLabel": "1 - Poor",
+          "maxLabel": "5 - Excellent",
+          "midpointLabel": "3 - Good",
+          "allowComments": true,
+          "commentRequired": false,
+          "commentPlaceholder": "Which capabilities are strongest/weakest?",
+          "displayType": "Stars",
+          "showAverageAfterSubmit": false,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -116,13 +140,21 @@
         "prompt": "What risks or concerns do you have about implementation?",
         "durationMinutes": 8,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Technical Integration",
-            "Migration Complexity",
-            "Vendor Lock-in",
-            "Training/Adoption",
-            "Ongoing Costs"
-          ]
+            {"id": "technical-integration", "label": "Technical Integration", "icon": "🔧"},
+            {"id": "migration-complexity", "label": "Migration Complexity", "icon": "📦"},
+            {"id": "vendor-lock-in", "label": "Vendor Lock-in", "icon": "🔒"},
+            {"id": "training-adoption", "label": "Training/Adoption", "icon": "📚"},
+            {"id": "ongoing-costs", "label": "Ongoing Costs", "icon": "💸"}
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the risk or concern...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -133,12 +165,20 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "Proceed with top vendor",
-            "Need more evaluation",
-            "Request additional demos",
-            "Consider alternative approach",
-            "Build in-house instead"
-          ]
+            {"id": "proceed-top-vendor", "label": "Proceed with top vendor", "description": null},
+            {"id": "more-evaluation", "label": "Need more evaluation", "description": null},
+            {"id": "additional-demos", "label": "Request additional demos", "description": null},
+            {"id": "alternative-approach", "label": "Consider alternative approach", "description": null},
+            {"id": "build-inhouse", "label": "Build in-house instead", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other recommendation",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       }
     ]

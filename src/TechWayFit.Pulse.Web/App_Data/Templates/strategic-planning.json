@@ -51,13 +51,21 @@
         "prompt": "What strategic initiatives should we pursue?",
         "durationMinutes": 10,
         "config": {
+          "categoriesEnabled": true,
           "categories": [
-            "Growth",
-            "Innovation",
-            "Efficiency",
-            "Market Expansion",
-            "Culture"
-          ]
+            {"id": "growth", "label": "Growth", "icon": "📈"},
+            {"id": "innovation", "label": "Innovation", "icon": "💡"},
+            {"id": "efficiency", "label": "Efficiency", "icon": "⚡"},
+            {"id": "market-expansion", "label": "Market Expansion", "icon": "🌍"},
+            {"id": "culture", "label": "Culture", "icon": "🤝"}
+          ],
+          "requireCategory": true,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the strategic initiative...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
         }
       },
       {
@@ -83,12 +91,20 @@
         "durationMinutes": 5,
         "config": {
           "options": [
-            "Market expansion",
-            "Product innovation",
-            "Operational excellence",
-            "Talent development",
-            "Customer experience"
-          ]
+            {"id": "market-expansion", "label": "Market expansion", "description": null},
+            {"id": "product-innovation", "label": "Product innovation", "description": null},
+            {"id": "operational-excellence", "label": "Operational excellence", "description": null},
+            {"id": "talent-development", "label": "Talent development", "description": null},
+            {"id": "customer-experience", "label": "Customer experience", "description": null}
+          ],
+          "allowMultiple": false,
+          "minSelections": 1,
+          "maxSelections": 1,
+          "allowCustomOption": true,
+          "customOptionPlaceholder": "Other priority (please specify)",
+          "randomizeOrder": false,
+          "showResultsAfterSubmit": true,
+          "maxResponsesPerParticipant": 1
         }
       },
       {
@@ -96,7 +112,16 @@
         "type": "GeneralFeedback",
         "title": "Action Plans",
         "prompt": "What are the concrete next steps for each priority?",
-        "durationMinutes": 10
+        "durationMinutes": 10,
+        "config": {
+          "categoriesEnabled": false,
+          "showCharacterCount": true,
+          "maxLength": 1000,
+          "minLength": 10,
+          "placeholder": "Describe the action plan...",
+          "allowAnonymous": false,
+          "maxResponsesPerParticipant": 5
+        }
       }
     ]
   }

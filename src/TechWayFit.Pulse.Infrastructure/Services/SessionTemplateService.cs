@@ -420,44 +420,13 @@ public sealed class SessionTemplateService : ISessionTemplateService
 
     private static string SerializeActivityConfig(ActivityType activityType, object config)
     {
-        // For Poll activities, transform string array options to PollOption objects
-        if (activityType == ActivityType.Poll && config is ActivityConfigData activityConfig)
+        // All activity configs now use proper object structure in templates
+        // No transformation needed - just serialize as-is with camelCase
+        return JsonSerializer.Serialize(config, new JsonSerializerOptions
         {
-            if (activityConfig.Options != null && activityConfig.Options.Count > 0)
-            {
-                var options = new List<object>();
-                
-                for (int i = 0; i < activityConfig.Options.Count; i++)
-                {
-                    var label = activityConfig.Options[i];
-                    options.Add(new
-                    {
-                        Id = $"option{i + 1}",
-                        Label = label,
-                        Description = (string?)null
-                    });
-                }
-                
-                // Create poll config with transformed options
-                var transformedConfig = new
-                {
-                    Options = options,
-                    AllowMultiple = activityConfig.MultipleChoice ?? false,
-                    MinSelections = 1,
-                    MaxSelections = (int?)null,
-                    AllowCustomOption = false,
-                    CustomOptionPlaceholder = "Other (please specify)",
-                    RandomizeOrder = false,
-                    ShowResultsAfterSubmit = false,
-                    MaxResponsesPerParticipant = 1
-                };
-                
-                return JsonSerializer.Serialize(transformedConfig);
-            }
-        }
-        
-        // For other activity types, serialize as-is
-        return JsonSerializer.Serialize(config);
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        });
     }
 
     private static List<(string Name, string Description, TemplateCategory Category, string IconEmoji, SessionTemplateConfig Config)> GetSystemTemplateConfigs()
