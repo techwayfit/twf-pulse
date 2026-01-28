@@ -40,6 +40,12 @@
            </button>
           }
         <span class="badge bg-light text-dark">#@Activity.Order</span>
+        
+        <!-- Presenter Mode Button -->
+        <a class="btn btn-sm btn-primary" href="/facilitator/live/presentation?code=@SessionCode" title="Present Activity Full-Screen">
+            <i class="fas fa-tv me-1"></i>
+            <span class="d-none d-md-inline">Presenter Mode</span>
+        </a>
       </div>
         </div>
 
@@ -122,9 +128,6 @@
         </div>
     </div>
 </div>
-
-<!-- Activity Presenter Mode Component -->
-<ActivityPresenterMode SessionCode="@SessionCode" />
 
 <style>
     .timer-display {

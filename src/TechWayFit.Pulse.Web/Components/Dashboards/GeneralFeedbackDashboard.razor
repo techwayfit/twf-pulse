@@ -28,149 +28,299 @@
     }
     else if (dashboard != null)
     {
-        <!-- Feedback Dashboard Header -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h4 class="card-title fw-bold mb-1">Feedback Responses</h4>
-                        <div class="text-muted">💬 General Feedback</div>
-                    </div>
-                    <div class="text-end">
-                        <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mb-2">
-                            Live Results
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Summary Stats -->
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="stat-card bg-primary bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="stat-number text-primary h2 mb-0">@dashboard.TotalResponses</div>
-                            <div class="stat-label text-muted">Total Responses</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card bg-success bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="stat-number text-success h2 mb-0">@dashboard.ParticipantCount</div>
-                            <div class="stat-label text-muted">Participants</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card bg-info bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="stat-number text-info h2 mb-0">@GetAverageWordCount()</div>
-                            <div class="stat-label text-muted">Avg Words</div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Sort Controls -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">
+                <i class="fas fa-comments me-2"></i>All Responses
+            </h5>
+            <div class="btn-group shadow-sm">
+                <button class="btn btn-sm @(sortOrder == "recent" ? "btn-primary" : "btn-outline-secondary")" 
+                        @onclick='() => sortOrder = "recent"'>
+                    <i class="fas fa-clock me-1"></i>Most Recent
+                </button>
+                <button class="btn btn-sm @(sortOrder == "longest" ? "btn-primary" : "btn-outline-secondary")" 
+                        @onclick='() => sortOrder = "longest"'>
+                    <i class="fas fa-sort-amount-down me-1"></i>Longest First
+                </button>
             </div>
         </div>
 
         <!-- Feedback Responses -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-comments me-2"></i>
-                        All Responses
-                    </h5>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn @(sortOrder == "recent" ? "btn-primary" : "btn-outline-primary")" 
-                                @onclick='() => sortOrder = "recent"'>
-                            Most Recent
-                        </button>
-                        <button class="btn @(sortOrder == "longest" ? "btn-primary" : "btn-outline-primary")" 
-                                @onclick='() => sortOrder = "longest"'>
-                            Longest First
-                        </button>
-                    </div>
-                </div>
-
-                @if (dashboard.TotalResponses > 0)
+        @if (dashboard.TotalResponses > 0)
+        {
+            <div class="feedback-list">
+                @{
+                    var responseIndex = 0;
+                }
+                @foreach (var feedback in GetSortedResponses())
                 {
-                    <div class="feedback-list">
-                        @foreach (var feedback in GetSortedResponses())
-                        {
-                            <div class="card mb-3 border">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            @if (!feedback.IsAnonymous)
-                                            {
-                                                <span class="badge bg-light text-dark">
-                                                    <i class="fas fa-user me-1"></i>
-                                                    Participant
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                                    <i class="fas fa-user-secret me-1"></i>
-                                                    Anonymous
-                                                </span>
-                                            }
-                                            <span class="badge bg-primary bg-opacity-10 text-primary">
-                                                <i class="fas fa-font me-1"></i>
-                                                @feedback.WordCount words
-                                            </span>
-                                            @if (!string.IsNullOrEmpty(feedback.Category))
-                                            {
-                                                <span class="badge bg-info bg-opacity-10 text-info">
-                                                    @feedback.Category
-                                                </span>
-                                            }
-                                        </div>
-                                        <small class="text-muted">@feedback.CreatedAt.ToString("HH:mm:ss")</small>
+                    responseIndex++;
+                    var sentiment = GetSentimentFromCategory(feedback.Category);
+                    var keywords = ExtractKeywords(feedback.Content);
+                    
+                    <div class="feedback-card">
+                        <div class="feedback-card-header">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="participant-avatar">
+                                    P@(responseIndex)
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="participant-label">Participant</span>
+                                        <span class="feedback-timestamp">
+                                            @GetRelativeTime(feedback.CreatedAt) · @feedback.WordCount words
+                                        </span>
                                     </div>
-                                    <p class="mb-0">@feedback.Content</p>
+                                    @if (!string.IsNullOrEmpty(sentiment))
+                                    {
+                                        <span class="sentiment-badge sentiment-@sentiment.ToLower()">@sentiment</span>
+                                    }
                                 </div>
                             </div>
-                        }
+                        </div>
                         
-                        @if (displayCount < dashboard.Feedbacks.Count)
-                        {
-                            <div class="text-center mt-3">
-                                <button class="btn btn-outline-primary" @onclick="LoadMore">
-                                    Load More (@(dashboard.Feedbacks.Count - displayCount) remaining)
-                                </button>
-                            </div>
-                        }
+                        <div class="feedback-card-body">
+                            <p class="feedback-text">@feedback.Content</p>
+                            
+                            @if (keywords.Any())
+                            {
+                                <div class="feedback-tags">
+                                    @foreach (var keyword in keywords.Take(5))
+                                    {
+                                        <span class="feedback-tag">#@keyword</span>
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
                 }
-                else
+                
+                @if (displayCount < dashboard.Feedbacks.Count)
                 {
-                    <div class="text-center py-5">
-                        <div class="display-4 text-muted mb-3">💬</div>
-                        <h6 class="text-muted">No feedback yet</h6>
-                        <p class="text-muted mb-0">Feedback will appear here once participants start responding.</p>
+                    <div class="text-center mt-4">
+                        <button class="btn btn-outline-primary px-5 py-2" @onclick="LoadMore">
+                            Load More (@(dashboard.Feedbacks.Count - displayCount) remaining)
+                        </button>
                     </div>
                 }
             </div>
-        </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-inbox"></i>
+                </div>
+                <h5 class="empty-title">No feedback yet</h5>
+                <p class="empty-text">Responses will appear here as participants share their thoughts</p>
+            </div>
+        }
 
-        <!-- Word Frequency (Optional Enhancement) -->
+        <!-- Trending Keywords Section -->
         @if (dashboard.TotalResponses > 0)
         {
-            <div class="card border-0 shadow-sm mt-4">
-                <div class="card-body p-4">
-                    <h6 class="card-title mb-3">
-                        <i class="fas fa-chart-line me-2"></i>
-                        Common Keywords
-                    </h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        @foreach (var keyword in GetTopKeywords().Take(15))
-                        {
-                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
-                                @keyword.Word <span class="badge bg-primary ms-1">@keyword.Count</span>
-                            </span>
-                        }
-                    </div>
+            <div class="trending-section">
+                <h5 class="trending-title">Trending Keywords</h5>
+                <div class="trending-keywords">
+                    @{
+                        var trendingWords = GetTopKeywords().Take(10).ToList();
+                    }
+                    @foreach (var keyword in trendingWords)
+                    {
+                        <span class="trending-badge">@keyword.Word</span>
+                    }
                 </div>
             </div>
         }
     }
 </div>
+
+<style>
+    /* Feedback List */
+    .feedback-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    /* Feedback Card */
+    .feedback-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 16px;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .feedback-card:hover {
+        border-color: #d1d5db;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .feedback-card-header {
+        margin-bottom: 12px;
+    }
+
+    /* Participant Avatar */
+    .participant-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .participant-label {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 15px;
+    }
+
+    .feedback-timestamp {
+        color: #9ca3af;
+        font-size: 13px;
+    }
+
+    /* Sentiment Badges */
+    .sentiment-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .sentiment-positive {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .sentiment-negative {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .sentiment-neutral {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .sentiment-new {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    /* Feedback Body */
+    .feedback-card-body {
+        padding-left: 52px;
+    }
+
+    .feedback-text {
+        color: #374151;
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 12px;
+    }
+
+    /* Feedback Tags */
+    .feedback-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .feedback-tag {
+        color: #6b7280;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 4px 0;
+    }
+
+    .feedback-tag:hover {
+        color: #4b5563;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .empty-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 20px;
+        background: #f1f5f9;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: #94a3b8;
+    }
+
+    .empty-title {
+        color: #475569;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .empty-text {
+        color: #94a3b8;
+        margin: 0;
+    }
+
+    /* Trending Keywords Section */
+    .trending-section {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 24px;
+        margin-top: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .trending-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 16px;
+    }
+
+    .trending-keywords {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .trending-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-size: 15px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+    }
+
+    .trending-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+    }
+</style>
 
 @code {
     [Parameter] public string SessionCode { get; set; } = string.Empty;
@@ -226,7 +376,7 @@
         try
         {
             hubConnection = new HubConnectionBuilder()
-                .WithUrl(Navigation.ToAbsoluteUri("/workshophub"))
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
                 .WithAutomaticReconnect()
                 .Build();
 
@@ -303,6 +453,57 @@
     private void LoadMore()
     {
         displayCount += 20;
+    }
+
+    private string GetSentimentFromCategory(string? category)
+    {
+        if (string.IsNullOrEmpty(category))
+            return string.Empty;
+
+        // Map common categories to sentiments
+        var categoryLower = category.ToLower();
+        if (categoryLower.Contains("positive") || categoryLower.Contains("good") || categoryLower.Contains("great"))
+            return "Positive";
+        if (categoryLower.Contains("negative") || categoryLower.Contains("bad") || categoryLower.Contains("issue"))
+            return "Negative";
+        if (categoryLower.Contains("neutral") || categoryLower.Contains("okay"))
+            return "Neutral";
+        if (categoryLower.Contains("new") || categoryLower.Contains("recent"))
+            return "New";
+        
+        return category;
+    }
+
+    private string GetRelativeTime(DateTimeOffset timestamp)
+    {
+        var timeSpan = DateTimeOffset.UtcNow - timestamp;
+        
+        if (timeSpan.TotalMinutes < 1)
+            return "Just now";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes} minute{((int)timeSpan.TotalMinutes == 1 ? "" : "s")} ago";
+        if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours} hour{((int)timeSpan.TotalHours == 1 ? "" : "s")} ago";
+        
+        return timestamp.ToString("MMM d 'at' h:mm tt");
+    }
+
+    private List<string> ExtractKeywords(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return new List<string>();
+
+        // Simple keyword extraction - split by spaces and filter
+        var stopWords = new HashSet<string> { "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by", "from", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did", "will", "would", "could", "should", "may", "might", "can" };
+        
+        var words = content.ToLower()
+            .Split(new[] { ' ', ',', '.', '!', '?', ';', ':', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+            .Where(w => w.Length > 3 && !stopWords.Contains(w))
+            .Distinct()
+            .Take(5)
+            .ToList();
+        
+        return words;
     }
 
     public async ValueTask DisposeAsync()

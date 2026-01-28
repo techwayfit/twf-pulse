@@ -124,9 +124,9 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
            });
   ");
             }
-     catch (Exception ex)
-    {
-    Logger.LogError(ex, "Failed to initialize presenter mode");
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to initialize presenter mode");
             }
         }
     }
@@ -135,107 +135,107 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
     {
         try
         {
-         isLoading = true;
-      errorMessage = string.Empty;
+            isLoading = true;
+            errorMessage = string.Empty;
 
-  if (string.IsNullOrWhiteSpace(SessionCode))
-  {
-  errorMessage = "No session code provided.";
-    return;
-         }
+            if (string.IsNullOrWhiteSpace(SessionCode))
+            {
+                errorMessage = "No session code provided.";
+                return;
+            }
 
             activities = (await ApiService.GetAgendaAsync(SessionCode)).ToList();
             activity = activities.FirstOrDefault(a => a.Status == Contracts.Enums.ActivityStatus.Open);
 
- if (activity == null)
+            if (activity == null)
             {
-          errorMessage = "No active activity found. Please open an activity first.";
-    return;
-      }
+                errorMessage = "No active activity found. Please open an activity first.";
+                return;
+            }
 
-         hasPrevious = activities.Any(a => a.Order < activity.Order);
- hasNext = activities.Any(a => a.Order > activity.Order);
+            hasPrevious = activities.Any(a => a.Order < activity.Order);
+            hasNext = activities.Any(a => a.Order > activity.Order && a.Status != Contracts.Enums.ActivityStatus.Closed);
 
             try
             {
-      participantCount = await ApiService.GetParticipantCountAsync(SessionCode);
+                participantCount = await ApiService.GetParticipantCountAsync(SessionCode);
             }
             catch
- {
-     participantCount = 0;
+            {
+                participantCount = 0;
             }
-   }
-  catch (Exception ex)
-        {
-      Logger.LogError(ex, "Failed to load presentation");
-  errorMessage = $"Failed to load presentation: {ex.Message}";
         }
-  finally
-   {
-  isLoading = false;
- StateHasChanged();
-  }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load presentation");
+            errorMessage = $"Failed to load presentation: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
 
     private async Task SetupSignalR()
     {
-    try
-     {
- hubConnection = new HubConnectionBuilder()
-       .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
-          .WithAutomaticReconnect()
-                .Build();
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                  .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                     .WithAutomaticReconnect()
+                           .Build();
 
-   hubConnection.On<ParticipantJoinedEvent>("ParticipantJoined", async (e) =>
-     {
-      await InvokeAsync(() =>
-    {
-  if (e.SessionCode == SessionCode)
-         {
-           participantCount = e.TotalParticipantCount;
-       StateHasChanged();
-       }
- });
-            });
+            hubConnection.On<ParticipantJoinedEvent>("ParticipantJoined", async (e) =>
+              {
+                  await InvokeAsync(() =>
+       {
+                 if (e.SessionCode == SessionCode)
+                 {
+                     participantCount = e.TotalParticipantCount;
+                     StateHasChanged();
+                 }
+             });
+              });
 
-      hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (e) =>
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (e) =>
+                  {
+                      await InvokeAsync(() =>
+             {
+            if (e.SessionCode == SessionCode && e.ActivityId == activity?.ActivityId)
             {
-     await InvokeAsync(() =>
-  {
-   if (e.SessionCode == SessionCode && e.ActivityId == activity?.ActivityId)
-         {
-              responseCount++;
-         StateHasChanged();
-}
-   });
-            });
+                responseCount++;
+                StateHasChanged();
+            }
+        });
+                  });
 
             await hubConnection.StartAsync();
-  await hubConnection.InvokeAsync("Subscribe", SessionCode);
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
         }
         catch (Exception ex)
         {
-   Logger.LogError(ex, "Failed to setup SignalR");
+            Logger.LogError(ex, "Failed to setup SignalR");
         }
     }
 
     private async Task CloseActivity()
     {
-   if (activity == null) return;
+        if (activity == null) return;
 
         try
-     {
-  isPerformingAction = true;
-   var token = await TokenService.GetFacilitatorTokenAsync(SessionCode);
-   if (string.IsNullOrEmpty(token)) return;
+        {
+            isPerformingAction = true;
+            var token = await TokenService.GetFacilitatorTokenAsync(SessionCode);
+            if (string.IsNullOrEmpty(token)) return;
 
- await ApiService.CloseActivityAsync(SessionCode, activity.ActivityId, token);
+            await ApiService.CloseActivityAsync(SessionCode, activity.ActivityId, token);
             Navigation.NavigateTo($"/facilitator/live?code={SessionCode}");
         }
         catch (Exception ex)
         {
-  Logger.LogError(ex, "Failed to close activity");
-     errorMessage = $"Failed to close activity: {ex.Message}";
+            Logger.LogError(ex, "Failed to close activity");
+            errorMessage = $"Failed to close activity: {ex.Message}";
         }
         finally
         {
@@ -244,77 +244,77 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
     }
 
     private async Task MoveNext()
- {
+    {
         if (activity == null) return;
 
-    try
- {
-  isPerformingAction = true;
-    var token = await TokenService.GetFacilitatorTokenAsync(SessionCode);
-    if (string.IsNullOrEmpty(token)) return;
+        try
+        {
+            isPerformingAction = true;
+            var token = await TokenService.GetFacilitatorTokenAsync(SessionCode);
+            if (string.IsNullOrEmpty(token)) return;
 
             var nextActivity = activities
     .Where(a => a.Order > activity.Order)
   .OrderBy(a => a.Order)
       .FirstOrDefault();
 
-      if (nextActivity == null) return;
+            if (nextActivity == null) return;
 
             await ApiService.CloseActivityAsync(SessionCode, activity.ActivityId, token);
             await ApiService.OpenActivityAsync(SessionCode, nextActivity.ActivityId, token);
 
-     await LoadPresentation();
-  }
+            await LoadPresentation();
+        }
         catch (Exception ex)
         {
-      Logger.LogError(ex, "Failed to move next");
-errorMessage = $"Failed to move to next activity: {ex.Message}";
+            Logger.LogError(ex, "Failed to move next");
+            errorMessage = $"Failed to move to next activity: {ex.Message}";
         }
         finally
         {
- isPerformingAction = false;
- }
+            isPerformingAction = false;
+        }
     }
 
     private async Task GoBack()
     {
         if (activity == null) return;
 
-  try
-     {
-         isPerformingAction = true;
+        try
+        {
+            isPerformingAction = true;
             var token = await TokenService.GetFacilitatorTokenAsync(SessionCode);
-      if (string.IsNullOrEmpty(token)) return;
+            if (string.IsNullOrEmpty(token)) return;
 
-    var previousActivity = activities
-      .Where(a => a.Order < activity.Order)
-          .OrderByDescending(a => a.Order)
-     .FirstOrDefault();
+            var previousActivity = activities
+              .Where(a => a.Order < activity.Order)
+                  .OrderByDescending(a => a.Order)
+             .FirstOrDefault();
 
             if (previousActivity == null) return;
 
-          await ApiService.CloseActivityAsync(SessionCode, activity.ActivityId, token);
+            await ApiService.CloseActivityAsync(SessionCode, activity.ActivityId, token);
             await ApiService.OpenActivityAsync(SessionCode, previousActivity.ActivityId, token);
 
             await LoadPresentation();
         }
- catch (Exception ex)
-      {
-     Logger.LogError(ex, "Failed to go back");
-    errorMessage = $"Failed to go back: {ex.Message}";
-    }
-   finally
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to go back");
+            errorMessage = $"Failed to go back: {ex.Message}";
+        }
+        finally
         {
             isPerformingAction = false;
         }
     }
 
     private async Task ExitPresenterMode()
- {
+    {
         try
         {
             // Exit fullscreen mode first
-     await JS.InvokeVoidAsync("eval", @"
+            await JS.InvokeVoidAsync("eval", @"
         if (document.exitFullscreen) {
     document.exitFullscreen();
                 } else if (document.webkitExitFullscreen) {
@@ -324,33 +324,33 @@ errorMessage = $"Failed to move to next activity: {ex.Message}";
     }
     ");
 
-     // Wait a bit for fullscreen to exit
-    await Task.Delay(200);
+            // Wait a bit for fullscreen to exit
+            await Task.Delay(200);
 
-        // Navigate back to live view
-         Navigation.NavigateTo($"/facilitator/live?code={SessionCode}");
+            // Navigate back to live view
+            Navigation.NavigateTo($"/facilitator/live?code={SessionCode}");
         }
         catch (Exception ex)
-   {
+        {
             Logger.LogError(ex, "Failed to exit presenter mode");
- // Still try to navigate even if fullscreen exit fails
-    Navigation.NavigateTo($"/facilitator/live?code={SessionCode}");
+            // Still try to navigate even if fullscreen exit fails
+            Navigation.NavigateTo($"/facilitator/live?code={SessionCode}");
         }
     }
 
     public async ValueTask DisposeAsync()
     {
-     if (hubConnection != null)
-    {
+        if (hubConnection != null)
+        {
             try
- {
-     await hubConnection.InvokeAsync("Unsubscribe", SessionCode);
-       await hubConnection.DisposeAsync();
+            {
+                await hubConnection.InvokeAsync("Unsubscribe", SessionCode);
+                await hubConnection.DisposeAsync();
             }
-        catch
-    {
-         // Ignore cleanup errors
-      }
+            catch
+            {
+                // Ignore cleanup errors
+            }
         }
     }
 }
