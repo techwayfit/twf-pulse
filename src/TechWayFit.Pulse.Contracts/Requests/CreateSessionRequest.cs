@@ -8,6 +8,9 @@ public sealed class CreateSessionRequest
 
     public string? Goal { get; set; }
 
+    /// <summary>
+    /// Legacy context field (kept for backward compatibility)
+    /// </summary>
     public string? Context { get; set; }
 
     public SessionSettingsDto Settings { get; set; } = new();
@@ -15,4 +18,15 @@ public sealed class CreateSessionRequest
     public JoinFormSchemaDto JoinFormSchema { get; set; } = new();
 
     public Guid? GroupId { get; set; }
+    
+    /// <summary>
+    /// Enhanced context for AI session generation (optional)
+    /// When provided, AI will use this rich context to generate better activities
+    /// </summary>
+    public SessionGenerationContextDto? GenerationContext { get; set; }
+    
+    /// <summary>
+    /// AI generation options (optional)
+    /// </summary>
+    public SessionGenerationOptionsDto? GenerationOptions { get; set; }
 }

@@ -8,6 +8,7 @@ using TechWayFit.Pulse.Contracts.Responses;
 using TechWayFit.Pulse.Web.Components.Facilitator;
 using TechWayFit.Pulse.Web.Hubs;
 using TechWayFit.Pulse.Web.Services;
+using System.Text.Json;
 
 namespace TechWayFit.Pulse.Web.Pages.Facilitator;
 
@@ -37,6 +38,9 @@ public partial class Live : IAsyncDisposable
     private bool isGeneratingQR = false;
     private string errorMessage = string.Empty;
     private HubConnection? hubConnection;
+    private JsonElement _aiInsightJson;
+    private bool _hasAiInsight = false;
+    private DateTimeOffset _aiInsightTimestamp;
     private int timerDurationInput = 5;
 
     // Modal component references
@@ -60,7 +64,7 @@ public partial class Live : IAsyncDisposable
     private async Task InitializePageAsync()
     {
         // Set page title
-        await JS.InvokeVoidAsync("eval", "document.title = 'TechWayFit Pulse — Live Session'");
+        await JS.InvokeVoidAsync("eval", "document.title = 'TechWayFit Pulse ï¿½ Live Session'");
 
         // Initialize activity timer
         await JS.InvokeVoidAsync("eval", @"
@@ -806,13 +810,34 @@ Config = currentActivity.Config,
         {
      if (session != null && dashboardEvent.SessionCode == session.Code)
            {
-  // Trigger UI refresh - the dashboard components handle their own updates
-      if (currentActivity != null &&
-  dashboardEvent.ActivityId.HasValue &&
-   dashboardEvent.ActivityId == currentActivity.ActivityId)
-{
-     StateHasChanged();
-   }
+  // If this is an AI insight, capture payload for facilitator UI
+  try
+  {
+    if (string.Equals(dashboardEvent.AggregateType, "AIInsight", StringComparison.OrdinalIgnoreCase))
+    {
+      if (dashboardEvent.Payload is JsonElement je)
+      {
+        _aiInsightJson = je;
+      }
+      else
+      {
+        // Try to serialize/deserialize generic object into JsonElement
+        _aiInsightJson = JsonSerializer.SerializeToElement(dashboardEvent.Payload ?? new { });
+      }
+      _hasAiInsight = true;
+      _aiInsightTimestamp = dashboardEvent.Timestamp;
+    }
+
+    // Trigger UI refresh - the dashboard components handle their own updates
+    if (currentActivity != null && dashboardEvent.ActivityId.HasValue && dashboardEvent.ActivityId == currentActivity.ActivityId)
+    {
+      StateHasChanged();
+    }
+  }
+  catch
+  {
+    // ignore any payload parsing issues
+  }
    }
                 });
             });

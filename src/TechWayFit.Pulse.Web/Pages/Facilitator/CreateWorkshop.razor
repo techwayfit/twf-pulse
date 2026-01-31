@@ -1,130 +1,467 @@
 @page "/facilitator/create-workshop"
 @inject NavigationManager Navigation
+@inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
+@inject TechWayFit.Pulse.Web.Services.IClientTokenService TokenService
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Web.Components.Facilitator
 
-<PageTitle>TechWayFit Pulse — Create Session</PageTitle>
 
-<header class="topbar">
-    <div class="row">
-        <a class="brand" href="/home">
-            <div class="logo" aria-hidden="true"></div>
-            <div class="name">
-                <strong>TechWayFit Pulse</strong>
-                <span>Make workshops fun. Make insights measurable.</span>
-            </div>
-        </a>
-        <div class="navbtns">
-            <a class="btn ghost" data-nav="home" href="/home">Home</a>
-            <a class="btn ghost" data-nav="create" href="/facilitator/create-workshop">Create</a>
-            <a class="btn ghost" data-nav="live" href="/facilitator/console">Live Room</a>
-            <a class="btn ghost" data-nav="dash" href="/facilitator/dashboards">Dashboards</a>
-            <a class="btn ghost" data-nav="pjoin" href="/participant/join">Participant</a>
-            <a class="btn primary" href="/facilitator/console">Launch</a>
-        </div>
-    </div>
-</header>
-
-<main class="wrap">
-    <section class="card">
-        <div class="title">
+<main class="py-5" style="min-height: calc(100vh - 200px); margin-bottom: 2rem;">
+    <div class="container" style="max-width: 1200px;">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <div>
-                <h2 class="h2">Create session</h2>
-                <div class="subtle">Context → Join Form (max 5 fields) → Activities → Launch</div>
+                <h2 class="mb-2">AI-Powered Session Creator</h2>
+                <p class="text-muted mb-0">Let AI generate your workshop activities based on your context and goals</p>
             </div>
-            <span class="chip">TTL: <strong>&nbsp;6h</strong></span>
-        </div>
-
-        <div class="grid">
-            <div class="card solid" style="box-shadow:none">
-                <h3 class="h2">Session context</h3>
-                <div class="sp"></div>
-                <div class="form">
-                    <div>
-                        <label>Session title</label>
-                        <input class="field" @bind="sessionTitle" />
-                    </div>
-                    <div>
-                        <label>Goal</label>
-                        <textarea class="field" rows="3" @bind="sessionGoal"></textarea>
-                    </div>
-                    <div class="row2">
-                        <div>
-                            <label>Workshop type</label>
-                            <select class="field" @bind="workshopType">
-                                <option selected>Ops / Process Improvement</option>
-                                <option>Retro</option>
-                                <option>Discovery</option>
-                                <option>Incident Review</option>
-                                <option>Feedback</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Max contributions per participant (N)</label>
-                            <select class="field" @bind="maxContributions">
-                                <option>3</option>
-                                <option selected>5</option>
-                                <option>8</option>
-                                <option>10</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="toolbar">
-                        <a class="btn primary" href="/facilitator/console">Save & Go Live</a>
-                        <a class="btn" href="/home">Cancel</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card solid" style="box-shadow:none">
-                <h3 class="h2">Join form (max 5 fields)</h3>
-                <p class="p">Simple builder concept — configure up to 5 fields for filtering/clustering.</p>
-                <div class="viz" style="margin-top:12px">
-                    <div class="row2">
-                        <div>
-                            <label>Field 1</label>
-                            <select class="field">
-                                <option selected>Team (Dropdown)</option>
-                                <option>Role</option>
-                                <option>Location</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Field 2</label>
-                            <select class="field">
-                                <option>Team</option>
-                                <option selected>Role (Dropdown)</option>
-                                <option>Location</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="sp"></div>
-                    <div class="row2">
-                        <div>
-                            <label>Field 3</label>
-                            <select class="field">
-                                <option selected>Location (Dropdown)</option>
-                                <option>Experience</option>
-                                <option>Text</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Fields remaining</label>
-                            <input class="field" value="2" readonly />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="hr"></div>
-                <h3 class="h2">Activities</h3>
-                <div class="list">
-                    <div class="item"><strong>1) Poll</strong><div>Slowest step</div></div>
-                    <div class="item"><strong>2) Word Cloud</strong><div>Pain in one word</div></div>
-                    <div class="item active"><strong>3) Quadrant</strong><div>Impact vs Effort</div></div>
-                    <div class="item"><strong>4) 5-Whys</strong><div>Root cause ladder</div></div>
-                </div>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <a href="/facilitator/create" class="btn btn-sm btn-outline-secondary">Create Manually</a>
+                <span class="badge bg-white text-dark border px-3 py-2">TTL: <strong>6h</strong></span>
             </div>
         </div>
-    </section>
+
+        <!-- Session Details & Join Form -->
+        <div class="row g-4 mb-4">
+            <!-- Session Details Card -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-semibold mb-3">1. Session Details</h5>
+                        <p class="text-muted small mb-4">Provide basic information about your workshop</p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Session title <span class="text-danger">*</span></label>
+                            <input class="form-control" @bind="sessionTitle" placeholder="e.g., Sprint 24 Retrospective" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Goal <span class="text-danger">*</span></label>
+                            <textarea class="form-control" rows="3" @bind="sessionGoal" placeholder="e.g., Identify bottlenecks and prioritize improvements"></textarea>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Workshop type</label>
+                                <select class="form-select" @bind="workshopType">
+                                    <option selected>Ops / Process Improvement</option>
+                                    <option>Retro</option>
+                                    <option>Discovery</option>
+                                    <option>Incident Review</option>
+                                    <option>Feedback</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Max contributions per participant</label>
+                                <select class="form-select" @bind="maxContributions">
+                                    <option>3</option>
+                                    <option selected>5</option>
+                                    <option>8</option>
+                                    <option>10</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Join Form Card -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="card-title fw-semibold mb-1">2. Join Form</h5>
+                                <p class="text-muted small mb-0">Configure up to 5 fields for filtering/clustering (optional)</p>
+                            </div>
+                            @if (joinFormFields.Count < 5)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-primary" @onclick="AddJoinFormField">
+                                    + Add Field
+                                </button>
+                            }
+                        </div>
+                        
+                        @if (joinFormFields.Any())
+                        {
+                            @foreach (var field in joinFormFields)
+                            {
+                                <div class="mb-3 p-3 border rounded bg-light">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <label class="form-label fw-medium mb-0">Field @(joinFormFields.IndexOf(field) + 1)</label>
+                                        <button type="button" class="btn btn-sm btn-link text-danger p-0" @onclick="() => RemoveJoinFormField(field)">
+                                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                                                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-6">
+                                            <input type="text" class="form-control form-control-sm" @bind="field.Label" placeholder="Field label (e.g., Team)" />
+                                        </div>
+                                        <div class="col-6">
+                                            <select class="form-select form-select-sm" @bind="field.Type">
+                                                <option value="text">Text</option>
+                                                <option value="dropdown">Dropdown</option>
+                                                <option value="checkbox">Checkbox</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    @if (field.Type == "dropdown")
+                                    {
+                                        <div class="mt-2">
+                                            <label class="form-label small mb-1">Dropdown Options (comma-separated)</label>
+                                            <input type="text" class="form-control form-control-sm" @bind="field.Options" 
+                                                   placeholder="e.g., Team A, Team B, Team C" />
+                                            <small class="form-text text-muted">Separate options with commas</small>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-4">
+                                <p class="mb-2">No fields added yet</p>
+                                <button type="button" class="btn btn-sm btn-primary" @onclick="AddJoinFormField">
+                                    + Add First Field
+                                </button>
+                            </div>
+                        }
+                        
+                        @if (joinFormFields.Any())
+                        {
+                            <div class="mt-3 pt-3 border-top">
+                                <small class="text-muted">
+                                    <strong>@joinFormFields.Count</strong> of 5 fields used
+                                    @if (joinFormFields.Count < 5)
+                                    {
+                                        <span> • @(5 - joinFormFields.Count) remaining</span>
+                                    }
+                                </small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Generation Section (Full Width) -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                <div class="mb-3">
+                    <h5 class="card-title fw-semibold mb-2">3. Generate Activities with AI</h5>
+                    <p class="text-muted small mb-0">Let AI create workshop activities tailored to your context</p>
+                </div>
+            
+            <div class="mb-3">
+                <div class="alert alert-info border-0 d-flex align-items-start" style="background-color: #cfe2ff;">
+                    <svg class="me-2 mt-1" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+                    </svg>
+                    <div class="small">
+                        <strong>Quick start:</strong> Fill in title and goal above, then click "Generate with AI" for instant activity suggestions. 
+                        Or expand enhanced options below for more tailored results.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Enhanced AI Generation Section -->
+            <details open="@showAdvancedAI" class="mb-4">
+                <summary class="btn btn-link p-0 text-decoration-none fw-semibold d-flex align-items-center" style="cursor:pointer; list-style: none;" @onclick="() => showAdvancedAI = !showAdvancedAI">
+                    <svg width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16" style="transform: rotate(@(showAdvancedAI ? "90deg" : "0deg")); transition: transform 0.2s;">
+                        <path fill-rule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                    @(showAdvancedAI ? "Hide" : "Show") Enhanced Options
+                </summary>
+                
+                <div class="mt-4 p-3 bg-white rounded border">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Session Duration (minutes)</label>
+                            <input type="number" class="form-control" @bind="aiDurationMinutes" min="15" max="600" placeholder="e.g., 60" />
+                            <small class="form-text text-muted">15-600 minutes. AI will suggest appropriate activity count.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Expected Participants</label>
+                            <input type="number" class="form-control" @bind="aiParticipantCount" min="1" max="1000" placeholder="e.g., 12" />
+                        </div>
+                    </div>
+                    
+                    <!-- Participant Type -->
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Primary Audience</label>
+                        <select class="form-select" @bind="aiParticipantType">
+                            <option value="">-- Select --</option>
+                            <option value="Technical">Technical (Engineers, DevOps, QA)</option>
+                            <option value="Business">Business (Product, Sales, Marketing)</option>
+                            <option value="Managers">Managers (Team Leads, Department Heads)</option>
+                            <option value="Leaders">Leaders (Directors, VPs, Executives)</option>
+                            <option value="Mixed">Mixed Audience</option>
+                        </select>
+                        <small class="form-text text-muted">AI will adjust terminology and focus based on audience type</small>
+                    </div>
+                    
+                    <!-- Context Documents Expandable -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold d-block mb-2">Context Documents (Optional)</label>
+                        <div class="alert alert-warning py-2 px-3 mb-3" style="font-size: 0.875rem;">
+                            ⚠️ Do not include customer names, emails, or sensitive data
+                        </div>
+                        
+                        <!-- Sprint Backlog -->
+                        <div class="border rounded mb-3">
+                            <button type="button" class="btn btn-light w-100 text-start d-flex align-items-center justify-content-between py-2 px-3" 
+                                    data-bs-toggle="collapse" data-bs-target="#sprintBacklogCollapse">
+                                <span>📋 Sprint Backlog</span>
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                                </svg>
+                            </button>
+                            <div class="collapse" id="sprintBacklogCollapse">
+                                <div class="p-3 border-top bg-light">
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" class="form-check-input" id="enableSprintBacklog" @bind="enableSprintBacklog" />
+                                        <label class="form-check-label fw-medium" for="enableSprintBacklog">Include Sprint Backlog Context</label>
+                                    </div>
+                                    @if (enableSprintBacklog)
+                                    {
+                                        <div class="mb-3">
+                                            <label class="form-label fw-medium">Sprint Summary (max 500 chars)</label>
+                                            <textarea class="form-control" rows="3" @bind="sprintBacklogSummary" maxlength="500" 
+                                                      placeholder="E.g., Sprint 24. Payment Gateway Integration. 12/15 stories done. Stripe integration completed."></textarea>
+                                            <small class="form-text text-muted">@(sprintBacklogSummary?.Length ?? 0)/500 chars</small>
+                                        </div>
+                                        
+                                        <div class="mb-0">
+                                            <label class="form-label fw-medium">Key Backlog Items (one per line)</label>
+                                            <textarea class="form-control" rows="3" @bind="sprintBacklogItems" 
+                                                      placeholder="E.g., JIRA-123: Implement rate limiting"></textarea>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Incident Report -->
+                        <div class="border rounded mb-3">
+                            <button type="button" class="btn btn-light w-100 text-start d-flex align-items-center justify-content-between py-2 px-3" 
+                                    data-bs-toggle="collapse" data-bs-target="#incidentReportCollapse">
+                                <span>🚨 Incident Report</span>
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                                </svg>
+                            </button>
+                            <div class="collapse" id="incidentReportCollapse">
+                                <div class="p-3 border-top bg-light">
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" class="form-check-input" id="enableIncident" @bind="enableIncident" />
+                                        <label class="form-check-label fw-medium" for="enableIncident">Include Incident Context</label>
+                                    </div>
+                                    @if (enableIncident)
+                                    {
+                                        <div class="mb-3">
+                                            <label class="form-label fw-medium">Incident Summary (max 500 chars)</label>
+                                            <textarea class="form-control" rows="3" @bind="incidentSummary" maxlength="500" 
+                                                      placeholder="E.g., Payment service outage on Nov 15. Database connection pool exhausted."></textarea>
+                                            <small class="form-text text-muted">@(incidentSummary?.Length ?? 0)/500 chars</small>
+                                        </div>
+                                        
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-medium">Severity</label>
+                                                <select class="form-select" @bind="incidentSeverity">
+                                                    <option value="">-- Select --</option>
+                                                    <option value="P0">P0 - Critical (Complete Outage)</option>
+                                                    <option value="P1">P1 - High (Major Impact)</option>
+                                                    <option value="P2">P2 - Medium (Significant Impact)</option>
+                                                    <option value="P3">P3 - Low (Minor Impact)</option>
+                                                    <option value="P4">P4 - Informational</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-medium">Duration (minutes)</label>
+                                                <input type="number" class="form-control" @bind="incidentDurationMinutes" placeholder="e.g., 120" />
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-0">
+                                            <label class="form-label fw-medium">Impacted Systems (comma-separated)</label>
+                                            <input class="form-control" @bind="incidentImpactedSystems" 
+                                                   placeholder="E.g., Payment API, Database, Notification Service" />
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product Documentation -->
+                        <div class="border rounded mb-3">
+                            <button type="button" class="btn btn-light w-100 text-start d-flex align-items-center justify-content-between py-2 px-3" 
+                                    data-bs-toggle="collapse" data-bs-target="#productDocsCollapse">
+                                <span>📖 Product Documentation</span>
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
+                                </svg>
+                            </button>
+                            <div class="collapse" id="productDocsCollapse">
+                                <div class="p-3 border-top bg-light">
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" class="form-check-input" id="enableProductDocs" @bind="enableProductDocs" />
+                                        <label class="form-check-label fw-medium" for="enableProductDocs">Include Product Context</label>
+                                    </div>
+                                    @if (enableProductDocs)
+                                    {
+                                        <div class="mb-3">
+                                            <label class="form-label fw-medium">Product Summary (max 500 chars)</label>
+                                            <textarea class="form-control" rows="3" @bind="productSummary" maxlength="500" 
+                                                      placeholder="E.g., E-commerce platform for B2B sales. Focus on mobile checkout experience."></textarea>
+                                            <small class="form-text text-muted">@(productSummary?.Length ?? 0)/500 chars</small>
+                                        </div>
+                                        
+                                        <div class="mb-0">
+                                            <label class="form-label fw-medium">Key Features (one per line)</label>
+                                            <textarea class="form-control" rows="3" @bind="productFeatures" 
+                                                      placeholder="E.g., One-click checkout, Bulk ordering"></textarea>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Options -->
+                    <div class="mb-3">
+                        <label class="fw-semibold d-block mb-2">Temperature (Creativity)</label>
+                        <input type="range" class="form-range" @bind="aiTemperature" min="0" max="1" step="0.1" />
+                        <small class="text-muted">@aiTemperature.ToString("0.0") - Lower = more focused, Higher = more creative</small>
+                    </div>
+                </div>
+            </details>
+            
+            <!-- Generate Button -->
+            <div class="d-flex gap-3 align-items-center flex-wrap mt-4">
+                <button class="btn btn-primary btn-lg px-5" @onclick="GenerateWithAI" disabled="@isGenerating">
+                    @if (isGenerating)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Generating Activities...</span>
+                    }
+                    else
+                    {
+                        <span>Generate Activities with AI</span>
+                    }
+                </button>
+                
+                @if (!string.IsNullOrEmpty(lastGenerationInfo))
+                {
+                    <div class="@(lastGenerationInfo.StartsWith("✓") ? "text-success" : "text-danger") fw-semibold">
+                        @lastGenerationInfo
+                    </div>
+                }
+            </div>
+            </div>
+        </div>
+        
+        <!-- Generated Activities List -->
+        @if (generatedActivities.Any())
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title fw-semibold mb-0">4. Review Generated Activities</h5>
+                        <span class="badge bg-success">@generatedActivities.Count @(generatedActivities.Count == 1 ? "Activity" : "Activities")</span>
+                    </div>
+                    <p class="text-muted small mb-4">Review and customize the AI-generated activities. Click edit to modify or remove to delete.</p>
+                
+                <div class="list-group mb-4">
+                    @for (int i = 0; i < generatedActivities.Count; i++)
+                    {
+                        var a = generatedActivities[i];
+                        <div class="list-group-item border rounded mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1 me-3">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="badge bg-primary me-2">@a.Order</span>
+                                        <strong class="mb-0">@a.Title</strong>
+                                        <span class="badge bg-secondary-subtle text-secondary ms-2">@a.Type</span>
+                                        @if (a.DurationMinutes.HasValue)
+                                        {
+                                            <span class="text-muted small ms-2">⏱ @a.DurationMinutes min</span>
+                                        }
+                                    </div>
+                                    <p class="text-muted mb-0 small">@a.Prompt</p>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => ShowEditModal(i)">
+                                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveGeneratedActivity(i)">
+                                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5Zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6Z"/>
+                                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1ZM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118ZM2.5 3h11V2h-11v1Z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            @if (editingIndex == i)
+                            {
+                                <div class="mt-3 pt-3 border-top">
+                                    <div class="mb-2">
+                                        <label class="form-label fw-semibold">Title</label>
+                                        <input class="form-control" @bind="editModel.Title" />
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-semibold">Prompt</label>
+                                        <textarea class="form-control" rows="3" @bind="editModel.Prompt"></textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-semibold">Duration (minutes)</label>
+                                        <input type="number" class="form-control" @bind="editModel.DurationMinutes" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Config (JSON)</label>
+                                        <textarea class="form-control font-monospace" rows="3" @bind="editModel.Config"></textarea>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-primary btn-sm" @onclick="SaveGeneratedEdit">Save</button>
+                                        <button class="btn btn-secondary btn-sm" @onclick="CancelGeneratedEdit">Cancel</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                
+                <!-- Final Actions -->
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    <div class="text-muted small">
+                        <strong>@generatedActivities.Count</strong> @(generatedActivities.Count == 1 ? "activity" : "activities") ready to launch
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-outline-secondary" href="/home">Cancel</a>
+                        <button class="btn btn-success btn-lg px-5" @onclick="CreateAndSaveSession" disabled="@isSaving">
+                            @if (isSaving)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Saving Session...</span>
+                            }
+                            else
+                            {
+                                <span>Save & Go Live</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+                </div>
+            </div>
+        }
+        
+        <EditActivityModal @ref="editActivityModal"
+                           OnDraftActivityUpdated="HandleDraftActivityUpdated"
+                           OnDraftActivityDeleted="HandleDraftActivityDeleted" />
+    </div>
 </main>
 
 @code {
@@ -132,4 +469,364 @@
     private string sessionGoal = "Identify bottlenecks and quantify impact so we can prioritize fixes.";
     private string workshopType = "Ops / Process Improvement";
     private string maxContributions = "5";
+    private List<AgendaActivityResponse> generatedActivities = new();
+    private int? editingIndex = null;
+    private TechWayFit.Pulse.Contracts.Requests.UpdateActivityRequest editModel = new();
+    private bool isSaving = false;
+    private bool isGenerating = false;
+    
+    // Join Form Fields
+    private List<JoinFormField> joinFormFields = new();
+    
+    // Enhanced AI generation fields
+    private bool showAdvancedAI = false;
+    private int? aiDurationMinutes = 60;
+    private int? aiParticipantCount = null;
+    private string aiParticipantType = "";
+    private double aiTemperature = 0.7;
+    private string lastGenerationInfo = "";
+    
+    // Sprint Backlog
+    private bool enableSprintBacklog = false;
+    private string? sprintBacklogSummary = "";
+    private string? sprintBacklogItems = "";
+    
+    // Incident Report
+    private bool enableIncident = false;
+    private string? incidentSummary = "";
+    private string? incidentSeverity = "";
+    private int? incidentDurationMinutes = null;
+    private string? incidentImpactedSystems = "";
+    
+    // Product Documentation
+    private bool enableProductDocs = false;
+    private string? productSummary = "";
+    private string? productFeatures = "";
+
+    private async Task GenerateWithAI()
+    {
+        if (isGenerating) return;
+        
+        // Validation
+        if (string.IsNullOrWhiteSpace(sessionTitle))
+        {
+            lastGenerationInfo = "❌ Session title is required";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(sessionGoal))
+        {
+            lastGenerationInfo = "❌ Goal is required";
+            return;
+        }
+        
+        // Validate advanced options if enabled
+        if (showAdvancedAI)
+        {
+            if (aiDurationMinutes.HasValue && (aiDurationMinutes < 15 || aiDurationMinutes > 600))
+            {
+                lastGenerationInfo = "❌ Duration must be between 15-600 minutes";
+                return;
+            }
+            if (aiParticipantCount.HasValue && (aiParticipantCount < 1 || aiParticipantCount > 1000))
+            {
+                lastGenerationInfo = "❌ Participant count must be between 1-1000";
+                return;
+            }
+            if (aiTemperature < 0 || aiTemperature > 1)
+            {
+                lastGenerationInfo = "❌ Temperature must be between 0.0-1.0";
+                return;
+            }
+            
+            // Validate context document summaries
+            if (enableSprintBacklog && !string.IsNullOrEmpty(sprintBacklogSummary) && sprintBacklogSummary.Length > 500)
+            {
+                lastGenerationInfo = "❌ Sprint backlog summary must be 500 characters or less";
+                return;
+            }
+            if (enableIncident && !string.IsNullOrEmpty(incidentSummary) && incidentSummary.Length > 500)
+            {
+                lastGenerationInfo = "❌ Incident summary must be 500 characters or less";
+                return;
+            }
+            if (enableProductDocs && !string.IsNullOrEmpty(productSummary) && productSummary.Length > 500)
+            {
+                lastGenerationInfo = "❌ Product summary must be 500 characters or less";
+                return;
+            }
+        }
+        
+        isGenerating = true;
+        lastGenerationInfo = "";
+        
+        try
+        {
+            var request = new TechWayFit.Pulse.Contracts.Requests.CreateSessionRequest
+            {
+                Title = sessionTitle,
+                Goal = sessionGoal,
+                Settings = new TechWayFit.Pulse.Contracts.Models.SessionSettingsDto { StrictCurrentActivityOnly = false, AllowAnonymous = false, TtlMinutes = 360 }
+            };
+            
+            // Build enhanced context if advanced options are used
+            if (showAdvancedAI && (aiDurationMinutes.HasValue || !string.IsNullOrEmpty(aiParticipantType) || 
+                enableSprintBacklog || enableIncident || enableProductDocs))
+            {
+                var context = new TechWayFit.Pulse.Contracts.Models.SessionGenerationContextDto
+                {
+                    WorkshopType = workshopType,
+                    DurationMinutes = aiDurationMinutes,
+                    ParticipantCount = aiParticipantCount
+                };
+                
+                // Participant types
+                if (!string.IsNullOrEmpty(aiParticipantType))
+                {
+                    context.ParticipantTypes = new TechWayFit.Pulse.Contracts.Models.ParticipantTypesDto
+                    {
+                        Primary = aiParticipantType
+                    };
+                }
+                
+                // Context documents
+                var docs = new TechWayFit.Pulse.Contracts.Models.ContextDocumentsDto();
+                bool hasAnyDoc = false;
+                
+                if (enableSprintBacklog && !string.IsNullOrEmpty(sprintBacklogSummary))
+                {
+                    hasAnyDoc = true;
+                    docs.SprintBacklog = new TechWayFit.Pulse.Contracts.Models.SprintBacklogDto
+                    {
+                        Provided = true,
+                        Summary = sprintBacklogSummary
+                    };
+                    if (!string.IsNullOrEmpty(sprintBacklogItems))
+                    {
+                        docs.SprintBacklog.KeyItems = sprintBacklogItems.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+                    }
+                }
+                
+                if (enableIncident && !string.IsNullOrEmpty(incidentSummary))
+                {
+                    hasAnyDoc = true;
+                    docs.IncidentReport = new TechWayFit.Pulse.Contracts.Models.IncidentReportDto
+                    {
+                        Provided = true,
+                        Summary = incidentSummary,
+                        Severity = incidentSeverity,
+                        DurationMinutes = incidentDurationMinutes
+                    };
+                    if (!string.IsNullOrEmpty(incidentImpactedSystems))
+                    {
+                        docs.IncidentReport.ImpactedSystems = incidentImpactedSystems.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+                    }
+                }
+                
+                if (enableProductDocs && !string.IsNullOrEmpty(productSummary))
+                {
+                    hasAnyDoc = true;
+                    docs.ProductDocumentation = new TechWayFit.Pulse.Contracts.Models.ProductDocumentationDto
+                    {
+                        Provided = true,
+                        Summary = productSummary
+                    };
+                    if (!string.IsNullOrEmpty(productFeatures))
+                    {
+                        docs.ProductDocumentation.Features = productFeatures.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+                    }
+                }
+                
+                if (hasAnyDoc)
+                {
+                    context.ContextDocuments = docs;
+                }
+                
+                request.GenerationContext = context;
+                
+                // Generation options
+                request.GenerationOptions = new TechWayFit.Pulse.Contracts.Models.SessionGenerationOptionsDto
+                {
+                    Temperature = aiTemperature
+                };
+            }
+            else
+            {
+                // Legacy path - use Context string
+                request.Context = workshopType;
+            }
+
+            generatedActivities = (await ApiService.GenerateSessionActivitiesAsync(request)).ToList();
+            
+            lastGenerationInfo = $"✓ Generated {generatedActivities.Count} activities";
+        }
+        catch (Exception ex)
+        {
+            lastGenerationInfo = $"❌ Failed to generate: {ex.Message}";
+        }
+        finally
+        {
+            isGenerating = false;
+        }
+    }
+
+    private void EditGeneratedActivity(int index)
+    {
+        // Deprecated - use modal
+    }
+
+    private EditActivityModal? editActivityModal;
+
+    private void ShowEditModal(int index)
+    {
+        if (index < 0 || index >= generatedActivities.Count) return;
+        var a = generatedActivities[index];
+        if (editActivityModal != null)
+        {
+            editActivityModal.SessionCode = null; // draft mode
+            editActivityModal.Activity = a;
+            editActivityModal.Show();
+        }
+    }
+
+    private void CancelGeneratedEdit()
+    {
+        editingIndex = null;
+        editModel = new TechWayFit.Pulse.Contracts.Requests.UpdateActivityRequest();
+    }
+
+    private void SaveGeneratedEdit()
+    {
+        // Deprecated - handled by modal
+    }
+
+    private void RemoveGeneratedActivity(int index)
+    {
+        if (index < 0 || index >= generatedActivities.Count) return;
+        generatedActivities.RemoveAt(index);
+        // Reindex orders
+        for (int i = 0; i < generatedActivities.Count; i++)
+        {
+            var a = generatedActivities[i];
+            generatedActivities[i] = new AgendaActivityResponse(a.ActivityId, i + 1, a.Type, a.Title, a.Prompt, a.Config, a.Status, a.OpenedAt, a.ClosedAt, a.DurationMinutes);
+        }
+    }
+
+    private Task HandleDraftActivityUpdated(AgendaActivityResponse updated)
+    {
+        var idx = generatedActivities.FindIndex(a => a.ActivityId == updated.ActivityId);
+        if (idx >= 0)
+        {
+            generatedActivities[idx] = updated;
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task HandleDraftActivityDeleted(Guid activityId)
+    {
+        var idx = generatedActivities.FindIndex(a => a.ActivityId == activityId);
+        if (idx >= 0)
+        {
+            generatedActivities.RemoveAt(idx);
+            // reindex
+            for (int i = 0; i < generatedActivities.Count; i++)
+            {
+                var a = generatedActivities[i];
+                generatedActivities[i] = new AgendaActivityResponse(a.ActivityId, i + 1, a.Type, a.Title, a.Prompt, a.Config, a.Status, a.OpenedAt, a.ClosedAt, a.DurationMinutes);
+            }
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task CreateAndSaveSession()
+    {
+        if (isSaving) return;
+        isSaving = true;
+        try
+        {
+            var request = new TechWayFit.Pulse.Contracts.Requests.CreateSessionRequest
+            {
+                Title = sessionTitle,
+                Goal = sessionGoal,
+                Context = workshopType,
+                Settings = new TechWayFit.Pulse.Contracts.Models.SessionSettingsDto { StrictCurrentActivityOnly = false, AllowAnonymous = false, TtlMinutes = 360 }
+            };
+
+            var created = await ApiService.CreateSessionAsync(request);
+
+            // Get facilitator token (client token service will join as facilitator and cache token)
+            string? token = null;
+            try
+            {
+                token = await TokenService.GetFacilitatorTokenAsync(created.Code);
+            }
+            catch
+            {
+                // ignore and fallback below
+            }
+
+            // Fallback: try joining directly via ApiService if token not available
+            if (string.IsNullOrEmpty(token))
+            {
+                var join = await ApiService.JoinAsFacilitatorAsync(created.Code, new TechWayFit.Pulse.Contracts.Requests.JoinFacilitatorRequest { DisplayName = "Facilitator" });
+                token = join?.Token;
+                if (!string.IsNullOrEmpty(token))
+                {
+                    await TokenService.StoreFacilitatorTokenAsync(created.Code, token);
+                }
+            }
+
+            // Create activities
+            foreach (var a in generatedActivities.OrderBy(x => x.Order))
+            {
+                var createReq = new TechWayFit.Pulse.Contracts.Requests.CreateActivityRequest(
+                    a.Type,
+                    a.Order,
+                    a.Title,
+                    a.Prompt,
+                    a.Config ?? string.Empty,
+                    a.DurationMinutes);
+
+                if (!string.IsNullOrEmpty(token))
+                {
+                    await ApiService.CreateActivityAsync(created.Code, createReq, token);
+                }
+            }
+
+            // Navigate to facilitator console for the created session
+            Navigation.NavigateTo($"/facilitator/console/{created.Code}");
+        }
+        catch (Exception ex)
+        {
+            // TODO: show user-friendly error
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+    
+    // Join Form Field Management
+    private void AddJoinFormField()
+    {
+        if (joinFormFields.Count < 5)
+        {
+            joinFormFields.Add(new JoinFormField 
+            { 
+                Label = $"Field {joinFormFields.Count + 1}", 
+                Type = "dropdown" 
+            });
+        }
+    }
+    
+    private void RemoveJoinFormField(JoinFormField field)
+    {
+        joinFormFields.Remove(field);
+    }
+    
+    private class JoinFormField
+    {
+        public string Label { get; set; } = string.Empty;
+        public string Type { get; set; } = "dropdown";
+        public string Options { get; set; } = string.Empty;
+    }
 }

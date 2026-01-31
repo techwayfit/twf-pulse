@@ -28,6 +28,10 @@ public sealed class SessionsController : ControllerBase
     private readonly IFacilitatorTokenStore _facilitatorTokens;
     private readonly ISessionCodeGenerator _codeGenerator;
     private readonly IHubContext<WorkshopHub, IWorkshopClient> _hub;
+    private readonly TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService _participantAI;
+    private readonly TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService _facilitatorAI;
+    private readonly TechWayFit.Pulse.Application.Abstractions.Services.IAIWorkQueue _aiQueue;
+    private readonly TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService _sessionAI;
 
     public SessionsController(
         ISessionService sessions,
@@ -42,7 +46,11 @@ public sealed class SessionsController : ControllerBase
         IGeneralFeedbackDashboardService generalFeedbackDashboards,
         IFacilitatorTokenStore facilitatorTokens,
         ISessionCodeGenerator codeGenerator,
-        IHubContext<WorkshopHub, IWorkshopClient> hub)
+        TechWayFit.Pulse.Application.Abstractions.Services.IAIWorkQueue aiQueue,
+        TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService sessionAI,
+        IHubContext<WorkshopHub, IWorkshopClient> hub,
+        TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService participantAI,
+        TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService facilitatorAI)
     {
         _sessions = sessions;
         _authService = authService;
@@ -57,6 +65,10 @@ public sealed class SessionsController : ControllerBase
         _facilitatorTokens = facilitatorTokens;
         _codeGenerator = codeGenerator;
         _hub = hub;
+        _participantAI = participantAI;
+        _facilitatorAI = facilitatorAI;
+        _aiQueue = aiQueue;
+        _sessionAI = sessionAI;
     }
 
     [HttpPost]
@@ -96,6 +108,22 @@ public sealed class SessionsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpPost("generate")]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<AgendaActivityResponse>>>> GenerateSessionActivities(
+        [FromBody] CreateSessionRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var generated = await _sessionAI.GenerateSessionActivitiesAsync(request, cancellationToken);
+            return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(generated));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to generate session activities", detail = ex.Message });
         }
     }
 
@@ -143,7 +171,7 @@ public sealed class SessionsController : ControllerBase
 
         // Ensure activity belongs to session
         var activities = await _activities.GetAgendaAsync(session.Id, cancellationToken);
-        var activity = activities.FirstOrDefault(a => a.ActivityId == activityId);
+        var activity = activities.FirstOrDefault(a => a.Id == activityId);
         if (activity is null)
         {
             return NotFound(Error<int>("not_found", "Activity not found for this session."));

@@ -129,6 +129,9 @@
     [Parameter] public AgendaActivityResponse? Activity { get; set; }
     [Parameter] public EventCallback OnActivityUpdated { get; set; }
     [Parameter] public EventCallback OnActivityDeleted { get; set; }
+    // Draft callbacks - used when editing activities before a session exists
+    [Parameter] public EventCallback<AgendaActivityResponse> OnDraftActivityUpdated { get; set; }
+    [Parameter] public EventCallback<Guid> OnDraftActivityDeleted { get; set; }
 
     private bool IsVisible { get; set; }
     private bool isSaving = false;
@@ -187,21 +190,41 @@
             errorMessage = null;
             StateHasChanged();
 
-            var response = await ApiService.PutAsync<UpdateActivityRequest, ActivityResponse>(
-                $"/api/sessions/{SessionCode}/activities/{Activity.ActivityId}",
-                editModel);
+                if (string.IsNullOrEmpty(SessionCode))
+                {
+                    // Draft mode - don't call API, return updated activity to parent
+                    var updated = new AgendaActivityResponse(
+                        Activity!.ActivityId,
+                        Activity.Order,
+                        Activity.Type,
+                        editModel.Title ?? Activity.Title,
+                        editModel.Prompt ?? Activity.Prompt,
+                        editModel.Config ?? Activity.Config,
+                        Activity.Status,
+                        Activity.OpenedAt,
+                        Activity.ClosedAt,
+                        editModel.DurationMinutes ?? Activity.DurationMinutes);
 
-            if (!response.Success)
-            {
-                errorMessage = response.Errors?.FirstOrDefault()?.Message ?? "Failed to update activity";
-                isSaving = false;
-                StateHasChanged();
-                return;
-            }
+                    await OnDraftActivityUpdated.InvokeAsync(updated);
+                    Close();
+                    return;
+                }
 
-            // Success
-            await OnActivityUpdated.InvokeAsync();
-            Close();
+                var response = await ApiService.PutAsync<UpdateActivityRequest, ActivityResponse>(
+                    $"/api/sessions/{SessionCode}/activities/{Activity.ActivityId}",
+                    editModel);
+
+                if (!response.Success)
+                {
+                    errorMessage = response.Errors?.FirstOrDefault()?.Message ?? "Failed to update activity";
+                    isSaving = false;
+                    StateHasChanged();
+                    return;
+                }
+
+                // Success (server persisted)
+                await OnActivityUpdated.InvokeAsync();
+                Close();
         }
         catch (Exception ex)
         {
@@ -239,6 +262,14 @@
             isDeleting = true;
             errorMessage = null;
             StateHasChanged();
+
+            if (string.IsNullOrEmpty(SessionCode))
+            {
+                // Draft mode - inform parent to remove
+                await OnDraftActivityDeleted.InvokeAsync(Activity!.ActivityId);
+                Close();
+                return;
+            }
 
             var response = await ApiService.DeleteAsync<object>(
                 $"/api/sessions/{SessionCode}/activities/{Activity.ActivityId}");

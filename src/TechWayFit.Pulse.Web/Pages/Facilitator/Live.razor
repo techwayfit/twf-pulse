@@ -44,6 +44,34 @@
             <LiveSessionInfo ParticipantCount="@participantCount"
                              Activities="@activities" />
 
+            @if (_hasAiInsight)
+            {
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">AI Insights</h5>
+                        <p class="text-muted mb-2">Updated @(_aiInsightTimestamp.ToLocalTime())</p>
+                        @if (_aiInsightJson.ValueKind != System.Text.Json.JsonValueKind.Undefined)
+                        {
+                            @if (_aiInsightJson.TryGetProperty("Analysis", out var analysisEl) && analysisEl.ValueKind == System.Text.Json.JsonValueKind.String)
+                            {
+                                <div class="mb-3">
+                                    <strong>Analysis</strong>
+                                    <div class="mt-1">@analysisEl.GetString()</div>
+                                </div>
+                            }
+
+                            @if (_aiInsightJson.TryGetProperty("FacilitatorPrompt", out var promptEl) && promptEl.ValueKind == System.Text.Json.JsonValueKind.String)
+                            {
+                                <div>
+                                    <strong>Suggested Prompt</strong>
+                                    <div class="mt-1">@promptEl.GetString()</div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
             <LiveQRModal SessionCode="@sessionCode"
                          JoinUrl="@joinUrl"
                          OnCopyUrl="@CopyJoinUrl" />

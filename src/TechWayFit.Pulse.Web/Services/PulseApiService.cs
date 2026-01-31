@@ -22,6 +22,7 @@ public interface IPulseApiService
     Task<ActivityResponse> CloseActivityAsync(string code, Guid activityId, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<ActivityResponse> UpdateActivityAsync(string code, Guid activityId, UpdateActivityRequest request, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<AgendaActivityResponse>> GetAgendaAsync(string code, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AgendaActivityResponse>> GenerateSessionActivitiesAsync(CreateSessionRequest request, CancellationToken cancellationToken = default);
     Task<SubmitResponseResponse> SubmitResponseAsync(string code, Guid activityId, SubmitResponseRequest request, CancellationToken cancellationToken = default);
     Task<PollDashboardResponse> GetPollDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
     Task<WordCloudDashboardResponse> GetWordCloudDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
@@ -238,6 +239,29 @@ public class PulseApiService : IPulseApiService
         }
 
         return apiResponse?.Data ?? throw new InvalidOperationException("Invalid response from server");
+    }
+
+    public async Task<IReadOnlyList<AgendaActivityResponse>> GenerateSessionActivitiesAsync(CreateSessionRequest request, CancellationToken cancellationToken = default)
+    {
+        var json = JsonSerializer.Serialize(request, _jsonOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync("/api/sessions/generate", content, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException($"Failed to generate session activities: {response.StatusCode} - {errorContent}");
+        }
+
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+        var apiResponse = JsonSerializer.Deserialize<ApiResponse<IReadOnlyList<AgendaActivityResponse>>>(responseJson, _jsonOptions);
+
+        if (apiResponse?.Errors?.Any() == true)
+        {
+            throw new InvalidOperationException(string.Join(", ", apiResponse.Errors.Select(e => e.Message)));
+        }
+
+        return apiResponse?.Data ?? new List<AgendaActivityResponse>();
     }
 
     public async Task<ActivityResponse> CreateActivityAsync(string code, CreateActivityRequest request, string facilitatorToken, CancellationToken cancellationToken = default)

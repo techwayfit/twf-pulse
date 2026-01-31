@@ -130,6 +130,57 @@ client.BaseAddress = new Uri(baseUrl);
 // Add default HttpClientFactory for dev/testing pages
 builder.Services.AddHttpClient();
 
+// Add named HttpClient for OpenAI (used by AI services) with retry policy
+builder.Services.AddHttpClient("openai", (client) =>
+{
+    // BaseAddress may be overridden by configuration (full endpoint expected)
+    var openAiBase = builder.Configuration["AI:OpenAI:Endpoint"];
+    if (!string.IsNullOrWhiteSpace(openAiBase))
+    {
+        client.BaseAddress = new Uri(openAiBase);
+    }
+    client.Timeout = TimeSpan.FromSeconds(90); // Increased for retry attempts
+})
+.AddStandardResilienceHandler(options =>
+{
+    // Configure retry with exponential backoff
+    options.Retry.MaxRetryAttempts = 3;
+    options.Retry.Delay = TimeSpan.FromSeconds(1);
+    options.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
+    options.Retry.UseJitter = true;
+    
+    // Configure circuit breaker
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(60); // Must be >= 2x AttemptTimeout
+    options.CircuitBreaker.FailureRatio = 0.5;
+    options.CircuitBreaker.MinimumThroughput = 3;
+    
+    // Configure timeout per attempt
+    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(30);
+    
+    // Configure total timeout
+    options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(90);
+});
+
+// AI services: register real implementations when AI enabled and API key present, otherwise register mocks
+var aiEnabled = builder.Configuration.GetValue<bool>("AI:Enabled");
+var openAiApiKey = builder.Configuration["AI:OpenAI:ApiKey"];
+if (aiEnabled && !string.IsNullOrWhiteSpace(openAiApiKey))
+{
+    builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.ParticipantAIService>();
+    builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.FacilitatorAIService>();
+    builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.SessionAIService>();
+}
+else
+{
+    builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
+    builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
+    builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.MockSessionAIService>();
+}
+
+// Register AI work queue and background processor
+builder.Services.AddSingleton<TechWayFit.Pulse.Application.Abstractions.Services.IAIWorkQueue, TechWayFit.Pulse.Infrastructure.AI.AIWorkQueue>();
+builder.Services.AddHostedService<TechWayFit.Pulse.Web.BackgroundServices.AIProcessingHostedService>();
+
 // Add HttpContextAccessor for dynamic URL resolution
 builder.Services.AddHttpContextAccessor();
 

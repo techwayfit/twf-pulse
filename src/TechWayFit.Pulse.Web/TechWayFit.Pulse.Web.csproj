@@ -5,12 +5,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <PreserveCompilationContext>true</PreserveCompilationContext>
+    <UserSecretsId>d9f8b1e2-6c3a-4f2b-9a2b-1f6c5d3e7a9b</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TechWayFit.Pulse.Application\TechWayFit.Pulse.Application.csproj" />
     <ProjectReference Include="..\TechWayFit.Pulse.Infrastructure\TechWayFit.Pulse.Infrastructure.csproj" />
     <ProjectReference Include="..\TechWayFit.Pulse.Contracts\TechWayFit.Pulse.Contracts.csproj" />
+    <ProjectReference Include="..\TechWayFit.Pulse.AI\TechWayFit.Pulse.AI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,6 +23,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.0.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
   </ItemGroup>
 
