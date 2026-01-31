@@ -57,7 +57,7 @@ public sealed class ActivityTemplateDto
 public sealed class ActivityConfigDto
 {
     // Poll/Quiz
-    public List<string>? Options { get; set; }
+    public List<PollOptionDto>? Options { get; set; }
 
     public bool? MultipleChoice { get; set; }
 
@@ -90,5 +90,19 @@ public sealed class ActivityConfigDto
     public int? MinWordLength { get; set; }
 
     // General Feedback
-    public List<string>? Categories { get; set; }
+    public List<FeedbackCategoryDto>? Categories { get; set; }
+}
+
+public sealed class PollOptionDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+    public string? Description { get; set; }
+}
+
+public sealed class FeedbackCategoryDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+    public string? Icon { get; set; }
 }

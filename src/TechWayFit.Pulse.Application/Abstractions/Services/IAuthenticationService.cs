@@ -13,7 +13,7 @@ public interface IAuthenticationService
     /// <summary>
     /// Verifies an OTP code and returns the facilitator user if valid.
     /// </summary>
-    Task<VerifyOtpResult> VerifyOtpAsync(string email, string otpCode, CancellationToken cancellationToken = default);
+    Task<VerifyOtpResult> VerifyOtpAsync(string email, string otpCode, string? displayName = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a facilitator user by ID.

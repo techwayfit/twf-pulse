@@ -1,5 +1,6 @@
 using TechWayFit.Pulse.Domain.Enums;
 using TechWayFit.Pulse.Domain.ValueObjects;
+using TechWayFit.Pulse.Domain.Models.ActivityConfigs;
 
 namespace TechWayFit.Pulse.Domain.Models;
 
@@ -73,7 +74,7 @@ public sealed class ActivityTemplateConfig
 public sealed class ActivityConfigData
 {
     // Poll/Quiz
-    public List<string>? Options { get; set; }
+    public List<PollOption>? Options { get; set; }
 
     public bool? MultipleChoice { get; set; }
 
@@ -106,5 +107,5 @@ public sealed class ActivityConfigData
     public int? MinWordLength { get; set; }
 
     // General Feedback
-    public List<string>? Categories { get; set; }
+    public List<FeedbackCategory>? Categories { get; set; }
 }

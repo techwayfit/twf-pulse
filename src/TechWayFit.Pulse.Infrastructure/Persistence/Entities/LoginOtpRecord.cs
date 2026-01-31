@@ -8,6 +8,7 @@ public sealed class LoginOtpRecord
 
     public string OtpCode { get; set; } = string.Empty;
 
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset ExpiresAt { get; set; }

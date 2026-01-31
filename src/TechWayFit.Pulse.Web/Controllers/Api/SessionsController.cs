@@ -128,6 +128,34 @@ public sealed class SessionsController : ControllerBase
         return Ok(Wrap(participants.Count));
     }
 
+    [HttpGet("{code}/activities/{activityId:guid}/participants/{participantId:guid}/responses/count")]
+    public async Task<ActionResult<ApiResponse<int>>> GetParticipantActivityResponseCount(
+        string code,
+        Guid activityId,
+        Guid participantId,
+        CancellationToken cancellationToken)
+    {
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
+        {
+            return NotFound(Error<int>("not_found", "Session not found."));
+        }
+
+        // Ensure activity belongs to session
+        var activities = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+        var activity = activities.FirstOrDefault(a => a.ActivityId == activityId);
+        if (activity is null)
+        {
+            return NotFound(Error<int>("not_found", "Activity not found for this session."));
+        }
+
+        // Use response service to fetch participant responses for this session and count matches
+        var responses = await _responses.GetByParticipantAsync(session.Id, participantId, cancellationToken);
+        var count = responses.Count(r => r.ActivityId == activityId);
+
+        return Ok(Wrap(count));
+    }
+
     [HttpPost("{code}/facilitators/join")]
     public async Task<ActionResult<ApiResponse<JoinFacilitatorResponse>>> JoinFacilitator(
         string code,  [FromBody] JoinFacilitatorRequest request,        CancellationToken cancellationToken)

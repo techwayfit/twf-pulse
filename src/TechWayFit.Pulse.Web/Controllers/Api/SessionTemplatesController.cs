@@ -6,6 +6,9 @@ using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
 using TechWayFit.Pulse.Domain.Enums;
 using TechWayFit.Pulse.Domain.Models;
+using TechWayFit.Pulse.Domain.Models.ActivityConfigs;
+using static TechWayFit.Pulse.Domain.Models.ActivityConfigs.PollConfig;
+using static TechWayFit.Pulse.Domain.Models.ActivityConfigs.GeneralFeedbackConfig;
 using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Extensions;
 
@@ -369,7 +372,12 @@ public class SessionTemplatesController : ControllerBase
                     Prompt = a.Prompt,
                     Config = a.Config != null ? new ActivityConfigDto
                     {
-                        Options = a.Config.Options,
+                        Options = a.Config.Options?.Select(o => new PollOptionDto
+                        {
+                            Id = o.Id,
+                            Label = o.Label,
+                            Description = o.Description
+                        }).ToList(),
                         MultipleChoice = a.Config.MultipleChoice,
                         CorrectOptionIndex = a.Config.CorrectOptionIndex,
                         MaxRating = a.Config.MaxRating,
@@ -383,7 +391,12 @@ public class SessionTemplatesController : ControllerBase
                         MaxDepth = a.Config.MaxDepth,
                         MaxWords = a.Config.MaxWords,
                         MinWordLength = a.Config.MinWordLength,
-                        Categories = a.Config.Categories
+                        Categories = a.Config.Categories?.Select(c => new FeedbackCategoryDto
+                        {
+                            Id = c.Id,
+                            Label = c.Label,
+                            Icon = c.Icon
+                        }).ToList()
                     } : null
                 }).ToList()
             }
@@ -434,7 +447,12 @@ public class SessionTemplatesController : ControllerBase
                 Prompt = a.Prompt,
                 Config = a.Config != null ? new ActivityConfigData
                 {
-                    Options = a.Config.Options,
+                    Options = a.Config.Options?.Select(o => new PollOption
+                    {
+                        Id = o.Id,
+                        Label = o.Label,
+                        Description = o.Description
+                    }).ToList(),
                     MultipleChoice = a.Config.MultipleChoice,
                     CorrectOptionIndex = a.Config.CorrectOptionIndex,
                     MaxRating = a.Config.MaxRating,
@@ -448,7 +466,12 @@ public class SessionTemplatesController : ControllerBase
                     MaxDepth = a.Config.MaxDepth,
                     MaxWords = a.Config.MaxWords,
                     MinWordLength = a.Config.MinWordLength,
-                    Categories = a.Config.Categories
+                    Categories = a.Config.Categories?.Select(c => new FeedbackCategory
+                    {
+                        Id = c.Id,
+                        Label = c.Label,
+                        Icon = c.Icon
+                    }).ToList()
                 } : null
             }).ToList()
         };

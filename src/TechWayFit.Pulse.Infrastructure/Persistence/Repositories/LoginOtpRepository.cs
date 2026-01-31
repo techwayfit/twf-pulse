@@ -91,12 +91,12 @@ public sealed class LoginOtpRepository : ILoginOtpRepository
     private static LoginOtp MapToDomain(LoginOtpRecord record)
     {
         return new LoginOtp(
-     record.Id,
+            record.Id,
             record.Email,
-    record.OtpCode,
+            record.OtpCode,
             record.CreatedAt,
             record.ExpiresAt,
-      record.IsUsed,
+            record.IsUsed,
             record.UsedAt);
     }
 

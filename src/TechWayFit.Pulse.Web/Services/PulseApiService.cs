@@ -27,6 +27,7 @@ public interface IPulseApiService
     Task<WordCloudDashboardResponse> GetWordCloudDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
     Task<RatingDashboardResponse> GetRatingDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
     Task<GeneralFeedbackDashboardResponse> GetGeneralFeedbackDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
+    Task<int> GetParticipantActivityResponseCountAsync(string code, Guid activityId, Guid participantId, CancellationToken cancellationToken = default);
     
     // Generic methods for custom requests
     Task<ApiResponse<TResponse>> PutAsync<TRequest, TResponse>(string endpoint, TRequest request, CancellationToken cancellationToken = default);
@@ -527,6 +528,27 @@ public class PulseApiService : IPulseApiService
         }
 
         return apiResponse?.Data ?? throw new InvalidOperationException("Invalid response from server");
+    }
+
+    public async Task<int> GetParticipantActivityResponseCountAsync(string code, Guid activityId, Guid participantId, CancellationToken cancellationToken = default)
+    {
+        var response = await _httpClient.GetAsync($"/api/sessions/{Uri.EscapeDataString(code)}/activities/{activityId}/participants/{participantId}/responses/count", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException($"Failed to get participant activity response count: {response.StatusCode} - {errorContent}");
+        }
+
+        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+        var apiResponse = JsonSerializer.Deserialize<ApiResponse<int>>(responseJson, _jsonOptions);
+
+        if (apiResponse?.Errors?.Any() == true)
+        {
+            throw new InvalidOperationException(string.Join(", ", apiResponse.Errors.Select(e => e.Message)));
+        }
+
+        return apiResponse?.Data ?? 0;
     }
 
     public async Task<SubmitResponseResponse> SubmitResponseAsync(string code, Guid activityId, SubmitResponseRequest request, CancellationToken cancellationToken = default)

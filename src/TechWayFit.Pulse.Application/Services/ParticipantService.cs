@@ -1,3 +1,4 @@
+using System;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Domain.Entities;
@@ -73,6 +74,16 @@ public sealed class ParticipantService : IParticipantService
             if (!dimensions.TryGetValue(field.Id, out var value) || string.IsNullOrWhiteSpace(value))
             {
                 throw new InvalidOperationException($"Join form field '{field.Id}' is required.");
+            }
+        }
+
+        // Special-case: allow sessions to mark the display name as a required join field
+        var displayNameField = schemaFields.FirstOrDefault(f => string.Equals(f.Id, "displayName", StringComparison.OrdinalIgnoreCase));
+        if (displayNameField is not null && displayNameField.Required)
+        {
+            if (string.IsNullOrWhiteSpace(displayName))
+            {
+                throw new InvalidOperationException("Display name is required.");
             }
         }
 

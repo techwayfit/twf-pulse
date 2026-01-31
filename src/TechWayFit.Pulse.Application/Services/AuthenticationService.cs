@@ -22,8 +22,8 @@ public sealed class AuthenticationService : IAuthenticationService
     IEmailService emailService,
         ILogger<AuthenticationService> logger)
     {
-     _userRepository = userRepository;
-_otpRepository = otpRepository;
+        _userRepository = userRepository;
+        _otpRepository = otpRepository;
         _emailService = emailService;
         _logger = logger;
     }
@@ -35,28 +35,28 @@ _otpRepository = otpRepository;
     {
         if (string.IsNullOrWhiteSpace(email))
         {
-    return new SendOtpResult(false, "Email is required.");
+            return new SendOtpResult(false, "Email is required.");
         }
 
         var normalizedEmail = email.Trim().ToLowerInvariant();
 
-    // Rate limiting: Check recent OTPs
-     var recentOtps = await _otpRepository.GetRecentOtpsForEmailAsync(
-            normalizedEmail,
-            MaxOtpAttemptsPerHour,
-         cancellationToken);
+        // Rate limiting: Check recent OTPs
+        var recentOtps = await _otpRepository.GetRecentOtpsForEmailAsync(
+               normalizedEmail,
+               MaxOtpAttemptsPerHour,
+            cancellationToken);
 
         var oneHourAgo = DateTimeOffset.UtcNow.AddHours(-1);
         var recentOtpCount = recentOtps.Count(o => o.CreatedAt > oneHourAgo);
 
         if (recentOtpCount >= MaxOtpAttemptsPerHour)
         {
-        _logger.LogWarning("Rate limit exceeded for email {Email}", normalizedEmail);
-     return new SendOtpResult(false, "Too many OTP requests. Please try again later.");
+            _logger.LogWarning("Rate limit exceeded for email {Email}", normalizedEmail);
+            return new SendOtpResult(false, "Too many OTP requests. Please try again later.");
         }
 
-      // Generate OTP
-  var otpCode = GenerateOtpCode();
+        // Generate OTP
+        var otpCode = GenerateOtpCode();
         var now = DateTimeOffset.UtcNow;
         var otp = new LoginOtp(
             Guid.NewGuid(),
@@ -65,22 +65,22 @@ otpCode,
       now,
     now.AddMinutes(OtpExpiryMinutes));
 
-     await _otpRepository.AddAsync(otp, cancellationToken);
+        await _otpRepository.AddAsync(otp, cancellationToken);
 
         // Check if user exists
- var existingUser = await _userRepository.GetByEmailAsync(normalizedEmail, cancellationToken);
+        var existingUser = await _userRepository.GetByEmailAsync(normalizedEmail, cancellationToken);
         var userName = existingUser?.DisplayName ?? displayName ?? "there";
 
         // Send OTP email
-      try
+        try
         {
-      await _emailService.SendLoginOtpAsync(normalizedEmail, otpCode, userName, cancellationToken);
-       _logger.LogInformation("Login OTP sent to {Email}", normalizedEmail);
+            await _emailService.SendLoginOtpAsync(normalizedEmail, otpCode, userName, cancellationToken);
+            _logger.LogInformation("Login OTP sent to {Email}", normalizedEmail);
             return new SendOtpResult(true, "OTP sent to your email.");
-      }
+        }
         catch (Exception ex)
         {
-    _logger.LogError(ex, "Failed to send OTP email to {Email}", normalizedEmail);
+            _logger.LogError(ex, "Failed to send OTP email to {Email}", normalizedEmail);
             return new SendOtpResult(false, "Failed to send OTP. Please try again.");
         }
     }
@@ -88,17 +88,18 @@ otpCode,
     public async Task<VerifyOtpResult> VerifyOtpAsync(
         string email,
         string otpCode,
+        string? displayName = null,
       CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(otpCode))
         {
-         return new VerifyOtpResult(false, null, "Email and OTP code are required.");
-  }
+            return new VerifyOtpResult(false, null, "Email and OTP code are required.");
+        }
 
-     var normalizedEmail = email.Trim().ToLowerInvariant();
-     var normalizedOtp = otpCode.Trim();
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var normalizedOtp = otpCode.Trim();
 
-var otp = await _otpRepository.GetValidOtpAsync(normalizedEmail, normalizedOtp, cancellationToken);
+        var otp = await _otpRepository.GetValidOtpAsync(normalizedEmail, normalizedOtp, cancellationToken);
 
         if (otp == null)
         {
@@ -112,51 +113,51 @@ var otp = await _otpRepository.GetValidOtpAsync(normalizedEmail, normalizedOtp, 
         }
 
         // Mark OTP as used
- otp.MarkAsUsed(DateTimeOffset.UtcNow);
+        otp.MarkAsUsed(DateTimeOffset.UtcNow);
         await _otpRepository.UpdateAsync(otp, cancellationToken);
 
         // Get or create user
         var user = await _userRepository.GetByEmailAsync(normalizedEmail, cancellationToken);
 
         if (user == null)
-    {
-            // Create new user
-            var displayName = ExtractDisplayNameFromEmail(normalizedEmail);
-         user = new FacilitatorUser(
-    Guid.NewGuid(),
-    normalizedEmail,
-    displayName,
-     DateTimeOffset.UtcNow,
-       DateTimeOffset.UtcNow);
+        {
+            // Create new user - use provided displayName, otherwise extract from email
+            var userDisplayName = displayName ?? ExtractDisplayNameFromEmail(normalizedEmail);
+            user = new FacilitatorUser(
+                            Guid.NewGuid(),
+                            normalizedEmail,
+                            userDisplayName,
+                            DateTimeOffset.UtcNow,
+                            DateTimeOffset.UtcNow);
 
-  await _userRepository.AddAsync(user, cancellationToken);
+            await _userRepository.AddAsync(user, cancellationToken);
 
-     // Send welcome email
+            // Send welcome email
             try
             {
-      await _emailService.SendWelcomeEmailAsync(normalizedEmail, displayName, cancellationToken);
-        }
-   catch (Exception ex)
-  {
-        _logger.LogError(ex, "Failed to send welcome email to {Email}", normalizedEmail);
-     // Don't fail the login if welcome email fails
-  }
+                await _emailService.SendWelcomeEmailAsync(normalizedEmail, userDisplayName, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send welcome email to {Email}", normalizedEmail);
+                // Don't fail the login if welcome email fails
+            }
 
             _logger.LogInformation("New facilitator user created: {Email}", normalizedEmail);
         }
-    else
+        else
         {
-     // Update last login
-       user.UpdateLastLogin(DateTimeOffset.UtcNow);
-    await _userRepository.UpdateAsync(user, cancellationToken);
-   }
+            // Update last login
+            user.UpdateLastLogin(DateTimeOffset.UtcNow);
+            await _userRepository.UpdateAsync(user, cancellationToken);
+        }
 
         _logger.LogInformation("User {Email} logged in successfully", normalizedEmail);
-     return new VerifyOtpResult(true, user);
+        return new VerifyOtpResult(true, user);
     }
 
     public async Task<FacilitatorUser?> GetFacilitatorAsync(Guid userId, CancellationToken cancellationToken = default)
-  {
+    {
         return await _userRepository.GetByIdAsync(userId, cancellationToken);
     }
 
@@ -164,28 +165,28 @@ var otp = await _otpRepository.GetValidOtpAsync(normalizedEmail, normalizedOtp, 
     {
         if (string.IsNullOrWhiteSpace(email))
         {
-    return null;
+            return null;
         }
 
         var normalizedEmail = email.Trim().ToLowerInvariant();
         return await _userRepository.GetByEmailAsync(normalizedEmail, cancellationToken);
-}
+    }
 
     private static string GenerateOtpCode()
     {
-      // Generate a 6-digit numeric OTP
- var random = new Random();
+        // Generate a 6-digit numeric OTP
+        var random = new Random();
         return random.Next(100000, 999999).ToString();
     }
 
     private static string ExtractDisplayNameFromEmail(string email)
     {
-   // Extract display name from email (part before @)
+        // Extract display name from email (part before @)
         var atIndex = email.IndexOf('@');
-     if (atIndex > 0)
+        if (atIndex > 0)
         {
-var localPart = email[..atIndex];
-   // Capitalize first letter
+            var localPart = email[..atIndex];
+            // Capitalize first letter
             return char.ToUpper(localPart[0]) + localPart[1..];
         }
 

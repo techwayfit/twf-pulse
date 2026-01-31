@@ -53,6 +53,7 @@ public class AccountController : Controller
 
         TempData["Email"] = email;
         TempData["ReturnUrl"] = returnUrl;
+        TempData["DisplayName"] = displayName;
         return RedirectToAction(nameof(VerifyOtp));
     }
 
@@ -85,7 +86,8 @@ public class AccountController : Controller
             return RedirectToAction(nameof(VerifyOtp));
         }
 
-        var result = await _authService.VerifyOtpAsync(email, otpCode, cancellationToken);
+        var displayName = TempData["DisplayName"] as string;
+        var result = await _authService.VerifyOtpAsync(email, otpCode, displayName, cancellationToken);
 
         if (!result.Success || result.User == null)
         {

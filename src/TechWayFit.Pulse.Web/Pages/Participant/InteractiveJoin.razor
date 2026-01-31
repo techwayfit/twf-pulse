@@ -5,6 +5,7 @@
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Contracts.Models
+@using System
 @using Microsoft.AspNetCore.SignalR.Client
 
 <PageTitle>Join @sessionSummary?.Title - TechWayFit Pulse</PageTitle>
@@ -64,12 +65,18 @@
 
               <!-- Display Name -->
               <div class="mb-3">
-                <label for="displayName" class="form-label">Display Name</label>
+                <label for="displayName" class="form-label">
+                  Display Name
+                  @if (DisplayNameRequired)
+                  {
+                    <span class="text-danger">*</span>
+                  }
+                </label>
                 <input id="displayName" 
                        type="text" 
                        class="form-control" 
                        @bind="displayName" 
-                       placeholder="How should others see you? (optional)" 
+                       placeholder="@(DisplayNameRequired ? "Enter your name" : "How should others see you? (optional)")" 
                        maxlength="120" />
               </div>
 
@@ -227,6 +234,9 @@
   private Guid? participantId;
   private HubConnection? hubConnection;
 
+  private bool DisplayNameRequired =>
+    joinFormFields?.Any(f => string.Equals(f.Id, "displayName", StringComparison.OrdinalIgnoreCase) && f.Required) ?? false;
+
   protected override async Task OnInitializedAsync()
   {
     // Check if session code is provided
@@ -346,8 +356,11 @@
   };
 
   private bool CanJoin =>
-  joinFormFields?.Where(f => f.Required)
-  .All(f => fieldValues.ContainsKey(f.Id) && !string.IsNullOrWhiteSpace(fieldValues[f.Id])) ?? true;
+  // If display name is required by schema, ensure it's provided
+  (!DisplayNameRequired || !string.IsNullOrWhiteSpace(displayName)) &&
+  // Validate other required join form fields (exclude displayName special-case)
+  (joinFormFields?.Where(f => f.Required && !string.Equals(f.Id, "displayname", StringComparison.OrdinalIgnoreCase))
+  .All(f => fieldValues.ContainsKey(f.Id) && !string.IsNullOrWhiteSpace(fieldValues[f.Id])) ?? true);
 
   private async Task<Guid?> CheckExistingParticipant()
   {

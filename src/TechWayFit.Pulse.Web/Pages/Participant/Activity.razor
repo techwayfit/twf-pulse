@@ -265,8 +265,52 @@
             {
                 // Load participant-specific data
                 participantDisplayName = "Participant"; // Placeholder
-                contributionsRemaining = 3; // Placeholder
-                totalResponsesSubmitted = 0; // Placeholder
+
+                // Fetch how many responses this participant has already submitted for the current activity
+                if (currentActivity != null)
+                {
+                    try
+                    {
+                        var count = await ApiService.GetParticipantActivityResponseCountAsync(SessionCode, currentActivity.ActivityId, Pid.Value);
+                        // If any responses exist, consider the participant as having submitted
+                        hasSubmittedResponse = count > 0;
+
+                        // Try to derive per-activity max from activity config to compute remaining
+                        int? maxResponses = null;
+                        if (!string.IsNullOrWhiteSpace(currentActivity.Config))
+                        {
+                            try
+                            {
+                                using var doc = JsonDocument.Parse(currentActivity.Config);
+                                if (doc.RootElement.TryGetProperty("MaxResponsesPerParticipant", out var maxProp) && maxProp.TryGetInt32(out var mr))
+                                {
+                                    maxResponses = mr;
+                                }
+                            }
+                            catch { /* ignore parse issues */ }
+                        }
+
+                        if (maxResponses.HasValue)
+                        {
+                            contributionsRemaining = Math.Max(0, maxResponses.Value - count);
+                        }
+                        else
+                        {
+                            contributionsRemaining = -1; // unknown / unlimited
+                        }
+                        totalResponsesSubmitted = count;
+                    }
+                    catch (Exception ex)
+                    {
+                        // If API fails, fall back to placeholders
+                        Debug.WriteLine($"Error fetching participant response count: {ex.Message}");
+                        contributionsRemaining = -1;
+                    }
+                }
+                else
+                {
+                    contributionsRemaining = -1;
+                }
                 activitiesParticipated = 0; // Placeholder
             }
         }
