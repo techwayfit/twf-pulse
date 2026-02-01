@@ -1,0 +1,10 @@
+@inject NavigationManager Navigation
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Redirect to your login path. 
+        // Use 'true' for forceLoad if using Identity/Cookie auth.
+        Navigation.NavigateTo("account/login", forceLoad: true);
+    }
+}

@@ -1,9 +1,15 @@
 @page "/facilitator/create-workshop"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject NavigationManager Navigation
 @inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
 @inject TechWayFit.Pulse.Web.Services.IClientTokenService TokenService
+@inject Microsoft.Extensions.Options.IOptions<TechWayFit.Pulse.Web.Configuration.ContextDocumentLimitsOptions> ContextLimits
+@inject Microsoft.Extensions.Logging.ILogger<CreateWorkshop> Logger
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthenticationStateProvider
+@inject TechWayFit.Pulse.Application.Abstractions.Services.IAuthenticationService AuthService
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Web.Components.Facilitator
+@using System.Security.Claims
 
 
 <main class="py-5" style="min-height: calc(100vh - 200px); margin-bottom: 2rem;">
@@ -37,26 +43,16 @@
                             <label class="form-label fw-medium">Goal <span class="text-danger">*</span></label>
                             <textarea class="form-control" rows="3" @bind="sessionGoal" placeholder="e.g., Identify bottlenecks and prioritize improvements"></textarea>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-medium">Workshop type</label>
-                                <select class="form-select" @bind="workshopType">
-                                    <option selected>Ops / Process Improvement</option>
-                                    <option>Retro</option>
-                                    <option>Discovery</option>
-                                    <option>Incident Review</option>
-                                    <option>Feedback</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-medium">Max contributions per participant</label>
-                                <select class="form-select" @bind="maxContributions">
-                                    <option>3</option>
-                                    <option selected>5</option>
-                                    <option>8</option>
-                                    <option>10</option>
-                                </select>
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Workshop type</label>
+                            <select class="form-select" @bind="workshopType">
+                                <option selected>Ops / Process Improvement</option>
+                                <option>Retro</option>
+                                <option>Discovery</option>
+                                <option>Incident Review</option>
+                                <option>Feedback</option>
+                            </select>
+                            <small class="text-muted">AI will generate appropriate activities for this workshop type</small>
                         </div>
                     </div>
                 </div>
@@ -225,10 +221,10 @@
                                     @if (enableSprintBacklog)
                                     {
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Sprint Summary (max 500 chars)</label>
-                                            <textarea class="form-control" rows="3" @bind="sprintBacklogSummary" maxlength="500" 
+                                            <label class="form-label fw-medium">Sprint Summary (max @ContextLimits.Value.SprintBacklogSummaryMaxChars chars)</label>
+                                            <textarea class="form-control" rows="3" @bind="sprintBacklogSummary" maxlength="@ContextLimits.Value.SprintBacklogSummaryMaxChars" 
                                                       placeholder="E.g., Sprint 24. Payment Gateway Integration. 12/15 stories done. Stripe integration completed."></textarea>
-                                            <small class="form-text text-muted">@(sprintBacklogSummary?.Length ?? 0)/500 chars</small>
+                                            <small class="form-text text-muted">@(sprintBacklogSummary?.Length ?? 0)/@ContextLimits.Value.SprintBacklogSummaryMaxChars chars</small>
                                         </div>
                                         
                                         <div class="mb-0">
@@ -259,10 +255,10 @@
                                     @if (enableIncident)
                                     {
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Incident Summary (max 500 chars)</label>
-                                            <textarea class="form-control" rows="3" @bind="incidentSummary" maxlength="500" 
+                                            <label class="form-label fw-medium">Incident Summary (max @ContextLimits.Value.IncidentSummaryMaxChars chars)</label>
+                                            <textarea class="form-control" rows="3" @bind="incidentSummary" maxlength="@ContextLimits.Value.IncidentSummaryMaxChars" 
                                                       placeholder="E.g., Payment service outage on Nov 15. Database connection pool exhausted."></textarea>
-                                            <small class="form-text text-muted">@(incidentSummary?.Length ?? 0)/500 chars</small>
+                                            <small class="form-text text-muted">@(incidentSummary?.Length ?? 0)/@ContextLimits.Value.IncidentSummaryMaxChars chars</small>
                                         </div>
                                         
                                         <div class="row g-3 mb-3">
@@ -311,10 +307,10 @@
                                     @if (enableProductDocs)
                                     {
                                         <div class="mb-3">
-                                            <label class="form-label fw-medium">Product Summary (max 500 chars)</label>
-                                            <textarea class="form-control" rows="3" @bind="productSummary" maxlength="500" 
+                                            <label class="form-label fw-medium">Product Summary (max @ContextLimits.Value.ProductSummaryMaxChars chars)</label>
+                                            <textarea class="form-control" rows="3" @bind="productSummary" maxlength="@ContextLimits.Value.ProductSummaryMaxChars" 
                                                       placeholder="E.g., E-commerce platform for B2B sales. Focus on mobile checkout experience."></textarea>
-                                            <small class="form-text text-muted">@(productSummary?.Length ?? 0)/500 chars</small>
+                                            <small class="form-text text-muted">@(productSummary?.Length ?? 0)/@ContextLimits.Value.ProductSummaryMaxChars chars</small>
                                         </div>
                                         
                                         <div class="mb-0">
@@ -434,6 +430,15 @@
                     }
                 </div>
                 
+                <!-- Error Message -->
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger mt-3" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        @errorMessage
+                    </div>
+                }
+                
                 <!-- Final Actions -->
                 <div class="d-flex justify-content-between align-items-center pt-3 border-top">
                     <div class="text-muted small">
@@ -468,7 +473,6 @@
     private string sessionTitle = "Ops Pain Points Workshop — Group 1";
     private string sessionGoal = "Identify bottlenecks and quantify impact so we can prioritize fixes.";
     private string workshopType = "Ops / Process Improvement";
-    private string maxContributions = "5";
     private List<AgendaActivityResponse> generatedActivities = new();
     private int? editingIndex = null;
     private TechWayFit.Pulse.Contracts.Requests.UpdateActivityRequest editModel = new();
@@ -477,6 +481,9 @@
     
     // Join Form Fields
     private List<JoinFormField> joinFormFields = new();
+    
+    // Error message
+    private string? errorMessage = null;
     
     // Enhanced AI generation fields
     private bool showAdvancedAI = false;
@@ -539,19 +546,19 @@
             }
             
             // Validate context document summaries
-            if (enableSprintBacklog && !string.IsNullOrEmpty(sprintBacklogSummary) && sprintBacklogSummary.Length > 500)
+            if (enableSprintBacklog && !string.IsNullOrEmpty(sprintBacklogSummary) && sprintBacklogSummary.Length > ContextLimits.Value.SprintBacklogSummaryMaxChars)
             {
-                lastGenerationInfo = "❌ Sprint backlog summary must be 500 characters or less";
+                lastGenerationInfo = $"❌ Sprint backlog summary must be {ContextLimits.Value.SprintBacklogSummaryMaxChars} characters or less";
                 return;
             }
-            if (enableIncident && !string.IsNullOrEmpty(incidentSummary) && incidentSummary.Length > 500)
+            if (enableIncident && !string.IsNullOrEmpty(incidentSummary) && incidentSummary.Length > ContextLimits.Value.IncidentSummaryMaxChars)
             {
-                lastGenerationInfo = "❌ Incident summary must be 500 characters or less";
+                lastGenerationInfo = $"❌ Incident summary must be {ContextLimits.Value.IncidentSummaryMaxChars} characters or less";
                 return;
             }
-            if (enableProductDocs && !string.IsNullOrEmpty(productSummary) && productSummary.Length > 500)
+            if (enableProductDocs && !string.IsNullOrEmpty(productSummary) && productSummary.Length > ContextLimits.Value.ProductSummaryMaxChars)
             {
-                lastGenerationInfo = "❌ Product summary must be 500 characters or less";
+                lastGenerationInfo = $"❌ Product summary must be {ContextLimits.Value.ProductSummaryMaxChars} characters or less";
                 return;
             }
         }
@@ -741,14 +748,78 @@
     {
         if (isSaving) return;
         isSaving = true;
+        errorMessage = null; // Clear any previous error
         try
         {
+            // Get authenticated facilitator ID
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            Guid? facilitatorUserId = null;
+            if (user?.Identity?.IsAuthenticated == true)
+            {
+                var userIdClaim = user.FindFirst("FacilitatorUserId")?.Value;
+                if (Guid.TryParse(userIdClaim, out var userId))
+                {
+                    facilitatorUserId = userId;
+                }
+                else
+                {
+                    var email = user.FindFirst(ClaimTypes.Email)?.Value;
+                    if (!string.IsNullOrWhiteSpace(email))
+                    {
+                        var facilitator = await AuthService.GetFacilitatorByEmailAsync(email);
+                        facilitatorUserId = facilitator?.Id;
+                    }
+                }
+            }
+            
+            if (!facilitatorUserId.HasValue)
+            {
+                errorMessage = "You must be logged in as a facilitator to create sessions.";
+                return;
+            }
+
+            // Validate join form fields before submission
+            foreach (var field in joinFormFields)
+            {
+                if (field.Type == "dropdown" && string.IsNullOrWhiteSpace(field.Options))
+                {
+                    errorMessage = $"Dropdown field '{field.Label}' must have options defined (comma-separated values).";
+                    return;
+                }
+            }
+
+            // Build join form schema from join form fields
+            var joinFormFieldDtos = joinFormFields.Select((f, index) => new TechWayFit.Pulse.Contracts.Models.JoinFormFieldDto
+            {
+                Id = $"field_{index + 1}",
+                Label = f.Label,
+                Type = f.Type switch
+                {
+                    "dropdown" => TechWayFit.Pulse.Contracts.Enums.FieldType.Dropdown,
+                    "multiselect" => TechWayFit.Pulse.Contracts.Enums.FieldType.MultiSelect,
+                    "text" => TechWayFit.Pulse.Contracts.Enums.FieldType.Text,
+                    "number" => TechWayFit.Pulse.Contracts.Enums.FieldType.Number,
+                    "boolean" => TechWayFit.Pulse.Contracts.Enums.FieldType.Boolean,
+                    _ => TechWayFit.Pulse.Contracts.Enums.FieldType.Text
+                },
+                Required = false,
+                Options = f.Options ?? string.Empty,
+                UseInFilters = false
+            }).ToList();
+
             var request = new TechWayFit.Pulse.Contracts.Requests.CreateSessionRequest
             {
                 Title = sessionTitle,
                 Goal = sessionGoal,
                 Context = workshopType,
-                Settings = new TechWayFit.Pulse.Contracts.Models.SessionSettingsDto { StrictCurrentActivityOnly = false, AllowAnonymous = false, TtlMinutes = 360 }
+                Settings = new TechWayFit.Pulse.Contracts.Models.SessionSettingsDto { StrictCurrentActivityOnly = false, AllowAnonymous = false, TtlMinutes = 360 },
+                JoinFormSchema = new TechWayFit.Pulse.Contracts.Models.JoinFormSchemaDto
+                {
+                    MaxFields = 5,
+                    Fields = joinFormFieldDtos
+                }
             };
 
             var created = await ApiService.CreateSessionAsync(request);
@@ -775,6 +846,12 @@
                 }
             }
 
+            // Ensure we have a facilitator token before creating activities
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new InvalidOperationException("Failed to obtain facilitator token. Cannot create activities.");
+            }
+
             // Create activities
             foreach (var a in generatedActivities.OrderBy(x => x.Order))
             {
@@ -786,18 +863,39 @@
                     a.Config ?? string.Empty,
                     a.DurationMinutes);
 
-                if (!string.IsNullOrEmpty(token))
-                {
-                    await ApiService.CreateActivityAsync(created.Code, createReq, token);
-                }
+                await ApiService.CreateActivityAsync(created.Code, createReq, token);
             }
 
-            // Navigate to facilitator console for the created session
-            Navigation.NavigateTo($"/facilitator/console/{created.Code}");
+            // Navigate to facilitator live view for the created session
+            Navigation.NavigateTo($"/facilitator/live?Code={created.Code}");
+        }
+        catch (HttpRequestException ex)
+        {
+            // Extract detailed error message from the exception
+            var errorDetail = ex.Message;
+            
+            // Try to extract just the validation error if it's a 400 error
+            if (errorDetail.Contains("400") && errorDetail.Contains("-"))
+            {
+                var parts = errorDetail.Split(new[] { " - " }, 2, StringSplitOptions.None);
+                if (parts.Length > 1)
+                {
+                    errorDetail = parts[1]; // Get the part after "400 - "
+                }
+            }
+            
+            errorMessage = $"Failed to save session: {errorDetail}";
+            Logger.LogError(ex, "Error saving session");
+        }
+        catch (InvalidOperationException ex)
+        {
+            errorMessage = $"Configuration error: {ex.Message}";
+            Logger.LogError(ex, "Configuration error while saving session");
         }
         catch (Exception ex)
         {
-            // TODO: show user-friendly error
+            errorMessage = $"An unexpected error occurred: {ex.Message}";
+            Logger.LogError(ex, "Unexpected error while saving session");
         }
         finally
         {

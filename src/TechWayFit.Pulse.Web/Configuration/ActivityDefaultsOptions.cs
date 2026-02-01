@@ -29,3 +29,12 @@ public class GeneralFeedbackDefaultsOptions
 {
     public int MaxResponsesPerParticipant { get; set; } = 5;
 }
+
+public class ContextDocumentLimitsOptions
+{
+    public const string SectionName = "ContextDocumentLimits";
+
+    public int SprintBacklogSummaryMaxChars { get; set; } = 1000;
+    public int IncidentSummaryMaxChars { get; set; } = 1000;
+    public int ProductSummaryMaxChars { get; set; } = 5000;
+}

@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "dotnet",
+			"task": "build /Users/manasnayak/Projects/GitHub/twf-pulse/src/TechWayFit.Pulse.Web/TechWayFit.Pulse.Web.csproj",
+			"file": "/Users/manasnayak/Projects/GitHub/twf-pulse/src/TechWayFit.Pulse.Web/TechWayFit.Pulse.Web.csproj",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "dotnet: build /Users/manasnayak/Projects/GitHub/twf-pulse/src/TechWayFit.Pulse.Web/TechWayFit.Pulse.Web.csproj"
+		}
+	]
+}

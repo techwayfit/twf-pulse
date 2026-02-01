@@ -1,4 +1,5 @@
 @page "/facilitator/activities/create-feedback"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @inject NavigationManager Navigation
 @inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
 @inject TechWayFit.Pulse.Web.Services.IClientTokenService TokenService

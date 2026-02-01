@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TechWayFit.Pulse.AI.Utilities;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Contracts.Models;
@@ -23,18 +24,19 @@ namespace TechWayFit.Pulse.AI.Services
         private readonly IConfiguration _configuration;
         private readonly ILogger<SessionAIService> _logger;
         private readonly MockSessionAIService _mock = new MockSessionAIService();
+        private readonly ActivityDefaultsOptions _activityDefaults;
 
-        public SessionAIService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<SessionAIService> logger)
+        public SessionAIService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<SessionAIService> logger, IOptions<ActivityDefaultsOptions> activityDefaults)
         {
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
             _logger = logger;
+            _activityDefaults = activityDefaults?.Value ?? new ActivityDefaultsOptions();
         }
 
         public async Task<IReadOnlyList<AgendaActivityResponse>> GenerateSessionActivitiesAsync(CreateSessionRequest request, CancellationToken cancellationToken = default)
         {
             var apiKey = _configuration["AI:OpenAI:ApiKey"];
-            var endpoint = _configuration["AI:OpenAI:Endpoint"] ?? "https://api.openai.com/v1/chat/completions";
             var model = _configuration["AI:OpenAI:Model"] ?? "gpt-4o-mini";
 
             if (string.IsNullOrWhiteSpace(apiKey))
@@ -69,7 +71,19 @@ namespace TechWayFit.Pulse.AI.Services
                 };
 
                 var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-                var resp = await client.PostAsync(endpoint, content, cancellationToken);
+                var resp = await client.PostAsync("chat/completions", content, cancellationToken);
+                
+                if (!resp.IsSuccessStatusCode)
+                {
+                    var errorBody = await resp.Content.ReadAsStringAsync(cancellationToken);
+                    if (resp.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                    {
+                        _logger.LogError("OpenAI rate limit exceeded (429). Check your API quota at https://platform.openai.com/usage. Error: {Error}", errorBody);
+                        throw new InvalidOperationException("OpenAI rate limit exceeded. Please check your API quota.");
+                    }
+                    _logger.LogError("OpenAI API call failed with status {StatusCode}: {Error}", resp.StatusCode, errorBody);
+                }
+                
                 resp.EnsureSuccessStatusCode();
                 var body = await resp.Content.ReadAsStringAsync(cancellationToken);
 
@@ -219,12 +233,8 @@ namespace TechWayFit.Pulse.AI.Services
 
         private int CalculateActivityCount(int durationMinutes)
         {
-            // Rough guide: 15-20 mins per activity
-            if (durationMinutes <= 45) return 3;
-            if (durationMinutes <= 75) return 4;
-            if (durationMinutes <= 105) return 5;
-            if (durationMinutes <= 135) return 6;
-            return 7;
+            // Rough guide: ~10 mins per activity
+           return Math.Clamp(durationMinutes / 10, 3, 15);
         }
 
         private void BuildParticipantTypeContext(StringBuilder prompt, ParticipantTypesDto participantTypes)
@@ -385,10 +395,12 @@ For each activity, return:
 - config: Activity-specific configuration object
 
 Activity Guidelines:
-- Poll: Use for quick consensus, voting, or decision-making. Config should include 'options' array with 2-6 choices.
-- WordCloud: Use for brainstorming or sentiment capture. Config should set 'maxWords' (1-3), 'allowMultipleSubmissions'.
-- Rating: Use for satisfaction or confidence checks. Config should set 'scale' (5 or 10), 'minLabel', 'maxLabel', 'allowComments'.
-- GeneralFeedback: Use for open-ended input. Config can include 'categories' for organization.
+- Poll: Use for quick consensus, voting, or decision-making. Config should include 'options' array with 2-6 choices. Set MaxResponsesPerParticipant (1 is typical).
+- WordCloud: Use for brainstorming or sentiment capture. Config should set 'maxWords' (1-3), 'allowMultipleSubmissions', and MaxSubmissionsPerParticipant (1-3 is typical).
+- Rating: Use for satisfaction or confidence checks. Config should set 'scale' (5 or 10), 'minLabel', 'maxLabel', 'allowComments', and MaxResponsesPerParticipant (1 is typical).
+- GeneralFeedback: Use for open-ended input. Config can include 'categories' for organization and MaxResponsesPerParticipant (1-5 is typical).
+
+Note: You can suggest response limits for each activity, but the system will enforce configured maximums.
 
 Return ONLY a valid JSON array. No markdown, no explanation.";
         }
@@ -420,6 +432,9 @@ Return ONLY a valid JSON array. No markdown, no explanation.";
                         config = cfg.GetRawText();
                     }
 
+                    // Enforce maximum limits from configuration
+                    config = EnforceActivityLimits(at, config);
+
                     list.Add(new AgendaActivityResponse(Guid.NewGuid(), order++, at, title, prompt, config, TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending, null, null, duration));
                 }
 
@@ -431,5 +446,119 @@ Return ONLY a valid JSON array. No markdown, no explanation.";
                 return Array.Empty<AgendaActivityResponse>();
             }
         }
+
+        private string? EnforceActivityLimits(ActivityType activityType, string? config)
+        {
+            if (string.IsNullOrWhiteSpace(config))
+            {
+                // Generate default config with limits
+                return GenerateDefaultConfig(activityType);
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(config);
+                var root = doc.RootElement;
+                var updated = new Dictionary<string, object>();
+
+                // Copy all existing properties
+                foreach (var prop in root.EnumerateObject())
+                {
+                    updated[prop.Name] = JsonSerializer.Deserialize<object>(prop.Value.GetRawText()) ?? prop.Value.GetRawText();
+                }
+
+                // Enforce limits based on activity type
+                switch (activityType)
+                {
+                    case ActivityType.Poll:
+                        EnforceLimit(updated, "MaxResponsesPerParticipant", _activityDefaults.Poll.MaxResponsesPerParticipant);
+                        break;
+                    case ActivityType.Rating:
+                        EnforceLimit(updated, "MaxResponsesPerParticipant", _activityDefaults.Rating.MaxResponsesPerParticipant);
+                        break;
+                    case ActivityType.WordCloud:
+                        EnforceLimit(updated, "MaxSubmissionsPerParticipant", _activityDefaults.WordCloud.MaxSubmissionsPerParticipant);
+                        break;
+                    case ActivityType.GeneralFeedback:
+                        EnforceLimit(updated, "MaxResponsesPerParticipant", _activityDefaults.GeneralFeedback.MaxResponsesPerParticipant);
+                        break;
+                }
+
+                return JsonSerializer.Serialize(updated);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse/enforce limits on activity config, using default");
+                return GenerateDefaultConfig(activityType);
+            }
+        }
+
+        private void EnforceLimit(Dictionary<string, object> config, string propertyName, int maxLimit)
+        {
+            if (config.TryGetValue(propertyName, out var value))
+            {
+                // If AI suggested a value, cap it at the maximum
+                if (value is JsonElement elem && elem.ValueKind == JsonValueKind.Number)
+                {
+                    var suggested = elem.GetInt32();
+                    config[propertyName] = Math.Min(suggested, maxLimit);
+                }
+                else if (value is int intVal)
+                {
+                    config[propertyName] = Math.Min(intVal, maxLimit);
+                }
+                else
+                {
+                    config[propertyName] = maxLimit;
+                }
+            }
+            else
+            {
+                // AI didn't specify, use the default maximum
+                config[propertyName] = maxLimit;
+            }
+        }
+
+        private string GenerateDefaultConfig(ActivityType activityType)
+        {
+            return activityType switch
+            {
+                ActivityType.Poll => JsonSerializer.Serialize(new { MaxResponsesPerParticipant = _activityDefaults.Poll.MaxResponsesPerParticipant }),
+                ActivityType.Rating => JsonSerializer.Serialize(new { MaxResponsesPerParticipant = _activityDefaults.Rating.MaxResponsesPerParticipant }),
+                ActivityType.WordCloud => JsonSerializer.Serialize(new { MaxSubmissionsPerParticipant = _activityDefaults.WordCloud.MaxSubmissionsPerParticipant }),
+                ActivityType.GeneralFeedback => JsonSerializer.Serialize(new { MaxResponsesPerParticipant = _activityDefaults.GeneralFeedback.MaxResponsesPerParticipant }),
+                _ => "{}"
+            };
+        }
     }
+}
+
+public class ActivityDefaultsOptions
+{
+    public const string SectionName = "ActivityDefaults";
+    
+    public PollDefaultsOptions Poll { get; set; } = new();
+    public RatingDefaultsOptions Rating { get; set; } = new();
+    public WordCloudDefaultsOptions WordCloud { get; set; } = new();
+    public GeneralFeedbackDefaultsOptions GeneralFeedback { get; set; } = new();
+}
+
+public class PollDefaultsOptions
+{
+    public int MaxResponsesPerParticipant { get; set; } = 1;
+}
+
+public class RatingDefaultsOptions
+{
+    public int MaxResponsesPerParticipant { get; set; } = 1;
+}
+
+public class WordCloudDefaultsOptions
+{
+    public int MaxSubmissionsPerParticipant { get; set; } = 3;
+}
+
+public class GeneralFeedbackDefaultsOptions
+{
+    public int MaxResponsesPerParticipant { get; set; } = 5;
 }
