@@ -29,14 +29,11 @@
 
                     <!-- Action Buttons -->
                     <div class="d-flex flex-wrap gap-3 mb-4">
-                        <a class="btn btn-primary btn-lg pulse-btn-primary px-4 py-3" href="/facilitator/create-workshop">
-                            <span class="me-2">🧠</span>AI-Generate Session
+                        <a class="btn btn-primary btn-lg pulse-btn-primary px-4 py-3" href="/facilitator/dashboard">
+                            <span class="me-2">📊</span>Manage Your Session
                         </a>
-                        <a class="btn btn-outline-primary btn-lg px-4 py-3" href="/facilitator/create">
-                            Create Manually
-                        </a>
-                        <a class="btn btn-outline-secondary btn-lg px-4 py-3" href="/participant/join">
-                            Join as participant
+                        <a class="btn btn-outline-primary btn-lg px-4 py-3" href="/participant/join">
+                            <span class="me-2">👥</span>Join as Participant
                         </a>
                     </div>
 
@@ -61,6 +58,65 @@
                                     stroke-width="3"
                                     class="pulse-line" />
                             </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Capability Promotion Banner -->
+    <section class="py-5">
+        <div class="container" style="max-width: 1200px;">
+            <div class="card border-0 shadow-sm overflow-hidden bg-white">
+                <div class="row g-0 align-items-stretch">
+                    <div class="col-lg-7 order-lg-2">
+                        <!-- AI Generated Image -->
+                        <img src="~/images/ai-workshop-banner.jpg" 
+                             alt="AI-powered workshop generation" 
+                             class="w-100 h-100" 
+                             style="object-fit: cover; min-height: 350px;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <!-- Fallback if image doesn't exist -->
+                        <div class="d-none align-items-center justify-content-center h-100" style="min-height: 350px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                            <div class="text-center p-4">
+                                <i class="fas fa-magic fa-4x text-primary opacity-50 mb-3"></i>
+                                <p class="text-muted">AI Workshop Generation</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 order-lg-1">
+                        <div class="p-4 p-lg-5 h-100 d-flex flex-column justify-content-center">
+                                <div class="mb-3">
+                                    <span class="badge rounded-pill" style="background-color: #e3f2fd; color: #1976d2; font-weight: 500;">
+                                        🧠 AI-Powered
+                                    </span>
+                                </div>
+                                <h3 class="fw-bold mb-3" style="color: #1a1a1a; line-height: 1.3;">
+                                    Generate Complete Workshop Sessions in Seconds
+                                </h3>
+                                <p class="mb-4" style="color: #666; line-height: 1.6;">
+                                    Describe your workshop goal, and our AI will create a complete session with tailored activities 
+                                    and thoughtful questions—ready to go live instantly.
+                                </p>
+                                <div class="d-flex flex-column gap-2 mb-4">
+                                    <div class="d-flex align-items-center" style="color: #555;">
+                                        <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>
+                                        <span>Smart activity selection</span>
+                                    </div>
+                                    <div class="d-flex align-items-center" style="color: #555;">
+                                        <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>
+                                        <span>Custom questions</span>
+                                    </div>
+                                    <div class="d-flex align-items-center" style="color: #555;">
+                                        <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>
+                                        <span>Template-based or free-form</span>
+                                    </div>
+                                </div>
+                                <a href="/facilitator/create-workshop" class="btn btn-primary pulse-btn-primary">
+                                    <i class="fas fa-magic me-2"></i>Try AI Session Creation
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

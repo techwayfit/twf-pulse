@@ -287,14 +287,24 @@ await JS.InvokeVoidAsync("generateQRCode", canvasId, joinUrl);
 
     private async Task CopyJoinUrl()
     {
-   try
-   {
+        try
+        {
             await JS.InvokeVoidAsync("navigator.clipboard.writeText", joinUrl);
-          // TODO: Show toast notification
+            // Optional: Show success feedback
+            Logger.LogInformation("Join URL copied to clipboard");
         }
         catch (Exception ex)
         {
-       Logger.LogWarning($"Copy failed: {ex.Message}");
+            // Fallback: Try using a different clipboard method
+            try
+            {
+                await JS.InvokeVoidAsync("copyToClipboard", joinUrl);
+                Logger.LogInformation("Join URL copied using fallback method");
+            }
+            catch
+            {
+                Logger.LogWarning($"Copy failed: {ex.Message}");
+            }
         }
     }
 

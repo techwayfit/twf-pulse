@@ -26,12 +26,10 @@
    <div class="text-muted small mb-2">or share this link</div>
 
         <!-- Join URL -->
-          <div class="input-group">
-   <input type="text" class="form-control" readonly value="@JoinUrl" id="joinUrlInputModal" />
-      <button class="btn btn-primary" @onclick="OnCopyUrl">
-         Copy
- </button>
-    </div>
+          <div class="bg-light rounded p-3 text-break">
+            <code class="text-primary user-select-all">@JoinUrl</code>
+          </div>
+          <small class="text-muted d-block mt-2">Click to select, then copy</small>
   </div>
         </div>
     </div>
@@ -44,6 +42,6 @@
     [Parameter, EditorRequired]
     public string JoinUrl { get; set; } = default!;
 
-[Parameter]
+    [Parameter]
     public EventCallback OnCopyUrl { get; set; }
 }

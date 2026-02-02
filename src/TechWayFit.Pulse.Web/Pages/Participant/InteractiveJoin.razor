@@ -23,6 +23,84 @@
         </div>
       </div>
     }
+    else if (showCodeEntryForm)
+    {
+      <!-- Session Code Entry Form -->
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+              <div class="text-center mb-4">
+                <div class="mb-3">
+                  <i class="fas fa-users fa-3x text-primary"></i>
+                </div>
+                <h1 class="h3 fw-bold mb-2">Join Workshop Session</h1>
+                <p class="text-muted">Enter your session code or scan the QR code</p>
+              </div>
+
+              @if (!string.IsNullOrEmpty(codeEntryError))
+              {
+                <div class="alert alert-danger" role="alert">
+                  <strong>Error:</strong> @codeEntryError
+                </div>
+              }
+
+              <!-- Manual Code Entry -->
+              <div class="mb-4">
+                <label for="sessionCodeInput" class="form-label fw-semibold">Session Code</label>
+                <div class="input-group input-group-lg">
+                  <input type="text" 
+                         class="form-control text-uppercase" 
+                         id="sessionCodeInput" 
+                         value="@manualSessionCode"
+                         @oninput="FormatSessionCode"
+                         @onkeypress="HandleKeyPress"
+                         placeholder="XXX-XXX-XXX"
+                         maxlength="11"
+                         style="letter-spacing: 0.1em; font-weight: 600;" />
+                  <button class="btn btn-primary" 
+                          type="button" 
+                          @onclick="JoinWithCode"
+                          disabled="@(!IsValidSessionCodeFormat(manualSessionCode))">
+                    Join
+                  </button>
+                </div>
+                <small class="text-muted">Example: SHE-K4F-M4U</small>
+              </div>
+
+              <!-- Divider -->
+              <div class="position-relative text-center my-4">
+                <hr />
+                <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted">OR</span>
+              </div>
+
+              <!-- QR Code Scanner -->
+              <div class="mb-3">
+                <button class="btn btn-outline-primary w-100" 
+                        type="button" 
+                        @onclick="ToggleQRScanner">
+                  <i class="fas fa-qrcode me-2"></i>
+                  @(showQRScanner ? "Close Scanner" : "Scan QR Code")
+                </button>
+              </div>
+
+              @if (showQRScanner)
+              {
+                <div class="border rounded p-3 mb-3">
+                  <div id="qr-reader" style="width: 100%;"></div>
+                  @if (!string.IsNullOrEmpty(qrScannerStatus))
+                  {
+                    <div class="alert alert-info mt-3 mb-0">
+                      @qrScannerStatus
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
     else if (!string.IsNullOrEmpty(errorMessage))
     {
       <div class="card border-0 shadow-sm">
@@ -34,7 +112,7 @@
           {
             <p class="text-muted mb-3">Session Code: <strong>@sessionCode</strong></p>
           }
-          <a href="/" class="btn btn-primary pulse-btn-primary">Back to Home</a>
+          <a href="/participant/join" class="btn btn-primary pulse-btn-primary">Try Again</a>
         </div>
       </div>
     }
@@ -226,6 +304,7 @@
   private JoinState currentState = JoinState.FillForm;
   private bool isLoading = true;
   private string errorMessage = "";
+  private string codeEntryError = "";
   private SessionSummaryResponse? sessionSummary;
   private List<JoinFormFieldDto>? joinFormFields;
   private string displayName = "";
@@ -233,6 +312,12 @@
   private Dictionary<string, string?> fieldValues = new();
   private Guid? participantId;
   private HubConnection? hubConnection;
+  
+  // Session code entry
+  private bool showCodeEntryForm = false;
+  private string manualSessionCode = "";
+  private bool showQRScanner = false;
+  private string qrScannerStatus = "";
 
   private bool DisplayNameRequired =>
     joinFormFields?.Any(f => string.Equals(f.Id, "displayName", StringComparison.OrdinalIgnoreCase) && f.Required) ?? false;
@@ -242,14 +327,22 @@
     // Check if session code is provided
     if (string.IsNullOrWhiteSpace(sessionCode))
     {
-      errorMessage = "No session code provided. Please check your link.";
+      // Show code entry form instead of error
+      showCodeEntryForm = true;
       isLoading = false;
       return;
     }
 
+    await LoadSession();
+  }
+
+  private async Task LoadSession()
+  {
     try
     {
       isLoading = true;
+      errorMessage = "";
+      codeEntryError = "";
       
       // Check if user already joined this session
       var existingParticipantId = await CheckExistingParticipant();
@@ -278,6 +371,7 @@
       // Setup SignalR connection for real-time updates
       await SetupSignalRConnection();
       
+      showCodeEntryForm = false;
       isLoading = false;
     }
     catch (Exception ex)
@@ -285,6 +379,139 @@
       errorMessage = $"Could not load session: {ex.Message}";
       isLoading = false;
     }
+  }
+
+  private async Task JoinWithCode()
+  {
+    if (!IsValidSessionCodeFormat(manualSessionCode))
+    {
+      codeEntryError = "Please enter a valid session code in format XXX-XXX-XXX.";
+      return;
+    }
+
+    sessionCode = manualSessionCode.ToUpper().Trim();
+    showCodeEntryForm = false;
+    await LoadSession();
+  }
+
+  private bool IsValidSessionCodeFormat(string code)
+  {
+    if (string.IsNullOrWhiteSpace(code))
+      return false;
+    
+    // Format: XXX-XXX-XXX (11 characters total)
+    code = code.Trim();
+    if (code.Length != 11)
+      return false;
+    
+    // Check format: 3 chars, hyphen, 3 chars, hyphen, 3 chars
+    var parts = code.Split('-');
+    if (parts.Length != 3)
+      return false;
+    
+    return parts.All(p => p.Length == 3 && p.All(c => char.IsLetterOrDigit(c)));
+  }
+
+  private void FormatSessionCode(ChangeEventArgs e)
+  {
+    var input = e.Value?.ToString() ?? "";
+    manualSessionCode = FormatCode(input);
+    StateHasChanged();
+  }
+
+  private string FormatCode(string input)
+  {
+    // Remove all non-alphanumeric characters
+    var cleanInput = new string(input.Where(char.IsLetterOrDigit).ToArray()).ToUpper();
+    
+    // Limit to 9 alphanumeric characters
+    if (cleanInput.Length > 9)
+      cleanInput = cleanInput.Substring(0, 9);
+    
+    // Add hyphens at appropriate positions
+    if (cleanInput.Length > 6)
+      return $"{cleanInput.Substring(0, 3)}-{cleanInput.Substring(3, 3)}-{cleanInput.Substring(6)}";
+    else if (cleanInput.Length > 3)
+      return $"{cleanInput.Substring(0, 3)}-{cleanInput.Substring(3)}";
+    else
+      return cleanInput;
+  }
+
+  private async Task HandleKeyPress(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter" && IsValidSessionCodeFormat(manualSessionCode))
+    {
+      await JoinWithCode();
+    }
+  }
+
+  private async Task ToggleQRScanner()
+  {
+    showQRScanner = !showQRScanner;
+    
+    if (showQRScanner)
+    {
+      await Task.Delay(100); // Give DOM time to render
+      await StartQRScanner();
+    }
+    else
+    {
+      await StopQRScanner();
+    }
+  }
+
+  private async Task StartQRScanner()
+  {
+    try
+    {
+      qrScannerStatus = "Initializing camera...";
+      await JS.InvokeVoidAsync("initQRScanner", DotNetObjectReference.Create(this));
+    }
+    catch (Exception ex)
+    {
+      qrScannerStatus = $"Camera error: {ex.Message}";
+    }
+  }
+
+  private async Task StopQRScanner()
+  {
+    try
+    {
+      await JS.InvokeVoidAsync("stopQRScanner");
+      qrScannerStatus = "";
+    }
+    catch { }
+  }
+
+  [JSInvokable]
+  public async Task OnQRCodeScanned(string scannedCode)
+  {
+    // Extract session code from URL or use directly
+    var code = ExtractSessionCodeFromUrl(scannedCode);
+    
+    if (!string.IsNullOrWhiteSpace(code))
+    {
+      qrScannerStatus = "QR code detected! Redirecting...";
+      await StopQRScanner();
+      StateHasChanged(); // Force UI update
+      
+      // Redirect to join page with session code
+      Navigation.NavigateTo($"/participant/join?sessionCode={code}", forceLoad: true);
+    }
+  }
+
+  private string ExtractSessionCodeFromUrl(string input)
+  {
+    // If it's a URL, extract the session code
+    if (input.Contains("/participant/join?sessionCode=", StringComparison.OrdinalIgnoreCase))
+    {
+      var uri = new Uri(input);
+      var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+      return query["sessionCode"] ?? "";
+    }
+    
+    // Otherwise, assume it's a direct code
+    return input.Trim().ToUpper();
   }
 
   private async Task SetupSignalRConnection()

@@ -178,24 +178,42 @@ try
 
     // AI services: register real implementations when AI enabled and API key present, otherwise register mocks
     var aiEnabled = builder.Configuration.GetValue<bool>("AI:Enabled");
+    var aiProvider = builder.Configuration.GetValue<string>("AI:Provider") ?? "Mock";
     var openAiApiKey = builder.Configuration["AI:OpenAI:ApiKey"];
 
     Log.Information("Environment: {Environment}", builder.Environment.EnvironmentName);
     Log.Information("AI Enabled: {Enabled}", aiEnabled);
+    Log.Information("AI Provider: {Provider}", aiProvider);
     Log.Information("API Key present: {HasKey}, Length: {Length}",
         !string.IsNullOrWhiteSpace(openAiApiKey),
         openAiApiKey?.Length ?? 0);
 
-    if (aiEnabled && !string.IsNullOrWhiteSpace(openAiApiKey))
+    // Register AI services based on provider configuration
+    // Providers: "OpenAI" (GPT AI), "MLNet" (ML.NET machine learning), "Intelligent" (NLP-based), "Mock" (simple)
+    if (aiEnabled && !string.IsNullOrWhiteSpace(openAiApiKey) && aiProvider.Equals("OpenAI", StringComparison.OrdinalIgnoreCase))
     {
         Log.Information("Registering REAL AI services (OpenAI API enabled)");
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.ParticipantAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.FacilitatorAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.SessionAIService>();
     }
+    else if (aiProvider.Equals("MLNet", StringComparison.OrdinalIgnoreCase))
+    {
+        Log.Information("Registering ML.NET AI services (Microsoft ML.NET machine learning)");
+        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
+        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
+        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.MLNetSessionAIService>();
+    }
+    else if (aiProvider.Equals("Intelligent", StringComparison.OrdinalIgnoreCase))
+    {
+        Log.Information("Registering INTELLIGENT AI services (NLP-inspired keyword-based generation)");
+        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
+        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
+        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.IntelligentSessionAIService>();
+    }
     else
     {
-        Log.Warning("Registering MOCK AI services (AI disabled or API key missing)");
+        Log.Warning("Registering MOCK AI services (AI disabled, using simple mock provider)");
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.MockSessionAIService>();
