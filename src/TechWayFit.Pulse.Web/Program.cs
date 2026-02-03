@@ -56,6 +56,10 @@ try
     // Configure context document limits
     builder.Services.Configure<ContextDocumentLimitsOptions>(
         builder.Configuration.GetSection(ContextDocumentLimitsOptions.SectionName));
+    
+    // Configure AI quota limits
+    builder.Services.Configure<AiQuotaOptions>(
+        builder.Configuration.GetSection("AI:Quota"));
 
     // Add authentication services
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -211,13 +215,8 @@ try
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.IntelligentSessionAIService>();
     }
-    else
-    {
-        Log.Warning("Registering MOCK AI services (AI disabled, using simple mock provider)");
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.MockSessionAIService>();
-    }
+    builder.Services.AddKeyedScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.IntelligentSessionAIService>("Intelligent");
+    
 
     // Register AI work queue and background processor
     builder.Services.AddSingleton<TechWayFit.Pulse.Application.Abstractions.Services.IAIWorkQueue, TechWayFit.Pulse.Infrastructure.AI.AIWorkQueue>();
@@ -245,6 +244,7 @@ try
     builder.Services.AddScoped<IResponseRepository, ResponseRepository>();
     builder.Services.AddScoped<IContributionCounterRepository, ContributionCounterRepository>();
     builder.Services.AddScoped<IFacilitatorUserRepository, FacilitatorUserRepository>();
+    builder.Services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository>();
     builder.Services.AddScoped<ILoginOtpRepository, LoginOtpRepository>();
     builder.Services.AddScoped<ISessionGroupRepository, SessionGroupRepository>();
     builder.Services.AddScoped<ISessionTemplateRepository, TechWayFit.Pulse.Infrastructure.Repositories.SessionTemplateRepository>();
@@ -254,6 +254,7 @@ try
     builder.Services.AddScoped<IParticipantService, ParticipantService>();
     builder.Services.AddScoped<IResponseService, ResponseService>();
     builder.Services.AddScoped<IDashboardService, DashboardService>();
+    builder.Services.AddScoped<IAiQuotaService, AiQuotaService>();
     builder.Services.AddScoped<IPollDashboardService, PollDashboardService>();
     builder.Services.AddScoped<IWordCloudDashboardService, WordCloudDashboardService>();
     builder.Services.AddScoped<IRatingDashboardService, RatingDashboardService>();
@@ -356,6 +357,9 @@ try
 
     // Add facilitator token middleware (after authentication, before authorization)
     app.UseMiddleware<TechWayFit.Pulse.Web.Middleware.FacilitatorTokenMiddleware>();
+    
+    // Add facilitator context middleware (populates AsyncLocal context)
+    app.UseMiddleware<TechWayFit.Pulse.Web.Middleware.FacilitatorContextMiddleware>();
 
     app.UseAuthorization();
 

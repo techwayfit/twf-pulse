@@ -79,6 +79,12 @@ public sealed class Session
         UpdatedAt = updatedAt;
     }
 
+    public void SetExpiresAt(DateTimeOffset expiresAt, DateTimeOffset updatedAt)
+    {
+        ExpiresAt = expiresAt;
+        UpdatedAt = updatedAt;
+    }
+
     public void SetCurrentActivity(Guid? activityId, DateTimeOffset updatedAt)
     {
         CurrentActivityId = activityId;

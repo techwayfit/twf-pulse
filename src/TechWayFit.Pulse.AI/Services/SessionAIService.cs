@@ -7,10 +7,12 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TechWayFit.Pulse.AI.Utilities;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.Context;
 using TechWayFit.Pulse.Contracts.Models;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
@@ -23,21 +25,50 @@ namespace TechWayFit.Pulse.AI.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
         private readonly ILogger<SessionAIService> _logger;
-        private readonly MockSessionAIService _mock = new MockSessionAIService();
+        private readonly ISessionAIService _mock;
         private readonly ActivityDefaultsOptions _activityDefaults;
+        private readonly IAiQuotaService? _quotaService;
 
-        public SessionAIService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<SessionAIService> logger, IOptions<ActivityDefaultsOptions> activityDefaults)
+        public SessionAIService(IHttpClientFactory httpClientFactory, IConfiguration configuration, 
+        IServiceProvider serviceProvider,
+        ILogger<SessionAIService> logger, IOptions<ActivityDefaultsOptions> activityDefaults)
         {
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
             _logger = logger;
+            _mock = serviceProvider.GetKeyedService<ISessionAIService>("Intelligent") ?? throw new ArgumentNullException("Mock IntelligentSessionAIService not found");   
             _activityDefaults = activityDefaults?.Value ?? new ActivityDefaultsOptions();
+            
+            // Quota service is optional (may not be registered in all environments)
+            _quotaService = serviceProvider.GetService<IAiQuotaService>();
         }
 
         public async Task<IReadOnlyList<AgendaActivityResponse>> GenerateSessionActivitiesAsync(CreateSessionRequest request, CancellationToken cancellationToken = default)
         {
-            var apiKey = _configuration["AI:OpenAI:ApiKey"];
-            var model = _configuration["AI:OpenAI:Model"] ?? "gpt-4o-mini";
+            // Get facilitator context (contains their AI credentials)
+            var facilitatorContext = FacilitatorContextAccessor.Current;
+            
+            // Check quota before generating (only if quota service is available and user doesn't have own key)
+            if (_quotaService != null && facilitatorContext != null)
+            {
+                var quotaCheck = await _quotaService.CheckQuotaAsync(facilitatorContext.FacilitatorUserId, cancellationToken);
+                
+                if (!quotaCheck.HasQuota)
+                {
+                    _logger.LogWarning(
+                        "User {UserId} exceeded AI quota: {Used}/{Total}",
+                        facilitatorContext.FacilitatorUserId,
+                        quotaCheck.UsedSessions,
+                        quotaCheck.TotalSessions);
+                    
+                    throw new InvalidOperationException(quotaCheck.Message ?? "AI generation quota exceeded. Please add your own API key to continue.");
+                }
+            }
+            
+            // Use facilitator's API key/URL if available, otherwise fall back to configuration
+            var apiKey = facilitatorContext?.OpenAiApiKey ?? _configuration["AI:OpenAI:ApiKey"];
+            var model = request.GenerationOptions?.Model ?? _configuration["AI:OpenAI:Model"] ?? "gpt-4o-mini";
+            var baseUrl = facilitatorContext?.OpenAiBaseUrl ?? _configuration["AI:OpenAI:BaseUrl"];
 
             if (string.IsNullOrWhiteSpace(apiKey))
             {
@@ -50,6 +81,19 @@ namespace TechWayFit.Pulse.AI.Services
             try
             {
                 var client = _httpClientFactory.CreateClient("openai");
+                
+                // Override base URL if provided
+                if (!string.IsNullOrWhiteSpace(baseUrl))
+                {
+                    // Ensure baseUrl ends with /
+                    if (!baseUrl.EndsWith("/"))
+                    {
+                        baseUrl += "/";
+                    }
+                    client.BaseAddress = new Uri(baseUrl);
+                    _logger.LogInformation("Using custom OpenAI base URL: {BaseUrl}", baseUrl);
+                }
+                
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
                 // Build improved system prompt with schema
@@ -90,6 +134,7 @@ namespace TechWayFit.Pulse.AI.Services
                 stopwatch.Stop();
 
                 // Try to extract the model's content and log telemetry
+                IReadOnlyList<AgendaActivityResponse> activities;
                 try
                 {
                     using var doc = JsonDocument.Parse(body);
@@ -112,23 +157,46 @@ namespace TechWayFit.Pulse.AI.Services
                         if (first.TryGetProperty("message", out var message) && message.TryGetProperty("content", out var contentEl))
                         {
                             var jsonText = contentEl.GetString() ?? string.Empty;
-                            return ParseActivitiesJson(jsonText);
+                            activities = ParseActivitiesJson(jsonText);
                         }
                         else if (first.TryGetProperty("text", out var textEl))
                         {
                             var jsonText = textEl.GetString() ?? string.Empty;
-                            return ParseActivitiesJson(jsonText);
+                            activities = ParseActivitiesJson(jsonText);
+                        }
+                        else
+                        {
+                            // Fallback: body itself might be JSON array
+                            activities = ParseActivitiesJson(body);
                         }
                     }
-
-                    // Fallback: body itself might be JSON array
-                    return ParseActivitiesJson(body);
+                    else
+                    {
+                        // Fallback: body itself might be JSON array
+                        activities = ParseActivitiesJson(body);
+                    }
                 }
                 catch (JsonException)
                 {
                     _logger.LogWarning("Failed to parse OpenAI response as JSON, falling back to mock");
                     return await _mock.GenerateSessionActivitiesAsync(request, cancellationToken);
                 }
+                
+                // Consume quota ONLY after successful AI generation (only if quota service is available)
+                if (_quotaService != null && facilitatorContext != null)
+                {
+                    try
+                    {
+                        await _quotaService.ConsumeQuotaAsync(facilitatorContext.FacilitatorUserId, cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to consume quota for user {UserId}", facilitatorContext.FacilitatorUserId);
+                        // Don't fail the request if quota consumption fails
+                    }
+                }
+                
+                return activities;
             }
             catch (Exception ex)
             {

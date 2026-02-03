@@ -9,13 +9,13 @@ public sealed class FacilitatorUser
         Guid id,
         string email,
         string displayName,
-     DateTimeOffset createdAt,
+        DateTimeOffset createdAt,
         DateTimeOffset? lastLoginAt = null)
     {
         Id = id;
         Email = email.Trim().ToLowerInvariant();
- DisplayName = displayName.Trim();
-   CreatedAt = createdAt;
+        DisplayName = displayName.Trim();
+        CreatedAt = createdAt;
         LastLoginAt = lastLoginAt;
     }
 

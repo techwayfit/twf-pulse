@@ -18,6 +18,22 @@
             <span class="badge bg-white text-dark border px-3 py-2">TTL: <strong>6h</strong></span>
         </div>
 
+        <!-- Alternative Creation Methods -->
+        <div class="alert alert-light border d-flex align-items-center gap-3 mb-4">
+            <div class="flex-grow-1">
+                <div class="fw-semibold mb-1">Looking for other ways to create a session?</div>
+                <small class="text-muted">Try our templates or AI-powered session creator</small>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="@Url.Action("Templates", "Facilitator")" class="btn btn-sm btn-outline-primary">
+                    <span class="me-1">📋</span>Use Template
+                </a>
+                <a href="/facilitator/create-workshop" class="btn btn-sm btn-outline-primary">
+                    <span class="me-1">🧠</span>AI Generate
+                </a>
+            </div>
+        </div>
+
         <!-- Form -->
         <form id="sessionCreateForm" action="/api/sessions" method="post">
             <!-- Session Context Card -->
@@ -25,21 +41,10 @@
                 <div class="card-body p-4">
                     <h5 class="card-title fw-semibold mb-4">Session context</h5>
 
-                    <!-- Custom Tabs -->
-                    <div class="custom-tabs mb-4">
-                        <button type="button" class="custom-tab active" data-tab-target="basic">
-                            Basic Info
-                        </button>
-                        <button type="button" class="custom-tab" data-tab-target="ai">
-                            AI Context
-                        </button>
-                    </div>
+                    <!-- No tabs needed - single section -->
 
-                    <!-- Tab Content -->
-                    <div class="tab-content-container">
-                        <!-- Basic Info Tab -->
-                        <div id="tab-basic" class="tab-pane active">
-                            <div class="mb-4">
+                    <!-- Session Details -->
+                    <div class="mb-4">
                                 <label class="form-label fw-medium">Session title</label>
                                 <input class="form-control" name="sessionTitle" id="sessionTitle" required
                                        placeholder="e.g., Sprint Retrospective - Team Alpha" />
@@ -100,43 +105,6 @@
                                     <div class="form-text">Maximum responses allowed per participant in each activity</div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- AI Context Tab -->
-                        <div id="tab-ai" class="tab-pane" style="display: none;">
-                            <div class="alert alert-info border-0 mb-4">
-                                <small>
-                                    💡 Provide detailed context to help AI generate better questions and insights.
-                                    This information is not shown to participants.
-                                </small>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-medium">Current process/workflow</label>
-                                <textarea class="form-control" name="currentProcess" rows="3"
-                                          placeholder="Describe the current process, workflow, or system being discussed..."></textarea>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-medium">Known pain points & challenges</label>
-                                <textarea class="form-control" name="painPoints" rows="3"
-                                          placeholder="List known issues, bottlenecks, or areas of concern..."></textarea>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-medium">Solution architecture / technical context</label>
-                                <textarea class="form-control" name="technicalContext" rows="3"
-                                          placeholder="Relevant technical details, architecture, tools, or systems involved..."></textarea>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-medium">Team background & dynamics</label>
-                                <textarea class="form-control" name="teamBackground" rows="2"
-                                          placeholder="Team size, roles, experience levels, communication patterns..."></textarea>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-medium">Specific AI assistance goals</label>
-                                <textarea class="form-control" name="aiGoals" rows="2"
-                                          placeholder="What should AI focus on? (e.g., 'Generate probing questions', 'Identify patterns', 'Suggest prioritization')"></textarea>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -286,33 +254,9 @@
     <!-- External JavaScript -->
     <script src="~/js/create-session-form.js" asp-append-version="true"></script>
 
-    <!-- Tab switching and Tree Dropdown functionality -->
+    <!-- Tree Dropdown functionality -->
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Initialize tab switching
-        const tabButtons = document.querySelectorAll('.custom-tab');
-        const tabPanes = document.querySelectorAll('.tab-pane');
-
-        tabButtons.forEach(button => {
-            button.addEventListener('click', function () {
-                const targetTab = this.getAttribute('data-tab-target');
-                // Remove active class from all buttons and panes
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                tabPanes.forEach(pane => {
-                    pane.classList.remove('active');
-                    pane.style.display = 'none';
-                });
-
-                // Add active class to clicked button and corresponding pane
-                this.classList.add('active');
-                const targetPane = document.getElementById(`tab-${targetTab}`);
-                if (targetPane) {
-                    targetPane.classList.add('active');
-                    targetPane.style.display = 'block';
-                }
-            });
-        });
-
         // Initialize Tree Dropdown
         initializeTreeDropdown();
         

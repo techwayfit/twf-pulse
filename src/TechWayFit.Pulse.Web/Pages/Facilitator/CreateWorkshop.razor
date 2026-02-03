@@ -7,15 +7,30 @@
 <main class="py-5" style="min-height: calc(100vh - 200px); margin-bottom: 2rem;">
     <div class="container" style="max-width: 1200px;">
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <div>
-                <h2 class="mb-2">AI-Powered Session Creator</h2>
-                <p class="text-muted mb-0">Let AI generate your workshop activities based on your context and goals</p>
+        <div class="mb-4">
+            <h2 class="mb-2">AI-Powered Session Creator</h2>
+            <p class="text-muted mb-0">Let AI generate your workshop activities based on your context and goals</p>
+        </div>
+
+        <!-- Alternative Creation Methods -->
+        <div class="alert alert-light border d-flex align-items-center gap-3 mb-4">
+            <div class="flex-grow-1">
+                <div class="fw-semibold mb-1">Looking for other ways to create a session?</div>
+                <small class="text-muted">Try our templates or create manually</small>
             </div>
-            <div class="d-flex gap-2 align-items-center flex-wrap">
-                <a href="/facilitator/create" class="btn btn-sm btn-outline-secondary">Create Manually</a>
-                <span class="badge bg-white text-dark border px-3 py-2">TTL: <strong>6h</strong></span>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="/facilitator/templates" class="btn btn-sm btn-outline-primary">
+                    <span class="me-1">📋</span>Use Template
+                </a>
+                <a href="/facilitator/create" class="btn btn-sm btn-outline-primary">
+                    <span class="me-1">✏️</span>Create Manually
+                </a>
             </div>
+        </div>
+
+        <!-- TTL Badge -->
+        <div class="d-flex justify-content-end mb-4">
+            <span class="badge bg-white text-dark border px-3 py-2">TTL: <strong>6h</strong></span>
         </div>
 
         <!-- Session Details & Join Form -->

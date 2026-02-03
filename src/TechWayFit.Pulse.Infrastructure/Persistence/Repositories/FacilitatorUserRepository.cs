@@ -69,12 +69,12 @@ return await _context.FacilitatorUsers
 
     private static FacilitatorUser MapToDomain(FacilitatorUserRecord record)
     {
-     return new FacilitatorUser(
-      record.Id,
-       record.Email,
-         record.DisplayName,
+        return new FacilitatorUser(
+            record.Id,
+            record.Email,
+            record.DisplayName,
             record.CreatedAt,
-    record.LastLoginAt);
+            record.LastLoginAt);
     }
 
     private static FacilitatorUserRecord MapToRecord(FacilitatorUser user)
@@ -82,10 +82,10 @@ return await _context.FacilitatorUsers
         return new FacilitatorUserRecord
         {
             Id = user.Id,
- Email = user.Email,
+            Email = user.Email,
             DisplayName = user.DisplayName,
- CreatedAt = user.CreatedAt,
-    LastLoginAt = user.LastLoginAt
-    };
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt
+        };
     }
 }

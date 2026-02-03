@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Domain.Entities;
 
 namespace TechWayFit.Pulse.Web.Controllers;
 
@@ -11,14 +13,20 @@ namespace TechWayFit.Pulse.Web.Controllers;
 public class AccountController : Controller
 {
     private readonly Application.Abstractions.Services.IAuthenticationService _authService;
+    private readonly IFacilitatorUserDataRepository _userDataRepository;
+    private readonly IAiQuotaService? _quotaService;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
-    Application.Abstractions.Services.IAuthenticationService authService,
-   ILogger<AccountController> logger)
+        Application.Abstractions.Services.IAuthenticationService authService,
+        IFacilitatorUserDataRepository userDataRepository,
+        ILogger<AccountController> logger,
+        IAiQuotaService? quotaService = null)
     {
         _authService = authService;
+        _userDataRepository = userDataRepository;
         _logger = logger;
+        _quotaService = quotaService;
     }
 
     [HttpGet("login")]
@@ -150,7 +158,86 @@ public class AccountController : Controller
             return RedirectToAction(nameof(Login));
         }
 
+        // Load user data
+        var userData = await _userDataRepository.GetAllAsDictAsync(userId.Value, cancellationToken);
+        ViewBag.UserData = userData;
+        
+        // Load quota status if service is available
+        if (_quotaService != null)
+        {
+            var quotaStatus = await _quotaService.GetQuotaStatusAsync(userId.Value, cancellationToken);
+            ViewBag.QuotaStatus = quotaStatus;
+        }
+        
+        ViewBag.SuccessMessage = TempData["SuccessMessage"];
+        ViewBag.ErrorMessage = TempData["ErrorMessage"];
+
         return View(user);
+    }
+
+    [HttpPost("profile/update-settings")]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateSettings(
+        string? openAiApiKey,
+        string? openAiBaseUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+        {
+            return RedirectToAction(nameof(Login));
+        }
+
+        try
+        {
+            // Update OpenAI API Key if provided
+            if (!string.IsNullOrWhiteSpace(openAiApiKey))
+            {
+                // TODO: Encrypt the API key before storing
+                await _userDataRepository.SetValueAsync(
+                    userId.Value,
+                    FacilitatorUserDataKeys.OpenAiApiKey,
+                    openAiApiKey.Trim(),
+                    cancellationToken);
+            }
+            else
+            {
+                // Delete if empty
+                await _userDataRepository.DeleteAsync(
+                    userId.Value,
+                    FacilitatorUserDataKeys.OpenAiApiKey,
+                    cancellationToken);
+            }
+
+            // Update OpenAI Base URL if provided
+            if (!string.IsNullOrWhiteSpace(openAiBaseUrl))
+            {
+                await _userDataRepository.SetValueAsync(
+                    userId.Value,
+                    FacilitatorUserDataKeys.OpenAiBaseUrl,
+                    openAiBaseUrl.Trim(),
+                    cancellationToken);
+            }
+            else
+            {
+                // Delete if empty
+                await _userDataRepository.DeleteAsync(
+                    userId.Value,
+                    FacilitatorUserDataKeys.OpenAiBaseUrl,
+                    cancellationToken);
+            }
+
+            TempData["SuccessMessage"] = "Settings updated successfully!";
+            _logger.LogInformation("User {UserId} updated their profile settings", userId.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update settings for user {UserId}", userId.Value);
+            TempData["ErrorMessage"] = "Failed to update settings. Please try again.";
+        }
+
+        return RedirectToAction(nameof(Profile));
     }
 
     private IActionResult RedirectToLocal(string? returnUrl)

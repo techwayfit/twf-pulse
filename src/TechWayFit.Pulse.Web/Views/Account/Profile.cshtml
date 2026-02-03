@@ -1,3 +1,4 @@
+@using TechWayFit.Pulse.Application.Services
 @model TechWayFit.Pulse.Domain.Entities.FacilitatorUser
 
 @{
@@ -40,7 +41,6 @@
                 <h5 class="card-title fw-semibold mb-4">Account Information</h5>
 
                 <div class="row g-3">
-                <div class="row g-3">
                     <div class="col-md-12">
                         <label class="form-label fw-medium text-muted small">User ID</label>
                         <div class="fw-semibold font-monospace small">@Model.Id</div>
@@ -58,6 +58,173 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        @if (ViewBag.SuccessMessage != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                </svg>
+                @ViewBag.SuccessMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (ViewBag.ErrorMessage != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293z"/>
+                </svg>
+                @ViewBag.ErrorMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- AI Configuration Section -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-semibold mb-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                        <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/>
+                        <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/>
+                    </svg>
+                    AI Configuration
+                </h5>
+                <p class="text-muted small mb-4">Configure your personal OpenAI API credentials for AI-powered session generation.</p>
+
+                @{
+                    var quotaStatus = ViewBag.QuotaStatus as QuotaCheckResult;
+                    if (quotaStatus != null)
+                    {
+                        var percentage = quotaStatus.TotalSessions > 0 ? (quotaStatus.UsedSessions * 100.0 / quotaStatus.TotalSessions) : 0;
+                        var progressColor = quotaStatus.Tier == "BYOK" ? "success" : 
+                                          percentage >= 80 ? "danger" : 
+                                          percentage >= 60 ? "warning" : "primary";
+                        
+                        <div class="alert alert-light border mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 fw-semibold">
+                                    @if (quotaStatus.Tier == "BYOK")
+                                    {
+                                        <span class="badge bg-success">Unlimited Access</span>
+                                    }
+                                    else
+                                    {
+                                        <span>AI Generation Quota</span>
+                                        <span class="badge bg-@progressColor ms-2">@quotaStatus.Tier</span>
+                                    }
+                                </h6>
+                                <small class="text-muted">
+                                    @if (quotaStatus.ResetDate.HasValue)
+                                    {
+                                        <span>Resets: @quotaStatus.ResetDate.Value.ToString("MMM dd, yyyy")</span>
+                                    }
+                                </small>
+                            </div>
+                            
+                            @if (quotaStatus.Tier != "BYOK")
+                            {
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar bg-@progressColor" 
+                                         role="progressbar" 
+                                         style="width: @percentage%"
+                                         aria-valuenow="@quotaStatus.UsedSessions" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="@quotaStatus.TotalSessions"></div>
+                                </div>
+                                <small class="text-muted">
+                                    <strong>@quotaStatus.UsedSessions</strong> of <strong>@quotaStatus.TotalSessions</strong> AI sessions used this month
+                                </small>
+                                
+                                @if (!quotaStatus.HasQuota)
+                                {
+                                    <div class="alert alert-warning mt-3 mb-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                                            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+                                        </svg>
+                                        You've reached your monthly AI quota. Add your own API key below to continue using AI features.
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <small class="text-success">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                                    </svg>
+                                    You're using your own API key - no quota limits!
+                                </small>
+                            }
+                        </div>
+                    }
+                }
+
+                <form method="post" asp-action="UpdateSettings" asp-controller="Account">
+                    @Html.AntiForgeryToken()
+                    
+                    @{
+                        var userData = ViewBag.UserData as Dictionary<string, string> ?? new Dictionary<string, string>();
+                        var apiKey = userData.ContainsKey("OpenAI.ApiKey") ? userData["OpenAI.ApiKey"] : "";
+                        var baseUrl = userData.ContainsKey("OpenAI.BaseUrl") ? userData["OpenAI.BaseUrl"] : "";
+                    }
+
+                    <div class="mb-3">
+                        <label for="openAiApiKey" class="form-label fw-medium">
+                            OpenAI API Key
+                            <span class="badge bg-secondary ms-1">Optional</span>
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="openAiApiKey" 
+                               name="openAiApiKey" 
+                               value="@apiKey"
+                               placeholder="sk-proj-..." />
+                        <div class="form-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
+                            </svg>
+                            Your API key is stored securely and only used for your sessions. 
+                            <a href="https://platform.openai.com/api-keys" target="_blank" class="text-decoration-none">Get your API key</a>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="openAiBaseUrl" class="form-label fw-medium">
+                            OpenAI Base URL
+                            <span class="badge bg-secondary ms-1">Optional</span>
+                        </label>
+                        <input type="url" 
+                               class="form-control" 
+                               id="openAiBaseUrl" 
+                               name="openAiBaseUrl" 
+                               value="@baseUrl"
+                               placeholder="https://api.openai.com/v1" />
+                        <div class="form-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
+                            </svg>
+                            Use a custom endpoint (e.g., Azure OpenAI). Leave blank for default OpenAI.
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                                <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/>
+                            </svg>
+                            Save Settings
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('openAiApiKey').value=''; document.getElementById('openAiBaseUrl').value='';">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                                <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
+                            </svg>
+                            Clear
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 

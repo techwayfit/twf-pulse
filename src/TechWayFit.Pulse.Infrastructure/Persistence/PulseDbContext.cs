@@ -21,6 +21,8 @@ public sealed class PulseDbContext : DbContext
 
     public DbSet<FacilitatorUserRecord> FacilitatorUsers => Set<FacilitatorUserRecord>();
 
+    public DbSet<FacilitatorUserDataRecord> FacilitatorUserData => Set<FacilitatorUserDataRecord>();
+
     public DbSet<LoginOtpRecord> LoginOtps => Set<LoginOtpRecord>();
 
     public DbSet<SessionGroupRecord> SessionGroups => Set<SessionGroupRecord>();
@@ -90,6 +92,16 @@ public sealed class PulseDbContext : DbContext
             entity.Property(x => x.DisplayName).HasMaxLength(120).IsRequired();
             entity.HasIndex(x => x.Email).IsUnique();
             entity.HasIndex(x => x.CreatedAt);
+        });
+
+        modelBuilder.Entity<FacilitatorUserDataRecord>(entity =>
+        {
+            entity.ToTable("FacilitatorUserData");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Key).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Value).HasColumnType("TEXT").IsRequired();
+            entity.HasIndex(x => new { x.FacilitatorUserId, x.Key }).IsUnique();
+            entity.HasIndex(x => x.FacilitatorUserId);
         });
 
         modelBuilder.Entity<LoginOtpRecord>(entity =>

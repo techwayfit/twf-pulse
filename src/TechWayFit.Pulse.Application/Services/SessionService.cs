@@ -70,7 +70,7 @@ public sealed class SessionService : ISessionService
             null,
             now,
             now,
-            now.AddMinutes(settings.TtlMinutes),
+            now.AddDays(30), // Initial expiry far in future - actual TTL starts when session goes Live
             facilitatorUserId,
             groupId);
 
@@ -144,6 +144,13 @@ public sealed class SessionService : ISessionService
         }
 
         session.SetStatus(status, now);
+        
+        // When session goes Live, set the actual expiry time based on TTL
+        if (status == SessionStatus.Live)
+        {
+            session.SetExpiresAt(now.AddMinutes(session.Settings.TtlMinutes), now);
+        }
+        
         await _sessions.UpdateAsync(session, cancellationToken);
     }
 

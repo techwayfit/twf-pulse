@@ -9,20 +9,23 @@
 <main class="dashboard-main">
     <div class="container" style="max-width: 1200px;">
         <!-- Header -->
-        <div class="dashboard-header flex-column flex-md-row align-items-start align-items-md-center">
-            <div class="dashboard-header-text mb-3 mb-md-0">
-                <h2 class="dashboard-title">Session Templates</h2>
-                <p class="dashboard-subtitle d-none d-md-block">Choose a template to quickly create a workshop session</p>
+        <div class="mb-4">
+            <h2 class="mb-2">Session Templates</h2>
+            <p class="text-muted mb-0">Choose a template to quickly create a workshop session</p>
+        </div>
+
+        <!-- Alternative Creation Methods -->
+        <div class="alert alert-light border d-flex align-items-center gap-3 mb-4">
+            <div class="flex-grow-1">
+                <div class="fw-semibold mb-1">Looking for other ways to create a session?</div>
+                <small class="text-muted">Try creating manually or use our AI-powered session creator</small>
             </div>
-            <div class="dashboard-header-actions d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto">
-                <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-pulse-outline">
-                    ← Back to Dashboard
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="@Url.Action("Create", "Facilitator")" class="btn btn-sm btn-outline-primary">
+                    <span class="me-1">✏️</span>Create Manually
                 </a>
-                <a href="/facilitator/create-workshop" class="btn btn-pulse-primary">
-                    🧠 AI-Generate Session
-                </a>
-                <a href="@Url.Action("Create", "Facilitator")" class="btn btn-pulse-outline">
-                    Create Manually
+                <a href="/facilitator/create-workshop" class="btn btn-sm btn-outline-primary">
+                    <span class="me-1">🧠</span>AI Generate
                 </a>
             </div>
         </div>
