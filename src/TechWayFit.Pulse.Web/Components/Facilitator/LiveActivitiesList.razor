@@ -4,9 +4,9 @@
 <!-- All Activities -->
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="card-title fw-semibold mb-0">Workshop Activities</h5>
-            <span class="badge bg-primary bg-opacity-10 text-primary">@Activities.Count total</span>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title fw-bold mb-0" style="color: #1a1a2e;">Workshop Activities</h5>
+            <span class="badge rounded-pill" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 0.5rem 1rem; font-size: 0.85rem;">@Activities.Count total</span>
   </div>
 
  @if (Activities != null && Activities.Any())
@@ -14,82 +14,157 @@
             <div class="d-flex flex-column gap-3">
     @foreach (var (activity, index) in Activities.OrderBy(a => a.Order).Select((a, i) => (a, i)))
    {
-   <div class="card @(activity.Status == ActivityStatus.Open ? "border-success" : "") shadow-sm">
-   <div class="card-body">
-    <div class="d-flex justify-content-between align-items-start mb-2">
-    <div class="d-flex align-items-center gap-2">
-        <span class="badge bg-light text-dark">#@activity.Order</span>
-             <strong class="fw-semibold">@activity.Type</strong>
-  </div>
-   @if (activity.Status == ActivityStatus.Open)
-      {
-      <span class="badge bg-success">
-   <span class="pulse-dot me-1"></span>Live
-        </span>
-     }
-        else if (activity.Status == ActivityStatus.Closed)
-    {
-  <span class="badge bg-secondary">Completed</span>
-  }
-      else
-    {
-    <span class="badge bg-light text-dark">Pending</span>
-   }
-    </div>
-     <h6 class="mb-2">@activity.Title</h6>
-          @if (!string.IsNullOrEmpty(activity.Prompt))
-        {
-      <p class="small text-muted mb-3">@activity.Prompt</p>
-  }
-
-    <!-- Activity Actions -->
-     <div class="d-flex gap-2 align-items-center">
-   @if (activity.Status == ActivityStatus.Pending)
-     {
-         <button class="btn btn-sm btn-outline-secondary"
-     @onclick="@(() => OnEditActivity.InvokeAsync(activity))">
-    <i class="fas fa-edit me-1"></i>Edit
-     </button>
-    <!-- Only show Open if no other activity is open -->
- @if (CurrentActivity == null)
-        {
- <button class="btn btn-sm btn-success"
-       @onclick="@(() => OnOpenActivity.InvokeAsync(activity.ActivityId))"
- disabled="@IsPerformingAction">
-  <i class="fas fa-play me-1"></i>
-         @(IsPerformingAction ? "Opening..." : "Start Activity")
-     </button>
-   }
-    else
-    {
-       <span class="text-muted small">
-       <i class="fas fa-lock me-1"></i>Close current activity first
-            </span>
-     }
-    }
-   else if (activity.Status == ActivityStatus.Open)
-       {
-    <!-- Current activity controls shown in top section -->
-   <span class="text-success small">
-<i class="fas fa-play-circle me-1"></i>Currently active
-  </span>
-     }
-       else
-       {
-       <!-- Closed activity -->
-      <button class="btn btn-sm btn-outline-primary"
- @onclick="@(() => OnReopenActivity.InvokeAsync(activity.ActivityId))"
-   disabled="@IsPerformingAction">
-        <i class="fas fa-redo me-1"></i>
-@(IsPerformingAction ? "Reopening..." : "Reopen")
-  </button>
- <a href="/facilitator/dashboards" class="btn btn-sm btn-outline-secondary">
-<i class="fas fa-chart-bar me-1"></i>Results
-  </a>
-     }
-        </div>
-   </div>
+   <div class="activity-card @(activity.Status == ActivityStatus.Open ? "activity-live" : "") @(activity.Status == ActivityStatus.Closed ? "activity-completed" : "")" 
+        style="border: 2px solid @(activity.Status == ActivityStatus.Closed ? "#10b981" : "#e5e7eb"); border-radius: 12px; padding: 1.25rem; position: relative; overflow: hidden; transition: all 0.3s ease; background: @(activity.Status == ActivityStatus.Closed ? "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)" : "white");">
+       
+       <!-- Left accent border -->
+       <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: @(activity.Status == ActivityStatus.Closed ? "linear-gradient(180deg, #10b981 0%, #14b8a6 100%)" : "linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%)");"></div>
+       
+       <!-- Header -->
+       <div class="d-flex justify-content-between align-items-start mb-2" style="margin-left: 0.5rem;">
+           <div class="flex-grow-1">
+               <div class="d-flex align-items-center gap-2 mb-2">
+                   <span class="badge fw-bold" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 0.4rem 0.7rem; border-radius: 8px; min-width: 40px; text-align: center;">#@(index + 1)</span>
+                   <span class="badge" style="@GetActivityTypeBadgeStyle(activity.Type)">
+                       @GetActivityTypeIcon(activity.Type) @activity.Type
+                   </span>
+               </div>
+               <h6 class="fw-bold mb-1" style="color: #1a1a2e; font-size: 1.15rem;">@activity.Title</h6>
+               @if (!string.IsNullOrEmpty(activity.Prompt))
+               {
+                   <p class="text-muted mb-0" style="font-size: 0.9rem;">@activity.Prompt</p>
+               }
+           </div>
+           
+           <div class="flex-shrink-0 ms-3">
+               @if (activity.Status == ActivityStatus.Open)
+               {
+                   <span class="badge" style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); color: white; padding: 0.5rem 1rem; font-size: 0.85rem;">
+                       <span style="display: inline-block; width: 8px; height: 8px; background: white; border-radius: 50%; margin-right: 0.5rem; animation: pulse 2s infinite;"></span>
+                       Live
+                   </span>
+               }
+               else if (activity.Status == ActivityStatus.Closed)
+               {
+                   <span class="badge" style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); color: white; padding: 0.5rem 1rem; font-size: 0.85rem;">
+                       <span style="display: inline-block; width: 8px; height: 8px; background: white; border-radius: 50%; margin-right: 0.5rem;"></span>
+                       Completed
+                   </span>
+               }
+               else
+               {
+                   <span class="badge" style="background: #fef3c7; color: #f59e0b; padding: 0.5rem 1rem; font-size: 0.85rem;">
+                       <span style="display: inline-block; width: 8px; height: 8px; background: currentColor; border-radius: 50%; margin-right: 0.5rem;"></span>
+                       Pending
+                   </span>
+               }
+           </div>
        </div>
+       
+       <!-- Footer -->
+       <div class="d-flex justify-content-between align-items-center mt-3 pt-3" style="border-top: 2px solid #f3f4f6; margin-left: 0.5rem;">
+           <div class="d-flex gap-3">
+               @if (activity.DurationMinutes.HasValue)
+               {
+                   <span class="d-flex align-items-center gap-1 text-muted" style="font-size: 0.9rem; font-weight: 600;">
+                       <i class="far fa-clock" style="color: #6366f1;"></i>
+                       @activity.DurationMinutes min
+                   </span>
+               }
+               @if (!string.IsNullOrEmpty(activity.Config))
+               {
+                   @switch (activity.Type)
+                   {
+                       case ActivityType.Poll:
+                           try
+                           {
+                               var pollConfig = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
+                               if (pollConfig.TryGetProperty("options", out var options) && options.ValueKind == System.Text.Json.JsonValueKind.Array)
+                               {
+                                   <span class="d-flex align-items-center gap-1 text-muted" style="font-size: 0.9rem; font-weight: 600;">
+                                       <i class="far fa-list-alt" style="color: #6366f1;"></i>
+                                       @options.GetArrayLength() options
+                                   </span>
+                               }
+                           }
+                           catch { }
+                           break;
+                       case ActivityType.WordCloud:
+                           try
+                           {
+                               var wcConfig = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
+                               if (wcConfig.TryGetProperty("maxSubmissionsPerParticipant", out var maxSub))
+                               {
+                                   <span class="d-flex align-items-center gap-1 text-muted" style="font-size: 0.9rem; font-weight: 600;">
+                                       <i class="far fa-comment" style="color: #6366f1;"></i>
+                                       Max @maxSub.GetInt32()
+                                   </span>
+                               }
+                           }
+                           catch { }
+                           break;
+                       case ActivityType.Rating:
+                           try
+                           {
+                               var ratingConfig = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
+                               if (ratingConfig.TryGetProperty("maxRating", out var maxRating))
+                               {
+                                   <span class="d-flex align-items-center gap-1 text-muted" style="font-size: 0.9rem; font-weight: 600;">
+                                       <i class="far fa-star" style="color: #f59e0b;"></i>
+                                       1-@maxRating.GetInt32()
+                                   </span>
+                               }
+                           }
+                           catch { }
+                           break;
+                   }
+               }
+           </div>
+           
+           <div class="d-flex gap-2">
+            @if (activity.Status == ActivityStatus.Pending)
+            {
+                <button class="btn btn-sm" style="background: #f3f4f6; color: #6366f1; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; transition: all 0.3s ease;"
+                    @onclick="@(() => OnEditActivity.InvokeAsync(activity))">
+                    <i class="fas fa-edit me-1"></i>Edit
+                </button>
+                @if (CurrentActivity == null)
+                {
+                    <button class="btn btn-sm" style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; transition: all 0.3s ease;"
+                        @onclick="@(() => OnOpenActivity.InvokeAsync(activity.ActivityId))"
+                        disabled="@IsPerformingAction">
+                        <i class="fas fa-play me-1"></i>
+                        @(IsPerformingAction ? "Starting..." : "Start")
+                    </button>
+                }
+                else
+                {
+                    <span class="text-muted small">
+                        <i class="fas fa-lock me-1"></i>Close current first
+                    </span>
+                }
+            }
+            else if (activity.Status == ActivityStatus.Open)
+            {
+                <span class="text-success small fw-semibold">
+                    <i class="fas fa-play-circle me-1"></i>Currently active
+                </span>
+            }
+            else
+            {
+                <button class="btn btn-sm" style="background: #f3f4f6; color: #6366f1; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; transition: all 0.3s ease;"
+                    @onclick="@(() => OnReopenActivity.InvokeAsync(activity.ActivityId))"
+                    disabled="@IsPerformingAction">
+                    <i class="fas fa-redo me-1"></i>
+                    @(IsPerformingAction ? "Reopening..." : "Reopen")
+                </button>
+                <a href="/facilitator/dashboards" class="btn btn-sm" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">
+                    <i class="fas fa-chart-bar me-1"></i>Results
+                </a>
+            }
+        </div>
+    </div>
+   </div>
    }
  </div>
         }
@@ -156,4 +231,30 @@
 
     [Parameter]
     public EventCallback<string> OnAddActivity { get; set; }
+
+    private string GetActivityTypeIcon(ActivityType type) => type switch
+    {
+        ActivityType.Poll => "📊",
+        ActivityType.WordCloud => "☁️",
+        ActivityType.Quadrant => "📈",
+        ActivityType.FiveWhys => "🔍",
+        ActivityType.Rating => "⭐",
+        ActivityType.GeneralFeedback => "💬",
+        ActivityType.Quiz => "❓",
+        ActivityType.QnA => "💡",
+        _ => "📋"
+    };
+
+    private string GetActivityTypeBadgeStyle(ActivityType type) => type switch
+    {
+        ActivityType.Poll => "background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;",
+        ActivityType.WordCloud => "background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;",
+        ActivityType.Quadrant => "background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;",
+        ActivityType.FiveWhys => "background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;",
+        ActivityType.Rating => "background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;",
+        ActivityType.GeneralFeedback => "background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;",
+        ActivityType.Quiz => "background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: white; padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;",
+        ActivityType.QnA => "background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;",
+        _ => "background: #9ca3af; color: white; padding: 0.4rem 0.7rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;"
+    };
 }

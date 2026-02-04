@@ -2,48 +2,71 @@
 @using TechWayFit.Pulse.Contracts.Enums
 
 <!-- Session Information -->
-<div class="card border-0 shadow-sm mb-3">
-    <div class="card-body p-3">
-  <h6 class="fw-semibold mb-3">Session Information</h6>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <h6 class="fw-bold mb-4" style="color: #1a1a2e; font-size: 1.1rem;">Session Overview</h6>
 
- <div class="row g-3">
-       <div class="col-6 col-md-3">
-         <div class="d-flex align-items-center gap-2">
-     <i class="fas fa-users text-primary"></i>
-          <div class="d-flex align-items-baseline gap-1">
-   <span class="h5 mb-0 text-primary">@ParticipantCount</span>
-   <small class="text-muted">Participants</small>
-           </div>
-     </div>
-       </div>
-  <div class="col-6 col-md-3">
-      <div class="d-flex align-items-center gap-2">
-      <i class="fas fa-tasks text-info"></i>
-    <div class="d-flex align-items-baseline gap-1">
-     <span class="h5 mb-0 text-info">@Activities.Count</span>
-    <small class="text-muted">Activities</small>
-       </div>
-    </div>
-</div>
-<div class="col-6 col-md-3">
-  <div class="d-flex align-items-center gap-2">
-      <i class="fas fa-play-circle text-success"></i>
-     <div class="d-flex align-items-baseline gap-1">
-  <span class="h5 mb-0 text-success">@Activities.Count(a => a.Status == ActivityStatus.Open)</span>
-     <small class="text-muted">Active</small>
-    </div>
-</div>
+        <div class="row g-3">
+            <!-- Participants Card -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-left: 4px solid #3b82f6; border-radius: 12px; padding: 1.25rem;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-users" style="color: white; font-size: 1.25rem;"></i>
+                        </div>
+                        <div>
+                            <div class="h4 mb-0 fw-bold" style="color: #1e40af;">@ParticipantCount</div>
+                            <small class="text-muted fw-semibold">Participants</small>
+                        </div>
+                    </div>
+                </div>
             </div>
-        <div class="col-6 col-md-3">
-<div class="d-flex align-items-center gap-2">
-          <i class="fas fa-check-circle text-secondary"></i>
-      <div class="d-flex align-items-baseline gap-1">
-     <span class="h5 mb-0 text-secondary">@Activities.Count(a => a.Status == ActivityStatus.Closed)</span>
-      <small class="text-muted">Completed</small>
-    </div>
-    </div>
-      </div>
-      </div>
+
+            <!-- Total Activities Card -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-left: 4px solid #8b5cf6; border-radius: 12px; padding: 1.25rem;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-tasks" style="color: white; font-size: 1.25rem;"></i>
+                        </div>
+                        <div>
+                            <div class="h4 mb-0 fw-bold" style="color: #6d28d9;">@Activities.Count</div>
+                            <small class="text-muted fw-semibold">Activities</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Card -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-left: 4px solid #10b981; border-radius: 12px; padding: 1.25rem;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-play-circle" style="color: white; font-size: 1.25rem;"></i>
+                        </div>
+                        <div>
+                            <div class="h4 mb-0 fw-bold" style="color: #047857;">@Activities.Count(a => a.Status == ActivityStatus.Open)</div>
+                            <small class="text-muted fw-semibold">Active</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed Card -->
+            <div class="col-6 col-md-3">
+                <div class="stat-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-left: 4px solid #64748b; border-radius: 12px; padding: 1.25rem;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #64748b 0%, #475569 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-check-circle" style="color: white; font-size: 1.25rem;"></i>
+                        </div>
+                        <div>
+                            <div class="h4 mb-0 fw-bold" style="color: #334155;">@Activities.Count(a => a.Status == ActivityStatus.Closed)</div>
+                            <small class="text-muted fw-semibold">Completed</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
