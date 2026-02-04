@@ -20,6 +20,7 @@ public partial class Live : IAsyncDisposable
   [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = default!;
     [Inject] private IClientTokenService TokenService { get; set; } = default!;
     [Inject] private ILogger<Live> Logger { get; set; } = default!;
+    [Inject] private IWebHostEnvironment Environment { get; set; } = default!;
 
     [SupplyParameterFromQuery]
     public string? Code { get; set; }
@@ -42,6 +43,7 @@ public partial class Live : IAsyncDisposable
     private bool _hasAiInsight = false;
     private DateTimeOffset _aiInsightTimestamp;
     private int timerDurationInput = 5;
+    private string activityModalsHtml = string.Empty;
 
     // Modal component references
     private EditSessionModal? editSessionModal;
@@ -49,6 +51,7 @@ public partial class Live : IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
   {
+      await LoadActivityModalsHtml();
       await LoadSession();
     await EnsureFacilitatorAuthentication();
     }
@@ -58,6 +61,32 @@ public partial class Live : IAsyncDisposable
         if (firstRender)
         {
           await InitializePageAsync();
+        }
+    }
+    
+    private async Task InitializeActivityManager()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(sessionCode))
+            {
+                Logger.LogWarning("Cannot initialize activity manager - session code is empty");
+                return;
+            }
+            
+            // Get the facilitator token
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                Logger.LogWarning("No facilitator token available for session {SessionCode}", sessionCode);
+            }
+            
+            Logger.LogDebug("Initializing activity manager with session code: {SessionCode}", sessionCode);
+            await JS.InvokeVoidAsync("initializeLiveActivityManager", sessionCode, token ?? "");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to initialize activity manager");
         }
     }
 
@@ -142,6 +171,34 @@ public partial class Live : IAsyncDisposable
         window.initActivityTimer();
         ");
     }
+
+    #region Activity Modals Loading
+
+    private async Task LoadActivityModalsHtml()
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient();
+            httpClient.BaseAddress = new Uri(Navigation.BaseUri);
+            var response = await httpClient.GetAsync("/facilitator/activity-modals");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                activityModalsHtml = await response.Content.ReadAsStringAsync();
+                Logger.LogDebug("Loaded activity modals HTML ({Length} characters)", activityModalsHtml.Length);
+            }
+            else
+            {
+                Logger.LogWarning("Failed to load activity modals: {StatusCode}", response.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading activity modals HTML");
+        }
+    }
+
+    #endregion
 
     #region Authentication
 
@@ -233,6 +290,9 @@ Logger.LogWarning("Live page accessed without facilitator token for session {Ses
 
           // Setup SignalR connection for real-time updates
        await SetupSignalRConnection();
+       
+       // Initialize activity manager now that session code is set
+       await InitializeActivityManager();
 }
         catch (Exception ex)
       {
@@ -895,6 +955,13 @@ Config = currentActivity.Config,
             editActivityModal.Activity = activity;
             editActivityModal.Show();
         }
+    }
+
+    private async Task ShowAddActivityModal(string activityType)
+    {
+        // Modal is opened via HTML data-bs-toggle, this just logs
+        Logger.LogDebug("Add activity modal triggered for type: {ActivityType}", activityType);
+        await Task.CompletedTask;
     }
 
     private async Task HandleSessionUpdated()

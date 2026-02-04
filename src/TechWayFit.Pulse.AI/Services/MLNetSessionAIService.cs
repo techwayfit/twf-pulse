@@ -10,6 +10,8 @@ using Microsoft.ML.Data;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
+using TechWayFit.Pulse.Contracts.Models;
+using TechWayFit.Pulse.Domain.Entities;
 
 namespace TechWayFit.Pulse.AI.Services
 {
@@ -476,5 +478,31 @@ namespace TechWayFit.Pulse.AI.Services
 
         // Domain information record
         private record DomainInfo(string[] Keywords, string[] Activities);
+
+        public Task<IReadOnlyList<AgendaActivityResponse>> GenerateAndAddActivitiesToSessionAsync(
+            Session session,
+            string? additionalContext,
+            string? workshopType,
+            int targetActivityCount,
+            CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("ML.NET Service: Generating activities for existing session {SessionId}", session.Id);
+
+            // Build a request from session data
+            var request = new CreateSessionRequest
+            {
+                Title = session.Title,
+                Goal = session.Goal,
+                Context = additionalContext ?? session.Context,
+                GenerationContext = new SessionGenerationContextDto
+                {
+                    WorkshopType = workshopType ?? "general",
+                    DurationMinutes = targetActivityCount * 5 // Approximate duration based on activity count
+                }
+            };
+
+            // Use existing generation logic
+            return GenerateSessionActivitiesAsync(request, cancellationToken);
+        }
     }
 }

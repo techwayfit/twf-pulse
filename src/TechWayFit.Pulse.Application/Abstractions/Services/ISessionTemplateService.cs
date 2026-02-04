@@ -57,6 +57,15 @@ public interface ISessionTemplateService
     Task DeleteTemplateAsync(Guid templateId, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Apply activity set from template to an existing session
+    /// This adds only activities from the template, not session metadata
+    /// </summary>
+    Task ApplyActivitySetToSessionAsync(
+        Guid templateId,
+        Guid sessionId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Create a session from a template with optional customizations
     /// </summary>
     Task<Session> CreateSessionFromTemplateAsync(

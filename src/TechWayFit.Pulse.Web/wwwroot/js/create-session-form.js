@@ -416,8 +416,9 @@ if (nameLabel) {
         const result = await response.json();
       console.log('Session created successfully:', result);
         
-        // Extract code from the wrapped API response
+        // Extract code and id from the wrapped API response
  const sessionCode = result.data?.code || result.code;
+ const sessionId = result.data?.sessionId || result.sessionId;
   
         if (!sessionCode) {
             console.error('No session code in response:', result);
@@ -425,7 +426,8 @@ if (nameLabel) {
             return;
         }
         
-        window.location.href = `/facilitator/live?code=${sessionCode}`;
+        // Redirect to Add Activities page instead of going live
+        window.location.href = `/facilitator/add-activities?code=${sessionCode}`;
     } else {
         const error = await response.json();
         console.error('API error:', error);

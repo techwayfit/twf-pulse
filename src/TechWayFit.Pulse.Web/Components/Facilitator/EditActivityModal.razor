@@ -2,6 +2,7 @@
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Enums
 @using TechWayFit.Pulse.Web.Services
+@using System.Text.Json
 @inject IPulseApiService ApiService
 @inject ILogger<EditActivityModal> Logger
 
@@ -52,14 +53,65 @@
                             <div class="form-text">@(editModel.Prompt?.Length ?? 0) / 1000 characters</div>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="editActivityDuration" class="form-label">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="editActivityDuration" 
+                                   @bind="editModel.DurationMinutes" min="1" max="120" step="1">
+                            <div class="form-text">Recommended time for this activity</div>
+                        </div>
+
                         @if (!string.IsNullOrEmpty(Activity.Config))
                         {
-                            <div class="mb-3">
-                                <label for="editActivityConfig" class="form-label">Configuration (JSON)</label>
-                                <textarea class="form-control font-monospace" id="editActivityConfig" 
-                                          @bind="editModel.Config" rows="5"></textarea>
-                                <div class="form-text">Advanced: Activity-specific configuration</div>
-                            </div>
+                            @* Parse config and show user-friendly form based on activity type *@
+                            @if (Activity.Type == ActivityType.Poll)
+                            {
+                                <div class="card bg-light mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">📊 Poll Configuration</h6>
+                                        <p class="small text-muted">For advanced configuration, use the Activity Builder</p>
+                                        <div class="mb-2">
+                                            <strong>Poll Options:</strong>
+                                            <pre class="bg-white p-2 rounded small mt-1">@GetConfigDisplay()</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else if (Activity.Type == ActivityType.WordCloud)
+                            {
+                                <div class="card bg-light mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">☁️ Word Cloud Configuration</h6>
+                                        <pre class="bg-white p-2 rounded small">@GetConfigDisplay()</pre>
+                                    </div>
+                                </div>
+                            }
+                            else if (Activity.Type == ActivityType.Rating)
+                            {
+                                <div class="card bg-light mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">⭐ Rating Configuration</h6>
+                                        <pre class="bg-white p-2 rounded small">@GetConfigDisplay()</pre>
+                                    </div>
+                                </div>
+                            }
+                            else if (Activity.Type == ActivityType.Quadrant)
+                            {
+                                <div class="card bg-light mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">📈 Quadrant Configuration</h6>
+                                        <pre class="bg-white p-2 rounded small">@GetConfigDisplay()</pre>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="mb-3">
+                                    <label for="editActivityConfig" class="form-label">Configuration (JSON)</label>
+                                    <textarea class="form-control font-monospace" id="editActivityConfig" 
+                                              @bind="editModel.Config" rows="5"></textarea>
+                                    <div class="form-text">Advanced: Activity-specific configuration</div>
+                                </div>
+                            }
                         }
                     }
                     else
@@ -149,7 +201,8 @@
         {
             Title = Activity.Title,
             Prompt = Activity.Prompt,
-            Config = Activity.Config
+            Config = Activity.Config,
+            DurationMinutes = Activity.DurationMinutes
         };
 
         IsVisible = true;
@@ -162,6 +215,27 @@
         IsVisible = false;
         errorMessage = null;
         StateHasChanged();
+    }
+
+    private string GetConfigDisplay()
+    {
+        if (string.IsNullOrEmpty(Activity?.Config))
+            return "No configuration";
+
+        try
+        {
+            using var doc = JsonDocument.Parse(Activity.Config);
+            var options = new JsonSerializerOptions 
+            { 
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+            return JsonSerializer.Serialize(doc.RootElement, options);
+        }
+        catch
+        {
+            return Activity.Config;
+        }
     }
 
     private async Task SaveChanges()

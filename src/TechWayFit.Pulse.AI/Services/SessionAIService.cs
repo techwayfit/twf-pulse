@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -17,6 +18,7 @@ using TechWayFit.Pulse.Contracts.Models;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
 using TechWayFit.Pulse.Contracts.Enums;
+using TechWayFit.Pulse.Domain.Entities;
 
 namespace TechWayFit.Pulse.AI.Services
 {
@@ -28,6 +30,7 @@ namespace TechWayFit.Pulse.AI.Services
         private readonly ISessionAIService _mock;
         private readonly ActivityDefaultsOptions _activityDefaults;
         private readonly IAiQuotaService? _quotaService;
+        private readonly IActivityService? _activityService;
 
         public SessionAIService(IHttpClientFactory httpClientFactory, IConfiguration configuration, 
         IServiceProvider serviceProvider,
@@ -41,6 +44,7 @@ namespace TechWayFit.Pulse.AI.Services
             
             // Quota service is optional (may not be registered in all environments)
             _quotaService = serviceProvider.GetService<IAiQuotaService>();
+            _activityService = serviceProvider.GetService<IActivityService>();
         }
 
         public async Task<IReadOnlyList<AgendaActivityResponse>> GenerateSessionActivitiesAsync(CreateSessionRequest request, CancellationToken cancellationToken = default)
@@ -597,6 +601,58 @@ Return ONLY a valid JSON array. No markdown, no explanation.";
                 ActivityType.GeneralFeedback => JsonSerializer.Serialize(new { MaxResponsesPerParticipant = _activityDefaults.GeneralFeedback.MaxResponsesPerParticipant }),
                 _ => "{}"
             };
+        }
+
+        public async Task<IReadOnlyList<AgendaActivityResponse>> GenerateAndAddActivitiesToSessionAsync(
+            Session session,
+            string? additionalContext,
+            string? workshopType,
+            int targetActivityCount,
+            CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Generating activities for existing session {SessionId}", session.Id);
+
+            // Build a simplified request for AI generation
+            var request = new CreateSessionRequest
+            {
+                Title = session.Title,
+                Goal = session.Goal,
+                Context = additionalContext ?? session.Context,
+                GenerationContext = new SessionGenerationContextDto
+                {
+                    WorkshopType = workshopType ?? "general",
+                    DurationMinutes = targetActivityCount * 5 // Approximate duration based on activity count
+                }
+            };
+
+            // Generate activities using existing method
+            var generatedActivities = await GenerateSessionActivitiesAsync(request, cancellationToken);
+
+            // Add activities to the session if activityService is available
+            if (_activityService != null)
+            {
+                int order = 1;
+                foreach (var activity in generatedActivities)
+                {
+                    // Convert from Contracts.Enums to Domain.Enums
+                    var domainActivityType = (Domain.Enums.ActivityType)(int)activity.Type;
+                    
+                    await _activityService.AddActivityAsync(
+                        session.Id,
+                        order++,
+                        domainActivityType,
+                        activity.Title,
+                        activity.Prompt,
+                        activity.Config,
+                        activity.DurationMinutes ?? 5,
+                        cancellationToken);
+                }
+
+                _logger.LogInformation("Successfully added {Count} activities to session {SessionId}", 
+                    generatedActivities.Count, session.Id);
+            }
+
+            return generatedActivities;
         }
     }
 }

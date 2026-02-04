@@ -5,9 +5,12 @@
 @using TechWayFit.Pulse.Web.Components.Facilitator
 @using TechWayFit.Pulse.Web.Components.Shared
 @rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Live Session — TechWayFit Pulse</PageTitle>
 
 <main class="py-5" style="min-height: calc(100vh - 200px); margin-bottom: 2rem;">
-    <!-- Constrained Container -->
+    @* Constrained Container *@
     <div class="container" style="max-width: 1200px;">
 
         @if (isLoading)
@@ -102,7 +105,8 @@
                                 IsPerformingAction="@isPerformingAction"
                                 OnEditActivity="@ShowEditActivityModal"
                                 OnOpenActivity="@OpenActivity"
-                                OnReopenActivity="@ReopenActivity" />
+                                OnReopenActivity="@ReopenActivity"
+                                OnAddActivity="@ShowAddActivityModal" />
         }
     </div>
 </main>
@@ -116,3 +120,11 @@
                    SessionCode="@sessionCode"
                    OnActivityUpdated="HandleActivityUpdated"
                    OnActivityDeleted="HandleActivityDeleted" />
+
+@* Activity creation modals - server-side include *@
+@if (!string.IsNullOrEmpty(activityModalsHtml))
+{
+    @((MarkupString)activityModalsHtml)
+}
+
+

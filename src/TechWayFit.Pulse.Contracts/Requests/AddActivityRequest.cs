@@ -4,7 +4,7 @@ namespace TechWayFit.Pulse.Contracts.Requests;
 
 public sealed class AddActivityRequest
 {
-    public int Order { get; set; }
+    public int? Order { get; set; }
 
     public ActivityType Type { get; set; }
 

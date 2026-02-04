@@ -339,9 +339,17 @@ public sealed class SessionsController : ControllerBase
                 return authError;
             }
 
+            // Auto-assign order if not provided (append to end)
+            var order = request.Order;
+            if (!order.HasValue || order.Value <= 0)
+            {
+                var existingActivities = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+                order = existingActivities.Count + 1;
+            }
+
             var activity = await _activities.AddActivityAsync(
                 session.Id,
-                        request.Order,
+                order.Value,
             ApiMapper.MapActivityType(request.Type),
                       request.Title,
             request.Prompt,

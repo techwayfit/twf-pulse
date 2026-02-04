@@ -104,46 +104,31 @@
   }
     </div>
 
-    <!-- Add Activity Button -->
-    <div class="dropup w-100 mt-4 mb-5">
-        <button class="btn btn-primary pulse-btn-primary w-100 dropdown-toggle"
-    type="button"
-       id="addActivityDropdown"
-      data-bs-toggle="dropdown"
-         aria-expanded="false">
-      <i class="fas fa-plus me-2"></i>Add Activity
-        </button>
-        <ul class="dropdown-menu w-100" aria-labelledby="addActivityDropdown">
-  <li>
-    <a class="dropdown-item" href="/facilitator/activities/create-poll?code=@SessionCode">
-   <strong>?? Poll</strong>
- <br />
-    <small class="text-muted">Single or multiple choice question</small>
-       </a>
-    </li>
-        <li><hr class="dropdown-divider" /></li>
- <li>
-      <a class="dropdown-item" href="/facilitator/activities/create-rating?code=@SessionCode">
-     <strong>? Rating</strong>
-      <br />
-        <small class="text-muted">Numeric scale rating</small>
-    </a>
-       </li>
-         <li>
-       <a class="dropdown-item" href="/facilitator/activities/create-wordcloud?code=@SessionCode">
-  <strong>?? Word Cloud</strong>
-     <br />
-        <small class="text-muted">Short text responses</small>
-       </a>
-       </li>
-  <li>
-     <a class="dropdown-item" href="/facilitator/activities/create-feedback?code=@SessionCode">
-      <strong>?? General Feedback</strong>
- <br />
-    <small class="text-muted">Long-form text responses</small>
- </a>
-   </li>
-   </ul>
+    <!-- Add Activity Buttons -->
+    <div class="border-top pt-4 mt-4 pb-3">
+        <div class="text-center mb-4">
+            <h6 class="text-muted mb-0">Add New Activity</h6>
+        </div>
+        <div class="d-flex flex-wrap gap-3 justify-content-center px-3">
+            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#pollModal" @onclick='() => OnAddActivity.InvokeAsync("Poll")'>
+                <span class="me-1">📊</span>Poll
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#wordcloudModal" @onclick='() => OnAddActivity.InvokeAsync("WordCloud")'>
+                <span class="me-1">☁️</span>Word Cloud
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#quadrantModal" @onclick='() => OnAddActivity.InvokeAsync("Quadrant")'>
+                <span class="me-1">📈</span>Quadrant
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#fivewhysModal" @onclick='() => OnAddActivity.InvokeAsync("FiveWhys")'>
+                <span class="me-1">🔍</span>5 Whys
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#ratingModal" @onclick='() => OnAddActivity.InvokeAsync("Rating")'>
+                <span class="me-1">⭐</span>Rating
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal" data-bs-target="#feedbackModal" @onclick='() => OnAddActivity.InvokeAsync("Feedback")'>
+                <span class="me-1">💬</span>Feedback
+            </button>
+        </div>
     </div>
 </div>
 
@@ -168,4 +153,7 @@
 
     [Parameter]
     public EventCallback<Guid> OnReopenActivity { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnAddActivity { get; set; }
 }

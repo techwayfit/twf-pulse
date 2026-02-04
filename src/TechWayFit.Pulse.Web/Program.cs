@@ -320,6 +320,9 @@ try
         app.UseDeveloperExceptionPage();
     }
 
+    // Handle status code errors (404, 403, etc.) - must be before UseStaticFiles
+    app.UseStatusCodePagesWithReExecute("/Error/{0}");
+
     // Important: UseHttpsRedirection should come before UseStaticFiles
     app.UseHttpsRedirection();
 

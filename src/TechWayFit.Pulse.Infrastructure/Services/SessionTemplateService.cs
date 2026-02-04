@@ -261,6 +261,38 @@ public sealed class SessionTemplateService : ISessionTemplateService
         return session;
     }
 
+    public async Task ApplyActivitySetToSessionAsync(
+        Guid templateId,
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        var config = await GetTemplateConfigAsync(templateId, cancellationToken);
+        if (config == null)
+        {
+            throw new InvalidOperationException($"Template {templateId} not found or has invalid configuration");
+        }
+
+        // Add activities from template to existing session
+        foreach (var activityConfig in config.Activities.OrderBy(a => a.Order))
+        {
+            var activityConfigJson = activityConfig.Config != null
+                ? SerializeActivityConfig(activityConfig.Type, activityConfig.Config)
+                : null;
+
+            await _activityService.AddActivityAsync(
+                sessionId,
+                activityConfig.Order,
+                activityConfig.Type,
+                activityConfig.Title,
+                activityConfig.Prompt,
+                activityConfigJson,
+                activityConfig.DurationMinutes,
+                cancellationToken);
+        }
+
+        _logger.LogInformation("Applied activity set from template {TemplateId} to session {SessionId}", templateId, sessionId);
+    }
+
     public async Task InitializeSystemTemplatesAsync(CancellationToken cancellationToken = default)
     {
         await InitializeSystemTemplatesAsync(null, cancellationToken);

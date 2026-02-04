@@ -1,0 +1,199 @@
+@{
+    ViewData["Title"] = "Add Activities — TechWayFit Pulse";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/add-activities.css" asp-append-version="true" />
+}
+
+<main class="py-5">
+    <div class="container" style="max-width: 1200px;">
+        <!-- Header -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 text-muted mb-2">
+                <a href="/facilitator/dashboard" class="text-decoration-none text-muted">← Back to Dashboard</a>
+            </div>
+            <h2 class="mb-2">Add Activities</h2>
+            <p class="text-muted mb-0">Choose how you want to create activities for your session</p>
+        </div>
+
+        <!-- Session Info Badge -->
+        <div class="alert alert-info border-0 d-flex align-items-center gap-3 mb-4">
+            <div class="fs-4">📋</div>
+            <div class="flex-grow-1">
+                <div class="fw-semibold mb-1">Session: <span id="sessionTitle">@ViewData["SessionTitle"]</span></div>
+                <small class="text-muted">Code: <strong id="sessionCode">@ViewData["SessionCode"]</strong></small>
+            </div>
+        </div>
+
+        <!-- Hidden fields for JavaScript -->
+        <input type="hidden" id="hiddenSessionCode" value="@ViewData["SessionCode"]" />
+        <input type="hidden" id="hiddenSessionId" value="@ViewData["SessionId"]" />
+
+        <!-- Activity Creation Modes (Tabs) -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom-0 pt-4 px-4">
+                <ul class="nav nav-tabs card-header-tabs" id="activityModeTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-panel" type="button" role="tab">
+                            <span class="me-2">✏️</span>Manual
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="template-tab" data-bs-toggle="tab" data-bs-target="#template-panel" type="button" role="tab">
+                            <span class="me-2">📋</span>From Template
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai-panel" type="button" role="tab">
+                            <span class="me-2">🧠</span>AI Generate
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="tab-content" id="activityModeTabContent">
+                    <!-- Manual Mode -->
+                    <div class="tab-pane fade show active" id="manual-panel" role="tabpanel">
+                        <div class="py-4">
+                            <div class="text-center mb-4">
+                                <div class="fs-1 mb-3">✏️</div>
+                                <h5 class="mb-2">Add Activities Manually</h5>
+                                <p class="text-muted mb-0">Choose from different activity types to build your session</p>
+                            </div>
+                            
+                            <div class="d-flex flex-wrap gap-3 justify-content-center mb-4">
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#pollModal">
+                                    <span class="me-2">📊</span>Poll
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#wordcloudModal">
+                                    <span class="me-2">☁️</span>Word Cloud
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#quadrantModal">
+                                    <span class="me-2">📈</span>Quadrant Matrix
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#fivewhysModal">
+                                    <span class="me-2">🔍</span>5 Whys
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#ratingModal">
+                                    <span class="me-2">⭐</span>Rating
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                                    <span class="me-2">💬</span>General Feedback
+                                </button>
+                            </div>
+                            
+                            <!-- Activity List -->
+                            <div id="manualActivityList" class="mt-4">
+                                <div class="text-muted text-center small">No activities yet. Click a button above to add one.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Template Mode -->
+                    <div class="tab-pane fade" id="template-panel" role="tabpanel">
+                        <div class="text-center py-4">
+                            <div class="fs-1 mb-3">📋</div>
+                            <h5 class="mb-3">Choose a Template</h5>
+                            <p class="text-muted mb-4">Select a pre-configured activity set for your session</p>
+                            
+                            <!-- Template Browser -->
+                            <div id="templateList" class="row g-3">
+                                <div class="col-12 text-muted">Loading templates...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Mode -->
+                    <div class="tab-pane fade" id="ai-panel" role="tabpanel">
+                        <div class="py-4">
+                            <div class="text-center mb-4">
+                                <div class="fs-1 mb-3">🧠</div>
+                                <h5 class="mb-2">AI Activity Generator</h5>
+                                <p class="text-muted mb-0">Provide additional context to help AI generate relevant activities</p>
+                            </div>
+
+                            <form id="aiGenerateForm">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">Workshop Type</label>
+                                        <select class="form-select" id="aiWorkshopType">
+                                            <option value="">Select type...</option>
+                                            <option value="retrospective">Retrospective</option>
+                                            <option value="ops">Ops / Process Improvement</option>
+                                            <option value="discovery">Discovery</option>
+                                            <option value="incident">Incident Review</option>
+                                            <option value="feedback">Feedback Session</option>
+                                            <option value="planning">Planning</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">Number of Activities</label>
+                                        <select class="form-select" id="aiActivityCount">
+                                            <option value="3">3 activities</option>
+                                            <option value="4" selected>4 activities</option>
+                                            <option value="5">5 activities</option>
+                                            <option value="6">6 activities</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-medium">Additional Context (Optional)</label>
+                                        <textarea class="form-control" id="aiAdditionalContext" rows="4" 
+                                                  placeholder="Provide any additional context about the session, team, or specific topics you want to cover..."></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mt-4">
+                                    <button type="submit" class="btn btn-primary btn-lg px-5">
+                                        <span class="btn-text">
+                                            <span class="me-2">🧠</span>Generate Activities
+                                        </span>
+                                        <span class="btn-loading d-none">
+                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            Generating...
+                                        </span>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <!-- AI Generated Activities Preview -->
+                            <div id="aiGeneratedActivities" class="mt-4 d-none">
+                                <div class="border-top pt-4">
+                                    <h6 class="fw-semibold mb-3">Generated Activities</h6>
+                                    <div id="aiActivityList"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <button type="button" class="btn btn-outline-secondary px-4" onclick="skipActivities()">
+                        Skip (Go Live Now)
+                    </button>
+                    <button type="button" class="btn btn-primary px-5" onclick="goLive()" id="goLiveBtn" disabled>
+                        <span class="me-2">🚀</span>Save & Go Live
+                    </button>
+                </div>
+                <div class="text-center mt-3">
+                    <small class="text-muted" id="activityCountBadge">No activities added yet</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Activity Creation Modals -->
+@await Html.PartialAsync("_ActivityFormModals")
+
+@section Scripts {
+    <script src="~/js/add-activities.js" asp-append-version="true"></script>
+    <script src="~/js/activity-modals.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,198 @@
+@using TechWayFit.Pulse.Contracts.Requests
+@using TechWayFit.Pulse.Contracts.Enums
+@using System.Text.Json
+@inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
+
+<!-- Poll Activity Modal -->
+<div class="modal fade" id="pollModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📊 Create Poll Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="pollForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Activity Title *</label>
+                        <input type="text" class="form-control" id="pollTitle" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Prompt</label>
+                        <textarea class="form-control" id="pollPrompt" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Poll Options *</label>
+                        <div id="pollOptionsContainer"></div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addPollOption()">+ Add Option</button>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="pollDuration" value="5" min="1" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">Max Responses Per Participant</label>
+                            <input type="number" class="form-control" id="pollMaxResponses" value="1" min="1" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="pollAllowMultiple" />
+                            <label class="form-check-label" for="pollAllowMultiple">Allow multiple selections</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="savePollActivity()">Create Activity</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Word Cloud Activity Modal -->
+<div class="modal fade" id="wordcloudModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">☁️ Create Word Cloud Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="wordcloudForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Activity Title *</label>
+                        <input type="text" class="form-control" id="wcTitle" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Prompt</label>
+                        <textarea class="form-control" id="wcPrompt" rows="2"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">Max Words Per Response</label>
+                            <input type="number" class="form-control" id="wcMaxWords" value="3" min="1" max="10" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="wcDuration" value="5" min="1" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="wcAllowMultiple" />
+                            <label class="form-check-label" for="wcAllowMultiple">Allow multiple submissions</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveWordCloudActivity()">Create Activity</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rating Activity Modal -->
+<div class="modal fade" id="ratingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">⭐ Create Rating Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="ratingForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Activity Title *</label>
+                        <input type="text" class="form-control" id="ratingTitle" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Prompt</label>
+                        <textarea class="form-control" id="ratingPrompt" rows="2"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-medium">Scale Range</label>
+                            <select class="form-select" id="ratingScale">
+                                <option value="5">1-5</option>
+                                <option value="10" selected>1-10</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-medium">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="ratingDuration" value="5" min="1" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-medium">Max Responses</label>
+                            <input type="number" class="form-control" id="ratingMaxResponses" value="1" min="1" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">Low Label</label>
+                            <input type="text" class="form-control" id="ratingLowLabel" placeholder="Not at all" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">High Label</label>
+                            <input type="text" class="form-control" id="ratingHighLabel" placeholder="Extremely" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveRatingActivity()">Create Activity</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback Activity Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">💬 Create General Feedback Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="feedbackForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Activity Title *</label>
+                        <input type="text" class="form-control" id="feedbackTitle" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Prompt</label>
+                        <textarea class="form-control" id="feedbackPrompt" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="feedbackDuration" value="5" min="1" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">Max Responses Per Participant</label>
+                            <input type="number" class="form-control" id="feedbackMaxResponses" value="3" min="1" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveFeedbackActivity()">Create Activity</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string SessionCode { get; set; } = string.Empty;
+    
+    [Parameter]
+    public EventCallback OnActivityCreated { get; set; }
+}
