@@ -68,8 +68,8 @@ try
          options.LoginPath = "/account/login";
          options.LogoutPath = "/account/logout";
          options.AccessDeniedPath = "/account/login";
-         options.ExpireTimeSpan = TimeSpan.FromDays(30);
-         options.SlidingExpiration = true;
+         options.ExpireTimeSpan = TimeSpan.FromHours(8); // 8 hours of inactivity
+         options.SlidingExpiration = true; // Extends timeout on activity
          options.Cookie.Name = "TechWayFit.Pulse.Auth";
          options.Cookie.HttpOnly = true;
          options.Cookie.SecurePolicy = CookieSecurePolicy.Always;

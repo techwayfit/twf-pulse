@@ -64,60 +64,57 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="stat-cards-mobile-wrapper">
-            <div class="row g-3 g-md-4 mb-4">
-            <div class="col-6 col-lg-3">
-                <div class="stat-card stat-card-primary">
-                    <div class="stat-card-body">
-                        <div class="stat-card-content">
-                            <div class="stat-card-label">Total Sessions</div>
-                            <div class="stat-card-value">@Model.Count</div>
-                        </div>
-                        <div class="stat-card-icon text-primary">📊</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-6 col-lg-3">
-                <div class="stat-card stat-card-success">
-                    <div class="stat-card-body">
-                        <div class="stat-card-content">
-                            <div class="stat-card-label">Live Sessions</div>
-                            <div class="stat-card-value">@Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Live)</div>
-                        </div>
-                        <div class="stat-card-icon text-success">📡</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-6 col-lg-3">
-                <div class="stat-card stat-card-warning">
-                    <div class="stat-card-body">
-                        <div class="stat-card-content">
-                            <div class="stat-card-label">Draft Sessions</div>
-                            <div class="stat-card-value">@Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft)</div>
-                        </div>
-                        <div class="stat-card-icon text-warning">📝</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-6 col-lg-3">
-                @{
-                    var completedCount = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended);
-                    var isEmptyState = completedCount == 0;
+        @{
+            var statCards = new List<TechWayFit.Pulse.Web.Models.StatCardData>
+            {
+                new TechWayFit.Pulse.Web.Models.StatCardData
+                {
+                    Icon = "fas fa-folder",
+                    Value = Model.Count.ToString(),
+                    Label = "Total Sessions",
+                    BackgroundGradient = "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                    BorderColor = "#3b82f6",
+                    IconGradient = "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                    ValueColor = "#1e40af",
+                    IconShadowColor = "rgba(59, 130, 246, 0.3)"
+                },
+                new TechWayFit.Pulse.Web.Models.StatCardData
+                {
+                    Icon = "fas fa-broadcast-tower",
+                    Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Live).ToString(),
+                    Label = "Live Sessions",
+                    BackgroundGradient = "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                    BorderColor = "#10b981",
+                    IconGradient = "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                    ValueColor = "#047857",
+                    IconShadowColor = "rgba(16, 185, 129, 0.3)"
+                },
+                new TechWayFit.Pulse.Web.Models.StatCardData
+                {
+                    Icon = "fas fa-file-alt",
+                    Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft).ToString(),
+                    Label = "Draft Sessions",
+                    BackgroundGradient = "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+                    BorderColor = "#f59e0b",
+                    IconGradient = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                    ValueColor = "#b45309",
+                    IconShadowColor = "rgba(245, 158, 11, 0.3)"
+                },
+                new TechWayFit.Pulse.Web.Models.StatCardData
+                {
+                    Icon = "fas fa-check-circle",
+                    Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended).ToString(),
+                    Label = "Completed",
+                    BackgroundGradient = "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                    BorderColor = "#64748b",
+                    IconGradient = "linear-gradient(135deg, #64748b 0%, #475569 100%)",
+                    ValueColor = "#334155",
+                    IconShadowColor = "rgba(100, 116, 139, 0.3)"
                 }
-                <div class="stat-card stat-card-secondary @(isEmptyState ? "stat-card-empty" : "")">
-                    <div class="stat-card-body">
-                        <div class="stat-card-content">
-                            <div class="stat-card-label">Completed</div>
-                            <div class="stat-card-value">@completedCount</div>
-                        </div>
-                        <div class="stat-card-icon text-secondary">@(isEmptyState ? "🎯" : "✅")</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            };
+        }
+        <div class="stat-cards-mobile-wrapper mb-4">
+            @await Component.InvokeAsync("StatCards", new { cards = statCards })
         </div>
 
         <!-- Collapsible Search and Filter Bar -->

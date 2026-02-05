@@ -93,7 +93,7 @@ public partial class Live : IAsyncDisposable
     private async Task InitializePageAsync()
     {
         // Set page title
-        await JS.InvokeVoidAsync("eval", "document.title = 'TechWayFit Pulse � Live Session'");
+        await JS.InvokeVoidAsync("eval", "document.title = 'TechWayFit Pulse - Live Session'");
 
         // Initialize activity timer
         await JS.InvokeVoidAsync("eval", @"
