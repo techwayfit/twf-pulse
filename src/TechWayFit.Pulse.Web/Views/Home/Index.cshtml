@@ -4,10 +4,10 @@
 
 <main>
     <!-- Hero Section -->
-    <section class="py-5">
-        <div class="container" style="max-width: 1200px;">
+    <section class="py-5 hero-animated">
+        <div class="container container-wide">
             <div class="row min-vh-75 align-items-center">
-                <div class="col-lg-7">
+                <div class="col-lg-7 hero-content-animated">
                     <!-- Badge -->
                     <div class="mb-4">
                         <div class="hero-badge">
@@ -39,26 +39,31 @@
 
                     <!-- Feature Pills -->
                     <div class="d-flex flex-wrap gap-2">
-                        <span class="badge bg-white text-dark border px-3 py-2">✅ Anonymous optional</span>
-                        <span class="badge bg-white text-dark border px-3 py-2">⚡ Real-time dashboards</span>
-                        <span class="badge bg-white text-dark border px-3 py-2">🎯 "5 Whys" output</span>
-                        <span class="badge bg-success text-white px-3 py-2">🧠 AI-powered sessions</span>
+                        <span class="badge bg-white text-dark border px-3 py-2 feature-pill">
+                            <span class="me-1">✓</span>Anonymous optional
+                        </span>
+                        <span class="badge bg-white text-dark border px-3 py-2 feature-pill">
+                            <span class="me-1">📊</span>Real-time dashboards
+                        </span>
+                        <span class="badge bg-white text-dark border px-3 py-2 feature-pill">
+                            <span class="me-1">🎯</span>"5 Whys" output
+                        </span>
+                        <span class="badge bg-white text-dark border px-3 py-2 feature-pill">
+                            <span class="me-1">⚡</span>AI-powered sessions
+                        </span>
                     </div>
                 </div>
 
                 <!-- Hero Visual -->
-                <div class="col-lg-5 d-none d-lg-flex justify-content-center align-items-center">
-                    <div class="pulse-visual-container">
-                        <div class="pulse-animation"></div>
-                        <div class="pulse-meter">
-                            <svg viewBox="0 0 200 80" width="200" height="80">
-                                <polyline points="0,40 30,40 40,20 50,60 60,30 70,50 80,40 200,40"
-                                    fill="none"
-                                    stroke="white"
-                                    stroke-width="3"
-                                    class="pulse-line" />
-                            </svg>
-                        </div>
+                <div class="col-lg-5 d-none d-lg-flex justify-content-center align-items-center hero-visual-animated">
+                    <div class="gradient-orb">
+                        <svg class="pulse-overlay" viewBox="0 0 200 80" width="200" height="80">
+                            <polyline points="0,40 30,40 40,20 50,60 60,30 70,50 80,40 200,40"
+                                fill="none"
+                                stroke="white"
+                                stroke-width="3"
+                                class="animated-pulse-line" />
+                        </svg>
                     </div>
                 </div>
             </div>
@@ -67,7 +72,7 @@
 
     <!-- AI Capability Promotion Banner -->
     <section class="py-5">
-        <div class="container" style="max-width: 1200px;">
+        <div class="container container-wide">
             <div class="card border-0 shadow-sm overflow-hidden bg-white">
                 <div class="row g-0 align-items-stretch">
                     <div class="col-lg-7 order-lg-2">
@@ -126,7 +131,7 @@
 
     <!-- Templates Section -->
     <section class="py-5">
-        <div class="container" style="max-width: 1200px;">
+        <div class="container container-wide">
             <div class="bg-white bg-opacity-75 rounded-4 p-5">
                 <!-- Section Header -->
                 <div class="text-center mb-5">
