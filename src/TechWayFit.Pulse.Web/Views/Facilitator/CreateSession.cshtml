@@ -8,7 +8,7 @@
 
 <main class="py-5">
     <!-- Constrained Container -->
-    <div class="container" style="max-width: 1200px;">
+    <div class="container container-wide">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <div>
@@ -43,149 +43,186 @@
 
                     <!-- No tabs needed - single section -->
 
+                    <!-- Session Group (First field to avoid data loss on page refresh) -->
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Session Group</label>
+                        @{
+                            var groups = ViewData["Groups"] as IReadOnlyCollection<TechWayFit.Pulse.Domain.Entities.SessionGroup> ?? new List<TechWayFit.Pulse.Domain.Entities.SessionGroup>();
+                            var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
+                            
+                            foreach (TechWayFit.Pulse.Domain.Entities.SessionGroup group in groups)
+                            {
+                                treeItems.Add(new TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem
+                                {
+                                    Value = group.Id.ToString(),
+                                    Text = group.Name,
+                                    ParentValue = group.ParentGroupId?.ToString(),
+                                    Level = group.Level - 1,
+                                    HasChildren = groups.Any(g => g.ParentGroupId == group.Id),
+                                    Icon = group.Level == 1 ? "📁" : group.Level == 2 ? "📂" : "📄"
+                                });
+                            }
+                        }
+                        @await Component.InvokeAsync("TreeDropdown", new {
+                            id = "groupId",
+                            name = "groupId",
+                            placeholder = "No group (ungrouped)",
+                            items = treeItems,
+                            allowClear = true
+                        })
+                        @if (!groups.Any())
+                        {
+                            <div class="form-text">
+                                No groups yet. <a href="#" data-bs-toggle="modal" data-bs-target="#createGroupModal">Create your first group</a> to organize sessions.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="form-text">
+                                Optional: Organize your session into a group · 
+                                <a href="@Url.Action("Groups", "Facilitator", new { returnUrl = Url.Action("CreateSession", "Facilitator") })">Manage Groups</a>
+                            </div>
+                        }
+                    </div>
+
                     <!-- Session Details -->
                     <div class="mb-4">
-                                <label class="form-label fw-medium">Session title</label>
+                                <label class="form-label fw-medium" for="sessionTitle">Session title</label>
                                 <input class="form-control" name="sessionTitle" id="sessionTitle" required
+                                       maxlength="200"
                                        placeholder="e.g., Sprint Retrospective - Team Alpha" />
+                                <div class="text-end">
+                                    <span class="text-muted" style="font-size: 0.75rem;" id="titleCharCount">0 / 200</span>
+                                </div>
                             </div>
                             <div class="mb-4">
-                                <label class="form-label fw-medium">Goal</label>
-                                <textarea class="form-control" name="sessionGoal" rows="3"
+                                <label class="form-label fw-medium" for="sessionGoal">Goal</label>
+                                <textarea class="form-control" name="sessionGoal" id="sessionGoal" rows="3"
+                                          maxlength="500"
                                           placeholder="What do you want to achieve in this session?"></textarea>
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Session Group</label>
-                                    @{
-                                        var groups = ViewData["Groups"] as IReadOnlyCollection<TechWayFit.Pulse.Domain.Entities.SessionGroup> ?? new List<TechWayFit.Pulse.Domain.Entities.SessionGroup>();
-                                        var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
-                                        
-                                        foreach (TechWayFit.Pulse.Domain.Entities.SessionGroup group in groups)
-                                        {
-                                            treeItems.Add(new TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem
-                                            {
-                                                Value = group.Id.ToString(),
-                                                Text = group.Name,
-                                                ParentValue = group.ParentGroupId?.ToString(),
-                                                Level = group.Level - 1,
-                                                HasChildren = groups.Any(g => g.ParentGroupId == group.Id),
-                                                Icon = group.Level == 1 ? "📁" : group.Level == 2 ? "📂" : "📄"
-                                            });
-                                        }
-                                    }
-                                    @await Component.InvokeAsync("TreeDropdown", new {
-                                        id = "groupId",
-                                        name = "groupId",
-                                        placeholder = "No group (ungrouped)",
-                                        items = treeItems,
-                                        allowClear = true
-                                    })
-                                    @if (!groups.Any())
-                                    {
-                                        <div class="form-text">
-                                            No groups yet. <a href="#" data-bs-toggle="modal" data-bs-target="#createGroupModal">Create your first group</a> to organize sessions.
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <div class="form-text">Optional: Organize your session into a group</div>
-                                    }
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Max contributions per activity</label>
-                                    <select class="form-select" name="maxContributions">
-                                        <option value="3">3</option>
-                                        <option value="5" selected>5</option>
-                                        <option value="8">8</option>
-                                        <option value="10">10</option>
-                                        <option value="15">15</option>
-                                        <option value="20">20</option>
-                                    </select>
-                                    <div class="form-text">Maximum responses allowed per participant in each activity</div>
+                                <div class="text-end">
+                                    <span class="text-muted" style="font-size: 0.75rem;" id="goalCharCount">0 / 500</span>
                                 </div>
                             </div>
                 </div>
             </div>
 
-            <!-- Join Form Builder Card -->
+            <!-- Participant Fields Card -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
                     <!-- Header -->
                     <div class="d-flex align-items-center gap-3 mb-4">
                         <div class="bg-primary bg-opacity-10 rounded-3 p-2">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="text-primary" viewBox="0 0 16 16">
-                                <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z" />
+                                <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                                <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
                             </svg>
                         </div>
                         <div>
-                            <h6 class="fw-semibold mb-1">Join form builder</h6>
+                            <h6 class="fw-semibold mb-1">Participant Fields</h6>
                             <p class="text-muted small mb-0">
-                                Add up to 5 fields for participant registration. This data helps filter and group responses.
+                                Configure what information to collect from participants when they join.
                             </p>
                         </div>
                     </div>
 
-                    <!-- Form Builder Content -->
-                    <div class="form-builder-container" id="joinFormBuilder">
-                        <!-- Left: Field Types -->
-                        <div>
-                            <div class="d-flex align-items-center mb-3">
-                                <h6 class="fw-semibold mb-0 text-uppercase small text-muted">Available Field Types</h6>
-                            </div>
-                            
-                            <!-- Mobile: Dropdown + Add Button -->
-                            <div class="mobile-field-selector d-none">
-                                <div class="d-flex gap-2">
-                                    <select class="form-select" id="mobileFieldTypeSelect">
-                                        <option value="">Select field type...</option>
-                                        <option value="text">📝 Text Box</option>
-                                        <option value="checkbox">☑️ Checkbox</option>
-                                        <option value="dropdown">📋 Dropdown</option>
-                                        <option value="textarea">📄 Text Area</option>
-                                        <option value="radio">◉ Radio Button</option>
-                                    </select>
-                                    <button type="button" class="btn btn-primary" id="mobileAddFieldBtn" style="white-space: nowrap;">
-                                        + Add
-                                    </button>
+                    <!-- Default Field: Name (Always Collected) -->
+                    <div class="mb-4">
+                        <h6 class="small text-uppercase text-muted mb-3">Default Fields (Always Collected)</h6>
+                        <div class="border rounded-3 p-3 bg-light">
+                            <div class="d-flex align-items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-primary" viewBox="0 0 16 16">
+                                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                                </svg>
+                                <div class="flex-grow-1">
+                                    <div class="fw-medium">Participant Name</div>
+                                    <small class="text-muted">Display name (optional) with anonymous join option</small>
                                 </div>
-                            </div>
-                            
-                            <!-- Desktop: Draggable Field Types -->
-                            <div class="d-flex flex-column gap-2" id="fieldTypes">
-                                <div class="field-type" draggable="true" data-type="text">
-                                    <span class="icon">📝</span>
-                                    <span class="label">Text Box</span>
-                                </div>
-                                <div class="field-type" draggable="true" data-type="checkbox">
-                                    <span class="icon">☑️</span>
-                                    <span class="label">Checkbox</span>
-                                </div>
-                                <div class="field-type" draggable="true" data-type="dropdown">
-                                    <span class="icon">📋</span>
-                                    <span class="label">Dropdown</span>
-                                </div>
-                                <div class="field-type" draggable="true" data-type="textarea">
-                                    <span class="icon">📄</span>
-                                    <span class="label">Text Area</span>
-                                </div>
-                                <div class="field-type" draggable="true" data-type="radio">
-                                    <span class="icon">◉</span>
-                                    <span class="label">Radio Button</span>
-                                </div>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Default Field</span>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Right: Drop Zone -->
-                        <div class="form-drop-zone" id="formDropZone">
-                            <div class="drop-zone-placeholder">
-                                <div class="text-center text-muted">
-                                    <div class="fs-1 mb-2">⬇️</div>
-                                    <div class="fw-medium">Drag field types here to build your join form</div>
-                                    <small class="d-block mt-2">Maximum 5 fields allowed</small>
+                    <!-- Optional: Additional Fields Toggle -->
+                    <div class="form-check mb-3">
+                        <input type="checkbox" 
+                               class="form-check-input" 
+                               id="needMoreInfoToggle" 
+                               onchange="document.getElementById('additionalFieldsSection').style.display = this.checked ? 'block' : 'none';" />
+                        <label class="form-check-label fw-medium" for="needMoreInfoToggle">
+                            Need more info from participants before they join
+                        </label>
+                        <small class="d-block text-muted ms-4">Add custom fields like team name, role, department, etc.</small>
+                    </div>
+
+                    <!-- Additional Fields Section (Hidden by Default) -->
+                    <div id="additionalFieldsSection" style="display: none;">
+                        <hr class="my-4" />
+                        
+                        <h6 class="small text-uppercase text-muted mb-3">Custom Fields Builder</h6>
+                        <p class="text-muted small mb-3">Add up to 5 custom fields. This data helps filter and group responses.</p>
+
+                        <!-- Form Builder Content -->
+                        <div class="form-builder-container" id="joinFormBuilder">
+                            <!-- Left: Field Types -->
+                            <div>
+                                <div class="d-flex align-items-center mb-3">
+                                    <h6 class="fw-semibold mb-0 text-uppercase small text-muted">Available Field Types</h6>
+                                </div>
+                                
+                                <!-- Mobile: Dropdown + Add Button -->
+                                <div class="mobile-field-selector d-none">
+                                    <div class="d-flex gap-2">
+                                        <select class="form-select" id="mobileFieldTypeSelect">
+                                            <option value="">Select field type...</option>
+                                            <option value="text">📝 Text Box</option>
+                                            <option value="checkbox">☑️ Checkbox</option>
+                                            <option value="dropdown">📋 Dropdown</option>
+                                            <option value="textarea">📄 Text Area</option>
+                                            <option value="radio">◉ Radio Button</option>
+                                        </select>
+                                        <button type="button" class="btn btn-primary" id="mobileAddFieldBtn" style="white-space: nowrap;">
+                                            + Add
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Desktop: Draggable Field Types -->
+                                <div class="d-flex flex-column gap-2" id="fieldTypes">
+                                    <div class="field-type" draggable="true" data-type="text">
+                                        <span class="icon">📝</span>
+                                        <span class="label">Text Box</span>
+                                    </div>
+                                    <div class="field-type" draggable="true" data-type="checkbox">
+                                        <span class="icon">☑️</span>
+                                        <span class="label">Checkbox</span>
+                                    </div>
+                                    <div class="field-type" draggable="true" data-type="dropdown">
+                                        <span class="icon">📋</span>
+                                        <span class="label">Dropdown</span>
+                                    </div>
+                                    <div class="field-type" draggable="true" data-type="textarea">
+                                        <span class="icon">📄</span>
+                                        <span class="label">Text Area</span>
+                                    </div>
+                                    <div class="field-type" draggable="true" data-type="radio">
+                                        <span class="icon">◉</span>
+                                        <span class="label">Radio Button</span>
+                                    </div>
                                 </div>
                             </div>
-                            <!-- Dynamic fields will be added here by JavaScript -->
+
+                            <!-- Right: Drop Zone -->
+                            <div class="form-drop-zone" id="formDropZone">
+                                <div class="drop-zone-placeholder">
+                                    <div class="text-center text-muted">
+                                        <div class="fs-1 mb-2">⬇️</div>
+                                        <div class="fw-medium">Drag field types here to build your join form</div>
+                                        <small class="d-block mt-2">Maximum 5 fields allowed</small>
+                                    </div>
+                                </div>
+                                <!-- Dynamic fields will be added here by JavaScript -->
+                            </div>
                         </div>
                     </div>
 
@@ -253,6 +290,44 @@
 @section Scripts {
     <!-- External JavaScript -->
     <script src="~/js/create-session-form.js" asp-append-version="true"></script>
+
+    <!-- Character Counter -->
+    <script>
+        // Update character counters
+        function updateCharCount(inputId, counterId, maxLength) {
+            const input = document.getElementById(inputId);
+            const counter = document.getElementById(counterId);
+            if (input && counter) {
+                const currentLength = input.value.length;
+                counter.textContent = `${currentLength} / ${maxLength}`;
+                
+                // Change color when approaching limit
+                if (currentLength > maxLength * 0.9) {
+                    counter.classList.add('text-warning');
+                    counter.classList.remove('text-muted');
+                } else {
+                    counter.classList.remove('text-warning');
+                    counter.classList.add('text-muted');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize character counters
+            const titleInput = document.getElementById('sessionTitle');
+            const goalInput = document.getElementById('sessionGoal');
+            
+            if (titleInput) {
+                titleInput.addEventListener('input', () => updateCharCount('sessionTitle', 'titleCharCount', 200));
+                updateCharCount('sessionTitle', 'titleCharCount', 200); // Initial update
+            }
+            
+            if (goalInput) {
+                goalInput.addEventListener('input', () => updateCharCount('sessionGoal', 'goalCharCount', 500));
+                updateCharCount('sessionGoal', 'goalCharCount', 500); // Initial update
+            }
+        });
+    </script>
 
     <!-- Tree Dropdown functionality -->
     <script>

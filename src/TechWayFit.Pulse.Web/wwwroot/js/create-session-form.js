@@ -467,8 +467,6 @@ if (nameLabel) {
     context: contextParts.length > 0 ? contextParts.join(' | ') : null,
     groupId: formData.get('groupId') || null,
             settings: {
-     maxContributionsPerParticipantPerSession: 999, // High limit to effectively disable session-level cap
-  maxContributionsPerParticipantPerActivity: parseInt(formData.get('maxContributions') || '5'),
    strictCurrentActivityOnly: true,
         allowAnonymous: false,
             ttlMinutes: 360

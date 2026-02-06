@@ -1,60 +1,52 @@
 @model TechWayFit.Pulse.Domain.Entities.SessionGroup
 
-<div class="card group-card mb-3">
-    <div class="card-body">
+<div class="card group-card mb-2">
+    <div class="card-body p-3">
         <div class="d-flex justify-content-between align-items-start">
             <div class="flex-grow-1">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <h5 class="card-title mb-0">@Model.Name</h5>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <h6 class="mb-0 fw-semibold">@Model.Name</h6>
                     <span class="badge bg-primary level-badge">Level @Model.Level</span>
                 </div>
                 
                 @if (!string.IsNullOrEmpty(Model.Description))
                 {
-                    <p class="text-muted mb-2">@Model.Description</p>
+                    <p class="text-muted mb-0 small">@Model.Description</p>
                 }
-                
-                <div class="d-flex align-items-center gap-3 text-muted small">
-                    <span>
-                        <i class="bi bi-calendar-event"></i>
-                        Created @Model.CreatedAt.ToString("MMM d, yyyy")
-                    </span>
-                    @if (Model.UpdatedAt != Model.CreatedAt)
-                    {
-                        <span>
-                            <i class="bi bi-pencil"></i>
-                            Updated @Model.UpdatedAt.ToString("MMM d, yyyy")
-                        </span>
-                    }
-                </div>
             </div>
             
-            <div class="group-actions">
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        ⋮
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item" href="javascript:void(0)" onclick="editGroup('@Model.Id.ToString()', '@(Model.Name.Replace("'", "\\'"))', '@((Model.Description ?? "").Replace("'", "\\'"))')">
-                                <i class="bi bi-pencil"></i> Edit
-                            </a>
-                        </li>
-                        @if (Model.Level < 3)
-                        {
+            <div class="d-flex align-items-center gap-2 ms-3">
+                <div class="text-muted text-end" style="font-size: 0.75rem;">
+                    Created @Model.CreatedAt.ToString("MMM d, yyyy")
+                </div>
+                
+                <div class="group-actions">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 36px;">
+                            ⋮
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a class="dropdown-item" href="javascript:void(0)" onclick="createSubGroup('@Model.Id', @Model.Level)">
-                                    <i class="bi bi-folder-plus"></i> Add Sub Group
+                                <a class="dropdown-item" href="javascript:void(0)" onclick="editGroup('@Model.Id.ToString()', '@(Model.Name.Replace("'", "\\'"))', '@((Model.Description ?? "").Replace("'", "\\'"))')">
+                                    <i class="bi bi-pencil"></i> Edit
                                 </a>
                             </li>
-                        }
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteGroup('@Model.Id.ToString()', '@(Model.Name.Replace("'", "\\'"))')">
-                                <i class="bi bi-trash"></i> Delete
-                            </a>
-                        </li>
-                    </ul>
+                            @if (Model.Level < 3)
+                            {
+                                <li>
+                                    <a class="dropdown-item" href="javascript:void(0)" onclick="createSubGroup('@Model.Id', @Model.Level)">
+                                        <i class="bi bi-folder-plus"></i> Add Sub Group
+                                    </a>
+                                </li>
+                            }
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteGroup('@Model.Id.ToString()', '@(Model.Name.Replace("'", "\\'"))')">
+                                    <i class="bi bi-trash"></i> Delete
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

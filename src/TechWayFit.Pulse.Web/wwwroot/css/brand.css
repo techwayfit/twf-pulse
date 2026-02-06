@@ -2312,7 +2312,6 @@ textarea.form-control:focus {
   background: var(--dark-text);
   color: rgba(255, 255, 255, 0.7);
   padding: 2rem 5%;
-  margin-top: 4rem;
   border-top: none;
 }
 

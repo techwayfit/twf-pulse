@@ -6,7 +6,7 @@ public class SessionContextViewModel
     public string SessionGoal { get; set; } = "Identify bottlenecks and quantify impact so we can prioritize fixes.";
     public string WorkshopType { get; set; } = "Ops / Process Improvement";
     public string PrimaryActivity { get; set; } = "Quadrant (2x2 Matrix)";
-    public string MaxContributions { get; set; } = "5";
+
     
     // AI Context fields
     public string CurrentProcess { get; set; } = "";

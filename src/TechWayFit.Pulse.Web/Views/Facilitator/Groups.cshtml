@@ -4,6 +4,8 @@
     ViewData["Title"] = "Manage Groups - TechWayFit Pulse";
     var userEmail = ViewData["UserEmail"] as string;
     var userName = ViewData["UserName"] as string;
+    var returnUrl = Context.Request.Query["returnUrl"].ToString();
+    var isFromCreateSession = !string.IsNullOrEmpty(returnUrl) && returnUrl.Contains("create", StringComparison.OrdinalIgnoreCase);
 }
 
 @section Styles {
@@ -54,7 +56,7 @@
 }
 
 <main class="py-5">
-    <div class="container" style="max-width: 1200px;">
+    <div class="container container-wide">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <div>
@@ -65,9 +67,18 @@
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
                     ➕ Create Group
                 </button>
-                <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-outline-secondary">
-                    ← Back to Dashboard
-                </a>
+                @if (isFromCreateSession)
+                {
+                    <a href="@Url.Action("CreateSession", "Facilitator")" class="btn btn-outline-secondary">
+                        ← Back to Create Session
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-outline-secondary">
+                        ← Back to Dashboard
+                    </a>
+                }
             </div>
         </div>
 
