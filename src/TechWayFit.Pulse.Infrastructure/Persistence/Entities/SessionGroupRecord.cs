@@ -17,4 +17,8 @@ public sealed class SessionGroupRecord
     public DateTimeOffset UpdatedAt { get; set; }
 
     public Guid? FacilitatorUserId { get; set; }
+
+    public string Icon { get; set; } = "📁";
+
+    public string? Color { get; set; }
 }

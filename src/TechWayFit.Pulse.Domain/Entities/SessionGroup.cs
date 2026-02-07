@@ -10,7 +10,9 @@ public sealed class SessionGroup
         Guid? parentGroupId,
         DateTimeOffset createdAt,
         DateTimeOffset updatedAt,
-        Guid? facilitatorUserId = null)
+        Guid? facilitatorUserId = null,
+        string? icon = null,
+        string? color = null)
     {
         if (level < 1 || level > 3)
             throw new ArgumentException("Group level must be between 1 and 3.", nameof(level));
@@ -29,6 +31,8 @@ public sealed class SessionGroup
         CreatedAt = createdAt;
         UpdatedAt = updatedAt;
         FacilitatorUserId = facilitatorUserId;
+        Icon = icon ?? (level == 1 ? "📁" : level == 2 ? "📂" : "📄");
+        Color = color;
     }
 
     public Guid Id { get; }
@@ -51,13 +55,25 @@ public sealed class SessionGroup
     /// </summary>
     public Guid? FacilitatorUserId { get; private set; }
 
-    public void Update(string name, string? description, DateTimeOffset updatedAt)
+    /// <summary>
+    /// Icon/emoji representing this group (e.g., 📁, 📂, 🎯)
+    /// </summary>
+    public string Icon { get; private set; }
+
+    /// <summary>
+    /// Optional color for the group (hex code)
+    /// </summary>
+    public string? Color { get; private set; }
+
+    public void Update(string name, string? description, DateTimeOffset updatedAt, string? icon = null, string? color = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Group name is required.", nameof(name));
 
         Name = name.Trim();
         Description = description?.Trim();
+        Icon = icon ?? Icon;
+        Color = color;
         UpdatedAt = updatedAt;
     }
 }

@@ -25,7 +25,9 @@ public sealed class SessionGroupRepository : ISessionGroupRepository
             ParentGroupId = group.ParentGroupId,
             CreatedAt = group.CreatedAt,
             UpdatedAt = group.UpdatedAt,
-            FacilitatorUserId = group.FacilitatorUserId
+            FacilitatorUserId = group.FacilitatorUserId,
+            Icon = group.Icon,
+            Color = group.Color
         };
 
         _context.SessionGroups.Add(record);
@@ -74,6 +76,8 @@ public sealed class SessionGroupRepository : ISessionGroupRepository
         record.Name = group.Name;
         record.Description = group.Description;
         record.UpdatedAt = group.UpdatedAt;
+        record.Icon = group.Icon;
+        record.Color = group.Color;
 
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -126,6 +130,8 @@ public sealed class SessionGroupRepository : ISessionGroupRepository
             record.ParentGroupId,
             record.CreatedAt,
             record.UpdatedAt,
-            record.FacilitatorUserId);
+            record.FacilitatorUserId,
+            record.Icon,
+            record.Color);
     }
 }

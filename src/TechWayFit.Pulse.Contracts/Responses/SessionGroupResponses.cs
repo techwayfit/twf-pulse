@@ -7,7 +7,9 @@ public sealed record SessionGroupResponse(
     int Level,
     Guid? ParentGroupId,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    string? Icon,
+    string? Color);
 
 public sealed record SessionGroupHierarchyResponse(
     Guid Id,
@@ -16,4 +18,6 @@ public sealed record SessionGroupHierarchyResponse(
     int Level,
     Guid? ParentGroupId,
     IReadOnlyCollection<SessionGroupHierarchyResponse> Children,
-    int SessionCount);
+    int SessionCount,
+    string? Icon,
+    string? Color);

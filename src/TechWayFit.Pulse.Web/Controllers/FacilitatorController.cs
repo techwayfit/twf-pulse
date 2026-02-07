@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Web.Extensions;
 
 namespace TechWayFit.Pulse.Web.Controllers;
@@ -57,8 +58,9 @@ ISessionRepository sessionRepository,
     /// <summary>
     /// Create session page - static form with JavaScript enhancement
     /// </summary>
-    [HttpGet("create")]
-    public async Task<IActionResult> CreateSession(CancellationToken cancellationToken = default)
+    [HttpGet("create-session")]
+    [HttpGet("create")] // Backward compatibility
+    public async Task<IActionResult> CreateSession(Guid? groupId = null, CancellationToken cancellationToken = default)
     {
         var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
         if (userId == null)
@@ -68,6 +70,7 @@ ISessionRepository sessionRepository,
 
         var groups = await _sessionGroupService.GetFacilitatorGroupsAsync(userId.Value, cancellationToken);
         ViewData["Groups"] = groups;
+        ViewData["SelectedGroupId"] = groupId;
 
         return View();
     }
@@ -126,11 +129,48 @@ ISessionRepository sessionRepository,
         }
 
         var groups = await _sessionGroupService.GetGroupHierarchyAsync(userId.Value, cancellationToken);
+        var allSessions = await _sessionRepository.GetByFacilitatorUserIdAsync(userId.Value, cancellationToken);
+        
+        // Build view models with session data
+        var groupViewModels = groups.Select(g => new Web.Models.GroupWithSessionsViewModel
+        {
+            Group = g,
+            Sessions = allSessions
+                .Where(s => s.GroupId == g.Id)
+                .OrderBy(s => s.Title)
+                .Select(s => new Web.Models.SessionSummary
+                {
+                    Id = s.Id,
+                    Title = s.Title.Length > 50 ? s.Title.Substring(0, 47) + "..." : s.Title,
+                    Status = s.Status.ToString(),
+                    ExpiresAt = s.ExpiresAt,
+                    IsCompleted = s.Status == Domain.Enums.SessionStatus.Ended || 
+                                 s.Status == Domain.Enums.SessionStatus.Expired,
+                    IsActive = s.Status == Domain.Enums.SessionStatus.Live && s.ExpiresAt > DateTimeOffset.UtcNow
+                })
+                .ToList(),
+            TotalSessionCount = GetTotalSessionCount(g.Id, groups, allSessions)
+        }).ToList();
         
         ViewData["UserEmail"] = User.FindFirst(ClaimTypes.Email)?.Value;
         ViewData["UserName"] = User.FindFirst(ClaimTypes.Name)?.Value;
         
-        return View(groups);
+        return View(groupViewModels);
+    }
+
+    private int GetTotalSessionCount(Guid groupId, IReadOnlyCollection<SessionGroup> allGroups, IReadOnlyList<Session> allSessions)
+    {
+        // Count direct sessions
+        var count = allSessions.Count(s => s.GroupId == groupId);
+        
+        // Count sessions in child groups recursively
+        var childGroups = allGroups.Where(g => g.ParentGroupId == groupId);
+        foreach (var child in childGroups)
+        {
+            count += GetTotalSessionCount(child.Id, allGroups, allSessions);
+        }
+        
+        return count;
     }
 
     /// <summary>

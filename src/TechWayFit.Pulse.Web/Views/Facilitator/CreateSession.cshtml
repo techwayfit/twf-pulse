@@ -48,6 +48,7 @@
                         <label class="form-label fw-medium">Session Group</label>
                         @{
                             var groups = ViewData["Groups"] as IReadOnlyCollection<TechWayFit.Pulse.Domain.Entities.SessionGroup> ?? new List<TechWayFit.Pulse.Domain.Entities.SessionGroup>();
+                            var selectedGroupId = ViewData["SelectedGroupId"] as Guid?;
                             var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
                             
                             foreach (TechWayFit.Pulse.Domain.Entities.SessionGroup group in groups)
@@ -66,6 +67,7 @@
                         @await Component.InvokeAsync("TreeDropdown", new {
                             id = "groupId",
                             name = "groupId",
+                            value = selectedGroupId?.ToString() ?? string.Empty,
                             placeholder = "No group (ungrouped)",
                             items = treeItems,
                             allowClear = true

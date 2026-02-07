@@ -22,6 +22,8 @@ public sealed class SessionGroupService : ISessionGroupService
         Guid? parentGroupId,
         DateTimeOffset now,
         Guid facilitatorUserId,
+        string? icon = null,
+        string? color = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -56,7 +58,9 @@ public sealed class SessionGroupService : ISessionGroupService
             parentGroupId,
             now,
             now,
-            facilitatorUserId);
+            facilitatorUserId,
+            icon,
+            color);
 
         return await _groups.CreateAsync(group, cancellationToken);
     }
@@ -85,6 +89,8 @@ public sealed class SessionGroupService : ISessionGroupService
         string name,
         string? description,
         DateTimeOffset now,
+        string? icon = null,
+        string? color = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -100,7 +106,7 @@ public sealed class SessionGroupService : ISessionGroupService
         if (group == null)
             throw new InvalidOperationException("Group not found.");
 
-        group.Update(name, description, now);
+        group.Update(name, description, now, icon, color);
         return await _groups.UpdateAsync(group, cancellationToken);
     }
 

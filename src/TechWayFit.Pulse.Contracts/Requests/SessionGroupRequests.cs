@@ -4,11 +4,15 @@ public sealed record CreateSessionGroupRequest(
     string Name,
     string? Description,
     int Level,
-    Guid? ParentGroupId);
+    Guid? ParentGroupId,
+    string? Icon,
+    string? Color);
 
 public sealed record UpdateSessionGroupRequest(
     string Name,
-    string? Description);
+    string? Description,
+    string? Icon,
+    string? Color);
 
 public sealed record AssignSessionToGroupRequest(
     Guid? GroupId);

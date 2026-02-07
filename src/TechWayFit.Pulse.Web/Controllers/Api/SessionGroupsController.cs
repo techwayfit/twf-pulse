@@ -53,6 +53,8 @@ public sealed class SessionGroupsController : ControllerBase
                 request.ParentGroupId,
                 DateTimeOffset.UtcNow,
                 facilitatorUserId.Value,
+                request.Icon,
+                request.Color,
                 cancellationToken);
 
             var response = new SessionGroupResponse(
@@ -62,7 +64,9 @@ public sealed class SessionGroupsController : ControllerBase
                 group.Level,
                 group.ParentGroupId,
                 group.CreatedAt,
-                group.UpdatedAt);
+                group.UpdatedAt,
+                group.Icon,
+                group.Color);
 
             return Ok(response);
         }
@@ -73,6 +77,11 @@ public sealed class SessionGroupsController : ControllerBase
         catch (UnauthorizedAccessException ex)
         {
             return Forbid(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating session group");
+            return StatusCode(500, new { message = ex.Message });
         }
     }
 
@@ -95,7 +104,9 @@ public sealed class SessionGroupsController : ControllerBase
             g.Level,
             g.ParentGroupId,
             g.CreatedAt,
-            g.UpdatedAt)).ToList();
+            g.UpdatedAt,
+            g.Icon,
+            g.Color)).ToList();
 
         return Ok(response);
     }
@@ -132,7 +143,9 @@ public sealed class SessionGroupsController : ControllerBase
             group.Level,
             group.ParentGroupId,
             group.CreatedAt,
-            group.UpdatedAt);
+            group.UpdatedAt,
+            group.Icon,
+            group.Color);
 
         return Ok(response);
     }
@@ -150,6 +163,8 @@ public sealed class SessionGroupsController : ControllerBase
                 request.Name,
                 request.Description,
                 DateTimeOffset.UtcNow,
+                request.Icon,
+                request.Color,
                 cancellationToken);
 
             var response = new SessionGroupResponse(
@@ -159,7 +174,9 @@ public sealed class SessionGroupsController : ControllerBase
                 group.Level,
                 group.ParentGroupId,
                 group.CreatedAt,
-                group.UpdatedAt);
+                group.UpdatedAt,
+                group.Icon,
+                group.Color);
 
             return Ok(response);
         }
@@ -203,7 +220,9 @@ public sealed class SessionGroupsController : ControllerBase
             g.Level,
             g.ParentGroupId,
             g.CreatedAt,
-            g.UpdatedAt)).ToList();
+            g.UpdatedAt,
+            g.Icon,
+            g.Color)).ToList();
 
         return Ok(response);
     }
@@ -229,7 +248,9 @@ public sealed class SessionGroupsController : ControllerBase
                 group.Level,
                 group.ParentGroupId,
                 children,
-                sessions.Count));
+                sessions.Count,
+                group.Icon,
+                group.Color));
         }
 
         return result;

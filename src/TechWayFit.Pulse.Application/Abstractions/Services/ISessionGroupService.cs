@@ -11,6 +11,8 @@ public interface ISessionGroupService
         Guid? parentGroupId,
         DateTimeOffset now,
         Guid facilitatorUserId,
+        string? icon = null,
+        string? color = null,
         CancellationToken cancellationToken = default);
 
     Task<SessionGroup?> GetGroupAsync(Guid id, CancellationToken cancellationToken = default);
@@ -28,6 +30,8 @@ public interface ISessionGroupService
         string name,
         string? description,
         DateTimeOffset now,
+        string? icon = null,
+        string? color = null,
         CancellationToken cancellationToken = default);
 
     Task DeleteGroupAsync(Guid id, CancellationToken cancellationToken = default);

@@ -1,4 +1,4 @@
-@model IReadOnlyCollection<TechWayFit.Pulse.Domain.Entities.SessionGroup>
+@model IReadOnlyCollection<TechWayFit.Pulse.Web.Models.GroupWithSessionsViewModel>
 
 @{
     ViewData["Title"] = "Manage Groups - TechWayFit Pulse";
@@ -6,65 +6,180 @@
     var userName = ViewData["UserName"] as string;
     var returnUrl = Context.Request.Query["returnUrl"].ToString();
     var isFromCreateSession = !string.IsNullOrEmpty(returnUrl) && returnUrl.Contains("create", StringComparison.OrdinalIgnoreCase);
+    
+    // Store all groups in ViewData for recursive rendering
+    ViewData["AllGroups"] = Model;
 }
 
 @section Styles {
     <style>
-        .group-card {
+        /* Tree View Card Styling */
+        .group-tree-card {
             transition: all 0.2s ease;
-            border: 1px solid #e9ecef !important;
-            position: relative;
-            z-index: 1;
+            border: 1px solid #e3e8ef !important;
+            background: #ffffff;
         }
-        .group-card:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
-            z-index: 10;
+        .group-tree-card:hover {
+            border-color: #cbd5e0 !important;
         }
-        .level-badge {
-            font-size: 0.75rem;
-            padding: 0.25rem 0.5rem;
-        }
-        .group-actions .btn {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-        }
-        .hierarchy-indent-1 { margin-left: 1.5rem; }
-        .hierarchy-indent-2 { margin-left: 3rem; }
         
-        /* Fix dropdown z-index issues */
+        /* Expand/Collapse Icon */
+        .expand-icon {
+            display: inline-block;
+            transition: transform 0.2s ease;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            width: 20px;
+            text-align: center;
+        }
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+        
+        /* Cursor for clickable header */
+        .cursor-pointer {
+            cursor: pointer;
+            user-select: none;
+        }
+        .cursor-pointer:hover {
+            background-color: #f8fafc !important;
+        }
+        
+        /* Card Header Styling */
+        .group-tree-card .card-header {
+            border-bottom: 1px solid #f1f5f9;
+            background: linear-gradient(to bottom, #ffffff, #fafbfc);
+        }
+        
+        /* Sessions List Styling */
+        .sessions-list {
+            max-height: 240px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        .sessions-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sessions-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sessions-list::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 2px;
+        }
+        .sessions-list::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .session-item {
+            background: #f8fafc;
+            border-radius: 0.375rem;
+            transition: all 0.15s ease;
+        }
+        .session-item:hover {
+            background: #f1f5f9 !important;
+            transform: translateX(2px);
+        }
+        
+        .session-status-icon {
+            font-size: 0.875rem;
+            line-height: 1;
+        }
+        
+        /* Child Groups Indentation */
+        .child-groups {
+            margin-top: 0.75rem;
+        }
+        .child-groups .group-tree-card {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Level Badge Colors - More subtle */
+        .badge.bg-success { 
+            background-color: #10b981 !important; 
+            color: white;
+            font-weight: 600;
+        }
+        .badge.bg-warning { 
+            background-color: #f59e0b !important; 
+            color: white;
+            font-weight: 600;
+        }
+        .badge.bg-danger { 
+            background-color: #ef4444 !important; 
+            color: white;
+            font-weight: 600;
+        }
+        .badge.bg-secondary {
+            background-color: #64748b !important;
+            color: white;
+            font-weight: 500;
+        }
+        
+        /* Action Buttons - More subtle */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .action-buttons .btn {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.625rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            border-width: 1px;
+        }
+        .action-buttons .btn-outline-primary {
+            color: #3b82f6;
+            border-color: #bfdbfe;
+            background: white;
+        }
+        .action-buttons .btn-outline-primary:hover {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #1e40af;
+        }
+        .action-buttons .btn-outline-success {
+            color: #10b981;
+            border-color: #a7f3d0;
+            background: white;
+        }
+        .action-buttons .btn-outline-success:hover {
+            background: #ecfdf5;
+            border-color: #10b981;
+            color: #047857;
+        }
+        
+        /* Dropdown menu styling */
         .dropdown-menu {
             z-index: 1050 !important;
+            border: 1px solid #e3e8ef;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
         }
-        .group-actions .dropdown {
-            position: relative;
-            z-index: 10;
-        }
-        .group-actions .dropdown.show {
+        .dropdown.show {
             z-index: 1050;
         }
-        
-        /* Ensure dropdowns appear above other content */
-        .card.group-card .group-actions .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            z-index: 1050 !important;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        .dropdown-toggle {
+            color: #64748b;
+            border-color: #e3e8ef;
+        }
+        .dropdown-toggle:hover {
+            color: #334155;
+            border-color: #cbd5e0;
         }
     </style>
 }
 
-<main class="py-5">
+<main class="py-4">
     <div class="container container-wide">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <div>
-                <h2 class="mb-1">Session Groups</h2>
-                <p class="text-muted mb-0">Organize your workshop sessions into groups for better management</p>
+                <h2 class="mb-1" style="font-weight: 700; color: #1e293b;">Session Groups</h2>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">Organize your workshop sessions into groups for better management</p>
             </div>
             <div class="d-flex gap-2">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal" style="font-weight: 600;">
                     ➕ Create Group
                 </button>
                 @if (isFromCreateSession)
@@ -98,25 +213,9 @@
 
         <!-- Groups List -->
         <div id="groupsList">
-            @foreach (var group in Model.Where(g => g.Level == 1))
+            @foreach (var group in Model.Where(g => g.Group.Level == 1).OrderBy(g => g.Group.Name))
             {
                 @await Html.PartialAsync("_GroupCard", group)
-                
-                <!-- Level 2 Groups -->
-                @foreach (var subGroup in Model.Where(g => g.Level == 2 && g.ParentGroupId == group.Id))
-                {
-                    <div class="hierarchy-indent-1">
-                        @await Html.PartialAsync("_GroupCard", subGroup)
-                    </div>
-                    
-                    <!-- Level 3 Groups -->
-                    @foreach (var subSubGroup in Model.Where(g => g.Level == 3 && g.ParentGroupId == subGroup.Id))
-                    {
-                        <div class="hierarchy-indent-2">
-                            @await Html.PartialAsync("_GroupCard", subSubGroup)
-                        </div>
-                    }
-                }
             }
         </div>
     </div>
@@ -143,6 +242,22 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label class="form-label">Icon & Color</label>
+                        <div class="d-flex align-items-start gap-3 flex-wrap">
+                            <div class="d-flex flex-column align-items-center gap-2">
+                                <button type="button" id="groupIcon-display" class="btn btn-outline-secondary" style="font-size: 1.5rem; width: 60px; height: 60px;">📁</button>
+                                <button type="button" id="groupIcon-change" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; white-space: nowrap;">Change Icon</button>
+                                <input type="hidden" id="groupIcon" name="icon" value="📁">
+                            </div>
+                            <div class="d-flex flex-column align-items-center gap-2">
+                                <div id="groupColor-preview" class="border rounded" style="width: 60px; height: 60px; background: #f8fafc; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.65rem; text-align: center; padding: 0.25rem;">No Color</div>
+                                <button type="button" id="groupColor-change" class="btn btn-sm btn-outline-success" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; white-space: nowrap;">Change Color</button>
+                                <input type="hidden" id="groupColor" name="color">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="groupLevel" class="form-label">Level *</label>
                         <select class="form-select" id="groupLevel" name="level" required>
                             <option value="1">Level 1 (Main Group)</option>
@@ -155,10 +270,10 @@
                         <label for="parentGroup" class="form-label">Parent Group *</label>
                         <select class="form-select" id="parentGroup" name="parentGroupId">
                             <option value="">Select parent group...</option>
-                            @foreach (var group in Model.Where(g => g.Level <= 2))
+                            @foreach (var group in Model.Where(g => g.Group.Level <= 2))
                             {
-                                <option value="@group.Id" data-level="@group.Level">
-                                    @(new string('—', (group.Level - 1) * 2)) @group.Name
+                                <option value="@group.Group.Id" data-level="@group.Group.Level">
+                                    @(new string('—', (group.Group.Level - 1) * 2)) @group.Group.Name
                                 </option>
                             }
                         </select>
@@ -193,6 +308,22 @@
                         <label for="editGroupDescription" class="form-label">Description</label>
                         <textarea class="form-control" id="editGroupDescription" name="description" rows="3" maxlength="1000"></textarea>
                     </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Icon & Color</label>
+                        <div class="d-flex align-items-start gap-3 flex-wrap">
+                            <div class="d-flex flex-column align-items-center gap-2">
+                                <button type="button" id="editGroupIcon-display" class="btn btn-outline-secondary" style="font-size: 1.5rem; width: 60px; height: 60px;">📁</button>
+                                <button type="button" id="editGroupIcon-change" class="btn btn-sm btn-outline-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; white-space: nowrap;">Change Icon</button>
+                                <input type="hidden" id="editGroupIcon" name="icon" value="📁">
+                            </div>
+                            <div class="d-flex flex-column align-items-center gap-2">
+                                <div id="editGroupColor-preview" class="border rounded" style="width: 60px; height: 60px; background: #f8fafc; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 0.65rem; text-align: center; padding: 0.25rem;">No Color</div>
+                                <button type="button" id="editGroupColor-change" class="btn btn-sm btn-outline-success" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; white-space: nowrap;">Change Color</button>
+                                <input type="hidden" id="editGroupColor" name="color">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -204,7 +335,82 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/icon-picker.js"></script>
     <script>
+        // Initialize icon and color pickers
+        let createIconPicker, createColorPicker, editIconPicker, editColorPicker;
+        let initialized = false;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (initialized) {
+                console.log('Already initialized, skipping');
+                return;
+            }
+            initialized = true;
+            
+            console.log('Initializing icon and color pickers...');
+            
+            // Initialize CREATE icon picker (icon-only mode)
+            createIconPicker = new IconPicker('groupIcon', { 
+                displayId: 'groupIcon-display',
+                triggerButtonId: 'groupIcon-change',
+                pickerContainerId: 'groupIcon-picker',
+                mode: 'icon-only'
+            });
+            
+            // Initialize CREATE color picker (color-only mode)
+            createColorPicker = new IconPicker('groupColor', { 
+                displayId: 'groupColor-preview',
+                triggerButtonId: 'groupColor-change',
+                pickerContainerId: 'groupColor-picker',
+                mode: 'color-only',
+                onColorChange: updateColorPreview.bind(null, 'groupColor-preview', 'groupColor')
+            });
+            
+            // Initialize EDIT icon picker (icon-only mode)
+            editIconPicker = new IconPicker('editGroupIcon', { 
+                displayId: 'editGroupIcon-display',
+                triggerButtonId: 'editGroupIcon-change',
+                pickerContainerId: 'editGroupIcon-picker',
+                mode: 'icon-only'
+            });
+            
+            // Initialize EDIT color picker (color-only mode)
+            editColorPicker = new IconPicker('editGroupColor', { 
+                displayId: 'editGroupColor-preview',
+                triggerButtonId: 'editGroupColor-change',
+                pickerContainerId: 'editGroupColor-picker',
+                mode: 'color-only',
+                onColorChange: updateColorPreview.bind(null, 'editGroupColor-preview', 'editGroupColor')
+            });
+            
+            console.log('Icon and color pickers initialized');
+        });
+        
+        // Update color preview box
+        function updateColorPreview(previewId, inputId, color) {
+            console.log('updateColorPreview called:', { previewId, inputId, color });
+            
+            const preview = document.getElementById(previewId);
+            const input = document.getElementById(inputId);
+            
+            console.log('Preview element:', preview);
+            console.log('Input element:', input);
+            
+            if (color) {
+                preview.style.background = color;
+                preview.textContent = '';
+                input.value = color;
+                console.log('Color set to:', color);
+            } else {
+                preview.style.background = '#f8fafc';
+                preview.textContent = 'No Color';
+                preview.style.color = '#94a3b8';
+                input.value = '';
+                console.log('Color cleared');
+            }
+        }
+        
         // Reset modal when it's closed
         document.getElementById('createGroupModal').addEventListener('hidden.bs.modal', function () {
             const levelSelect = document.getElementById('groupLevel');
@@ -225,6 +431,55 @@
             // Hide parent container
             parentContainer.style.display = 'none';
             parentSelect.required = false;
+            
+            // Reset icon and color
+            if (createIconPicker) {
+                createIconPicker.updateDisplay('📁');
+                document.getElementById('groupIcon').value = '📁';
+            }
+            updateColorPreview('groupColor-preview', 'groupColor', null);
+        });
+        
+        // Ensure pickers are visible when modal is shown
+        document.getElementById('createGroupModal').addEventListener('shown.bs.modal', function () {
+            if (!createIconPicker || !document.getElementById('groupIcon-picker')) {
+                createIconPicker = new IconPicker('groupIcon', { 
+                    displayId: 'groupIcon-display',
+                    triggerButtonId: 'groupIcon-change',
+                    pickerContainerId: 'groupIcon-picker',
+                    mode: 'icon-only'
+                });
+            }
+            if (!createColorPicker || !document.getElementById('groupColor-picker')) {
+                createColorPicker = new IconPicker('groupColor', { 
+                    displayId: 'groupColor-preview',
+                    triggerButtonId: 'groupColor-change',
+                    pickerContainerId: 'groupColor-picker',
+                    mode: 'color-only',
+                    onColorChange: updateColorPreview.bind(null, 'groupColor-preview', 'groupColor')
+                });
+            }
+        });
+        
+        // Ensure edit pickers are visible when modal is shown
+        document.getElementById('editGroupModal').addEventListener('shown.bs.modal', function () {
+            if (!editIconPicker || !document.getElementById('editGroupIcon-picker')) {
+                editIconPicker = new IconPicker('editGroupIcon', { 
+                    displayId: 'editGroupIcon-display',
+                    triggerButtonId: 'editGroupIcon-change',
+                    pickerContainerId: 'editGroupIcon-picker',
+                    mode: 'icon-only'
+                });
+            }
+            if (!editColorPicker || !document.getElementById('editGroupColor-picker')) {
+                editColorPicker = new IconPicker('editGroupColor', { 
+                    displayId: 'editGroupColor-preview',
+                    triggerButtonId: 'editGroupColor-change',
+                    pickerContainerId: 'editGroupColor-picker',
+                    mode: 'color-only',
+                    onColorChange: updateColorPreview.bind(null, 'editGroupColor-preview', 'editGroupColor')
+                });
+            }
         });
 
         // Group level change handler
@@ -260,14 +515,34 @@
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
             
+            // Handle disabled fields manually (disabled fields are not included in FormData)
+            const levelSelect = document.getElementById('groupLevel');
+            const parentSelect = document.getElementById('parentGroup');
+            
+            if (levelSelect.disabled && levelSelect.value) {
+                data.level = levelSelect.value;
+            }
+            if (parentSelect.disabled && parentSelect.value) {
+                data.parentGroupId = parentSelect.value;
+            }
+            
+            console.log('Form data before processing:', data);
+            console.log('Icon value:', data.icon);
+            console.log('Color value:', data.color);
+            
             // Convert empty parentGroupId to null
             if (!data.parentGroupId) {
                 data.parentGroupId = null;
-            } else {
-                data.parentGroupId = data.parentGroupId;
             }
             
             data.level = parseInt(data.level);
+            
+            // Ensure icon has a default value if not set
+            if (!data.icon) {
+                data.icon = '📁';
+            }
+            
+            console.log('Final data to send:', data);
             
             try {
                 const response = await fetch('/api/session-groups', {
@@ -278,23 +553,43 @@
                     body: JSON.stringify(data)
                 });
                 
+                console.log('Response status:', response.status);
+                
                 if (response.ok) {
                     location.reload();
                 } else {
-                    const error = await response.json();
-                    alert('Error creating group: ' + (error.message || 'Unknown error'));
+                    let errorMessage = 'Unknown error';
+                    try {
+                        const error = await response.json();
+                        console.error('Error response:', error);
+                        errorMessage = error.message || error.title || JSON.stringify(error);
+                    } catch (parseErr) {
+                        const errorText = await response.text();
+                        console.error('Error response (text):', errorText);
+                        errorMessage = errorText || `HTTP ${response.status}`;
+                    }
+                    alert('Error creating group: ' + errorMessage);
                 }
             } catch (err) {
+                console.error('Error creating group:', err);
                 alert('Error creating group: ' + (err.message || 'Network error'));
             }
         });
 
         // Edit group
-        function editGroup(id, name, description) {
+        function editGroup(id, name, description, icon, color) {
             event.preventDefault();
             document.getElementById('editGroupId').value = id;
             document.getElementById('editGroupName').value = name;
             document.getElementById('editGroupDescription').value = description || '';
+            document.getElementById('editGroupIcon').value = icon || '📁';
+            
+            if (editIconPicker) {
+                editIconPicker.updateDisplay(icon || '📁');
+            }
+            
+            // Update color preview
+            updateColorPreview('editGroupColor-preview', 'editGroupColor', color);
             
             new bootstrap.Modal(document.getElementById('editGroupModal')).show();
             return false;
@@ -316,7 +611,9 @@
                     },
                     body: JSON.stringify({
                         name: data.name,
-                        description: data.description
+                        description: data.description,
+                        icon: data.icon,
+                        color: data.color
                     })
                 });
                 
@@ -354,5 +651,72 @@
             }
             return false;
         }
+        
+        // ===== EXPAND/COLLAPSE WITH LOCALSTORAGE =====
+        const STORAGE_KEY = 'groupsExpandedState';
+        
+        // Get expanded state from localStorage
+        function getExpandedState() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            return stored ? JSON.parse(stored) : {};
+        }
+        
+        // Save expanded state to localStorage
+        function saveExpandedState(groupId, isExpanded) {
+            const state = getExpandedState();
+            state[groupId] = isExpanded;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+        
+        // Toggle group expand/collapse
+        window.toggleGroupExpand = function(groupId) {
+            const content = document.getElementById(`content-${groupId}`);
+            const icon = document.getElementById(`expand-icon-${groupId}`);
+            
+            if (!content || !icon) return;
+            
+            const isExpanding = !content.classList.contains('show');
+            
+            // Toggle Bootstrap collapse
+            if (isExpanding) {
+                content.classList.add('show');
+                icon.classList.add('expanded');
+            } else {
+                content.classList.remove('show');
+                icon.classList.remove('expanded');
+            }
+            
+            // Save state to localStorage
+            saveExpandedState(groupId, isExpanding);
+        };
+        
+        // Initialize expand/collapse state on page load
+        function initializeExpandedState() {
+            const state = getExpandedState();
+            const allCards = document.querySelectorAll('[data-group-id]');
+            
+            // If no saved state, expand the first top-level group
+            if (Object.keys(state).length === 0 && allCards.length > 0) {
+                const firstGroupId = allCards[0].getAttribute('data-group-id');
+                toggleGroupExpand(firstGroupId);
+                return;
+            }
+            
+            // Restore saved state
+            allCards.forEach(card => {
+                const groupId = card.getAttribute('data-group-id');
+                if (state[groupId]) {
+                    const content = document.getElementById(`content-${groupId}`);
+                    const icon = document.getElementById(`expand-icon-${groupId}`);
+                    if (content && icon) {
+                        content.classList.add('show');
+                        icon.classList.add('expanded');
+                    }
+                }
+            });
+        }
+        
+        // Initialize on page load
+        initializeExpandedState();
     </script>
 }
