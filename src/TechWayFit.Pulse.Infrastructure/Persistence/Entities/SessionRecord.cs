@@ -29,4 +29,8 @@ public sealed class SessionRecord
     public Guid? FacilitatorUserId { get; set; }
 
     public Guid? GroupId { get; set; }
+
+    public DateTime? SessionStart { get; set; }
+
+    public DateTime? SessionEnd { get; set; }
 }

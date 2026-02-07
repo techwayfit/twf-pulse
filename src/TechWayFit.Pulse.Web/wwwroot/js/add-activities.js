@@ -73,11 +73,45 @@ class AddActivitiesManager {
                 this.sessionId = this.sessionData.sessionId;
             }
             
+            // Load existing activities
+            await this.loadActivities();
+            
             console.log('Session data loaded:', this.sessionData);
         } catch (error) {
             console.error('Error loading session:', error);
             alert('Failed to load session data');
             window.location.href = '/facilitator/dashboard';
+        }
+    }
+
+    async loadActivities() {
+        try {
+            const response = await fetch(`/api/sessions/${this.sessionCode}/activities`);
+            if (!response.ok) {
+                throw new Error('Failed to load activities');
+            }
+            
+            const result = await response.json();
+            const activities = result.data || [];
+            
+            // Map API activities to local format
+            this.activities = activities.map(activity => ({
+                id: activity.activityId,
+                type: activity.type.toLowerCase(),
+                title: activity.title,
+                prompt: activity.prompt,
+                config: activity.config,
+                durationMinutes: activity.durationMinutes,
+                order: activity.order
+            }));
+            
+            this.updateActivityList();
+            
+            console.log(`Loaded ${this.activities.length} existing activities`);
+        } catch (error) {
+            console.error('Error loading activities:', error);
+            // Don't fail - just start with empty activities
+            this.activities = [];
         }
     }
 
@@ -304,66 +338,107 @@ class AddActivitiesManager {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const submitBtn = form.querySelector('button[type="submit"]');
+            const submitBtn = document.getElementById('aiGenerateBtn');
             const btnText = submitBtn.querySelector('.btn-text');
             const btnLoading = submitBtn.querySelector('.btn-loading');
+            const statusMessage = document.getElementById('aiStatusMessage');
             
             // Show loading state
             btnText.classList.add('d-none');
             btnLoading.classList.remove('d-none');
             submitBtn.disabled = true;
+            statusMessage.classList.add('d-none');
             
             try {
                 const workshopType = document.getElementById('aiWorkshopType').value;
                 const activityCount = parseInt(document.getElementById('aiActivityCount').value);
-                const additionalContext = document.getElementById('aiAdditionalContext').value;
+                const additionalContext = document.getElementById('aiAdditionalContext').value.trim();
+                const duration = document.getElementById('aiDuration').value;
+                const participantCount = document.getElementById('aiParticipantCount').value;
                 
-                // Build AI generation request
+                // Collect all checked participant types
+                const participantTypeCheckboxes = document.querySelectorAll('#aiParticipantTypes input[type="checkbox"]:checked');
+                const participantTypes = Array.from(participantTypeCheckboxes).map(cb => cb.value);
+                
+                // Build optimized AI generation request using session data already on the server
                 const aiRequest = {
-                    title: this.sessionData.title,
-                    goal: this.sessionData.goal,
-                    context: additionalContext || null,
-                    generationContext: {
-                        workshopType: workshopType || 'other',
-                        durationMinutes: activityCount * 5  // Approximate: 5 mins per activity
-                    }
+                    additionalContext: additionalContext || null,
+                    workshopType: workshopType || null,
+                    targetActivityCount: activityCount,
+                    durationMinutes: duration ? parseInt(duration) : null,
+                    participantCount: participantCount ? parseInt(participantCount) : null,
+                    participantType: participantTypes.length > 0 ? participantTypes.join(',') : null
                 };
                 
-                // Call AI generation endpoint
-                const response = await fetch('/api/sessions/generate', {
+                console.log('🧠 Requesting AI generation:', aiRequest);
+                
+                // Call new optimized endpoint - generates and adds activities in one call
+                const response = await fetch(`/api/sessions/${this.sessionCode}/generate-activities`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(aiRequest)
                 });
                 
                 if (!response.ok) {
-                    throw new Error('AI generation failed');
+                    const errorData = await response.json().catch(() => ({}));
+                    
+                    // Handle quota exceeded error
+                    if (response.status === 429) {
+                        throw new Error(errorData.error?.message || 'AI generation quota exceeded. Please add your own API key in settings.');
+                    }
+                    
+                    throw new Error(errorData.error?.message || 'AI generation failed');
                 }
                 
                 const result = await response.json();
-                const generatedActivities = result.data || result;
+                const generatedActivities = result.data || [];
                 
-                console.log('Generated activities:', generatedActivities);
+                console.log('✅ Generated and saved activities:', generatedActivities);
                 
-                // Clear existing and add generated activities
-                this.activities = [];
-                for (const activity of generatedActivities) {
-                    await this.createActivityFromConfig(activity);
-                }
+                // Reload activities from server to get the complete list
+                await this.loadActivities();
                 
-                // Show success and switch to manual tab
-                alert(`Successfully generated ${generatedActivities.length} activities!`);
-                document.getElementById('manual-tab').click();
+                // Show success message
+                statusMessage.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>✅ Success!</strong> Generated ${generatedActivities.length} AI-powered activities
+                    </div>
+                `;
+                statusMessage.classList.remove('d-none');
+                
+                // Switch to manual tab to see the generated activities after a brief delay
+                setTimeout(() => {
+                    document.getElementById('manual-tab').click();
+                    
+                    // Scroll to activity list
+                    const activityList = document.getElementById('manualActivityList');
+                    if (activityList) {
+                        activityList.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }, 1500);
                 
             } catch (error) {
-                console.error('AI generation error:', error);
-                alert('Failed to generate activities: ' + error.message);
+                console.error('❌ AI generation error:', error);
+                
+                // Show error message
+                statusMessage.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>❌ Error:</strong> ${this.escapeHtml(error.message)}
+                    </div>
+                `;
+                statusMessage.classList.remove('d-none');
             } finally {
                 btnText.classList.remove('d-none');
                 btnLoading.classList.add('d-none');
                 submitBtn.disabled = false;
             }
         });
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     skipActivities() {

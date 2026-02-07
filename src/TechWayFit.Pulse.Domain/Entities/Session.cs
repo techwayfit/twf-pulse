@@ -19,7 +19,9 @@ public sealed class Session
         DateTimeOffset updatedAt,
         DateTimeOffset expiresAt,
         Guid? facilitatorUserId = null,
-        Guid? groupId = null)
+        Guid? groupId = null,
+        DateTime? sessionStart = null,
+        DateTime? sessionEnd = null)
     {
         Id = id;
         Code = code.Trim();
@@ -35,6 +37,8 @@ public sealed class Session
         ExpiresAt = expiresAt;
         FacilitatorUserId = facilitatorUserId;
         GroupId = groupId;
+        SessionStart = sessionStart;
+        SessionEnd = sessionEnd;
     }
 
     public Guid Id { get; }
@@ -72,6 +76,18 @@ public sealed class Session
     /// Null if session is not assigned to any group.
     /// </summary>
     public Guid? GroupId { get; private set; }
+
+    /// <summary>
+    /// Planned start date/time for the workshop session.
+    /// Used for planning purposes only, does not auto-start the session.
+    /// </summary>
+    public DateTime? SessionStart { get; private set; }
+
+    /// <summary>
+    /// Planned end date/time for the workshop session.
+    /// Used for planning purposes only, does not auto-end the session.
+    /// </summary>
+    public DateTime? SessionEnd { get; private set; }
 
     public void SetStatus(SessionStatus status, DateTimeOffset updatedAt)
     {
@@ -114,6 +130,13 @@ public sealed class Session
     public void SetGroup(Guid? groupId, DateTimeOffset updatedAt)
     {
         GroupId = groupId;
+        UpdatedAt = updatedAt;
+    }
+
+    public void SetSessionSchedule(DateTime? sessionStart, DateTime? sessionEnd, DateTimeOffset updatedAt)
+    {
+        SessionStart = sessionStart;
+        SessionEnd = sessionEnd;
         UpdatedAt = updatedAt;
     }
 }

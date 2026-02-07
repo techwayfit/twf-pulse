@@ -12,7 +12,8 @@ public sealed class SessionGroup
         DateTimeOffset updatedAt,
         Guid? facilitatorUserId = null,
         string? icon = null,
-        string? color = null)
+        string? color = null,
+        bool isDefault = false)
     {
         if (level < 1 || level > 3)
             throw new ArgumentException("Group level must be between 1 and 3.", nameof(level));
@@ -33,6 +34,7 @@ public sealed class SessionGroup
         FacilitatorUserId = facilitatorUserId;
         Icon = icon ?? (level == 1 ? "📁" : level == 2 ? "📂" : "📄");
         Color = color;
+        IsDefault = isDefault;
     }
 
     public Guid Id { get; }
@@ -64,6 +66,12 @@ public sealed class SessionGroup
     /// Optional color for the group (hex code)
     /// </summary>
     public string? Color { get; private set; }
+
+    /// <summary>
+    /// Indicates if this is the default group for the facilitator.
+    /// Default groups are automatically created and used when no group is specified.
+    /// </summary>
+    public bool IsDefault { get; private set; }
 
     public void Update(string name, string? description, DateTimeOffset updatedAt, string? icon = null, string? color = null)
     {

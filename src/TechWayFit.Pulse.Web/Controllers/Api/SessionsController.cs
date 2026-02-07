@@ -32,6 +32,7 @@ public sealed class SessionsController : ControllerBase
     private readonly TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService _facilitatorAI;
     private readonly TechWayFit.Pulse.Application.Abstractions.Services.IAIWorkQueue _aiQueue;
     private readonly TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService _sessionAI;
+    private readonly ISessionGroupService _sessionGroups;
 
     public SessionsController(
         ISessionService sessions,
@@ -50,7 +51,8 @@ public sealed class SessionsController : ControllerBase
         TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService sessionAI,
         IHubContext<WorkshopHub, IWorkshopClient> hub,
         TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService participantAI,
-        TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService facilitatorAI)
+        TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService facilitatorAI,
+        ISessionGroupService sessionGroups)
     {
         _sessions = sessions;
         _authService = authService;
@@ -69,12 +71,13 @@ public sealed class SessionsController : ControllerBase
         _facilitatorAI = facilitatorAI;
         _aiQueue = aiQueue;
         _sessionAI = sessionAI;
+        _sessionGroups = sessionGroups;
     }
 
     [HttpPost]
     public async Task<ActionResult<ApiResponse<CreateSessionResponse>>> CreateSession(
-   [FromBody] CreateSessionRequest request,
- CancellationToken cancellationToken)
+        [FromBody] CreateSessionRequest request,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -87,6 +90,15 @@ public sealed class SessionsController : ControllerBase
             var settings = ApiMapper.ToDomain(request.Settings);
             var joinFormSchema = ApiMapper.ToDomain(request.JoinFormSchema);
             var facilitatorUserId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+            
+            // If no group is specified, use the default group for this facilitator
+            var groupId = request.GroupId;
+            if (groupId == null && facilitatorUserId.HasValue)
+            {
+                var defaultGroup = await _sessionGroups.GetDefaultGroupAsync(facilitatorUserId.Value, cancellationToken);
+                groupId = defaultGroup?.Id;
+            }
+            
             var session = await _sessions.CreateSessionAsync(
                 code,
                 request.Title,
@@ -96,7 +108,7 @@ public sealed class SessionsController : ControllerBase
                 joinFormSchema,
                 DateTimeOffset.UtcNow,
                 facilitatorUserId,
-                request.GroupId,
+                groupId,
                 cancellationToken);
 
             return Ok(Wrap(new CreateSessionResponse(session.Id, session.Code)));
@@ -124,6 +136,62 @@ public sealed class SessionsController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "Failed to generate session activities", detail = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Generate and add AI activities to an existing session
+    /// Optimized endpoint for add-activities page
+    /// </summary>
+    [HttpPost("{code}/generate-activities")]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<AgendaActivityResponse>>>> GenerateActivitiesForSession(
+        string code,
+        [FromBody] GenerateActivitiesRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Get the session
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<IReadOnlyList<AgendaActivityResponse>>("not_found", "Session not found."));
+            }
+
+            // Verify facilitator owns this session
+            var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+            if (userId == null || session.FacilitatorUserId != userId)
+            {
+                return Forbid();
+            }
+
+            // Build enhanced context from request parameters
+            var enhancedContext = BuildEnhancedContext(
+                request.AdditionalContext,
+                request.ParticipantCount,
+                request.ParticipantType);
+
+            // Calculate target activity count based on duration if provided
+            var targetCount = request.TargetActivityCount 
+                ?? (request.DurationMinutes.HasValue ? request.DurationMinutes.Value / 5 : 4);
+
+            // Generate and add activities to the session
+            var generated = await _sessionAI.GenerateAndAddActivitiesToSessionAsync(
+                session,
+                enhancedContext,
+                request.WorkshopType,
+                targetCount,
+                cancellationToken);
+
+            return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(generated));
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("quota"))
+        {
+            return StatusCode(429, Error<IReadOnlyList<AgendaActivityResponse>>("quota_exceeded", ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, Error<IReadOnlyList<AgendaActivityResponse>>("generation_failed", $"Failed to generate activities: {ex.Message}"));
         }
     }
 
@@ -1126,6 +1194,59 @@ filters ?? new Dictionary<string, string?>(),
         await _hub.Clients.Group(sessionCode).ActivityStateChanged(activityStateEvent);
     }
 
+    /// <summary>
+    /// Build enhanced context by combining user context with participant information
+    /// This helps AI generate more relevant activities
+    /// </summary>
+    private static string? BuildEnhancedContext(
+        string? additionalContext,
+        int? participantCount,
+        string? participantType)
+    {
+        var contextParts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(additionalContext))
+        {
+            contextParts.Add(additionalContext.Trim());
+        }
+
+        if (participantCount.HasValue)
+        {
+            var teamSize = participantCount.Value switch
+            {
+                <= 5 => "small team",
+                <= 10 => "medium-sized team",
+                <= 20 => "large team",
+                _ => "large group"
+            };
+            contextParts.Add($"Expected audience: {teamSize} (~{participantCount} participants)");
+        }
+
+        if (!string.IsNullOrWhiteSpace(participantType))
+        {
+            var types = participantType.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            var descriptions = types.Select(type => type.ToLowerInvariant() switch
+            {
+                "developers" => "developers/engineers",
+                "product" => "product managers",
+                "designers" => "designers/UX",
+                "leadership" => "leadership/executives",
+                "operations" => "operations/support",
+                "sales" => "sales/customer success",
+                _ => type
+            }).ToArray();
+            
+            var audienceDescription = descriptions.Length switch
+            {
+                1 => $"{descriptions[0]} team",
+                2 => $"{descriptions[0]} and {descriptions[1]}",
+                _ => $"{string.Join(", ", descriptions.Take(descriptions.Length - 1))}, and {descriptions.Last()}"
+            };
+            contextParts.Add($"Participant profile: {audienceDescription}");
+        }
+
+        return contextParts.Any() ? string.Join(". ", contextParts) : null;
+    }
 
     private void ValidateJoinFormSchema(JoinFormSchemaDto schema)
     {

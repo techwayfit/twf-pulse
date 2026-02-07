@@ -206,6 +206,7 @@
                                     <th>Session Code</th>
                                     <th>Title</th>
                                     <th>Group</th>
+                                    <th>Scheduled</th>
                                     <th>Status</th>
                                     <th>Created</th>
                                     <th>Expires</th>
@@ -241,6 +242,26 @@
                                                     <span class="badge bg-secondary bg-opacity-10 text-secondary">
                                                         @group.Name
                                                     </span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (session.SessionStart.HasValue)
+                                            {
+                                                <div>
+                                                    <small class="text-success">
+                                                        📅 @session.SessionStart.Value.ToString("MMM dd, HH:mm")
+                                                    </small>
+                                                </div>
+                                                @if (session.SessionEnd.HasValue)
+                                                {
+                                                    <small class="text-muted">
+                                                        → @session.SessionEnd.Value.ToString("HH:mm")
+                                                    </small>
                                                 }
                                             }
                                             else
@@ -343,6 +364,10 @@
                                             {
                                                 <span class="session-mobile-group">📁 @group.Name</span>
                                             }
+                                        }
+                                        @if (session.SessionStart.HasValue)
+                                        {
+                                            <span class="session-mobile-schedule">📅 @session.SessionStart.Value.ToString("MMM dd, HH:mm")</span>
                                         }
                                         <span class="session-mobile-date">Created: @session.CreatedAt.ToString("MMM dd, yyyy")</span>
                                     </div>

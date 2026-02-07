@@ -21,15 +21,18 @@ public class SessionTemplatesController : ControllerBase
     private readonly ISessionTemplateService _templateService;
     private readonly IAuthenticationService _authService;
     private readonly ILogger<SessionTemplatesController> _logger;
+    private readonly ISessionGroupService _sessionGroups;
 
     public SessionTemplatesController(
         ISessionTemplateService templateService,
         IAuthenticationService authService,
-        ILogger<SessionTemplatesController> logger)
+        ILogger<SessionTemplatesController> logger,
+        ISessionGroupService sessionGroups)
     {
         _templateService = templateService;
         _authService = authService;
         _logger = logger;
+        _sessionGroups = sessionGroups;
     }
 
     /// <summary>
@@ -289,10 +292,18 @@ public class SessionTemplatesController : ControllerBase
                 };
             }
 
+            // If no group is specified, use the default group for this facilitator
+            var groupId = request.GroupId;
+            if (groupId == null)
+            {
+                var defaultGroup = await _sessionGroups.GetDefaultGroupAsync(userId.Value, cancellationToken);
+                groupId = defaultGroup?.Id;
+            }
+
             var session = await _templateService.CreateSessionFromTemplateAsync(
                 request.TemplateId,
                 userId.Value,
-                request.GroupId,
+                groupId,
                 customizations,
                 cancellationToken);
 

@@ -146,7 +146,9 @@ ISessionRepository sessionRepository,
                     ExpiresAt = s.ExpiresAt,
                     IsCompleted = s.Status == Domain.Enums.SessionStatus.Ended || 
                                  s.Status == Domain.Enums.SessionStatus.Expired,
-                    IsActive = s.Status == Domain.Enums.SessionStatus.Live && s.ExpiresAt > DateTimeOffset.UtcNow
+                    IsActive = s.Status == Domain.Enums.SessionStatus.Live && s.ExpiresAt > DateTimeOffset.UtcNow,
+                    SessionStart = s.SessionStart,
+                    SessionEnd = s.SessionEnd
                 })
                 .ToList(),
             TotalSessionCount = GetTotalSessionCount(g.Id, groups, allSessions)

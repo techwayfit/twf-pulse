@@ -60,7 +60,8 @@ public sealed class SessionGroupService : ISessionGroupService
             now,
             facilitatorUserId,
             icon,
-            color);
+            color,
+            false); // Not a default group
 
         return await _groups.CreateAsync(group, cancellationToken);
     }
@@ -134,5 +135,34 @@ public sealed class SessionGroupService : ISessionGroupService
         CancellationToken cancellationToken = default)
     {
         return await _groups.GetHierarchyAsync(facilitatorUserId, cancellationToken);
+    }
+
+    public async Task<SessionGroup> CreateDefaultGroupAsync(
+        Guid facilitatorUserId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        var group = new SessionGroup(
+            Guid.NewGuid(),
+            "Default",
+            "Default group for organizing sessions",
+            1,
+            null,
+            now,
+            now,
+            facilitatorUserId,
+            "📁",
+            null,
+            true); // Mark as default group
+
+        return await _groups.CreateAsync(group, cancellationToken);
+    }
+
+    public async Task<SessionGroup?> GetDefaultGroupAsync(
+        Guid facilitatorUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var groups = await _groups.GetByFacilitatorAsync(facilitatorUserId, cancellationToken);
+        return groups.FirstOrDefault(g => g.IsDefault);
     }
 }

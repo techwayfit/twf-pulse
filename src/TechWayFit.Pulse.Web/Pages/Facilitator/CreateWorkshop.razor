@@ -61,6 +61,22 @@
                             </select>
                             <small class="text-muted">AI will generate appropriate activities for this workshop type</small>
                         </div>
+                        
+                        <!-- Session Schedule (Optional) -->
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Scheduled Time (Optional)</label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">Start Date & Time</label>
+                                    <input type="datetime-local" class="form-control" @bind="sessionStart" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">End Date & Time</label>
+                                    <input type="datetime-local" class="form-control" @bind="sessionEnd" />
+                                </div>
+                            </div>
+                            <small class="text-muted">For planning purposes only - won't auto-start/stop the session</small>
+                        </div>
                     </div>
                 </div>
             </div>

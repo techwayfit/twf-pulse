@@ -17,4 +17,6 @@ public class SessionSummary
     public DateTimeOffset ExpiresAt { get; set; }
     public bool IsCompleted { get; set; }
     public bool IsActive { get; set; }
+    public DateTime? SessionStart { get; set; }
+    public DateTime? SessionEnd { get; set; }
 }

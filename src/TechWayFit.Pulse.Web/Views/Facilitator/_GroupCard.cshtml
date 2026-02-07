@@ -122,6 +122,12 @@
                                         <a href="/facilitator/dashboard?session=@session.Id" class="text-decoration-none fw-medium d-block text-truncate" style="font-size: 0.8rem; color: #334155;">
                                             @session.Title
                                         </a>
+                                        @if (session.SessionStart.HasValue)
+                                        {
+                                            <small class="text-muted d-block" style="font-size: 0.7rem; margin-top: 2px;">
+                                                📅 @session.SessionStart.Value.ToString("MMM dd, HH:mm")@(session.SessionEnd.HasValue ? $" - {session.SessionEnd.Value:HH:mm}" : "")
+                                            </small>
+                                        }
                                     </div>
                                     <div class="text-muted text-end" style="font-size: 0.7rem; white-space: nowrap;">
                                         <div>@session.Status</div>

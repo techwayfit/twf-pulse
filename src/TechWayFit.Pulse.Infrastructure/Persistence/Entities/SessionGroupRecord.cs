@@ -21,4 +21,6 @@ public sealed class SessionGroupRecord
     public string Icon { get; set; } = "📁";
 
     public string? Color { get; set; }
+
+    public bool IsDefault { get; set; }
 }

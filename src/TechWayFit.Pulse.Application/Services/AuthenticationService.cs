@@ -10,6 +10,7 @@ public sealed class AuthenticationService : IAuthenticationService
     private readonly IFacilitatorUserRepository _userRepository;
     private readonly ILoginOtpRepository _otpRepository;
     private readonly IEmailService _emailService;
+    private readonly ISessionGroupService _sessionGroupService;
     private readonly ILogger<AuthenticationService> _logger;
 
     private const int OtpLength = 6;
@@ -20,11 +21,13 @@ public sealed class AuthenticationService : IAuthenticationService
       IFacilitatorUserRepository userRepository,
         ILoginOtpRepository otpRepository,
     IEmailService emailService,
+        ISessionGroupService sessionGroupService,
         ILogger<AuthenticationService> logger)
     {
         _userRepository = userRepository;
         _otpRepository = otpRepository;
         _emailService = emailService;
+        _sessionGroupService = sessionGroupService;
         _logger = logger;
     }
 
@@ -123,14 +126,27 @@ otpCode,
         {
             // Create new user - use provided displayName, otherwise extract from email
             var userDisplayName = displayName ?? ExtractDisplayNameFromEmail(normalizedEmail);
+            var now = DateTimeOffset.UtcNow;
             user = new FacilitatorUser(
                             Guid.NewGuid(),
                             normalizedEmail,
                             userDisplayName,
-                            DateTimeOffset.UtcNow,
-                            DateTimeOffset.UtcNow);
+                            now,
+                            now);
 
             await _userRepository.AddAsync(user, cancellationToken);
+
+            // Create default group for new user
+            try
+            {
+                await _sessionGroupService.CreateDefaultGroupAsync(user.Id, now, cancellationToken);
+                _logger.LogInformation("Created default group for new facilitator user: {Email}", normalizedEmail);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create default group for {Email}", normalizedEmail);
+                // Don't fail the login if default group creation fails
+            }
 
             // Send welcome email
             try

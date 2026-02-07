@@ -20,6 +20,18 @@ public sealed class CreateSessionRequest
     public Guid? GroupId { get; set; }
     
     /// <summary>
+    /// Planned start date/time for the workshop session (optional)
+    /// Used for planning purposes only, does not auto-start the session
+    /// </summary>
+    public DateTime? SessionStart { get; set; }
+    
+    /// <summary>
+    /// Planned end date/time for the workshop session (optional)
+    /// Used for planning purposes only, does not auto-end the session
+    /// </summary>
+    public DateTime? SessionEnd { get; set; }
+    
+    /// <summary>
     /// Enhanced context for AI session generation (optional)
     /// When provided, AI will use this rich context to generate better activities
     /// </summary>

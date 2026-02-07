@@ -39,4 +39,13 @@ public interface ISessionGroupService
     Task<IReadOnlyCollection<SessionGroup>> GetGroupHierarchyAsync(
         Guid facilitatorUserId,
         CancellationToken cancellationToken = default);
+
+    Task<SessionGroup> CreateDefaultGroupAsync(
+        Guid facilitatorUserId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
+    Task<SessionGroup?> GetDefaultGroupAsync(
+        Guid facilitatorUserId,
+        CancellationToken cancellationToken = default);
 }

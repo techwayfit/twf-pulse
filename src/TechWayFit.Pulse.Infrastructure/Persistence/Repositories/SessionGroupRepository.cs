@@ -27,7 +27,8 @@ public sealed class SessionGroupRepository : ISessionGroupRepository
             UpdatedAt = group.UpdatedAt,
             FacilitatorUserId = group.FacilitatorUserId,
             Icon = group.Icon,
-            Color = group.Color
+            Color = group.Color,
+            IsDefault = group.IsDefault
         };
 
         _context.SessionGroups.Add(record);
@@ -132,6 +133,7 @@ public sealed class SessionGroupRepository : ISessionGroupRepository
             record.UpdatedAt,
             record.FacilitatorUserId,
             record.Icon,
-            record.Color);
+            record.Color,
+            record.IsDefault);
     }
 }

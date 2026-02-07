@@ -38,6 +38,10 @@ namespace TechWayFit.Pulse.Web.Pages.Facilitator
         private UpdateActivityRequest editModel = new();
         private bool isSaving = false;
         private bool isGenerating = false;
+        
+        // Session Schedule Fields
+        private DateTime? sessionStart = null;
+        private DateTime? sessionEnd = null;
 
         // Join Form Fields
         private List<JoinFormField> joinFormFields = new();
@@ -134,7 +138,9 @@ namespace TechWayFit.Pulse.Web.Pages.Facilitator
                 {
                     Title = sessionTitle,
                     Goal = sessionGoal,
-                    Settings = new Contracts.Models.SessionSettingsDto { StrictCurrentActivityOnly = false, AllowAnonymous = false, TtlMinutes = 360 }
+                    Settings = new Contracts.Models.SessionSettingsDto { StrictCurrentActivityOnly = false, AllowAnonymous = false, TtlMinutes = 360 },
+                    SessionStart = sessionStart,
+                    SessionEnd = sessionEnd
                 };
 
                 // Build enhanced context if advanced options are used
