@@ -10,6 +10,12 @@ public interface ISessionRepository
 
     Task<IReadOnlyList<Session>> GetByFacilitatorUserIdAsync(Guid facilitatorUserId, CancellationToken cancellationToken = default);
 
+    Task<(IReadOnlyList<Session> Sessions, int TotalCount)> GetByFacilitatorUserIdPaginatedAsync(
+        Guid facilitatorUserId, 
+        int page, 
+        int pageSize, 
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyCollection<Session>> GetByGroupAsync(Guid? groupId, Guid facilitatorUserId, CancellationToken cancellationToken = default);
 
     Task AddAsync(Session session, CancellationToken cancellationToken = default);

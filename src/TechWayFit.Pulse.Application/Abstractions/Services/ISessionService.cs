@@ -50,6 +50,13 @@ public interface ISessionService
         DateTimeOffset now,
         CancellationToken cancellationToken = default);
 
+    Task SetSessionScheduleAsync(
+        Guid sessionId,
+        DateTime? sessionStart,
+        DateTime? sessionEnd,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyCollection<Session>> GetSessionsByGroupAsync(
         Guid? groupId,
         Guid facilitatorUserId,

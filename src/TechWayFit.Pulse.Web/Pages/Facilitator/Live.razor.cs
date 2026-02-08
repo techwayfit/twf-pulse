@@ -46,7 +46,6 @@ public partial class Live : IAsyncDisposable
     private string activityModalsHtml = string.Empty;
 
     // Modal component references
-    private EditSessionModal? editSessionModal;
     private EditActivityModal? editActivityModal;
 
     protected override async Task OnInitializedAsync()
@@ -945,7 +944,8 @@ Config = currentActivity.Config,
 
     private void ShowEditSessionModal()
     {
-        editSessionModal?.Show();
+        var returnUrl = $"/facilitator/live?Code={Uri.EscapeDataString(sessionCode)}";
+        Navigation.NavigateTo($"/facilitator/edit-session/{sessionCode}?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
     }
 
     private void ShowEditActivityModal(AgendaActivityResponse activity)

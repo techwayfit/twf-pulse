@@ -36,7 +36,7 @@ ISessionRepository sessionRepository,
     }
 
     [HttpGet("dashboard")]
-    public async Task<IActionResult> Dashboard(CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Dashboard(int page = 1, int pageSize = 15, CancellationToken cancellationToken = default)
     {
         var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
         if (userId == null)
@@ -44,12 +44,26 @@ ISessionRepository sessionRepository,
             return RedirectToAction("Login", "Account");
         }
 
-        var sessions = await _sessionRepository.GetByFacilitatorUserIdAsync(userId.Value, cancellationToken);
+        // Validate pagination parameters
+        if (page < 1) page = 1;
+        if (pageSize < 1 || pageSize > 20) pageSize = 15;
+
+        var (sessions, totalCount) = await _sessionRepository.GetByFacilitatorUserIdPaginatedAsync(
+            userId.Value, 
+            page, 
+            pageSize, 
+            cancellationToken);
         var groups = await _sessionGroupService.GetGroupHierarchyAsync(userId.Value, cancellationToken);
+
+        var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
         ViewData["UserEmail"] = User.FindFirst(ClaimTypes.Email)?.Value;
         ViewData["UserName"] = User.FindFirst(ClaimTypes.Name)?.Value;
         ViewData["Groups"] = groups;
+        ViewData["CurrentPage"] = page;
+        ViewData["PageSize"] = pageSize;
+        ViewData["TotalCount"] = totalCount;
+        ViewData["TotalPages"] = totalPages;
 
         return View(sessions);
     }
@@ -220,6 +234,42 @@ ISessionRepository sessionRepository,
         ViewData["Groups"] = groups;
         
         return View(template);
+    }
+
+    /// <summary>
+    /// Edit Session page
+    /// </summary>
+    [HttpGet("edit-session/{code}")]
+    public async Task<IActionResult> EditSession(string code, string? returnUrl = null, CancellationToken cancellationToken = default)
+    {
+        var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+        if (userId == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        // Get session
+        var session = await _sessionRepository.GetByCodeAsync(code, cancellationToken);
+        if (session == null)
+        {
+            _logger.LogWarning("Session not found: {Code}", code);
+            return NotFound();
+        }
+
+        // Verify ownership
+        if (session.FacilitatorUserId != userId)
+        {
+            _logger.LogWarning("Unauthorized access attempt to session {Code} by user {UserId}", code, userId);
+            return NotFound();
+        }
+
+        // Get groups for dropdown
+        var groups = await _sessionGroupService.GetFacilitatorGroupsAsync(userId.Value, cancellationToken);
+        
+        ViewData["Groups"] = groups;
+        ViewData["ReturnUrl"] = returnUrl ?? Url.Action("Dashboard", "Facilitator");
+        
+        return View(session);
     }
 
     /// <summary>

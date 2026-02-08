@@ -1,0 +1,265 @@
+@model TechWayFit.Pulse.Domain.Entities.Session
+@{
+    ViewData["Title"] = $"Edit Session — {Model.Code}";
+    var groups = ViewData["Groups"] as IEnumerable<TechWayFit.Pulse.Domain.Entities.SessionGroup>;
+    var returnUrl = ViewData["ReturnUrl"] as string ?? "/facilitator/dashboard";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/create-session.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+}
+
+<main class="py-5">
+    <div class="container container-wide">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h2 class="mb-2">Edit Session</h2>
+                <p class="text-muted mb-0">
+                    <span class="badge bg-white text-dark border px-3 py-2">@Model.Code</span>
+                </p>
+            </div>
+            <a href="@returnUrl" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+
+        <!-- Edit Form -->
+        <form id="editSessionForm">
+            <input type="hidden" id="sessionCode" value="@Model.Code" />
+            <input type="hidden" id="returnUrl" value="@returnUrl" />
+
+            <!-- Session Details Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-semibold">Session Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <!-- Title -->
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label fw-medium" for="sessionTitle">
+                                Title <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="sessionTitle" name="title" 
+                                   value="@Model.Title" required maxlength="150" />
+                            <div class="text-end">
+                                <span class="text-muted" style="font-size: 0.75rem;" id="titleCharCount">@(Model.Title?.Length ?? 0) / 150</span>
+                            </div>
+                        </div>
+
+                        <!-- Group -->
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label fw-medium" for="sessionGroup">Group</label>
+                            @{
+                                var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
+                                
+                                if (groups != null)
+                                {
+                                    foreach (var group in groups)
+                                    {
+                                        treeItems.Add(new TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem
+                                        {
+                                            Value = group.Id.ToString(),
+                                            Text = group.Name,
+                                            ParentValue = group.ParentGroupId?.ToString(),
+                                            Level = group.Level - 1,
+                                            HasChildren = groups.Any(g => g.ParentGroupId == group.Id),
+                                            Icon = group.Level == 1 ? "📁" : group.Level == 2 ? "📂" : "📄"
+                                        });
+                                    }
+                                }
+                            }
+                            @await Component.InvokeAsync("TreeDropdown", new {
+                                id = "sessionGroup",
+                                name = "groupId",
+                                value = Model.GroupId?.ToString() ?? string.Empty,
+                                placeholder = "No group (ungrouped)",
+                                items = treeItems,
+                                allowClear = true
+                            })
+                            <div class="form-text">Optional: Organize sessions into folders</div>
+                        </div>
+                    </div>
+
+                    <!-- Goal -->
+                    <div class="mb-4">
+                        <label class="form-label fw-medium" for="sessionGoal">Session Goal</label>
+                        <textarea class="form-control" id="sessionGoal" name="goal" rows="3" 
+                                  maxlength="250">@Model.Goal</textarea>
+                        <div class="d-flex justify-content-between">
+                            <div class="form-text">What do you want participants to achieve?</div>
+                            <span class="text-muted" style="font-size: 0.75rem;" id="goalCharCount">@(Model.Goal?.Length ?? 0) / 250</span>
+                        </div>
+                    </div>
+
+                    <!-- Context -->
+                    <div class="mb-4">
+                        <label class="form-label fw-medium" for="sessionContext">Context</label>
+                        <textarea class="form-control" id="sessionContext" name="context" rows="2" 
+                                  maxlength="100">@Model.Context</textarea>
+                        <div class="d-flex justify-content-between">
+                            <div class="form-text">Brief context about the session</div>
+                            <span class="text-muted" style="font-size: 0.75rem;" id="contextCharCount">@(Model.Context?.Length ?? 0) / 100</span>
+                        </div>
+                    </div>
+
+                    <!-- Settings -->
+                    <div class="mb-4">
+                        <label class="form-label fw-medium d-block mb-3">Session Settings</label>
+                        
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="allowAnonymous" name="allowAnonymous" 
+                                   @(Model.Settings.AllowAnonymous ? "checked" : "") />
+                            <label class="form-check-label" for="allowAnonymous">
+                                Allow Anonymous Participation
+                            </label>
+                            <div class="form-text">Participants can join without providing a name</div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="strictCurrentActivityOnly" name="strictCurrentActivityOnly" 
+                                   @(Model.Settings.StrictCurrentActivityOnly ? "checked" : "") />
+                            <label class="form-check-label" for="strictCurrentActivityOnly">
+                                Strict Current Activity Mode
+                            </label>
+                            <div class="form-text">Participants can only see and respond to the current active activity</div>
+                        </div>
+                    </div>
+
+                    <!-- Schedule -->
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label fw-medium" for="sessionStart">Start date & time</label>
+                            <input type="text" class="form-control" id="sessionStart" name="sessionStart" 
+                                   value="@(Model.SessionStart?.ToString("yyyy-MM-dd hh:mm tt"))" 
+                                   placeholder="Select date & time" />
+                            <div class="form-text">Optional: When workshop is planned to start</div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label fw-medium" for="sessionEnd">End date & time</label>
+                            <input type="text" class="form-control" id="sessionEnd" name="sessionEnd" 
+                                   value="@(Model.SessionEnd?.ToString("yyyy-MM-dd hh:mm tt"))" 
+                                   placeholder="Select date & time" />
+                            <div class="form-text">Optional: When workshop is planned to end</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-end gap-3">
+                <a href="@returnUrl" class="btn btn-outline-secondary px-4">Cancel</a>
+                <button type="submit" class="btn btn-pulse-primary px-4 btn-lift" id="saveBtn">
+                    <span class="btn-text">Save Changes</span>
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Character counters
+            const titleInput = document.getElementById('sessionTitle');
+            const goalInput = document.getElementById('sessionGoal');
+            const contextInput = document.getElementById('sessionContext');
+            
+            titleInput.addEventListener('input', function() {
+                document.getElementById('titleCharCount').textContent = `${this.value.length} / 150`;
+            });
+            
+            goalInput.addEventListener('input', function() {
+                document.getElementById('goalCharCount').textContent = `${this.value.length} / 250`;
+            });
+            
+            contextInput.addEventListener('input', function() {
+                document.getElementById('contextCharCount').textContent = `${this.value.length} / 100`;
+            });
+
+            // Initialize Flatpickr
+            flatpickr('#sessionStart', {
+                enableTime: true,
+                dateFormat: 'Y-m-d h:i K',
+                time_24hr: false,
+                allowInput: true
+            });
+            
+            flatpickr('#sessionEnd', {
+                enableTime: true,
+                dateFormat: 'Y-m-d h:i K',
+                time_24hr: false,
+                allowInput: true
+            });
+
+            // Form submission
+            const form = document.getElementById('editSessionForm');
+            const saveBtn = document.getElementById('saveBtn');
+            
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    return;
+                }
+
+                // Disable button and show spinner
+                saveBtn.disabled = true;
+                saveBtn.querySelector('.btn-text').textContent = 'Saving...';
+                saveBtn.querySelector('.spinner-border').classList.remove('d-none');
+
+                const sessionCode = document.getElementById('sessionCode').value;
+                const returnUrl = document.getElementById('returnUrl').value;
+
+                // Get groupId from TreeDropdown hidden input
+                const groupIdInput = document.querySelector('input[name="groupId"]');
+                const groupId = groupIdInput ? groupIdInput.value : null;
+
+                const data = {
+                    title: document.getElementById('sessionTitle').value.trim(),
+                    goal: document.getElementById('sessionGoal').value.trim() || null,
+                    context: document.getElementById('sessionContext').value.trim() || null,
+                    groupId: groupId || null,
+                    sessionStart: document.getElementById('sessionStart').value || null,
+                    sessionEnd: document.getElementById('sessionEnd').value || null,
+                    allowAnonymous: document.getElementById('allowAnonymous').checked,
+                    strictCurrentActivityOnly: document.getElementById('strictCurrentActivityOnly').checked
+                };
+
+                try {
+                    const response = await fetch(`/api/sessions/${sessionCode}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        window.location.href = returnUrl;
+                    } else {
+                        const error = await response.json();
+                        alert('Error updating session: ' + (error.message || 'Unknown error'));
+                        
+                        // Re-enable button
+                        saveBtn.disabled = false;
+                        saveBtn.querySelector('.btn-text').textContent = 'Save Changes';
+                        saveBtn.querySelector('.spinner-border').classList.add('d-none');
+                    }
+                } catch (err) {
+                    alert('Error updating session: ' + err.message);
+                    
+                    // Re-enable button
+                    saveBtn.disabled = false;
+                    saveBtn.querySelector('.btn-text').textContent = 'Save Changes';
+                    saveBtn.querySelector('.spinner-border').classList.add('d-none');
+                }
+            });
+        });
+    </script>
+}

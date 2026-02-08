@@ -458,15 +458,71 @@ public sealed class SessionsController : ControllerBase
                 return authError;
             }
 
-            var updatedSession = await _sessions.UpdateSessionAsync(
-                session.Id,
+            var sessionId = session.Id;
+
+            // Update basic session info (title, goal, context)
+            await _sessions.UpdateSessionAsync(
+                sessionId,
                 request.Title,
                 request.Goal,
                 request.Context,
                 DateTimeOffset.UtcNow,
                 cancellationToken);
 
-            return Ok(Wrap(ApiMapper.ToSummary(updatedSession)));
+            // Update group assignment if provided
+            var currentSessionForGroup = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (currentSessionForGroup is not null && request.GroupId != currentSessionForGroup.GroupId)
+            {
+                await _sessions.SetSessionGroupAsync(
+                    sessionId,
+                    request.GroupId,
+                    DateTimeOffset.UtcNow,
+                    cancellationToken);
+            }
+
+            // Update session schedule if provided
+            if (request.SessionStart.HasValue || request.SessionEnd.HasValue)
+            {
+                var currentSessionForSchedule = await _sessions.GetByCodeAsync(code, cancellationToken);
+                if (currentSessionForSchedule is not null)
+                {
+                    await _sessions.SetSessionScheduleAsync(
+                        sessionId,
+                        request.SessionStart ?? currentSessionForSchedule.SessionStart,
+                        request.SessionEnd ?? currentSessionForSchedule.SessionEnd,
+                        DateTimeOffset.UtcNow,
+                        cancellationToken);
+                }
+            }
+
+            // Update settings if any boolean fields are provided
+            if (request.AllowAnonymous.HasValue || request.StrictCurrentActivityOnly.HasValue)
+            {
+                var currentSessionForSettings = await _sessions.GetByCodeAsync(code, cancellationToken);
+                if (currentSessionForSettings is not null)
+                {
+                    var settings = new Domain.ValueObjects.SessionSettings(
+                        strictCurrentActivityOnly: request.StrictCurrentActivityOnly ?? currentSessionForSettings.Settings.StrictCurrentActivityOnly,
+                        allowAnonymous: request.AllowAnonymous ?? currentSessionForSettings.Settings.AllowAnonymous,
+                        ttlMinutes: request.TtlMinutes ?? currentSessionForSettings.Settings.TtlMinutes
+                    );
+
+                    await _sessions.UpdateSessionSettingsAsync(
+                        sessionId,
+                        settings,
+                        DateTimeOffset.UtcNow,
+                        cancellationToken);
+                }
+            }
+
+            // Fetch final updated session to return
+            var finalSession = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (finalSession is null)
+            {
+                throw new InvalidOperationException("Session not found after update.");
+            }
+
+            return Ok(Wrap(ApiMapper.ToSummary(finalSession)));
         }
         catch (ArgumentException ex)
         {

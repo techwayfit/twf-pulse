@@ -73,6 +73,32 @@ public sealed class SessionRepository : ISessionRepository
         return sortedRecords.Select(r => r.ToDomain()).ToList();
     }
 
+    public async Task<(IReadOnlyList<Session> Sessions, int TotalCount)> GetByFacilitatorUserIdPaginatedAsync(
+        Guid facilitatorUserId, 
+        int page, 
+        int pageSize, 
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbContext.Sessions
+            .AsNoTracking()
+            .Where(x => x.FacilitatorUserId == facilitatorUserId);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var records = await query.ToListAsync(cancellationToken);
+
+        // Sort on the client side to avoid SQLite DateTimeOffset ordering issues
+        var sortedRecords = records
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        var sessions = sortedRecords.Select(r => r.ToDomain()).ToList();
+
+        return (sessions, totalCount);
+    }
+
     public async Task<IReadOnlyCollection<Session>> GetByGroupAsync(
         Guid? groupId,
         Guid facilitatorUserId,

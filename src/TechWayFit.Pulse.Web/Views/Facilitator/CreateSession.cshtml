@@ -4,6 +4,7 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/create-session.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 }
 
 <main class="py-5">
@@ -91,19 +92,42 @@
                     <div class="mb-4">
                                 <label class="form-label fw-medium" for="sessionTitle">Session title</label>
                                 <input class="form-control" name="sessionTitle" id="sessionTitle" required
-                                       maxlength="200"
+                                       maxlength="150"
                                        placeholder="e.g., Sprint Retrospective - Team Alpha" />
                                 <div class="text-end">
-                                    <span class="text-muted" style="font-size: 0.75rem;" id="titleCharCount">0 / 200</span>
+                                    <span class="text-muted" style="font-size: 0.75rem;" id="titleCharCount">0 / 150</span>
                                 </div>
                             </div>
                             <div class="mb-4">
                                 <label class="form-label fw-medium" for="sessionGoal">Goal</label>
-                                <textarea class="form-control" name="sessionGoal" id="sessionGoal" rows="3"
-                                          maxlength="500"
+                                <textarea class="form-control" name="sessionGoal" id="sessionGoal" rows="2"
+                                          maxlength="250"
                                           placeholder="What do you want to achieve in this session?"></textarea>
                                 <div class="text-end">
-                                    <span class="text-muted" style="font-size: 0.75rem;" id="goalCharCount">0 / 500</span>
+                                    <span class="text-muted" style="font-size: 0.75rem;" id="goalCharCount">0 / 250</span>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-medium" for="sessionContext">Context</label>
+                                <textarea class="form-control" name="sessionContext" id="sessionContext" rows="2"
+                                          maxlength="100"
+                                          placeholder="Additional context or background information"></textarea>
+                                <div class="text-end">
+                                    <span class="text-muted" style="font-size: 0.75rem;" id="contextCharCount">0 / 100</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Session Schedule -->
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label fw-medium" for="sessionStart">Start date & time</label>
+                                    <input type="text" class="form-control" name="sessionStart" id="sessionStart" placeholder="Select date & time" />
+                                    <div class="form-text">Optional: When workshop is planned to start</div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label fw-medium" for="sessionEnd">End date & time</label>
+                                    <input type="text" class="form-control" name="sessionEnd" id="sessionEnd" placeholder="Select date & time" />
+                                    <div class="form-text">Optional: When workshop is planned to end</div>
                                 </div>
                             </div>
                 </div>
@@ -318,15 +342,21 @@
             // Initialize character counters
             const titleInput = document.getElementById('sessionTitle');
             const goalInput = document.getElementById('sessionGoal');
+            const contextInput = document.getElementById('sessionContext');
             
             if (titleInput) {
-                titleInput.addEventListener('input', () => updateCharCount('sessionTitle', 'titleCharCount', 200));
-                updateCharCount('sessionTitle', 'titleCharCount', 200); // Initial update
+                titleInput.addEventListener('input', () => updateCharCount('sessionTitle', 'titleCharCount', 150));
+                updateCharCount('sessionTitle', 'titleCharCount', 150); // Initial update
             }
             
             if (goalInput) {
-                goalInput.addEventListener('input', () => updateCharCount('sessionGoal', 'goalCharCount', 500));
-                updateCharCount('sessionGoal', 'goalCharCount', 500); // Initial update
+                goalInput.addEventListener('input', () => updateCharCount('sessionGoal', 'goalCharCount', 250));
+                updateCharCount('sessionGoal', 'goalCharCount', 250); // Initial update
+            }
+            
+            if (contextInput) {
+                contextInput.addEventListener('input', () => updateCharCount('sessionContext', 'contextCharCount', 100));
+                updateCharCount('sessionContext', 'contextCharCount', 100); // Initial update
             }
         });
     </script>
@@ -431,6 +461,22 @@
                 }
             });
         }
+        
+        // Initialize Flatpickr for datetime inputs
+        flatpickr('#sessionStart', {
+            enableTime: true,
+            dateFormat: 'Y-m-d h:i K',
+            time_24hr: false,
+            allowInput: true
+        });
+        
+        flatpickr('#sessionEnd', {
+            enableTime: true,
+            dateFormat: 'Y-m-d h:i K',
+            time_24hr: false,
+            allowInput: true
+        });
     });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 }

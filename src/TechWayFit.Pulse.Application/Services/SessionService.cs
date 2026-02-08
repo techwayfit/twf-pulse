@@ -205,6 +205,23 @@ public sealed class SessionService : ISessionService
         await _sessions.UpdateAsync(session, cancellationToken);
     }
 
+    public async Task SetSessionScheduleAsync(
+        Guid sessionId,
+        DateTime? sessionStart,
+        DateTime? sessionEnd,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        var session = await _sessions.GetByIdAsync(sessionId, cancellationToken);
+        if (session is null)
+        {
+            throw new InvalidOperationException("Session not found.");
+        }
+
+        session.SetSessionSchedule(sessionStart, sessionEnd, now);
+        await _sessions.UpdateAsync(session, cancellationToken);
+    }
+
     public async Task<IReadOnlyCollection<Session>> GetSessionsByGroupAsync(
         Guid? groupId,
         Guid facilitatorUserId,

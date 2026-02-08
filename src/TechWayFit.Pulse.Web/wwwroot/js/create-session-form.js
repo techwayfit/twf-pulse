@@ -452,20 +452,26 @@ if (nameLabel) {
      * Build session data object from form
      */
     buildSessionData(formData) {
-      // Build context string from all AI context fields
+      // Build context string from all AI context fields (for AI-generated sessions)
         const contextParts = [];
         if (formData.get('currentProcess')) contextParts.push(`Current Process: ${formData.get('currentProcess')}`);
         if (formData.get('painPoints')) contextParts.push(`Pain Points: ${formData.get('painPoints')}`);
   if (formData.get('technicalContext')) contextParts.push(`Technical Context: ${formData.get('technicalContext')}`);
    if (formData.get('teamBackground')) contextParts.push(`Team Background: ${formData.get('teamBackground')}`);
         if (formData.get('aiGoals')) contextParts.push(`AI Goals: ${formData.get('aiGoals')}`);
+        
+        // Use manual context if provided, otherwise use AI-generated context
+        const manualContext = formData.get('sessionContext');
+        const aiContext = contextParts.length > 0 ? contextParts.join(' | ') : null;
 
   return {
       // Let server generate the code - it will be unique and in XXX-XXX-XXX format
        title: formData.get('sessionTitle'),
     goal: formData.get('sessionGoal') || null,
-    context: contextParts.length > 0 ? contextParts.join(' | ') : null,
+    context: manualContext || aiContext,
     groupId: formData.get('groupId') || null,
+    sessionStart: formData.get('sessionStart') || null,
+    sessionEnd: formData.get('sessionEnd') || null,
             settings: {
    strictCurrentActivityOnly: true,
         allowAnonymous: false,
