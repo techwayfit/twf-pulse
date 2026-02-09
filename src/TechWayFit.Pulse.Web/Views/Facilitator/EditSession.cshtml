@@ -97,11 +97,11 @@
                     <!-- Context -->
                     <div class="mb-4">
                         <label class="form-label fw-medium" for="sessionContext">Context</label>
-                        <textarea class="form-control" id="sessionContext" name="context" rows="2" 
-                                  maxlength="100">@Model.Context</textarea>
+                        <textarea class="form-control" id="sessionContext" name="context" rows="4" 
+                                  maxlength="2000">@Model.Context</textarea>
                         <div class="d-flex justify-content-between">
-                            <div class="form-text">Brief context about the session</div>
-                            <span class="text-muted" style="font-size: 0.75rem;" id="contextCharCount">@(Model.Context?.Length ?? 0) / 100</span>
+                            <div class="form-text">Detailed context for AI session generation (1000-2000 characters recommended)</div>
+                            <span class="text-muted" style="font-size: 0.75rem;" id="contextCharCount">@(Model.Context?.Length ?? 0) / 2000</span>
                         </div>
                     </div>
 
@@ -178,7 +178,7 @@
             });
             
             contextInput.addEventListener('input', function() {
-                document.getElementById('contextCharCount').textContent = `${this.value.length} / 100`;
+                document.getElementById('contextCharCount').textContent = `${this.value.length} / 2000`;
             });
 
             // Initialize Flatpickr
@@ -199,6 +199,23 @@
             // Form submission
             const form = document.getElementById('editSessionForm');
             const saveBtn = document.getElementById('saveBtn');
+            
+            // Helper function to convert Flatpickr format to ISO DateTime
+            function convertToISODateTime(dateStr) {
+                if (!dateStr || dateStr.trim() === '') return null;
+                
+                try {
+                    // Parse the Flatpickr format: "2026-02-10 9:00 AM"
+                    const date = new Date(dateStr);
+                    if (isNaN(date.getTime())) return null;
+                    
+                    // Convert to ISO format
+                    return date.toISOString();
+                } catch (e) {
+                    console.error('Date conversion error:', e);
+                    return null;
+                }
+            }
             
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -225,8 +242,8 @@
                     goal: document.getElementById('sessionGoal').value.trim() || null,
                     context: document.getElementById('sessionContext').value.trim() || null,
                     groupId: groupId || null,
-                    sessionStart: document.getElementById('sessionStart').value || null,
-                    sessionEnd: document.getElementById('sessionEnd').value || null,
+                    sessionStart: convertToISODateTime(document.getElementById('sessionStart').value),
+                    sessionEnd: convertToISODateTime(document.getElementById('sessionEnd').value),
                     allowAnonymous: document.getElementById('allowAnonymous').checked,
                     strictCurrentActivityOnly: document.getElementById('strictCurrentActivityOnly').checked
                 };

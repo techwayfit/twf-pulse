@@ -9,6 +9,175 @@ class AddActivitiesManager {
         this.sessionData = null;
         this.activities = [];
         this.templates = [];
+        this.participantTypeSelect = null;
+        
+        // Define all participant types organized by industry
+        this.participantTypes = [
+            {
+                optgroup: 'Technology & Engineering',
+                options: [
+                    'Software Engineers',
+                    'Frontend Developers',
+                    'Backend Developers',
+                    'Full Stack Developers',
+                    'DevOps Engineers',
+                    'Site Reliability Engineers (SRE)',
+                    'QA Engineers',
+                    'Data Engineers',
+                    'Machine Learning Engineers',
+                    'Data Scientists',
+                    'Security Engineers',
+                    'Cloud Architects',
+                    'System Administrators',
+                    'Database Administrators',
+                    'Technical Architects'
+                ]
+            },
+            {
+                optgroup: 'Product & Design',
+                options: [
+                    'Product Managers',
+                    'Product Owners',
+                    'UX Designers',
+                    'UI Designers',
+                    'UX Researchers',
+                    'Product Designers',
+                    'Graphic Designers'
+                ]
+            },
+            {
+                optgroup: 'Leadership & Management',
+                options: [
+                    'Engineering Managers',
+                    'Product Leaders',
+                    'CTOs',
+                    'VPs of Engineering',
+                    'CEOs',
+                    'COOs',
+                    'CFOs',
+                    'Directors',
+                    'Team Leads',
+                    'Department Heads'
+                ]
+            },
+            {
+                optgroup: 'Sales & Marketing',
+                options: [
+                    'Sales Representatives',
+                    'Account Executives',
+                    'Sales Managers',
+                    'Customer Success Managers',
+                    'Marketing Managers',
+                    'Digital Marketing Specialists',
+                    'Content Marketers',
+                    'Growth Marketers',
+                    'Brand Managers'
+                ]
+            },
+            {
+                optgroup: 'Operations & Support',
+                options: [
+                    'Operations Managers',
+                    'Customer Support Agents',
+                    'Technical Support',
+                    'IT Support',
+                    'Business Analysts',
+                    'Project Managers',
+                    'Scrum Masters',
+                    'Agile Coaches'
+                ]
+            },
+            {
+                optgroup: 'Healthcare',
+                options: [
+                    'Physicians',
+                    'Nurses',
+                    'Nurse Practitioners',
+                    'Medical Assistants',
+                    'Healthcare Administrators',
+                    'Pharmacists',
+                    'Physical Therapists',
+                    'Lab Technicians'
+                ]
+            },
+            {
+                optgroup: 'Education',
+                options: [
+                    'Teachers',
+                    'Professors',
+                    'Students',
+                    'School Administrators',
+                    'Educational Coordinators',
+                    'Instructional Designers',
+                    'Academic Advisors'
+                ]
+            },
+            {
+                optgroup: 'Finance & Accounting',
+                options: [
+                    'Accountants',
+                    'Financial Analysts',
+                    'Investment Bankers',
+                    'Financial Advisors',
+                    'Controllers',
+                    'Auditors',
+                    'Tax Specialists'
+                ]
+            },
+            {
+                optgroup: 'Legal & Compliance',
+                options: [
+                    'Lawyers',
+                    'Legal Counsel',
+                    'Paralegals',
+                    'Compliance Officers',
+                    'Contract Managers'
+                ]
+            },
+            {
+                optgroup: 'Human Resources',
+                options: [
+                    'HR Managers',
+                    'Recruiters',
+                    'Talent Acquisition Specialists',
+                    'HR Business Partners',
+                    'Learning & Development Specialists'
+                ]
+            },
+            {
+                optgroup: 'Manufacturing & Supply Chain',
+                options: [
+                    'Production Managers',
+                    'Supply Chain Managers',
+                    'Logistics Coordinators',
+                    'Quality Assurance Specialists',
+                    'Warehouse Managers',
+                    'Procurement Specialists'
+                ]
+            },
+            {
+                optgroup: 'Retail & Hospitality',
+                options: [
+                    'Store Managers',
+                    'Retail Associates',
+                    'Hotel Managers',
+                    'Restaurant Managers',
+                    'Front Desk Staff',
+                    'Event Coordinators'
+                ]
+            },
+            {
+                optgroup: 'Construction & Real Estate',
+                options: [
+                    'Civil Engineers',
+                    'Architects',
+                    'Construction Managers',
+                    'Real Estate Agents',
+                    'Property Managers',
+                    'Surveyors'
+                ]
+            }
+        ];
         
         // Expose globally for modal access
         window.addActivitiesManager = this;
@@ -42,15 +211,29 @@ class AddActivitiesManager {
         // Initialize components
         this.initializeTemplates();
         this.initializeAIForm();
+        this.initializeTemplateModal();
         
         // Setup global functions for HTML onclick handlers
         window.addActivity = (type) => this.addManualActivity(type);
+        window.editActivity = (index) => this.editActivity(index);
         window.removeActivity = (index) => this.removeActivity(index);
         window.skipActivities = () => this.skipActivities();
         window.goLive = () => this.goLive();
         window.selectTemplate = (templateId) => this.selectTemplate(templateId);
         
         console.log('Add Activities Manager initialized');
+    }
+
+    initializeTemplateModal() {
+        // Setup confirm button click handler
+        const confirmBtn = document.getElementById('confirmTemplateBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                if (this.pendingTemplateId) {
+                    this.applyTemplate(this.pendingTemplateId);
+                }
+            });
+        }
     }
 
     async loadSessionData() {
@@ -123,48 +306,143 @@ class AddActivitiesManager {
             }
             
             const result = await response.json();
-            this.templates = result.data?.templates || [];
+            this.templates = result.templates || [];
             
             this.renderTemplates();
+            this.initializeTemplateFilters();
         } catch (error) {
             console.error('Error loading templates:', error);
             document.getElementById('templateList').innerHTML = 
-                '<div class="col-12 text-danger">Failed to load templates</div>';
+                '<div class="col-12 text-center text-danger py-4">Failed to load templates. Please try again.</div>';
         }
+    }
+
+    initializeTemplateFilters() {
+        // Desktop: Button filtering
+        document.querySelectorAll('[data-template-filter]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Update active button
+                document.querySelectorAll('[data-template-filter]').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                this.filterTemplates(button.dataset.templateFilter);
+            });
+        });
+
+        // Mobile: Dropdown filtering
+        const mobileSelect = document.getElementById('templateCategoryFilterMobile');
+        if (mobileSelect) {
+            mobileSelect.addEventListener('change', (e) => {
+                this.filterTemplates(e.target.value);
+            });
+        }
+    }
+
+    filterTemplates(category) {
+        const cards = document.querySelectorAll('.template-card-container');
+        cards.forEach(card => {
+            if (category === 'all' || card.dataset.category === category) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
     }
 
     renderTemplates() {
         const container = document.getElementById('templateList');
         
         if (this.templates.length === 0) {
-            container.innerHTML = '<div class="col-12 text-muted">No templates available</div>';
+            container.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <div class="fs-1 mb-3">📝</div>
+                    <h5 class="text-muted">No templates available</h5>
+                    <p class="text-muted">System templates will be initialized on first application startup.</p>
+                </div>
+            `;
             return;
         }
         
-        const html = this.templates.map(template => `
-            <div class="col-md-6 col-lg-4">
-                <div class="card template-card h-100 border-0 shadow-sm" onclick="selectTemplate('${template.id}')">
-                    <div class="card-body text-center">
-                        <div class="template-icon">${template.iconEmoji || '📋'}</div>
-                        <div class="template-name">${template.name}</div>
-                        <div class="template-description">${template.description}</div>
-                        <div class="template-activity-count">
-                            <span class="badge bg-light text-dark">${template.category}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
+        // Separate system and custom templates
+        const systemTemplates = this.templates.filter(t => t.isSystemTemplate);
+        const customTemplates = this.templates.filter(t => !t.isSystemTemplate);
+        
+        let html = '';
+        
+        // Render system templates
+        if (systemTemplates.length > 0) {
+            html += systemTemplates.map(template => this.renderTemplateCard(template)).join('');
+        }
+        
+        // Render custom templates
+        if (customTemplates.length > 0) {
+            html += customTemplates.map(template => this.renderTemplateCard(template)).join('');
+        }
         
         container.innerHTML = html;
     }
 
+    renderTemplateCard(template) {
+        return `
+            <div class="col-md-6 col-lg-4 template-card-container" data-category="${template.category}">
+                <div class="activity-card template-card" style="cursor: pointer; position: relative;" onclick="activityManager.selectTemplate('${template.id}')">
+                    ${template.isSystemTemplate ? '<span class="template-badge badge bg-primary-subtle text-primary">★ System</span>' : '<span class="template-badge badge bg-success-subtle text-success">✎ Custom</span>'}
+                    <div class="activity-header">
+                        <div class="activity-title">
+                            <span class="activity-icon">${template.iconEmoji || '📋'}</span>
+                            <h3>${this.escapeHtml(template.name)}</h3>
+                        </div>
+                    </div>
+                    <p class="activity-description">${this.escapeHtml(template.description)}</p>
+                    <p class="activity-meta">
+                        <span class="badge bg-secondary-subtle text-secondary">${template.category}</span>
+                    </p>
+                    <div class="template-overlay">
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); activityManager.selectTemplate('${template.id}')">
+                            Use Template
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     async selectTemplate(templateId) {
-        if (!confirm('This will replace any existing activities with the template activities. Continue?')) {
+        // Store template ID for confirmation
+        this.pendingTemplateId = templateId;
+        
+        // Show modal confirmation if activities exist
+        if (this.activities.length > 0) {
+            const modal = new bootstrap.Modal(document.getElementById('templateConfirmModal'));
+            modal.show();
             return;
         }
         
+        // No existing activities, apply template directly
+        await this.applyTemplate(templateId);
+    }
+
+    async applyTemplate(templateId) {
         try {
+            // Get the modal if it's open
+            const modalElement = document.getElementById('templateConfirmModal');
+            const modal = modalElement ? bootstrap.Modal.getInstance(modalElement) : null;
+            
+            // Show loading indicator on confirm button if modal is open
+            const confirmBtn = document.getElementById('confirmTemplateBtn');
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Loading...';
+            }
+
             // Load template details
             const response = await fetch(`/api/templates/${templateId}`);
             if (!response.ok) {
@@ -172,61 +450,173 @@ class AddActivitiesManager {
             }
             
             const result = await response.json();
-            const templateConfig = result.data?.template?.config;
+            const template = result.template;
             
-            if (!templateConfig || !templateConfig.activities) {
+            if (!template || !template.config || !template.config.activities) {
                 throw new Error('Invalid template configuration');
             }
             
-            // Clear existing activities
+            // Clear existing activities from UI and server
+            if (this.activities.length > 0) {
+                // Delete all existing activities
+                for (const activity of this.activities) {
+                    if (activity.id) {
+                        try {
+                            await fetch(`/api/sessions/${this.sessionCode}/activities/${activity.id}`, {
+                                method: 'DELETE'
+                            });
+                        } catch (err) {
+                            console.warn('Failed to delete activity:', err);
+                        }
+                    }
+                }
+            }
+            
             this.activities = [];
             
             // Add template activities to session
-            for (const activityConfig of templateConfig.activities) {
-                await this.createActivityFromConfig(activityConfig);
+            const templateActivities = template.config.activities || [];
+            
+            console.log(`Applying ${templateActivities.length} activities from template...`);
+            
+            for (let i = 0; i < templateActivities.length; i++) {
+                const activityConfig = templateActivities[i];
+                console.log(`Creating activity ${i + 1}/${templateActivities.length}:`, activityConfig);
+                
+                try {
+                    await this.createActivityFromTemplate(activityConfig);
+                } catch (activityError) {
+                    console.error(`Failed to create activity ${i + 1}:`, activityError);
+                    throw new Error(`Failed to create activity "${activityConfig.title}": ${activityError.message}`);
+                }
             }
             
-            alert(`Added ${templateConfig.activities.length} activities from template!`);
+            // Close modal if open
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Show success message
+            alert(`Successfully added ${templateActivities.length} ${templateActivities.length === 1 ? 'activity' : 'activities'} from template!`);
             
             // Switch to manual tab to show activities
             const manualTab = document.getElementById('manual-tab');
-            manualTab.click();
+            if (manualTab) {
+                const tabInstance = new bootstrap.Tab(manualTab);
+                tabInstance.show();
+            }
             
         } catch (error) {
             console.error('Error applying template:', error);
-            alert('Failed to apply template: ' + error.message);
+            alert('Failed to apply template:\n\n' + error.message);
+            
+            // Close modal if open
+            if (modal) {
+                modal.hide();
+            }
+        } finally {
+            // Restore confirm button
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = 'OK';
+            }
         }
     }
 
-    async createActivityFromConfig(config) {
-        return await this.createActivityFromData({
-            order: config.order || (this.activities.length + 1),
-            type: config.type,
-            title: config.title,
-            prompt: config.prompt,
-            config: config.config ? JSON.stringify(config.config) : '{}',
-            durationMinutes: config.durationMinutes || 5
-        });
+    async createActivityFromTemplate(templateActivity) {
+        // Map template config to activity format
+        const activityData = {
+            type: templateActivity.type,
+            title: templateActivity.title,
+            prompt: templateActivity.prompt || '',
+            durationMinutes: templateActivity.durationMinutes || 5,
+            config: this.mapTemplateConfig(templateActivity.type, templateActivity.config)
+        };
+
+        return await this.createActivityFromData(activityData);
+    }
+
+    mapTemplateConfig(activityType, templateConfig) {
+        if (!templateConfig) return {};
+
+        const type = activityType.toLowerCase();
+        
+        switch (type) {
+            case 'poll':
+                return {
+                    options: templateConfig.options || [],
+                    allowMultiple: templateConfig.multipleChoice || false,
+                    maxResponses: 1
+                };
+            
+            case 'wordcloud':
+                return {
+                    maxWords: templateConfig.maxWords || 3,
+                    allowMultiple: false,
+                    maxSubmissions: 1
+                };
+            
+            case 'quadrant':
+                return {
+                    xAxisLabel: templateConfig.xAxisLabel || 'X Axis',
+                    yAxisLabel: templateConfig.yAxisLabel || 'Y Axis',
+                    topLeft: templateConfig.topLeftLabel || 'Top Left',
+                    topRight: templateConfig.topRightLabel || 'Top Right',
+                    bottomLeft: templateConfig.bottomLeftLabel || 'Bottom Left',
+                    bottomRight: templateConfig.bottomRightLabel || 'Bottom Right'
+                };
+            
+            case 'fivewhys':
+                return {
+                    maxDepth: templateConfig.maxDepth || 5
+                };
+            
+            case 'rating':
+                return {
+                    scale: templateConfig.maxRating || 5,
+                    lowLabel: 'Low',
+                    highLabel: 'High',
+                    maxResponses: null
+                };
+            
+            case 'feedback':
+                return {
+                    maxResponses: null
+                };
+            
+            default:
+                return templateConfig || {};
+        }
     }
 
     async createActivityFromData(activityData) {
         try {
+            // Ensure config is a JSON string
+            const configString = typeof activityData.config === 'string' 
+                ? activityData.config 
+                : JSON.stringify(activityData.config || {});
+
+            const requestBody = {
+                order: activityData.order || (this.activities.length + 1),
+                type: activityData.type,
+                title: activityData.title,
+                prompt: activityData.prompt || '',
+                config: configString,
+                durationMinutes: activityData.durationMinutes || 5
+            };
+
+            console.log('Creating activity:', requestBody);
+
             const response = await fetch(`/api/sessions/${this.sessionCode}/activities`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    order: activityData.order || (this.activities.length + 1),
-                    type: activityData.type,
-                    title: activityData.title,
-                    prompt: activityData.prompt,
-                    config: activityData.config || '{}',
-                    durationMinutes: activityData.durationMinutes || 5
-                })
+                body: JSON.stringify(requestBody)
             });
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Failed to create activity');
+                console.error('API Error:', errorData);
+                throw new Error(errorData.message || `Failed to create activity (${response.status})`);
             }
             
             const result = await response.json();
@@ -237,7 +627,8 @@ class AddActivitiesManager {
                 type: activityData.type.toLowerCase(),
                 title: activityData.title,
                 prompt: activityData.prompt,
-                durationMinutes: activityData.durationMinutes
+                durationMinutes: activityData.durationMinutes,
+                config: activityData.config
             });
             
             // Update UI
@@ -248,7 +639,7 @@ class AddActivitiesManager {
             
         } catch (error) {
             console.error('Error creating activity:', error);
-            alert('Failed to create activity: ' + error.message);
+            throw error; // Re-throw to be caught by caller
             throw error;
         }
     }
@@ -283,6 +674,33 @@ class AddActivitiesManager {
         this.createActivityFromConfig(config);
     }
 
+    editActivity(index) {
+        const activityData = this.activities[index];
+        if (!activityData) return;
+        
+        // Create activity instance using factory
+        const activity = ActivityFactory.create(activityData);
+        
+        // Get modal and check if it exists
+        const modalId = activity.getModalId();
+        const modal = document.getElementById(modalId);
+        if (!modal) {
+            console.error(`Modal ${modalId} not found`);
+            return;
+        }
+        
+        // Store for editing
+        window.editingActivityIndex = index;
+        window.editingActivityData = activityData;
+        
+        // Populate modal using activity class method
+        activity.populateModal();
+        
+        // Show modal
+        const modalElement = bootstrap.Modal.getOrCreateInstance(modal);
+        modalElement.show();
+    }
+    
     removeActivity(index) {
         if (confirm('Remove this activity?')) {
             // TODO: Call API to delete activity
@@ -297,33 +715,24 @@ class AddActivitiesManager {
         const badge = document.getElementById('activityCountBadge');
         
         if (this.activities.length === 0) {
-            container.innerHTML = '<div class="text-muted small">No activities yet. Click a button above to add one.</div>';
+            container.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-clipboard-list fa-3x text-muted"></i>
+                    </div>
+                    <p class="text-muted mb-0">No activities yet. Create your first activity to get started.</p>
+                </div>
+            `;
             goLiveBtn.disabled = true;
             badge.textContent = 'No activities added yet';
         } else {
-            const activityIcons = {
-                poll: '📊',
-                wordcloud: '☁️',
-                quadrant: '📈',
-                fivewhys: '🔍',
-                rating: '⭐',
-                feedback: '💬'
-            };
-            
-            const html = this.activities.map((activity, index) => `
-                <div class="activity-card">
-                    <div class="activity-icon">${activityIcons[activity.type] || '📄'}</div>
-                    <div class="activity-details">
-                        <div class="activity-title">${activity.title}</div>
-                        <div class="activity-prompt">${activity.prompt || 'No prompt'}</div>
-                    </div>
-                    <div class="activity-actions">
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeActivity(${index})">
-                            Remove
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+            // Use activity classes to render cards in a column layout
+            const html = `<div class="d-flex flex-column gap-3">` + 
+                this.activities.map((activityData, index) => {
+                    const activity = ActivityFactory.create(activityData);
+                    return activity.renderCard(index);
+                }).join('') + 
+                `</div>`;
             
             container.innerHTML = html;
             goLiveBtn.disabled = false;
@@ -335,6 +744,9 @@ class AddActivitiesManager {
         const form = document.getElementById('aiGenerateForm');
         if (!form) return;
         
+        // Initialize participant type multi-select
+        this.initializeParticipantTypeSelector();
+        
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -342,6 +754,15 @@ class AddActivitiesManager {
             const btnText = submitBtn.querySelector('.btn-text');
             const btnLoading = submitBtn.querySelector('.btn-loading');
             const statusMessage = document.getElementById('aiStatusMessage');
+            
+            // Validate duration is selected
+            const duration = document.getElementById('aiDuration').value;
+            if (!duration) {
+                statusMessage.textContent = '⚠️ Please select a session duration';
+                statusMessage.className = 'alert alert-warning';
+                statusMessage.classList.remove('d-none');
+                return;
+            }
             
             // Show loading state
             btnText.classList.add('d-none');
@@ -351,23 +772,19 @@ class AddActivitiesManager {
             
             try {
                 const workshopType = document.getElementById('aiWorkshopType').value;
-                const activityCount = parseInt(document.getElementById('aiActivityCount').value);
                 const additionalContext = document.getElementById('aiAdditionalContext').value.trim();
-                const duration = document.getElementById('aiDuration').value;
                 const participantCount = document.getElementById('aiParticipantCount').value;
                 
-                // Collect all checked participant types
-                const participantTypeCheckboxes = document.querySelectorAll('#aiParticipantTypes input[type="checkbox"]:checked');
-                const participantTypes = Array.from(participantTypeCheckboxes).map(cb => cb.value);
+                // Get selected participant types from Tom Select
+                const selectedTypes = this.participantTypeSelect ? this.participantTypeSelect.getValue() : [];
                 
-                // Build optimized AI generation request using session data already on the server
+                // Build AI generation request - activity count will be auto-calculated from duration
                 const aiRequest = {
                     additionalContext: additionalContext || null,
                     workshopType: workshopType || null,
-                    targetActivityCount: activityCount,
-                    durationMinutes: duration ? parseInt(duration) : null,
+                    durationMinutes: parseInt(duration),
                     participantCount: participantCount ? parseInt(participantCount) : null,
-                    participantType: participantTypes.length > 0 ? participantTypes.join(',') : null
+                    participantType: selectedTypes.length > 0 ? selectedTypes.join(', ') : null
                 };
                 
                 console.log('🧠 Requesting AI generation:', aiRequest);
@@ -440,6 +857,83 @@ class AddActivitiesManager {
         div.textContent = text;
         return div.innerHTML;
     }
+    
+    initializeParticipantTypeSelector() {
+        const dropdown = document.getElementById('participantTypeDropdown');
+        const filterDropdown = document.getElementById('participantTypeFilter');
+        if (!dropdown || !filterDropdown) return;
+        
+        // Populate industry filter dropdown
+        this.participantTypes.forEach(group => {
+            const option = document.createElement('option');
+            option.value = group.optgroup;
+            option.textContent = group.optgroup;
+            filterDropdown.appendChild(option);
+        });
+        
+        // Flatten participant types into options array for Tom Select
+        const options = [];
+        this.participantTypes.forEach(group => {
+            group.options.forEach(option => {
+                options.push({
+                    value: option,
+                    text: option,
+                    optgroup: group.optgroup
+                });
+            });
+        });
+        
+        // Initialize Tom Select with multi-select capability
+        this.participantTypeSelect = new TomSelect(dropdown, {
+            options: options,
+            optgroups: this.participantTypes.map(g => ({ value: g.optgroup, label: g.optgroup })),
+            optgroupField: 'optgroup',
+            labelField: 'text',
+            valueField: 'value',
+            searchField: ['text', 'optgroup'],
+            plugins: ['remove_button', 'dropdown_input'],
+            maxOptions: null,
+            closeAfterSelect: false,
+            hideSelected: true,
+            placeholder: 'Search and select...',
+            render: {
+                optgroup_header: function(data, escape) {
+                    return '<div class="optgroup-header">' + escape(data.label) + '</div>';
+                },
+                option: function(data, escape) {
+                    return '<div>' + escape(data.text) + '</div>';
+                },
+                item: function(data, escape) {
+                    return '<div>' + escape(data.text) + '</div>';
+                },
+                no_results: function(data, escape) {
+                    return '<div class="no-results">No participant types found matching "' + escape(data.input) + '"</div>';
+                }
+            },
+            onInitialize: function() {
+                this.dropdown.style.maxHeight = '300px';
+                this.dropdown.style.overflowY = 'auto';
+            }
+        });
+        
+        // Add filter functionality
+        filterDropdown.addEventListener('change', () => {
+            const selectedCategory = filterDropdown.value;
+            
+            if (!selectedCategory) {
+                // Show all options
+                this.participantTypeSelect.clearOptions();
+                this.participantTypeSelect.addOption(options);
+                this.participantTypeSelect.refreshOptions(false);
+            } else {
+                // Filter options by selected category
+                const filteredOptions = options.filter(opt => opt.optgroup === selectedCategory);
+                this.participantTypeSelect.clearOptions();
+                this.participantTypeSelect.addOption(filteredOptions);
+                this.participantTypeSelect.refreshOptions(false);
+            }
+        });
+    }
 
     skipActivities() {
         if (confirm('Go live without activities? You can add them later from the facilitator view.')) {
@@ -456,7 +950,14 @@ class AddActivitiesManager {
         // Navigate to live facilitator view
         window.location.href = `/facilitator/live?code=${this.sessionCode}`;
     }
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 }
 
-// Initialize when script loads
-new AddActivitiesManager();
+// Initialize when script loads and make it globally accessible
+const activityManager = new AddActivitiesManager();
+window.activityManager = activityManager;

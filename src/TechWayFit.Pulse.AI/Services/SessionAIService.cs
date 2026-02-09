@@ -236,6 +236,11 @@ namespace TechWayFit.Pulse.AI.Services
                     var suggestedCount = CalculateActivityCount(ctx.DurationMinutes.Value);
                     prompt.AppendLine($"Generate {suggestedCount} activities to fit this timeframe.");
                 }
+                else
+                {
+                    // No duration specified - suggest default count
+                    prompt.AppendLine($"Generate 5-8 activities for this session.");
+                }
                 if (ctx.ParticipantCount > 0)
                 {
                     prompt.AppendLine($"Expected participants: {ctx.ParticipantCount}");
@@ -290,12 +295,13 @@ namespace TechWayFit.Pulse.AI.Services
             else if (!string.IsNullOrEmpty(request.Context))
             {
                 // Legacy context path
-                var sanitizedContext = PiiSanitizer.Sanitize(request.Context, 500);
+                var sanitizedContext = PiiSanitizer.Sanitize(request.Context, 2000);
                 if (PiiSanitizer.ContainsPii(request.Context))
                 {
                     _logger.LogWarning("PII detected in legacy context and sanitized for session generation");
                 }
                 prompt.AppendLine($"Context: {sanitizedContext}");
+                prompt.AppendLine($"Generate 5-8 activities for this session.");
             }
             
             prompt.AppendLine("\nReturn ONLY valid JSON array, no explanatory text.");

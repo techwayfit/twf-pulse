@@ -4,6 +4,8 @@
 
 @section Styles {
     <link rel="stylesheet" href="~/css/add-activities.css" asp-append-version="true" />
+    <!-- Tom Select for searchable dropdowns -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 }
 
 <main class="py-5">
@@ -93,14 +95,56 @@
 
                     <!-- Template Mode -->
                     <div class="tab-pane fade" id="template-panel" role="tabpanel">
-                        <div class="text-center py-4">
-                            <div class="fs-1 mb-3">📋</div>
-                            <h5 class="mb-3">Choose a Template</h5>
-                            <p class="text-muted mb-4">Select a pre-configured activity set for your session</p>
+                        <div class="py-4">
+                            <div class="text-center mb-4">
+                                <div class="fs-1 mb-3">📋</div>
+                                <h5 class="mb-2">Choose a Template</h5>
+                                <p class="text-muted mb-0">Select a pre-configured activity set for your session</p>
+                            </div>
                             
-                            <!-- Template Browser -->
+                            <!-- Category Filter -->
+                            <div class="mb-4">
+                                <!-- Mobile: Dropdown -->
+                                <select class="form-select d-md-none" id="templateCategoryFilterMobile" aria-label="Filter templates by category">
+                                    <option value="all">All Templates</option>
+                                    <option value="Retrospective">🔄 Retrospective</option>
+                                    <option value="ProductDiscovery">💡 Product Discovery</option>
+                                    <option value="IncidentReview">🚨 Incident Review</option>
+                                    <option value="TeamBuilding">🤝 Team Building</option>
+                                    <option value="Training">📚 Training</option>
+                                </select>
+                                
+                                <!-- Desktop: Buttons -->
+                                <div class="d-none d-md-flex flex-wrap gap-2 justify-content-center" role="group" aria-label="Filter templates by category">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary active" data-template-filter="all">
+                                        All Templates
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-template-filter="Retrospective">
+                                        🔄 Retrospective
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-template-filter="ProductDiscovery">
+                                        💡 Product Discovery
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-template-filter="IncidentReview">
+                                        🚨 Incident Review
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-template-filter="TeamBuilding">
+                                        🤝 Team Building
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-template-filter="Training">
+                                        📚 Training
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Template Grid -->
                             <div id="templateList" class="row g-3">
-                                <div class="col-12 text-muted">Loading templates...</div>
+                                <div class="col-12 text-center text-muted py-4">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    Loading templates...
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -137,26 +181,22 @@
                                         </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label fw-medium">Number of Activities</label>
-                                        <select class="form-select" id="aiActivityCount">
-                                            <option value="3">3 activities (~15 mins)</option>
-                                            <option value="4" selected>4 activities (~20 mins)</option>
-                                            <option value="5">5 activities (~25 mins)</option>
-                                            <option value="6">6 activities (~30 mins)</option>
-                                            <option value="8">8 activities (~40 mins)</option>
+                                        <label class="form-label fw-medium">Session Duration <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="aiDuration" required>
+                                            <option value="">-- Select Duration --</option>
+                                            <option value="15">15 minutes (2-3 activities)</option>
+                                            <option value="20">20 minutes (3-4 activities)</option>
+                                            <option value="30">30 minutes (4-6 activities)</option>
+                                            <option value="45">45 minutes (6-9 activities)</option>
+                                            <option value="60" selected>60 minutes (8-12 activities)</option>
+                                            <option value="75">75 minutes (10-15 activities)</option>
+                                            <option value="90">90 minutes (12-18 activities)</option>
+                                            <option value="120">2 hours (16-24 activities)</option>
+                                            <option value="150">2.5 hours (20-30 activities)</option>
+                                            <option value="180">3 hours (24-36 activities)</option>
+                                            <option value="240">4 hours (32-48 activities)</option>
                                         </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-medium">Session Duration</label>
-                                        <select class="form-select" id="aiDuration">
-                                            <option value="">Auto-calculate from activities</option>
-                                            <option value="15">15 minutes</option>
-                                            <option value="30">30 minutes</option>
-                                            <option value="45">45 minutes</option>
-                                            <option value="60">60 minutes</option>
-                                            <option value="90">90 minutes</option>
-                                            <option value="120">2 hours</option>
-                                        </select>
+                                        <small class="text-muted">AI will generate 1 activity per 5-10 minutes</small>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label fw-medium">Number of Participants</label>
@@ -169,56 +209,22 @@
                                         </select>
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label fw-medium">Participants</label>
-                                        <div class="form-text small mb-2">Select all that apply</div>
-                                        <div class="row g-2" id="aiParticipantTypes">
-                                            <div class="col-md-6">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="developers" id="pt-developers">
-                                                    <label class="form-check-label" for="pt-developers">
-                                                        Developers / Engineers
-                                                    </label>
-                                                </div>
+                                        <label class="form-label fw-medium">Participant Types (Optional)</label>
+                                        <div class="form-text small mb-2">Filter by industry, then search and select multiple participant types</div>
+                                        
+                                        <div class="row g-2 mb-2">
+                                            <div class="col-md-4">
+                                                <label class="form-label small">Filter by Industry</label>
+                                                <select class="form-select" id="participantTypeFilter">
+                                                    <option value="">All Industries</option>
+                                                    <!-- Options will be populated by JavaScript -->
+                                                </select>
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="product" id="pt-product">
-                                                    <label class="form-check-label" for="pt-product">
-                                                        Product Managers
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="designers" id="pt-designers">
-                                                    <label class="form-check-label" for="pt-designers">
-                                                        Designers / UX
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="leadership" id="pt-leadership">
-                                                    <label class="form-check-label" for="pt-leadership">
-                                                        Leadership / Executives
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="operations" id="pt-operations">
-                                                    <label class="form-check-label" for="pt-operations">
-                                                        Operations / Support
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="sales" id="pt-sales">
-                                                    <label class="form-check-label" for="pt-sales">
-                                                        Sales / Customer Success
-                                                    </label>
-                                                </div>
+                                            <div class="col-md-8">
+                                                <label class="form-label small">Select Participant Types</label>
+                                                <select class="form-select" id="participantTypeDropdown" multiple placeholder="Search and select...">
+                                                    <!-- Options will be populated by JavaScript -->
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -273,7 +279,41 @@
 <!-- Activity Creation Modals -->
 @await Html.PartialAsync("_ActivityFormModals")
 
+<!-- Template Confirmation Modal -->
+<div class="modal fade" id="templateConfirmModal" tabindex="-1" aria-labelledby="templateConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center px-4 pb-4">
+                <div class="mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center" 
+                         style="width: 64px; height: 64px; background: linear-gradient(135deg, #ede9fe 0%, #f3e8ff 100%); border-radius: 50%;">
+                        <span style="font-size: 32px;">📋</span>
+                    </div>
+                </div>
+                <h5 class="modal-title mb-2" id="templateConfirmModalLabel">Use This Template?</h5>
+                <p class="text-muted mb-0">
+                    This will replace any existing activities with the template activities. Continue?
+                </p>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-center gap-2">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary px-4" id="confirmTemplateBtn">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <!-- Tom Select for searchable dropdowns -->
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <script src="~/js/activity-types.js" asp-append-version="true"></script>
     <script src="~/js/add-activities.js" asp-append-version="true"></script>
     <script src="~/js/activity-modals.js" asp-append-version="true"></script>
 }

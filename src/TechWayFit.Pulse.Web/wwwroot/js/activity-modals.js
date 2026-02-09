@@ -35,9 +35,12 @@
     });
 
     function initializePollModal() {
-        // Add initial 2 options
-        addPollOption();
-        addPollOption();
+        // Only add initial options if container is empty (creating new activity)
+        const container = document.getElementById('pollOptionsContainer');
+        if (container && container.children.length === 0) {
+            addPollOption();
+            addPollOption();
+        }
     }
 
     function initializeWordCloudModal() {

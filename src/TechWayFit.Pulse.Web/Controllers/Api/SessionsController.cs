@@ -171,9 +171,12 @@ public sealed class SessionsController : ControllerBase
                 request.ParticipantCount,
                 request.ParticipantType);
 
-            // Calculate target activity count based on duration if provided
+            // Calculate target activity count based on duration (1 activity per 5-10 minutes)
+            // If duration provided, calculate as duration / 7 (average of 5-10 minutes)
+            // If TargetActivityCount explicitly provided, use it (for backward compatibility)
+            // Otherwise default to 6 activities
             var targetCount = request.TargetActivityCount 
-                ?? (request.DurationMinutes.HasValue ? request.DurationMinutes.Value / 5 : 4);
+                ?? (request.DurationMinutes.HasValue ? Math.Max(2, request.DurationMinutes.Value / 7) : 6);
 
             // Generate and add activities to the session
             var generated = await _sessionAI.GenerateAndAddActivitiesToSessionAsync(

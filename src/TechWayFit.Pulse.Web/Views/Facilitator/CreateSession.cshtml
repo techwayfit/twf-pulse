@@ -109,11 +109,11 @@
                             </div>
                             <div class="mb-4">
                                 <label class="form-label fw-medium" for="sessionContext">Context</label>
-                                <textarea class="form-control" name="sessionContext" id="sessionContext" rows="2"
-                                          maxlength="100"
-                                          placeholder="Additional context or background information"></textarea>
+                                <textarea class="form-control" name="sessionContext" id="sessionContext" rows="4"
+                                          maxlength="2000"
+                                          placeholder="Provide detailed context to help AI generate relevant session content and activities (1000-2000 characters recommended)..."></textarea>
                                 <div class="text-end">
-                                    <span class="text-muted" style="font-size: 0.75rem;" id="contextCharCount">0 / 100</span>
+                                    <span class="text-muted" style="font-size: 0.75rem;" id="contextCharCount">0 / 2000</span>
                                 </div>
                             </div>
                             
@@ -355,8 +355,8 @@
             }
             
             if (contextInput) {
-                contextInput.addEventListener('input', () => updateCharCount('sessionContext', 'contextCharCount', 100));
-                updateCharCount('sessionContext', 'contextCharCount', 100); // Initial update
+                contextInput.addEventListener('input', () => updateCharCount('sessionContext', 'contextCharCount', 2000));
+                updateCharCount('sessionContext', 'contextCharCount', 2000); // Initial update
             }
         });
     </script>

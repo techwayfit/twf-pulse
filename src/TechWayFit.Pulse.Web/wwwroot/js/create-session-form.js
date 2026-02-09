@@ -464,14 +464,26 @@ if (nameLabel) {
         const manualContext = formData.get('sessionContext');
         const aiContext = contextParts.length > 0 ? contextParts.join(' | ') : null;
 
+    // Helper to convert Flatpickr date format to ISO
+    const convertToISODateTime = (dateStr) => {
+        if (!dateStr || dateStr.trim() === '') return null;
+        try {
+            const date = new Date(dateStr);
+            return isNaN(date.getTime()) ? null : date.toISOString();
+        } catch (e) {
+            console.error('Date conversion error:', e);
+            return null;
+        }
+    };
+
   return {
       // Let server generate the code - it will be unique and in XXX-XXX-XXX format
        title: formData.get('sessionTitle'),
     goal: formData.get('sessionGoal') || null,
     context: manualContext || aiContext,
     groupId: formData.get('groupId') || null,
-    sessionStart: formData.get('sessionStart') || null,
-    sessionEnd: formData.get('sessionEnd') || null,
+    sessionStart: convertToISODateTime(formData.get('sessionStart')),
+    sessionEnd: convertToISODateTime(formData.get('sessionEnd')),
             settings: {
    strictCurrentActivityOnly: true,
         allowAnonymous: false,
