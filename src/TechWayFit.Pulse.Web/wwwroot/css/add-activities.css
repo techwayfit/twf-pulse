@@ -1,5 +1,22 @@
 /* Add Activities Page Styles - Clean Modern Design */
 
+/* Tab Pill Buttons */
+.card-header [data-bs-toggle="tab"] {
+    white-space: nowrap;
+}
+
+.card-header [data-bs-toggle="tab"].active,
+.card-header [data-bs-toggle="tab"][aria-selected="true"] {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border-color: #6366f1;
+    color: white;
+}
+
+.card-header [data-bs-toggle="tab"]:hover:not(.active):not([aria-selected="true"]) {
+    border-color: #6366f1;
+    color: #6366f1;
+}
+
 /* Activity Cards */
 .activities-grid {
     display: grid;
@@ -7,18 +24,19 @@
 }
 
 .activity-card {
-    background: white;
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
     padding: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.08));
     transition: all 0.2s;
-    border: 1px solid #f3f4f6;
+    border: 1px solid rgba(0, 102, 255, 0.1);
     position: relative;
     overflow: hidden;
+    backdrop-filter: blur(10px);
 }
 
 .activity-card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.1));
     transform: translateY(-2px);
 }
 
@@ -35,9 +53,23 @@
     z-index: 2;
 }
 
-.activity-card:hover .activity-actions-overlay {
-    opacity: 1;
-    transform: translateY(0);
+/* Desktop: Show on hover */
+@media (min-width: 768px) {
+    .activity-card:hover .activity-actions-overlay {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Mobile: Always show edit button */
+@media (max-width: 767px) {
+    .activity-actions-overlay {
+        opacity: 1;
+        transform: translateY(0);
+        position: static;
+        margin-top: 12px;
+        justify-content: flex-end;
+    }
 }
 
 .activity-header {
@@ -125,11 +157,14 @@
     height: 100%;
     position: relative;
     overflow: hidden;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 102, 255, 0.1) !important;
 }
 
 .template-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15) !important;
+    box-shadow: var(--shadow-lg, 0 8px 24px rgba(15, 23, 42, 0.12)) !important;
 }
 
 .template-card:active {

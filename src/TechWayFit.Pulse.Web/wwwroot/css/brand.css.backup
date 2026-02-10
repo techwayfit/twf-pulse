@@ -97,6 +97,18 @@
 }
 
 /* Mobile Navbar Adjustments */
+@media (max-width: 767.98px) {
+  .pulse-navbar {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  
+  .pulse-navbar .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+}
+
 /* Brand Badge - Landing Page Style */
 .brand-badge {
   width: 40px;
@@ -142,7 +154,26 @@
   font-weight: 400;
 }
 
-/* Mobile Brand Adjustments - See mobile.css */
+/* Mobile Brand Adjustments */
+@media (max-width: 767.98px) {
+  
+  
+  .brand-badge svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  
+  .brand-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  
+  .brand-sub {
+    font-size: 0.7rem;
+  }
+}
+
+ 
 
 /* Custom Pulse Buttons - No Bootstrap Override */
 /* Base button class to reduce duplication */
@@ -323,8 +354,52 @@
   }
 }
 
-/* Mobile Navigation - See mobile.css */
-
+/* Mobile Navigation */
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    margin-top: 1rem;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+  }
+  
+  .navbar-collapse.show {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .navbar-collapse.collapsing {
+    padding: 0 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .navbar-nav {
+    gap: 0.25rem !important;
+  }
+  
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem !important;
+  }
+  
+  .navbar-nav .dropdown-menu {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding-left: 1rem !important;
+  }
+  
+  .btn-brand {
+    width: 100%;
+    text-align: center;
+    margin-top: 0.5rem;
+  }
+}
 
 @keyframes slideDown {
   from {
@@ -559,7 +634,24 @@ a:hover {
 }
 
 /* Mobile Hero Adjustments */
-/* Hero mobile styles - See mobile.css */
+@media (max-width: 767.98px) {
+  .hero-badge {
+    font-size: 0.8125rem;
+    padding: 0.5rem 0.875rem;
+    gap: 0.375rem;
+  }
+  
+  .hero-title {
+    font-size: 1.875rem !important;
+    letter-spacing: -0.02em;
+  }
+  
+  .hero-lead {
+    font-size: 1rem;
+  }
+}
+
+
 
 /* Pulse Dot Animation - Refined */
 .pulse-dot {
@@ -885,7 +977,16 @@ footer.border-top.bg-white {
 }
 
 /* Footer mobile - single line */
-/* Footer mobile styles - See mobile.css */
+@media (max-width: 767.98px) {
+  footer.border-top.bg-white {
+    padding: 1rem 0;
+  }
+  
+  footer.border-top.bg-white .container {
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+  }
+}
 
 /* Smooth Scrolling */
 html {
@@ -994,17 +1095,122 @@ html {
   100% { transform: scale(1); }
 }
 
-/* Mobile Responsive Utilities - See mobile.css */
+/* Mobile Responsive Utilities */
+@media (max-width: 767.98px) {
+  /* Container padding on mobile */
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  /* Smaller cards on mobile */
+  .card {
+    border-radius: var(--radius-md) !important;
+  }
+  
+  .card-body {
+    padding: 1rem !important;
+  }
+  
+  /* Compact template cards on mobile */
+  .hover-lift .card-body {
+    padding: 0.75rem !important;
+  }
+  
+  .hover-lift .card-title {
+    font-size: 0.875rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .hover-lift .card-text {
+    font-size: 0.7rem !important;
+  }
+  
+  .hover-lift .fs-1 {
+    font-size: 1.75rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Compact hero on mobile */
+  h1, .h1 {
+    font-size: 2rem !important;
+    line-height: 1.15 !important;
+  }
+  
+  h2, .h2 {
+    font-size: 1.5rem !important;
+  }
+  
+  .display-4 {
+    font-size: 2rem !important;
+  }
+  
+  .display-6 {
+    font-size: 1.5rem !important;
+  }
+  
+  /* Button sizing on mobile */
+  .btn-lg {
+    padding: 0.75rem 1.25rem !important;
+    font-size: 1rem !important;
+  }
+  
+  /* Smaller badges on mobile - Keep horizontal wrap */
+  .badge {
+    font-size: 0.75rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+  
+  /* Pulse animation smaller on mobile */
+  .pulse-visual-container,
+  .pulse-animation {
+    width: 240px !important;
+    height: 240px !important;
+  }
+  
+  /* Hide decorative elements on small screens */
+  .pulse-heart-container,
+  .pulse-visual-container {
+    display: none !important;
+  }
+}
 
 /* Tablet responsive */
-/* Tablet adjustments - See mobile.css */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .container {
+    max-width: 720px !important;
+  }
+  
+  .card-body {
+    padding: 1.25rem !important;
+  }
+  
+  h1, .h1 {
+    font-size: 2.25rem !important;
+  }
+}
 
 /* Ensure smooth transitions */
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Touch-friendly interactive elements - See mobile.css */
+/* Touch-friendly interactive elements */
+@media (hover: none) and (pointer: coarse) {
+  .btn,
+  .nav-link,
+  .card {
+    min-height: 44px;
+  }
+  
+  .hover-lift:hover {
+    transform: none !important;
+  }
+  
+  .hover-lift:active {
+    transform: scale(0.98) !important;
+  }
+}
 
 /* ============================================
    DASHBOARD STYLES
@@ -1291,7 +1497,24 @@ html {
   color: white;
 }
 
-/* Sort controls mobile - See mobile.css */
+@media (max-width: 991.98px) {
+  .sort-controls {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .sort-controls .btn-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .sort-controls .btn-group .btn {
+    border-radius: 0.375rem !important;
+    margin: 0.125rem;
+    font-size: 0.8125rem;
+  }
+}
 
 /* Sessions Table (Desktop) */
 .sessions-table {
@@ -1448,7 +1671,21 @@ html {
   border-color: rgba(15, 23, 42, 0.1);
 }
 
-/* Pagination mobile - See mobile.css */
+@media (max-width: 768px) {
+  .pagination-footer {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .pagination-info {
+    order: 2;
+  }
+
+  .pagination {
+    order: 1;
+  }
+}
 
 /* Ghost button style for actions */
 .btn-ghost-secondary {
@@ -1634,7 +1871,122 @@ html {
 }
 
 /* Mobile Dashboard Responsive */
-/* Dashboard responsive styles - See mobile.css */
+@media (max-width: 991.98px) {
+  .dashboard-main {
+    padding: 1rem 0;
+  }
+  
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+  
+  .dashboard-header-actions {
+    width: 100%;
+  }
+  
+  .dashboard-header-actions .btn {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .dashboard-main {
+    padding: 0.75rem 0;
+  }
+  
+  .dashboard-header {
+    margin-bottom: 0.75rem;
+  }
+  
+  .dashboard-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .dashboard-subtitle {
+    font-size: 0.8125rem;
+  }
+  
+  /* Make stat cards 2x2 grid on mobile */
+  .stat-cards-mobile-wrapper {
+    margin-bottom: 1rem;
+  }
+  
+  .stat-cards-mobile-wrapper .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  .stat-cards-mobile-wrapper .col-6 {
+    flex: 0 0 calc(50% - 0.25rem) !important;
+    max-width: calc(50% - 0.25rem) !important;
+    padding: 0 !important;
+  }
+  
+  /* Compact stat cards on mobile */
+  .stat-cards-mobile-wrapper .col-6 > div {
+    padding: 0.75rem !important;
+  }
+  
+  .stat-cards-mobile-wrapper .col-6 .flex-shrink-0 {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  .stat-cards-mobile-wrapper .col-6 .h3 {
+    font-size: 1.25rem !important;
+  }
+  
+  .stat-cards-mobile-wrapper .col-6 small {
+    font-size: 0.7rem !important;
+  }
+  
+  .stat-card-body {
+    padding: 0.875rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .stat-card-content {
+    width: 100%;
+  }
+  
+  .stat-card-value {
+    font-size: 1.5rem;
+    margin-top: 0.25rem;
+  }
+  
+  .stat-card-label {
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  
+  .stat-card-icon {
+    font-size: 1.5rem;
+    align-self: flex-end;
+    position: absolute;
+    top: 0.875rem;
+    right: 0.875rem;
+    opacity: 0.6;
+  }
+  
+  .stat-card {
+    position: relative;
+  }
+  
+  /* Compact filter toggle on mobile */
+  .filter-toggle-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+}
 
 /* ============================================
    FORM ENHANCEMENTS
@@ -2066,7 +2418,16 @@ textarea.form-control:focus {
   align-items: center !important;
 }
 
-/* Navigation dropdown mobile - See mobile.css */
+@media (max-width: 991.98px) {
+  .nav-item.dropdown .nav-link {
+    justify-content: space-between !important;
+    width: 100%;
+  }
+  
+  .nav-item.dropdown .nav-link i {
+    margin-left: auto !important;
+  }
+}
 
 /* Gradient Orb Visual */
 .gradient-orb {
@@ -2153,7 +2514,17 @@ textarea.form-control:focus {
   justify-content: center;
 }
 
-/* Footer desktop layout - See mobile.css */
+@media (min-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    text-align: left;
+  }
+  
+  .footer-links {
+    justify-content: flex-end;
+  }
+}
 
 /* Hero Section Animations */
 .hero-animated {
@@ -2168,7 +2539,14 @@ textarea.form-control:focus {
   animation: slideInRight 0.8s ease-out 0.4s both;
 }
 
-/* Responsive Gradient Orb - See mobile.css */
+/* Responsive Gradient Orb */
+@media (max-width: 968px) {
+  .gradient-orb {
+    width: 350px;
+    height: 350px;
+    margin: 0 auto;
+  }
+}
 
 /* Wide Container for Better Space Utilization */
 .container-wide {
@@ -2262,4 +2640,12 @@ textarea.form-control:focus {
 }
 
 /* Ensure dropdown is visible on mobile */
-/* Tree dropdown mobile - See mobile.css */
+@media (max-width: 991.98px) {
+  .tree-dropdown .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0.25rem;
+  }
+}

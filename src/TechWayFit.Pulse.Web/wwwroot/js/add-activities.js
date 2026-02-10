@@ -205,6 +205,9 @@ class AddActivitiesManager {
         this.sessionCode = hiddenCode.value;
         this.sessionId = hiddenId ? hiddenId.value : null;
         
+        // Initialize tab switching for pill buttons
+        this.initializeTabSwitching();
+        
         // Load full session data from API
         await this.loadSessionData();
         
@@ -222,6 +225,19 @@ class AddActivitiesManager {
         window.selectTemplate = (templateId) => this.selectTemplate(templateId);
         
         console.log('Add Activities Manager initialized');
+    }
+
+    initializeTabSwitching() {
+        // Handle tab button clicks to update active state
+        const tabButtons = document.querySelectorAll('[data-bs-toggle="tab"]');
+        tabButtons.forEach(button => {
+            button.addEventListener('shown.bs.tab', (event) => {
+                // Remove active class from all buttons
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                event.target.classList.add('active');
+            });
+        });
     }
 
     initializeTemplateModal() {

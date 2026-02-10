@@ -20,23 +20,13 @@
        <!-- Left accent border -->
        <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: @(activity.Status == ActivityStatus.Closed ? "linear-gradient(180deg, #10b981 0%, #14b8a6 100%)" : "linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%)");"></div>
        
-       <!-- Header -->
-       <div class="d-flex justify-content-between align-items-start mb-2" style="margin-left: 0.5rem;">
-           <div class="flex-grow-1">
-               <div class="d-flex align-items-center gap-2 mb-2">
-                   <span class="badge fw-bold" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 0.4rem 0.7rem; border-radius: 8px; min-width: 40px; text-align: center;">#@(index + 1)</span>
-                   <span class="badge" style="@GetActivityTypeBadgeStyle(activity.Type)">
-                       @GetActivityTypeIcon(activity.Type) @activity.Type
-                   </span>
-               </div>
-               <h6 class="fw-bold mb-1" style="color: #1a1a2e; font-size: 1.15rem;">@activity.Title</h6>
-               @if (!string.IsNullOrEmpty(activity.Prompt))
-               {
-                   <p class="text-muted mb-0" style="font-size: 0.9rem;">@activity.Prompt</p>
-               }
-           </div>
-           
-           <div class="flex-shrink-0 ms-3">
+       <!-- Header: Index, Type, and Status on one line -->
+       <div class="d-flex align-items-center gap-2 mb-3" style="margin-left: 0.5rem;">
+           <span class="badge fw-bold" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 0.4rem 0.7rem; border-radius: 8px; min-width: 40px; text-align: center;">#@(index + 1)</span>
+           <span class="badge" style="@GetActivityTypeBadgeStyle(activity.Type)">
+               @GetActivityTypeIcon(activity.Type) @activity.Type
+           </span>
+           <div class="ms-auto">
                @if (activity.Status == ActivityStatus.Open)
                {
                    <span class="badge" style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); color: white; padding: 0.5rem 1rem; font-size: 0.85rem;">
@@ -61,6 +51,32 @@
            </div>
        </div>
        
+       <!-- Title and Description: Full Width -->
+       <div style="margin-left: 0.5rem;">
+           <h6 class="fw-bold mb-1" style="color: #1a1a2e; font-size: 1.15rem;">@activity.Title</h6>
+           @if (!string.IsNullOrEmpty(activity.Prompt))
+           {
+               <p class="text-muted mb-2" style="font-size: 0.9rem;">@activity.Prompt</p>
+           }
+           
+           @* Display options count right below description for Poll activities *@
+           @if (!string.IsNullOrEmpty(activity.Config) && activity.Type == ActivityType.Poll)
+           {
+               try
+               {
+                   var pollConfig = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
+                   if (pollConfig.TryGetProperty("options", out var options) && options.ValueKind == System.Text.Json.JsonValueKind.Array)
+                   {
+                       <span class="d-inline-flex align-items-center gap-1 text-muted" style="font-size: 0.9rem; font-weight: 600;">
+                           <i class="far fa-list-alt" style="color: #6366f1;"></i>
+                           @options.GetArrayLength() options
+                       </span>
+                   }
+               }
+               catch { }
+           }
+       </div>
+       
        <!-- Footer -->
        <div class="d-flex justify-content-between align-items-center mt-3 pt-3" style="border-top: 2px solid #f3f4f6; margin-left: 0.5rem;">
            <div class="d-flex gap-3">
@@ -75,20 +91,6 @@
                {
                    @switch (activity.Type)
                    {
-                       case ActivityType.Poll:
-                           try
-                           {
-                               var pollConfig = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
-                               if (pollConfig.TryGetProperty("options", out var options) && options.ValueKind == System.Text.Json.JsonValueKind.Array)
-                               {
-                                   <span class="d-flex align-items-center gap-1 text-muted" style="font-size: 0.9rem; font-weight: 600;">
-                                       <i class="far fa-list-alt" style="color: #6366f1;"></i>
-                                       @options.GetArrayLength() options
-                                   </span>
-                               }
-                           }
-                           catch { }
-                           break;
                        case ActivityType.WordCloud:
                            try
                            {
