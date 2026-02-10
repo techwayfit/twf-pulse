@@ -19,7 +19,7 @@
                 <h2 class="dashboard-title">My Workshop Sessions</h2>
                 <p class="dashboard-subtitle">Welcome back, <strong>@userName</strong></p>
             </div>
-            <div class="dashboard-header-actions">
+            <div class="dashboard-header-actions d-none d-md-flex">
                 <a href="@Url.Action("Groups", "Facilitator")" class="btn btn-pulse-outline">
                     <span class="d-none d-sm-inline">📁 </span>Manage Groups
                 </a>
@@ -68,6 +68,7 @@
         </div>
 
         <!-- Stats Cards -->
+        <div class="d-lg-none mb-2"></div>
         @{
             var statCards = new List<TechWayFit.Pulse.Web.Models.StatCardData>
             {
@@ -117,7 +118,7 @@
                 }
             };
         }
-        <div class="stat-cards-mobile-wrapper mb-4">
+        <div class="stat-cards-mobile-wrapper mb-3">
             @await Component.InvokeAsync("StatCards", new { cards = statCards })
         </div>
 
@@ -347,29 +348,10 @@
                                             }
                                         </td>
                                         <td class="text-end" onclick="event.stopPropagation();">
-                                            <div class="dropdown">
-                                                <button class="btn btn-sm btn-ghost-secondary dropdown-toggle" type="button" 
-                                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="fas fa-ellipsis-v"></i>
-                                                </button>
-                                                <ul class="dropdown-menu dropdown-menu-end shadow-lg">
-                                                    <li>
-                                                        <a class="dropdown-item" href="/facilitator/live?Code=@session.Code">
-                                                            <i class="fas fa-eye text-primary me-2"></i>View Details
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item" href="/facilitator/edit-session/@session.Code?returnUrl=@Uri.EscapeDataString(Url.Action("Dashboard", "Facilitator", new { page = ViewData["CurrentPage"] }) ?? "/facilitator/dashboard")">
-                                                            <i class="fas fa-edit text-info me-2"></i>Edit Details
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <a class="dropdown-item" href="#" onclick="assignGroup('@session.Code', '@session.Id'); return false;">
-                                                            <i class="fas fa-folder text-warning me-2"></i>Assign Group
-                                                        </a>
-                                                    </li>
-                                                </ul>
-                                            </div>
+                                            <a href="/facilitator/edit-session/@session.Code?returnUrl=@Uri.EscapeDataString(Url.Action("Dashboard", "Facilitator", new { page = ViewData["CurrentPage"] }) ?? "/facilitator/dashboard")" 
+                                               class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 }
@@ -440,28 +422,15 @@
                                     </div>
                                 </div>
                                 <div class="session-mobile-card-footer">
-                                    <div class="dropdown w-100">
-                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100" type="button" 
-                                                data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v"></i> Actions
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end w-100">
-                                            <li>
-                                                <a class="dropdown-item" href="/facilitator/live?Code=@session.Code">
-                                                    <i class="fas fa-eye text-primary me-2"></i>View Details
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="/facilitator/edit-session/@session.Code?returnUrl=@Uri.EscapeDataString(Url.Action("Dashboard", "Facilitator", new { page = ViewData["CurrentPage"] }) ?? "/facilitator/dashboard")">
-                                                    <i class="fas fa-edit text-info me-2"></i>Edit Details
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="#" onclick="assignGroup('@session.Code', '@session.Id'); return false;">
-                                                    <i class="fas fa-folder text-warning me-2"></i>Assign Group
-                                                </a>
-                                            </li>
-                                        </ul>
+                                    <div class="d-flex gap-2">
+                                        <a href="/facilitator/live?Code=@session.Code" 
+                                           class="btn btn-sm btn-pulse-primary flex-fill">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <a href="/facilitator/edit-session/@session.Code?returnUrl=@Uri.EscapeDataString(Url.Action("Dashboard", "Facilitator", new { page = ViewData["CurrentPage"] }) ?? "/facilitator/dashboard")" 
+                                           class="btn btn-sm btn-outline-secondary flex-fill">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
                                     </div>
                                 </div>
                             </div>

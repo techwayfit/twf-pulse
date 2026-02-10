@@ -1525,6 +1525,11 @@ html {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sort-controls label {
+  display: none;
 }
 
 .sort-controls .btn-group-sm .btn {
@@ -1537,6 +1542,25 @@ html {
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   border-color: #6366f1;
   color: white;
+}
+
+@media (max-width: 991.98px) {
+  .sort-controls {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .sort-controls .btn-group {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .sort-controls .btn-group .btn {
+    border-radius: 0.375rem !important;
+    margin: 0.125rem;
+    font-size: 0.8125rem;
+  }
 }
 
 /* Sessions Table (Desktop) */
@@ -1933,30 +1957,41 @@ html {
     font-size: 0.8125rem;
   }
   
-  /* Make stat cards horizontal scrollable on mobile */
+  /* Make stat cards 2x2 grid on mobile */
   .stat-cards-mobile-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin: 0 -1rem 1rem;
-    padding: 0 1rem;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-  }
-  
-  .stat-cards-mobile-wrapper::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    margin-bottom: 1rem;
   }
   
   .stat-cards-mobile-wrapper .row {
-    flex-wrap: nowrap !important;
-    gap: 0.75rem !important;
-    margin: 0 !important;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
   }
   
   .stat-cards-mobile-wrapper .col-6 {
-    flex: 0 0 150px !important;
-    max-width: 150px !important;
+    flex: 0 0 calc(50% - 0.25rem) !important;
+    max-width: calc(50% - 0.25rem) !important;
     padding: 0 !important;
+  }
+  
+  /* Compact stat cards on mobile */
+  .stat-cards-mobile-wrapper .col-6 > div {
+    padding: 0.75rem !important;
+  }
+  
+  .stat-cards-mobile-wrapper .col-6 .flex-shrink-0 {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  .stat-cards-mobile-wrapper .col-6 .h3 {
+    font-size: 1.25rem !important;
+  }
+  
+  .stat-cards-mobile-wrapper .col-6 small {
+    font-size: 0.7rem !important;
   }
   
   .stat-card-body {
@@ -2419,6 +2454,28 @@ textarea.form-control:focus {
   width: 100%;
 }
 
+/* Hide underline when dropdown is open */
+.nav-link-animated[aria-expanded="true"]::after {
+  width: 0 !important;
+}
+
+/* Ensure dropdown arrow aligns properly on desktop and mobile */
+.nav-item.dropdown .nav-link {
+  display: flex !important;
+  align-items: center !important;
+}
+
+@media (max-width: 991.98px) {
+  .nav-item.dropdown .nav-link {
+    justify-content: space-between !important;
+    width: 100%;
+  }
+  
+  .nav-item.dropdown .nav-link i {
+    margin-left: auto !important;
+  }
+}
+
 /* Gradient Orb Visual */
 .gradient-orb {
   width: 500px;
@@ -2488,6 +2545,32 @@ textarea.form-control:focus {
 
 .footer-dark a:hover {
   color: var(--pulse-mint);
+}
+
+/* Footer Grid Layout */
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  text-align: center;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    text-align: left;
+  }
+  
+  .footer-links {
+    justify-content: flex-end;
+  }
 }
 
 /* Hero Section Animations */

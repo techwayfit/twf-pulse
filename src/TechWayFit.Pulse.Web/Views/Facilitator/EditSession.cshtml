@@ -18,11 +18,23 @@
                 <h2 class="mb-2">Edit Session</h2>
                 <p class="text-muted mb-0">
                     <span class="badge bg-white text-dark border px-3 py-2">@Model.Code</span>
+                    @if (Model.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft)
+                    {
+                        <span class="badge bg-warning text-dark ms-2">DRAFT</span>
+                    }
                 </p>
             </div>
-            <a href="@returnUrl" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Back
-            </a>
+            <div class="d-flex gap-2">
+                @if (Model.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft)
+                {
+                    <a href="/facilitator/add-activities?code=@Model.Code" class="btn btn-pulse-primary">
+                        <i class="bi bi-plus-circle"></i> Add Activities
+                    </a>
+                }
+                <a href="@returnUrl" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
         </div>
 
         <!-- Edit Form -->
