@@ -219,7 +219,13 @@
 /* Legacy support for existing btn-brand usage */
 .btn-brand {
   background: var(--pulse-blue);
+  color: white;
+  font-weight: 600;
+  padding: 0.625rem 1.5rem;
+  border-radius: var(--radius-full);
+  border: none;
   box-shadow: var(--shadow-md), 0 0 24px rgba(0, 102, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-brand:hover {
@@ -228,6 +234,35 @@
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg), 0 0 32px rgba(0, 102, 255, 0.4);
   text-decoration: none;
+}
+
+/* Outline Primary Button - Navbar Style */
+.btn-outline-primary {
+  border: 2px solid var(--pulse-blue);
+  color: var(--pulse-blue);
+  background: transparent;
+  font-weight: 600;
+  padding: calc(0.625rem - 2px) calc(1.5rem - 2px);
+  border-radius: var(--radius-full);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-outline-primary:hover {
+  background: var(--pulse-blue);
+  border-color: var(--pulse-blue);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md), 0 0 24px rgba(0, 102, 255, 0.3);
+}
+
+.btn-outline-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-outline-primary:focus-visible {
+  outline: 2px solid var(--pulse-blue);
+  outline-offset: 2px;
 }
 
 /* Success Button - Custom Pulse Style */

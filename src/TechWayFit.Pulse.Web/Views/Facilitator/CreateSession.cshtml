@@ -19,24 +19,16 @@
             <span class="badge bg-white text-dark border px-3 py-2">TTL: <strong>6h</strong></span>
         </div>
 
-        <!-- Alternative Creation Methods -->
-        <div class="alert alert-light border d-flex align-items-center gap-3 mb-4">
-            <div class="flex-grow-1">
-                <div class="fw-semibold mb-1">Looking for other ways to create a session?</div>
-                <small class="text-muted">Try our templates or AI-powered session creator</small>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a href="@Url.Action("Templates", "Facilitator")" class="btn btn-sm btn-outline-primary">
-                    <span class="me-1">📋</span>Use Template
-                </a>
-                <a href="/facilitator/create-workshop" class="btn btn-sm btn-outline-primary">
-                    <span class="me-1">🧠</span>AI Generate
-                </a>
-            </div>
-        </div>
+   
 
         <!-- Form -->
         <form id="sessionCreateForm" action="/api/sessions" method="post">
+            <!-- Hidden field for templateId if coming from template selection -->
+            @if (ViewData["TemplateId"] != null)
+            {
+                <input type="hidden" id="templateId" value="@ViewData["TemplateId"]" />
+            }
+            
             <!-- Session Context Card -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
@@ -93,6 +85,7 @@
                                 <label class="form-label fw-medium" for="sessionTitle">Session title</label>
                                 <input class="form-control" name="sessionTitle" id="sessionTitle" required
                                        maxlength="150"
+                                       value="@(ViewData["TemplateName"] ?? "")"
                                        placeholder="e.g., Sprint Retrospective - Team Alpha" />
                                 <div class="text-end">
                                     <span class="text-muted" style="font-size: 0.75rem;" id="titleCharCount">0 / 150</span>
@@ -102,7 +95,7 @@
                                 <label class="form-label fw-medium" for="sessionGoal">Goal</label>
                                 <textarea class="form-control" name="sessionGoal" id="sessionGoal" rows="2"
                                           maxlength="250"
-                                          placeholder="What do you want to achieve in this session?"></textarea>
+                                          placeholder="What do you want to achieve in this session?">@(ViewData["TemplateDescription"] ?? "")</textarea>
                                 <div class="text-end">
                                     <span class="text-muted" style="font-size: 0.75rem;" id="goalCharCount">0 / 250</span>
                                 </div>

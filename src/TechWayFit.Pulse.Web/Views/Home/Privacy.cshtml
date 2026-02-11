@@ -1,0 +1,132 @@
+@{
+    ViewData["Title"] = "Privacy Policy — TechWayFit Pulse";
+}
+
+<main class="py-5">
+    <div class="container" style="max-width: 800px;">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-5 fw-bold mb-3">Privacy Policy</h1>
+            <p class="text-muted">Last updated: @DateTime.Now.ToString("MMMM dd, yyyy")</p>
+        </div>
+
+        <!-- Content -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 p-md-5">
+                <section class="mb-5">
+                    <h2 class="h4 fw-semibold mb-3">1. Information We Collect</h2>
+                    <p class="text-muted">
+                        TechWayFit Pulse collects minimal information necessary to provide workshop facilitation services. This includes:
+                    </p>
+                    <ul class="text-muted">
+                        <li><strong>Account Information:</strong> Only your email address and name. We use Email OTP (One-Time Password) for authentication and do not store passwords or authentication credentials</li>
+                        <li><strong>Participant Information:</strong> Limited to participant name (optional) and custom data fields configured by the facilitator for specific workshops</li>
+                        <li><strong>Workshop Data:</strong> Session titles, activities, and participant responses (which may be anonymous)</li>
+                        <li><strong>Usage Data:</strong> Basic log data for service operation and debugging purposes</li>
+                    </ul>
+                </section>
+
+                <section class="mb-5">
+                    <h2 class="h4 fw-semibold mb-3">2. How We Use Your Information</h2>
+                    <p class="text-muted">We use collected information to:</p>
+                    <ul class="text-muted">
+                        <li>Authenticate you via secure email-based one-time passwords (no password storage)</li>
+                        <li>Provide and maintain the Pulse workshop platform</li>
+                        <li>Enable real-time collaboration and data collection during workshops</li>
+                        <li>Generate reports and analytics for facilitators</li>
+                        <li>Improve and optimize our services</li>
+                        <li>Communicate with you about your account and our services</li>
+                    </ul>
+                </section>
+
+                <section class="mb-5">
+                    <h2 class="h4 fw-semibold mb-3">3. Data Storage and Security</h2>
+                    <p class="text-muted">
+                        Your data is stored securely using industry-standard encryption. Workshop sessions expire after 6 hours by default,
+                        and all associated participant data is automatically deleted unless explicitly saved by the facilitator.
+                    </p>
+                    <p class="text-muted mb-0">
+                        We only store your name and email address for account purposes. We do not store passwords—authentication
+                        is handled through secure one-time passwords (OTP) sent to your email.
+                    </p>
+                </section>
+
+                <section class="mb-5">
+                    <h2 class="h4 fw-semibold mb-3">4. AI Context and Processing</h2>
+                    <p class="text-muted mb-0">
+                        When you use AI-powered features to generate session content or get facilitation assistance, any context
+                        or prompts you share are sent to the AI service provider for processing. <strong>We do not persist or store
+                        this AI context data.</strong> The AI-generated responses are provided to you in real-time and are not
+                        saved to our servers beyond the session scope.
+                    </p>
+                </section>
+
+                <section class="mb-5">
+                    <h2 class="h4 fw-semibold mb-3">5. Anonymous Participation</h2>
+                    <p class="text-muted">
+                        Participants can choose to respond anonymously during workshop activities. When anonymous mode is enabled,
+                        we do not collect or store personally identifiable information linked to those responses. Even when participants
+                        provide their name, we only collect the name and specific data fields that the facilitator has configured
+                        for the workshop (such as department, role, or other custom fields).
+                    </p>
+                </section>
+
+                <section class="mb-5">
+                    <h2 class="h4 fw-semibold mb-3">6. Data Sharing</h2>
+                    <p class="text-muted">
+                        We do not sell, trade, or rent your personal information to third parties. Workshop data is only accessible
+                        to the facilitator who created the session and participants with the session code.
+                    </p>
+                </section>
+
+                <section class="mb-5">
+                    <h2 class="h4 fw-semibold mb-3">7. Your Rights</h2>
+                    <p class="text-muted">You have the right to:</p>
+                    <ul class="text-muted">
+                        <li>Access your personal data (name and email address)</li>
+                        <li>Request correction of inaccurate data</li>
+                        <li>Request deletion of your account and associated workshop data</li>
+                        <li>Export your workshop data and participant responses</li>
+                        <li>Opt-out of non-essential communications</li>
+                    </ul>
+                    <p class="text-muted mb-0">
+                        <strong>Note:</strong> We maintain minimal data—only your name and email. Sessions automatically expire
+                        after 6 hours unless saved, and AI context is never persisted.
+                    </p>
+                </section>
+
+                <section class="mb-5">
+                    <h2 class="h4 fw-semibold mb-3">8. Cookies and Tracking</h2>
+                    <p class="text-muted">
+                        We use essential cookies to maintain your session and preferences. We do not use third-party tracking cookies
+                        or analytics beyond what is necessary for the platform to function.
+                    </p>
+                </section>
+
+                <section class="mb-4">
+                    <h2 class="h4 fw-semibold mb-3">9. Changes to This Policy</h2>
+                    <p class="text-muted">
+                        We may update this Privacy Policy from time to time. We will notify you of any changes by posting
+                        the new policy on this page and updating the "Last updated" date.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="h4 fw-semibold mb-3">10. Contact Us</h2>
+                    <p class="text-muted mb-0">
+                        If you have questions about this Privacy Policy, please contact us at:
+                        <a href="/home/support" class="text-decoration-none fw-medium">Support Center</a>
+                    </p>
+                </section>
+            </div>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-lg btn-primary d-inline-flex align-items-center gap-2">
+                <i class="fas fa-home"></i>
+                <span>Back to Home</span>
+            </a>
+        </div>
+    </div>
+</main>

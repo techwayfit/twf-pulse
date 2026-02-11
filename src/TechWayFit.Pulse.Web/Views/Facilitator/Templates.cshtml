@@ -18,14 +18,11 @@
         <div class="alert alert-light border d-flex align-items-center gap-3 mb-4">
             <div class="flex-grow-1">
                 <div class="fw-semibold mb-1">Looking for other ways to create a session?</div>
-                <small class="text-muted">Try creating manually or use our AI-powered session creator</small>
+                <small class="text-muted">Create a session manually with custom activities</small>
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <a href="@Url.Action("Create", "Facilitator")" class="btn btn-sm btn-outline-primary">
                     <span class="me-1">✏️</span>Create Manually
-                </a>
-                <a href="/facilitator/create-workshop" class="btn btn-sm btn-outline-primary">
-                    <span class="me-1">🧠</span>AI Generate
                 </a>
             </div>
         </div>
@@ -99,7 +96,7 @@
                                     </div>
                                 </div>
                                 <div class="card-footer bg-transparent border-top-0">
-                                    <a href="@Url.Action("CustomizeTemplate", "Facilitator", new { id = template.Id })" 
+                                    <a href="@Url.Action("Create", "Facilitator", new { templateId = template.Id })" 
                                        class="btn btn-pulse-primary w-100">
                                         Use Template
                                     </a>
@@ -145,7 +142,7 @@
                                     </div>
                                 </div>
                                 <div class="card-footer bg-transparent border-top-0">
-                                    <a href="@Url.Action("CustomizeTemplate", "Facilitator", new { id = template.Id })" 
+                                    <a href="@Url.Action("Create", "Facilitator", new { templateId = template.Id })" 
                                        class="btn btn-pulse-primary w-100">
                                         Use Template
                                     </a>

@@ -74,7 +74,7 @@ ISessionRepository sessionRepository,
     /// </summary>
     [HttpGet("create-session")]
     [HttpGet("create")] // Backward compatibility
-    public async Task<IActionResult> CreateSession(Guid? groupId = null, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> CreateSession(Guid? groupId = null, Guid? templateId = null, CancellationToken cancellationToken = default)
     {
         var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
         if (userId == null)
@@ -85,6 +85,24 @@ ISessionRepository sessionRepository,
         var groups = await _sessionGroupService.GetFacilitatorGroupsAsync(userId.Value, cancellationToken);
         ViewData["Groups"] = groups;
         ViewData["SelectedGroupId"] = groupId;
+        ViewData["TemplateId"] = templateId;
+
+        // Load template data if templateId is provided
+        if (templateId.HasValue)
+        {
+            _logger.LogInformation("Loading template {TemplateId}", templateId.Value);
+            var template = await _sessionTemplateService.GetTemplateByIdAsync(templateId.Value, cancellationToken);
+            if (template != null)
+            {
+                _logger.LogInformation("Template found: {Name}, {Description}", template.Name, template.Description);
+                ViewData["TemplateName"] = template.Name;
+                ViewData["TemplateDescription"] = template.Description;
+            }
+            else
+            {
+                _logger.LogWarning("Template {TemplateId} not found", templateId.Value);
+            }
+        }
 
         return View();
     }
@@ -93,7 +111,7 @@ ISessionRepository sessionRepository,
     /// Add Activities page - choose between manual, template, or AI activity creation
     /// </summary>
     [HttpGet("add-activities")]
-    public async Task<IActionResult> AddActivities(string code, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> AddActivities(string code, Guid? templateId = null, CancellationToken cancellationToken = default)
     {
         var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
         if (userId == null)
@@ -126,6 +144,7 @@ ISessionRepository sessionRepository,
         ViewData["SessionCode"] = session.Code;
         ViewData["SessionTitle"] = session.Title;
         ViewData["SessionId"] = session.Id;
+        ViewData["TemplateId"] = templateId;
 
         return View();
     }
@@ -156,6 +175,7 @@ ISessionRepository sessionRepository,
                 {
                     Id = s.Id,
                     Title = s.Title.Length > 50 ? s.Title.Substring(0, 47) + "..." : s.Title,
+                    SessionCode = s.Code,
                     Status = s.Status.ToString(),
                     ExpiresAt = s.ExpiresAt,
                     IsCompleted = s.Status == Domain.Enums.SessionStatus.Ended || 
@@ -207,33 +227,6 @@ ISessionRepository sessionRepository,
         ViewData["UserName"] = User.FindFirst(ClaimTypes.Name)?.Value;
         
         return View(templates);
-    }
-
-    /// <summary>
-    /// Template customization page - customize template before creating session
-    /// </summary>
-    [HttpGet("templates/{id:guid}/customize")]
-    public async Task<IActionResult> CustomizeTemplate(Guid id, CancellationToken cancellationToken = default)
-    {
-        var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
-        if (userId == null)
-        {
-            return RedirectToAction("Login", "Account");
-        }
-
-        var template = await _sessionTemplateService.GetTemplateByIdAsync(id, cancellationToken);
-        if (template == null)
-        {
-            return NotFound();
-        }
-
-        var groups = await _sessionGroupService.GetFacilitatorGroupsAsync(userId.Value, cancellationToken);
-        
-        ViewData["UserEmail"] = User.FindFirst(ClaimTypes.Email)?.Value;
-        ViewData["UserName"] = User.FindFirst(ClaimTypes.Name)?.Value;
-        ViewData["Groups"] = groups;
-        
-        return View(template);
     }
 
     /// <summary>

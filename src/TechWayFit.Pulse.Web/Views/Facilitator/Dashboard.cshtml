@@ -23,47 +23,11 @@
                 <a href="@Url.Action("Groups", "Facilitator")" class="btn btn-pulse-outline">
                     <span class="d-none d-sm-inline">📁 </span>Manage Groups
                 </a>
-                
+                <a class="btn btn-pulse-outline" href="@Url.Action("Create", "Facilitator")">
+                                <span class="d-none d-sm-inline">✏️</span> Create Session 
+                </a>
                 <!-- Create Session Dropdown -->
-                <div class="btn-group">
-                    <button type="button" class="btn btn-pulse-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="d-none d-sm-inline">✨ </span>Create Session
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-lg">
-                        <li>
-                            <h6 class="dropdown-header">Choose creation method</h6>
-                        </li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-start py-2" href="@Url.Action("Create", "Facilitator")">
-                                <span class="me-3 fs-5">✏️</span>
-                                <div>
-                                    <div class="fw-semibold">Create Manually</div>
-                                    <small class="text-muted">Build from scratch with full control</small>
-                                </div>
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-start py-2" href="@Url.Action("Templates", "Facilitator")">
-                                <span class="me-3 fs-5">📋</span>
-                                <div>
-                                    <div class="fw-semibold">Use Template</div>
-                                    <small class="text-muted">Start with pre-built scenarios</small>
-                                </div>
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item d-flex align-items-start py-2" href="/facilitator/create-workshop">
-                                <span class="me-3 fs-5">🧠</span>
-                                <div>
-                                    <div class="fw-semibold">AI Generate Session</div>
-                                    <small class="text-muted">Let AI create your workshop</small>
-                                </div>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                
             </div>
         </div>
 

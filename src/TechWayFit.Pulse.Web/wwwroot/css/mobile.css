@@ -14,29 +14,59 @@
     padding-left: 1rem !important;
     padding-right: 1rem !important;
   }
+  
+  /* Navbar toggler (hamburger) styling */
+  .navbar-toggler {
+    padding: 0.375rem 0.5rem;
+    font-size: 1.25rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: rgba(0, 102, 255, 0.05);
+    transition: all 0.2s ease;
+  }
+  
+  .navbar-toggler:hover,
+  .navbar-toggler:focus {
+    background: rgba(0, 102, 255, 0.1);
+    box-shadow: none;
+    outline: none;
+  }
+  
+  .navbar-toggler-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0, 102, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  }
 }
 
 /* ===== MOBILE BRAND ADJUSTMENTS (max-width: 767.98px) ===== */
 @media (max-width: 767.98px) {
+  .brand-badge {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+  
   .brand-badge svg {
-    width: 18px !important;
-    height: 18px !important;
+    width: 16px !important;
+    height: 16px !important;
   }
   
   .brand-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
   }
   
   .brand-sub {
-    font-size: 0.7rem;
+    font-size: 0.625rem;
   }
 }
 
 /* ===== NAVBAR COLLAPSE (max-width: 991.98px) ===== */
 @media (max-width: 991.98px) {
   .navbar-collapse {
-    margin-top: 1rem;
+    margin-top: 0.75rem;
     padding: 0;
     background: transparent;
     overflow: hidden;
@@ -44,22 +74,66 @@
   
   .navbar-collapse.show {
     padding: 1rem;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(20px);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(0, 102, 255, 0.08);
   }
   
   .navbar-collapse.collapsing {
     padding: 0 1rem;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(20px);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(0, 102, 255, 0.08);
   }
   
   .navbar-nav {
-    gap: 0.25rem !important;
+    gap: 0.375rem !important;
+  }
+  
+  /* Mobile nav items styling */
+  .navbar-nav .nav-item {
+    width: 100%;
+  }
+  
+  .navbar-nav .nav-link {
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+    font-weight: 500;
+    color: var(--pulse-dark);
+  }
+  
+  .navbar-nav .nav-link:hover {
+    background: rgba(0, 102, 255, 0.05);
+    color: var(--pulse-blue);
+  }
+  
+  /* Mobile button styling in navbar */
+  .navbar-nav .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
+  }
+  
+  /* Outline button compensation for border */
+  .navbar-nav .btn-outline-primary {
+    padding: calc(0.75rem - 2px) calc(1.5rem - 2px);
+  }
+  
+  .navbar-nav .btn-brand,
+  .navbar-nav .btn-outline-primary {
+    border-radius: var(--radius-sm);
+  }
+  
+  /* Mobile navbar button spacing */
+  .navbar-nav .nav-item + .nav-item .btn {
+    margin-top: 0.5rem;
   }
 }
 

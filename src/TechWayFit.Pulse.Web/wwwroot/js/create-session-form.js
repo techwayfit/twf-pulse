@@ -426,8 +426,17 @@ if (nameLabel) {
             return;
         }
         
-        // Redirect to Add Activities page instead of going live
-        window.location.href = `/facilitator/add-activities?code=${sessionCode}`;
+        // Check if templateId exists and append to redirect URL
+        const templateIdInput = document.getElementById('templateId');
+        const templateId = templateIdInput ? templateIdInput.value : null;
+        
+        let redirectUrl = `/facilitator/add-activities?code=${sessionCode}`;
+        if (templateId) {
+            redirectUrl += `&templateId=${templateId}`;
+        }
+        
+        // Redirect to Add Activities page
+        window.location.href = redirectUrl;
     } else {
         const error = await response.json();
         console.error('API error:', error);

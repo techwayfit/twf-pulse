@@ -132,10 +132,16 @@
                     else
                     {
                         <li class="nav-item">
-                            <a class="nav-link" href="/account/login">Sign In</a>
+                            <a class="btn btn-outline-primary px-4 d-inline-flex align-items-center gap-2" href="/account/login">
+                                <i class="fas fa-user"></i>
+                                <span>Sign In</span>
+                            </a>
                         </li>
                         <li class="nav-item ms-lg-2">
-                            <a class="btn btn-brand px-4" href="/participant/join">Join Workshop</a>
+                            <a class="btn btn-brand px-4 d-inline-flex align-items-center gap-2" href="/participant/join">
+                                <i class="fas fa-users"></i>
+                                <span>Join Workshop</span>
+                            </a>
                         </li>
                     }
                 </nav>
@@ -153,9 +159,9 @@
             <div class="footer-grid">
                 <div class="footer-copyright">&copy; @DateTime.Now.Year TechWayFit Pulse. All rights reserved.</div>
                 <div class="footer-links">
-                    <a href="#" class="text-decoration-none">Privacy</a>
-                    <a href="#" class="text-decoration-none">Terms</a>
-                    <a href="#" class="text-decoration-none">Support</a>
+                    <a href="/home/privacy" class="text-decoration-none">Privacy</a>
+                    <a href="/home/terms" class="text-decoration-none">Terms</a>
+                    <a href="/home/support" class="text-decoration-none">Support</a>
                 </div>
             </div>
         </div>
@@ -188,8 +194,8 @@
     <script src="js/clipboard-helper.js"></script>
 
     <!-- Chart.js for dashboard charts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-wordcloud"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-wordcloud@4.3.0/build/index.umd.min.js"></script>
     
     <!-- Dashboard Scripts -->
     <script src="js/poll-dashboard.js"></script>

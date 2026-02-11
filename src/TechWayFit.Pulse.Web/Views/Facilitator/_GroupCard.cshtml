@@ -119,7 +119,7 @@
                                         }
                                     </span>
                                     <div class="flex-grow-1" style="min-width: 0;">
-                                        <a href="/facilitator/dashboard?session=@session.Id" class="text-decoration-none fw-medium d-block text-truncate" style="font-size: 0.8rem; color: #334155;">
+                                        <a href="/facilitator/live?Code=@session.SessionCode" class="text-decoration-none fw-medium d-block text-truncate" style="font-size: 0.8rem; color: #334155;">
                                             @session.Title
                                         </a>
                                         @if (session.SessionStart.HasValue)
@@ -129,8 +129,11 @@
                                             </small>
                                         }
                                     </div>
+                                    <div class="text-end">
+                                            <span class="badge text-bg-info">@session.SessionCode</span>
+                                            </div>
                                     <div class="text-muted text-end" style="font-size: 0.7rem; white-space: nowrap;">
-                                        <div>@session.Status</div>
+                                        <div class="session-status-@session.Status.ToLower()">@session.Status</div>
                                         <div>Expires @session.ExpiresAt.ToString("MMM d")</div>
                                     </div>
                                 </div>

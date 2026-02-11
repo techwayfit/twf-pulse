@@ -27,32 +27,64 @@ public sealed class FacilitatorContextMiddleware
     {
         try
         {
-            // Try to get facilitator token from cookie or header
-            var token = context.Request.Cookies["FacilitatorToken"]
-                ?? context.Request.Headers["X-Facilitator-Token"].FirstOrDefault();
+            FacilitatorContext? facilitatorContext = null;
 
-            if (!string.IsNullOrWhiteSpace(token))
+            // First, check if user is authenticated via ASP.NET Core authentication
+            if (context.User?.Identity?.IsAuthenticated == true)
             {
-                var facilitatorUserId = await tokenService.ValidateTokenAsync(token);
-                if (facilitatorUserId.HasValue)
+                var emailClaim = context.User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email);
+                if (emailClaim != null)
                 {
-                    var facilitator = await authService.GetFacilitatorAsync(facilitatorUserId.Value, default);
+                    var facilitator = await authService.GetFacilitatorByEmailAsync(emailClaim.Value, default);
                     if (facilitator != null)
                     {
-                        // Load user-specific data (OpenAI credentials, etc.)
                         var userData = await userDataRepository.GetAllAsDictAsync(facilitator.Id, default);
-                        
-                        // Set the facilitator context for this request
-                        FacilitatorContextAccessor.Set(new FacilitatorContext
+                        facilitatorContext = new FacilitatorContext
                         {
                             FacilitatorUserId = facilitator.Id,
                             Email = facilitator.Email,
                             DisplayName = facilitator.DisplayName,
                             OpenAiApiKey = userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiApiKey),
                             OpenAiBaseUrl = userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiBaseUrl)
-                        });
+                        };
                     }
                 }
+            }
+
+            // If not authenticated via ASP.NET Core, try facilitator token from cookie or header
+            if (facilitatorContext == null)
+            {
+                var token = context.Request.Cookies["FacilitatorToken"]
+                    ?? context.Request.Headers["X-Facilitator-Token"].FirstOrDefault();
+
+                if (!string.IsNullOrWhiteSpace(token))
+                {
+                    var facilitatorUserId = await tokenService.ValidateTokenAsync(token);
+                    if (facilitatorUserId.HasValue)
+                    {
+                        var facilitator = await authService.GetFacilitatorAsync(facilitatorUserId.Value, default);
+                        if (facilitator != null)
+                        {
+                            // Load user-specific data (OpenAI credentials, etc.)
+                            var userData = await userDataRepository.GetAllAsDictAsync(facilitator.Id, default);
+                            
+                            facilitatorContext = new FacilitatorContext
+                            {
+                                FacilitatorUserId = facilitator.Id,
+                                Email = facilitator.Email,
+                                DisplayName = facilitator.DisplayName,
+                                OpenAiApiKey = userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiApiKey),
+                                OpenAiBaseUrl = userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiBaseUrl)
+                            };
+                        }
+                    }
+                }
+            }
+
+            // Set the context if we found one
+            if (facilitatorContext != null)
+            {
+                FacilitatorContextAccessor.Set(facilitatorContext);
             }
 
             await _next(context);

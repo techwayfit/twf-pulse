@@ -224,6 +224,25 @@ class AddActivitiesManager {
         window.goLive = () => this.goLive();
         window.selectTemplate = (templateId) => this.selectTemplate(templateId);
         
+        // Auto-show template modal if templateId provided
+        const hiddenTemplateId = document.getElementById('hiddenTemplateId');
+        if (hiddenTemplateId && hiddenTemplateId.value) {
+            const templateId = hiddenTemplateId.value;
+            console.log('Auto-showing template modal for templateId:', templateId);
+            
+            // Switch to template tab
+            const templateTab = document.getElementById('template-tab');
+            if (templateTab) {
+                const bsTab = new bootstrap.Tab(templateTab);
+                bsTab.show();
+            }
+            
+            // Auto-select the template
+            setTimeout(() => {
+                this.selectTemplate(templateId);
+            }, 500); // Small delay to ensure tab switch completes
+        }
+        
         console.log('Add Activities Manager initialized');
     }
 
@@ -432,18 +451,68 @@ class AddActivitiesManager {
     }
 
     async selectTemplate(templateId) {
-        // Store template ID for confirmation
-        this.pendingTemplateId = templateId;
-        
-        // Show modal confirmation if activities exist
-        if (this.activities.length > 0) {
+        try {
+            // Store template ID for confirmation
+            this.pendingTemplateId = templateId;
+            
+            // Load template details to show in modal
+            const response = await fetch(`/api/templates/${templateId}`);
+            if (!response.ok) {
+                throw new Error('Failed to load template details');
+            }
+            
+            const result = await response.json();
+            const template = result.template;
+            
+            if (!template || !template.config || !template.config.activities) {
+                throw new Error('Invalid template configuration');
+            }
+            
+            // Update modal content
+            document.getElementById('templateModalIcon').textContent = template.iconEmoji || '📋';
+            document.getElementById('templateModalName').textContent = template.name;
+            document.getElementById('templateModalDescription').textContent = template.description || '';
+            
+            // Populate activities list
+            const activitiesList = document.getElementById('templateActivitiesList');
+            const activities = template.config.activities || [];
+            
+            activitiesList.innerHTML = activities.map((activity, index) => {
+                const activityIcon = this.getActivityIcon(activity.type);
+                const durationText = activity.durationMinutes ? `${activity.durationMinutes} min` : '';
+                
+                return `
+                    <div class="list-group-item d-flex align-items-start gap-2">
+                        <span class="me-1" style="font-size: 1.2rem;">${activityIcon}</span>
+                        <div class="flex-grow-1">
+                            <div class="fw-medium">${this.escapeHtml(activity.title)}</div>
+                            ${activity.prompt ? `<small class="text-muted">${this.escapeHtml(activity.prompt)}</small>` : ''}
+                        </div>
+                        ${durationText ? `<span class="badge bg-secondary-subtle text-secondary">${durationText}</span>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            // Show modal
             const modal = new bootstrap.Modal(document.getElementById('templateConfirmModal'));
             modal.show();
-            return;
+            
+        } catch (error) {
+            console.error('Error loading template:', error);
+            alert('Failed to load template details. Please try again.');
         }
-        
-        // No existing activities, apply template directly
-        await this.applyTemplate(templateId);
+    }
+    
+    getActivityIcon(type) {
+        const icons = {
+            'poll': '📊',
+            'wordcloud': '☁️',
+            'quadrant': '📈',
+            'fivewhys': '🔍',
+            'rating': '⭐',
+            'feedback': '💬'
+        };
+        return icons[type.toLowerCase()] || '📋';
     }
 
     async applyTemplate(templateId) {
@@ -472,23 +541,8 @@ class AddActivitiesManager {
                 throw new Error('Invalid template configuration');
             }
             
-            // Clear existing activities from UI and server
-            if (this.activities.length > 0) {
-                // Delete all existing activities
-                for (const activity of this.activities) {
-                    if (activity.id) {
-                        try {
-                            await fetch(`/api/sessions/${this.sessionCode}/activities/${activity.id}`, {
-                                method: 'DELETE'
-                            });
-                        } catch (err) {
-                            console.warn('Failed to delete activity:', err);
-                        }
-                    }
-                }
-            }
-            
-            this.activities = [];
+            // Note: We are now appending activities instead of replacing them
+            // Existing activities will remain in place
             
             // Add template activities to session
             const templateActivities = template.config.activities || [];
@@ -514,6 +568,17 @@ class AddActivitiesManager {
             
             // Show success message
             alert(`Successfully added ${templateActivities.length} ${templateActivities.length === 1 ? 'activity' : 'activities'} from template!`);
+            
+            // Remove templateId from URL to prevent re-triggering on page refresh
+            const url = new URL(window.location);
+            url.searchParams.delete('templateId');
+            window.history.replaceState({}, '', url);
+            
+            // Remove hidden templateId field
+            const hiddenTemplateId = document.getElementById('hiddenTemplateId');
+            if (hiddenTemplateId) {
+                hiddenTemplateId.remove();
+            }
             
             // Switch to manual tab to show activities
             const manualTab = document.getElementById('manual-tab');

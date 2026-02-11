@@ -1199,6 +1199,15 @@ filters ?? new Dictionary<string, string?>(),
 
     private ActionResult<ApiResponse<T>>? RequireFacilitatorToken<T>(TechWayFit.Pulse.Domain.Entities.Session session)
     {
+        // First, check if the current facilitator context user owns this session
+        var currentContext = Application.Context.FacilitatorContextAccessor.Current;
+        if (currentContext != null && currentContext.FacilitatorUserId == session.FacilitatorUserId)
+        {
+            // Authenticated facilitator owns this session - allow access
+            return null;
+        }
+
+        // Otherwise, check for session-specific facilitator token
         if (!_facilitatorTokens.TryGet(session.Id, out var auth))
         {
             return null;

@@ -15,5 +15,48 @@ public class HomeController : Controller
  return View();
     }
 
-    
+    /// <summary>
+    /// Privacy Policy page
+    /// </summary>
+    public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    /// <summary>
+    /// Terms of Service page
+    /// </summary>
+    public IActionResult Terms()
+    {
+        return View();
+    }
+
+    /// <summary>
+    /// Support page
+    /// </summary>
+    public IActionResult Support()
+    {
+        return View();
+    }
+
+    /// <summary>
+    /// Getting Started guide
+    /// </summary>
+    public IActionResult GettingStarted()
+    {
+        return View();
+    }
+
+    /// <summary>
+    /// Activity Types documentation
+    /// </summary>
+    public IActionResult ActivityTypes()
+    {
+        return View();
+    }
+
+    public IActionResult ParticipantGuide()
+    {
+        return View();
+    }
 }
