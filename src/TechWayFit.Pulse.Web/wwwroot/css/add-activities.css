@@ -1,43 +1,21 @@
-/* Add Activities Page Styles - Clean Modern Design */
+/* ============================================
+   ADD ACTIVITIES - ACTIVITY CARDS
+   Minimal custom styles for activity management
+   All colors from Bootstrap + pulse.css
+   ============================================ */
 
-/* Tab Pill Buttons */
-.card-header [data-bs-toggle="tab"] {
-    white-space: nowrap;
-}
-
-.card-header [data-bs-toggle="tab"].active,
-.card-header [data-bs-toggle="tab"][aria-selected="true"] {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    border-color: #6366f1;
-    color: white;
-}
-
-.card-header [data-bs-toggle="tab"]:hover:not(.active):not([aria-selected="true"]) {
-    border-color: #6366f1;
-    color: #6366f1;
-    background-color: #f5f3ff;
-}
-
-/* Activity Cards */
+/* Activities Grid */
 .activities-grid {
     display: grid;
     gap: 16px;
 }
 
+/* Activity Cards - Use Bootstrap cards with minimal overrides */
 .activity-card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.08));
-    transition: all 0.2s;
-    border: 1px solid rgba(0, 102, 255, 0.1);
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
 }
 
 .activity-card:hover {
-    box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.1));
     transform: translateY(-2px);
 }
 
@@ -51,13 +29,6 @@
     padding-top: 4px;
 }
 
-.activity-number {
-    font-size: 14px;
-    font-weight: 500;
-    color: #6366f1;
-    flex-shrink: 0;
-}
-
 /* Rearrange Controls */
 .rearrange-controls {
     display: flex;
@@ -69,22 +40,12 @@
     width: 32px;
     height: 28px;
     padding: 0;
-    border: 1px solid #d1d5db;
-    background: white;
-    border-radius: 6px;
-    cursor: pointer;
+    border-radius: var(--pulse-radius-sm);
     font-size: 12px;
-    color: #6b7280;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.btn-rearrange:hover:not(:disabled) {
-    background: #f3f4f6;
-    border-color: #6366f1;
-    color: #6366f1;
 }
 
 .btn-rearrange:disabled {
@@ -92,248 +53,17 @@
     cursor: not-allowed;
 }
 
-/* Activity Content Area */
+/* Activity Content */
 .activity-content {
-    min-width: 0; /* Enables text truncation if needed */
+    min-width: 0;
 }
 
-/* Activity Actions Overlay */
-.activity-actions-overlay {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    display: flex;
-    gap: 8px;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: all 0.3s ease;
-    z-index: 2;
+/* Drag and Drop States */
+.activity-card.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
 }
 
-/* Desktop: Show on hover */
-@media (min-width: 768px) {
-    .activity-card:hover .activity-actions-overlay {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Mobile: Always show edit button */
-@media (max-width: 767px) {
-    .activity-actions-overlay {
-        opacity: 1;
-        transform: translateY(0);
-        position: static;
-        margin-top: 12px;
-        justify-content: flex-end;
-    }
-}
-
-.activity-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 8px;
-}
-
-.activity-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-}
-
-.activity-icon {
-    font-size: 18px;
-}
-
-.activity-title h3 {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin: 0;
-}
-
-.activity-description {
-    color: #6b7280;
-    font-size: 13px;
-    margin-bottom: 8px;
-    line-height: 1.4;
-}
-
-.activity-meta {
-    color: #9ca3af;
-    font-size: 12px;
-    margin-bottom: 8px;
-}
-
-.activity-actions {
-    display: flex;
-    gap: 8px;
-}
-
-/* Buttons */
-.btn {
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: none;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-}
-
-.btn-secondary {
-    background: transparent;
-    color: #ef4444;
-    border: 1px solid #fecaca;
-}
-
-.btn-secondary:hover {
-    background: #fef2f2;
-}
-
-/* Template Grid */
-.template-card-container {
-    transition: opacity 0.3s ease;
-}
-
-.template-card {
-    cursor: pointer;
-    transition: all 0.3s ease;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 102, 255, 0.1) !important;
-}
-
-.template-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg, 0 8px 24px rgba(15, 23, 42, 0.12)) !important;
-}
-
-.template-card:active {
-    transform: translateY(-2px);
-}
-
-.template-card .template-badge {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    font-size: 11px;
-    padding: 4px 8px;
-    z-index: 2;
-}
-
-/* Template Overlay */
-.template-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.95) 0%, rgba(139, 92, 246, 0.95) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 1;
-}
-
-.template-card:hover .template-overlay {
-    opacity: 1;
-}
-
-.template-overlay .btn {
-    background: white;
-    color: #6366f1;
-    border: none;
-    font-weight: 600;
-    padding: 12px 32px;
-    font-size: 15px;
-    border-radius: 10px;
-    transform: translateY(10px);
-    transition: transform 0.3s ease;
-}
-
-.template-card:hover .template-overlay .btn {
-    transform: translateY(0);
-}
-
-.template-overlay .btn:hover {
-    background: #f9fafb;
-    color: #4f46e5;
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
-}
-
-/* Activity Animation */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.activity-card {
-    animation: fadeIn 0.3s ease-out;
-}
-
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: #9ca3af;
-}
-
-.empty-state-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-}
-
-/* Tom Select Customization */
-.ts-wrapper.multi .ts-control {
-    padding: 0.5rem;
-    border-color: #d1d5db;
-    border-radius: 0.5rem;
-}
-
-.ts-wrapper.multi .ts-control > div {
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    color: white;
-    border: none;
-    border-radius: 0.375rem;
-    padding: 0.25rem 0.5rem;
-    margin: 0.125rem;
-}
-
-.ts-dropdown {
-    border-color: #d1d5db;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.ts-dropdown .option {
-    padding: 0.5rem;
-}
-
-.ts-dropdown .option.active {
-    background: #ede9fe;
-    color: #6366f1;
+.activity-card.drop-target {
+    border-top: 3px solid var(--pulse-blue);
 }

@@ -1,0 +1,717 @@
+/* ============================================
+   PULSE DESIGN SYSTEM - BOOTSTRAP 5 OVERRIDES
+   Version: 1.0.0
+   
+   Import after Bootstrap CSS:
+   <link href="bootstrap.min.css" rel="stylesheet">
+   <link href="pulse-bootstrap-overrides.css" rel="stylesheet">
+   ============================================ */
+
+/* ------------------------------------------
+   1. CSS VARIABLES & COLOR SYSTEM
+   ------------------------------------------ */
+:root {
+    /* Primary Brand Colors */
+    --pulse-blue: #0EA5E9;
+    --pulse-green: #10B981;
+    --pulse-gradient: linear-gradient(135deg, #0EA5E9 0%, #10B981 100%);
+    
+    /* Brand Color Variations */
+    --pulse-blue-light: #38BDF8;
+    --pulse-blue-dark: #0284C7;
+    --pulse-green-light: #34D399;
+    --pulse-green-dark: #059669;
+    
+    /* Semantic Colors */
+    --pulse-success: #10B981;
+    --pulse-warning: #F59E0B;
+    --pulse-danger: #EF4444;
+    --pulse-info: #0EA5E9;
+    
+    /* Neutral Grays */
+    --pulse-gray-50: #F9FAFB;
+    --pulse-gray-100: #F3F4F6;
+    --pulse-gray-200: #E5E7EB;
+    --pulse-gray-300: #D1D5DB;
+    --pulse-gray-400: #9CA3AF;
+    --pulse-gray-500: #6B7280;
+    --pulse-gray-600: #4B5563;
+    --pulse-gray-700: #374151;
+    --pulse-gray-800: #1F2937;
+    --pulse-gray-900: #111827;
+    
+    /* Typography */
+    --pulse-font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --pulse-font-mono: 'Space Mono', 'Courier New', monospace;
+    
+    /* Spacing */
+    --pulse-spacing-xs: 0.25rem;
+    --pulse-spacing-sm: 0.5rem;
+    --pulse-spacing-md: 1rem;
+    --pulse-spacing-lg: 1.5rem;
+    --pulse-spacing-xl: 2rem;
+    --pulse-spacing-2xl: 3rem;
+    
+    /* Border Radius */
+    --pulse-radius-sm: 6px;
+    --pulse-radius-md: 8px;
+    --pulse-radius-lg: 12px;
+    --pulse-radius-xl: 16px;
+    --pulse-radius-full: 9999px;
+    
+    /* Shadows */
+    --pulse-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --pulse-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --pulse-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --pulse-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    --pulse-shadow-gradient: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+/* ------------------------------------------
+   2. BOOTSTRAP COLOR OVERRIDES
+   ------------------------------------------ */
+
+/* Override Bootstrap's primary color with gradient */
+.btn-primary,
+.bg-primary,
+.badge-primary {
+    --bs-primary-rgb: 14, 165, 233;
+}
+
+.btn-success,
+.bg-success,
+.badge-success {
+    --bs-success-rgb: 16, 185, 129;
+}
+
+.btn-warning,
+.bg-warning,
+.badge-warning {
+    --bs-warning-rgb: 245, 158, 11;
+}
+
+.btn-danger,
+.bg-danger,
+.badge-danger {
+    --bs-danger-rgb: 239, 68, 68;
+}
+
+.btn-info,
+.bg-info,
+.badge-info {
+    --bs-info-rgb: 14, 165, 233;
+}
+
+/* ------------------------------------------
+   3. GLOBAL OVERRIDES
+   ------------------------------------------ */
+
+body {
+    font-family: var(--pulse-font-family);
+    color: var(--pulse-gray-900);
+    background-color: var(--pulse-gray-50);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ------------------------------------------
+   4. BUTTON SYSTEM
+   ------------------------------------------ */
+
+/* Base button styles */
+.btn {
+    font-weight: 600;
+    border-radius: var(--pulse-radius-md);
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    line-height: 1.5;
+}
+
+/* Button sizes */
+.btn-sm {
+    padding: 0.375rem 0.875rem;
+    font-size: 0.8125rem;
+    border-radius: var(--pulse-radius-sm);
+}
+
+.btn-lg {
+    padding: 0.875rem 1.75rem;
+    font-size: 1rem;
+    border-radius: var(--pulse-radius-lg);
+}
+
+/* Primary Gradient Button */
+.btn-gradient,
+.btn-primary {
+    background: var(--pulse-gradient);
+    color: white;
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-gradient:hover,
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0284C7 0%, #059669 100%);
+    transform: translateY(-1px);
+    box-shadow: var(--pulse-shadow-gradient);
+    color: white;
+}
+
+.btn-gradient:active,
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-gradient:focus,
+.btn-primary:focus {
+    box-shadow: var(--pulse-shadow-gradient);
+    color: white;
+}
+
+/* Outline Gradient Button */
+.btn-outline-gradient {
+    background: white;
+    border: 2px solid transparent;
+    background-image: 
+        linear-gradient(white, white),
+        var(--pulse-gradient);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    color: var(--pulse-blue);
+}
+
+.btn-outline-gradient:hover {
+    background: var(--pulse-gradient);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: var(--pulse-shadow-gradient);
+}
+
+/* Secondary Button */
+.btn-secondary {
+    background: white;
+    color: var(--pulse-gray-700);
+    border: 1px solid var(--pulse-gray-300);
+}
+
+.btn-secondary:hover {
+    background: var(--pulse-gray-50);
+    border-color: var(--pulse-gray-400);
+    color: var(--pulse-gray-900);
+    transform: translateY(-1px);
+}
+
+.btn-secondary:focus {
+    background: var(--pulse-gray-50);
+    border-color: var(--pulse-gray-400);
+    color: var(--pulse-gray-900);
+}
+
+/* Ghost Button */
+.btn-ghost {
+    background: transparent;
+    color: var(--pulse-gray-700);
+    border: none;
+}
+
+.btn-ghost:hover {
+    background: var(--pulse-gray-100);
+    color: var(--pulse-gray-900);
+}
+
+/* Success Button */
+.btn-success {
+    background: var(--pulse-success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: var(--pulse-green-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    color: white;
+}
+
+.btn-success:focus {
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    color: white;
+}
+
+/* Warning Button */
+.btn-warning {
+    background: var(--pulse-warning);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #D97706;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    color: white;
+}
+
+.btn-warning:focus {
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    color: white;
+}
+
+/* Danger Button */
+.btn-danger {
+    background: var(--pulse-danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #DC2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    color: white;
+}
+
+.btn-danger:focus {
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    color: white;
+}
+
+/* Icon Button */
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--pulse-radius-md);
+}
+
+.btn-icon.btn-sm {
+    width: 32px;
+    height: 32px;
+}
+
+.btn-icon.btn-lg {
+    width: 48px;
+    height: 48px;
+}
+
+/* Loading Button */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: pulse-spin 0.6s linear infinite;
+}
+
+@keyframes pulse-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ------------------------------------------
+   5. BADGE SYSTEM
+   ------------------------------------------ */
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--pulse-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.badge-gradient {
+    background: var(--pulse-gradient);
+    color: white;
+}
+
+.badge-subtle {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    color: var(--pulse-blue);
+    border: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.badge-gray {
+    background: var(--pulse-gray-100);
+    color: var(--pulse-gray-700);
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--pulse-success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.badge-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--pulse-warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.badge-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--pulse-danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* ------------------------------------------
+   6. CARD SYSTEM
+   ------------------------------------------ */
+
+.card {
+    border-radius: var(--pulse-radius-lg);
+    border: 1px solid var(--pulse-gray-200);
+    box-shadow: var(--pulse-shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--pulse-shadow-md);
+    transform: translateY(-2px);
+}
+
+.card-gradient {
+    background: var(--pulse-gradient);
+    color: white;
+    border: none;
+}
+
+.card-gradient .card-title,
+.card-gradient .card-text {
+    color: white;
+}
+
+/* ------------------------------------------
+   7. FORM CONTROLS
+   ------------------------------------------ */
+
+.form-control,
+.form-select {
+    border-radius: var(--pulse-radius-md);
+    border: 1px solid var(--pulse-gray-300);
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--pulse-blue);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--pulse-gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.form-check-input:checked {
+    background-color: var(--pulse-blue);
+    border-color: var(--pulse-blue);
+}
+
+/* ------------------------------------------
+   8. ALERTS
+   ------------------------------------------ */
+
+.alert {
+    border-radius: var(--pulse-radius-lg);
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+.alert-gradient {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    color: var(--pulse-blue);
+    border-left: 4px solid var(--pulse-blue);
+}
+
+.alert-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--pulse-green-dark);
+    border-left: 4px solid var(--pulse-success);
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #D97706;
+    border-left: 4px solid var(--pulse-warning);
+}
+
+.alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #DC2626;
+    border-left: 4px solid var(--pulse-danger);
+}
+
+.alert-info {
+    background: rgba(14, 165, 233, 0.1);
+    color: var(--pulse-blue-dark);
+    border-left: 4px solid var(--pulse-info);
+}
+
+/* ------------------------------------------
+   9. TABLES
+   ------------------------------------------ */
+
+.table {
+    border-radius: var(--pulse-radius-lg);
+    overflow: hidden;
+}
+
+.table thead {
+    background: var(--pulse-gray-50);
+}
+
+.table-hover tbody tr:hover {
+    background: var(--pulse-gray-50);
+}
+
+/* ------------------------------------------
+   10. UTILITIES
+   ------------------------------------------ */
+
+.bg-gradient {
+    background: var(--pulse-gradient) !important;
+    color: white;
+}
+
+.bg-gradient-subtle {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%) !important;
+}
+
+.text-gradient {
+    background: var(--pulse-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shadow-gradient {
+    box-shadow: var(--pulse-shadow-gradient) !important;
+}
+
+/* Custom spacing utilities */
+.gap-xs { gap: var(--pulse-spacing-xs); }
+.gap-sm { gap: var(--pulse-spacing-sm); }
+.gap-md { gap: var(--pulse-spacing-md); }
+.gap-lg { gap: var(--pulse-spacing-lg); }
+.gap-xl { gap: var(--pulse-spacing-xl); }
+
+/* Custom border radius utilities */
+.rounded-pulse-sm { border-radius: var(--pulse-radius-sm) !important; }
+.rounded-pulse-md { border-radius: var(--pulse-radius-md) !important; }
+.rounded-pulse-lg { border-radius: var(--pulse-radius-lg) !important; }
+.rounded-pulse-xl { border-radius: var(--pulse-radius-xl) !important; }
+
+/* ------------------------------------------
+   11. NAVIGATION
+   ------------------------------------------ */
+
+.nav-pills .nav-link {
+    border-radius: var(--pulse-radius-md);
+    color: var(--pulse-gray-700);
+    transition: all 0.2s ease;
+}
+
+.nav-pills .nav-link.active {
+    background: var(--pulse-gradient);
+}
+
+.nav-pills .nav-link:hover:not(.active) {
+    background: var(--pulse-gray-100);
+}
+
+.navbar-light .navbar-brand {
+    color: var(--pulse-gray-900);
+    font-weight: 700;
+}
+
+.navbar-light .navbar-nav .nav-link {
+    color: var(--pulse-gray-700);
+}
+
+.navbar-light .navbar-nav .nav-link:hover {
+    color: var(--pulse-blue);
+}
+
+/* ------------------------------------------
+   12. PAGINATION
+   ------------------------------------------ */
+
+.pagination .page-link {
+    border-radius: var(--pulse-radius-md);
+    margin: 0 0.25rem;
+    border: 1px solid var(--pulse-gray-300);
+    color: var(--pulse-gray-700);
+}
+
+.pagination .page-link:hover {
+    background: var(--pulse-gray-50);
+    border-color: var(--pulse-blue);
+    color: var(--pulse-blue);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--pulse-gradient);
+    border-color: transparent;
+}
+
+/* ------------------------------------------
+   13. PROGRESS BARS
+   ------------------------------------------ */
+
+.progress {
+    height: 8px;
+    border-radius: var(--pulse-radius-full);
+    background: var(--pulse-gray-200);
+}
+
+.progress-bar {
+    background: var(--pulse-gradient);
+    border-radius: var(--pulse-radius-full);
+}
+
+/* ------------------------------------------
+   14. MODAL OVERRIDES
+   ------------------------------------------ */
+
+.modal-content {
+    border-radius: var(--pulse-radius-lg);
+    border: none;
+    box-shadow: var(--pulse-shadow-xl);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--pulse-gray-200);
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--pulse-gray-200);
+    padding: 1.25rem 1.5rem;
+}
+
+/* ------------------------------------------
+   15. DROPDOWN OVERRIDES
+   ------------------------------------------ */
+
+.dropdown-menu {
+    border-radius: var(--pulse-radius-lg);
+    border: 1px solid var(--pulse-gray-200);
+    box-shadow: var(--pulse-shadow-lg);
+    padding: 0.5rem;
+}
+
+.dropdown-item {
+    border-radius: var(--pulse-radius-md);
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: var(--pulse-gray-100);
+    color: var(--pulse-blue);
+}
+
+.dropdown-item.active {
+    background: var(--pulse-gradient);
+}
+
+/* ------------------------------------------
+   16. TOAST NOTIFICATIONS
+   ------------------------------------------ */
+
+.toast {
+    border-radius: var(--pulse-radius-lg);
+    border: none;
+    box-shadow: var(--pulse-shadow-lg);
+}
+
+.toast-header {
+    background: var(--pulse-gray-50);
+    border-bottom: 1px solid var(--pulse-gray-200);
+}
+
+/* ------------------------------------------
+   17. ACCORDION OVERRIDES
+   ------------------------------------------ */
+
+.accordion-item {
+    border: 1px solid var(--pulse-gray-200);
+    border-radius: var(--pulse-radius-lg) !important;
+    margin-bottom: 0.5rem;
+}
+
+.accordion-button {
+    border-radius: var(--pulse-radius-lg);
+    font-weight: 600;
+}
+
+.accordion-button:not(.collapsed) {
+    background: var(--pulse-gradient);
+    color: white;
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: var(--pulse-blue);
+}
+
+/* ------------------------------------------
+   18. SPINNER/LOADING STATES
+   ------------------------------------------ */
+
+.spinner-border-gradient {
+    border-color: var(--pulse-blue);
+    border-right-color: transparent;
+}
+
+/* ------------------------------------------
+   19. BREADCRUMB OVERRIDES
+   ------------------------------------------ */
+
+.breadcrumb-item.active {
+    color: var(--pulse-blue);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: var(--pulse-gray-400);
+}
+
+/* ------------------------------------------
+   20. LIST GROUP OVERRIDES
+   ------------------------------------------ */
+
+.list-group-item {
+    border-color: var(--pulse-gray-200);
+}
+
+.list-group-item:hover {
+    background: var(--pulse-gray-50);
+}
+
+.list-group-item.active {
+    background: var(--pulse-gradient);
+    border-color: transparent;
+}

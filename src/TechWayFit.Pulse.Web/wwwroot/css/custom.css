@@ -1,0 +1,260 @@
+/* ============================================
+   PULSE CUSTOM STYLES
+   Minimal custom styles not covered by Bootstrap
+   ============================================ */
+
+/* Brand Badge - Logo Component */
+.brand-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--pulse-radius-md);
+  background: var(--pulse-gradient);
+  box-shadow: var(--pulse-shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.brand-title {
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--pulse-gray-900);
+  line-height: 1.2;
+}
+
+.brand-sub {
+  font-size: 0.65rem;
+  color: var(--pulse-gray-500);
+  line-height: 1;
+  display: block;
+  font-weight: 400;
+}
+
+/* User Initials Badge */
+.user-initials-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Container Wide - Custom Layout */
+.container-wide {
+  max-width: 1400px;
+}
+
+/* Navbar Custom Animation */
+.nav-link-animated {
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.nav-link-animated::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--pulse-gradient);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.nav-link-animated:hover::after {
+  width: 100%;
+}
+
+/* Fullscreen Mode - Keep as is */
+/* This is functional, not styling */
+
+/* Footer Dark Theme */
+.footer-dark {
+  background: var(--pulse-gray-900);
+  color: var(--pulse-gray-300);
+  padding: 2rem 0;
+  margin-top: auto;
+}
+
+.footer-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.footer-copyright {
+  font-size: 0.875rem;
+}
+
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer-links a {
+  color: var(--pulse-gray-400);
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: var(--pulse-blue-light);
+}
+
+/* Utility Classes for Common Patterns */
+
+/* Icon Circle Sizes */
+.icon-circle {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-circle-50 {
+  width: 50px;
+  height: 50px;
+}
+
+.icon-circle-56 {
+  width: 56px;
+  height: 56px;
+}
+
+.icon-circle-64 {
+  width: 64px;
+  height: 64px;
+}
+
+/* Container max-widths */
+.container-narrow {
+  max-width: 800px;
+}
+
+.container-medium {
+  max-width: 900px;
+}
+
+.container-large {
+  max-width: 1200px;
+}
+
+/* Modal body with scroll */
+.modal-body-scroll {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* List with scroll */
+.list-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Font size utilities to complement Bootstrap */
+.fs-xxxl {
+  font-size: 2rem;
+}
+
+/* Letter spacing */
+.letter-spacing-wide {
+  letter-spacing: 0.1em;
+}
+
+.letter-spacing-ultra {
+  letter-spacing: 0.5em;
+}
+
+/* Layout Utilities */
+.min-h-content {
+  min-height: calc(100vh - 200px);
+}
+
+.h-viewport {
+  height: 100vh;
+}
+
+/* Container Sizes */
+.container-xs {
+  max-width: 500px;
+}
+
+.container-sm-custom {
+  max-width: 800px;
+}
+
+.container-lg-custom {
+  max-width: 1200px;
+}
+
+/* Avatar Sizes */
+.avatar-lg {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+/* Progress Bar Variants */
+.progress-sm {
+  height: 8px;
+}
+
+/* Line Height Utilities */
+.lh-tight {
+  line-height: 1.3;
+}
+
+.lh-snug {
+  line-height: 1.4;
+}
+
+/* Small Font Sizes */
+.fs-7 {
+  font-size: 0.75rem;
+}
+
+.fs-8 {
+  font-size: 0.65rem;
+}
+
+/* Blazor Error Boundary */
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.blazor-error-boundary {
+    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+}
+
+.blazor-error-boundary::after {
+    content: "An error has occurred."
+}

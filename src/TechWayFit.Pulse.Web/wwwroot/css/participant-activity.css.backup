@@ -1,0 +1,168 @@
+/* Participant Activity Styles */
+
+/* Poll Options */
+.poll-option-interactive {
+    transition: all 0.2s ease-in-out;
+}
+
+.poll-option-interactive:hover {
+    border-color: var(--bs-primary) !important;
+    background-color: rgba(var(--bs-primary-rgb), 0.05) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.poll-option-interactive.border-primary:hover {
+    box-shadow: 0 3px 12px rgba(var(--bs-primary-rgb), 0.2);
+}
+
+/* Radio and Checkbox styling */
+.form-check-input {
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+/* Rating buttons */
+.rating-button {
+    border-width: 2px;
+    transition: all 0.2s ease-in-out;
+    font-weight: 600;
+}
+
+.rating-button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.2);
+}
+
+.rating-button.active {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(var(--bs-primary-rgb), 0.3);
+}
+
+.rating-button.active:hover {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+/* Star rating */
+.rating-star {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.rating-star:hover {
+    transform: scale(1.2);
+    filter: brightness(1.1);
+}
+
+.rating-star.active {
+    color: #ffc107 !important;
+}
+
+/* Range slider for rating */
+.form-range::-webkit-slider-thumb {
+    background-color: var(--bs-primary);
+    cursor: pointer;
+}
+
+.form-range::-moz-range-thumb {
+    background-color: var(--bs-primary);
+    cursor: pointer;
+}
+
+/* Form controls */
+.form-control-lg {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+}
+
+textarea.form-control:focus,
+input.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.15);
+}
+
+/* Submit button enhancements */
+.btn-primary.btn-lg {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary.btn-lg:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(var(--bs-primary-rgb), 0.3);
+}
+
+.btn-primary.btn-lg:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Category buttons */
+.btn-group .btn-outline-secondary {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-group .btn-outline-secondary:hover {
+    background-color: rgba(108, 117, 125, 0.1);
+}
+
+.btn-group .btn-outline-secondary.active {
+    background-color: var(--bs-secondary);
+    border-color: var(--bs-secondary);
+    color: white;
+}
+
+/* Activity header */
+.text-break {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* Better spacing for mobile */
+@media (max-width: 576px) {
+    .rating-scale {
+        gap: 0.5rem !important;
+    }
+    
+    .rating-button {
+        width: 60px !important;
+        height: 60px !important;
+        font-size: 24px !important;
+    }
+    
+    .poll-option-interactive {
+        padding: 0.75rem !important;
+    }
+    
+    .badge {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.65rem !important;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.poll-option-interactive,
+.rating-button,
+.alert {
+    animation: fadeIn 0.3s ease-out;
+}
