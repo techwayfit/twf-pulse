@@ -34,4 +34,9 @@ public sealed record GenerateActivitiesRequest
     /// Type of participants (e.g., "developers", "product managers", "mixed team")
     /// </summary>
     public string? ParticipantType { get; init; }
+
+    /// <summary>
+    /// List of existing activities in format "Title | Type" to avoid duplicates
+    /// </summary>
+    public string? ExistingActivities { get; init; }
 }

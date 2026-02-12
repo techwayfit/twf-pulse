@@ -17,6 +17,7 @@ window.pulseParticipantSession = {
                         const sessionCode = key.replace('pulse_session_time_', '');
                         localStorage.removeItem(key);
                         localStorage.removeItem(`pulse_participant_${sessionCode}`);
+                        localStorage.removeItem(`pulse_participant_token_${sessionCode}`);
                         console.log(`Cleaned up old session: ${sessionCode}`);
                     }
                 }
@@ -56,6 +57,7 @@ window.pulseParticipantSession = {
     removeFromSession: function(sessionCode) {
         try {
             localStorage.removeItem(`pulse_participant_${sessionCode}`);
+            localStorage.removeItem(`pulse_participant_token_${sessionCode}`);
             localStorage.removeItem(`pulse_session_time_${sessionCode}`);
         } catch (error) {
             console.warn('Failed to remove from session:', error);

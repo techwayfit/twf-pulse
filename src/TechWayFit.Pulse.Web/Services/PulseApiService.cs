@@ -23,7 +23,7 @@ public interface IPulseApiService
     Task<ActivityResponse> UpdateActivityAsync(string code, Guid activityId, UpdateActivityRequest request, string facilitatorToken, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<AgendaActivityResponse>> GetAgendaAsync(string code, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<AgendaActivityResponse>> GenerateSessionActivitiesAsync(CreateSessionRequest request, CancellationToken cancellationToken = default);
-    Task<SubmitResponseResponse> SubmitResponseAsync(string code, Guid activityId, SubmitResponseRequest request, CancellationToken cancellationToken = default);
+    Task<SubmitResponseResponse> SubmitResponseAsync(string code, Guid activityId, SubmitResponseRequest request, string participantToken, CancellationToken cancellationToken = default);
     Task<PollDashboardResponse> GetPollDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
     Task<WordCloudDashboardResponse> GetWordCloudDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
     Task<RatingDashboardResponse> GetRatingDashboardAsync(string code, Guid activityId, Dictionary<string, string?>? filters = null, CancellationToken cancellationToken = default);
@@ -575,12 +575,18 @@ public class PulseApiService : IPulseApiService
         return apiResponse?.Data ?? 0;
     }
 
-    public async Task<SubmitResponseResponse> SubmitResponseAsync(string code, Guid activityId, SubmitResponseRequest request, CancellationToken cancellationToken = default)
+    public async Task<SubmitResponseResponse> SubmitResponseAsync(string code, Guid activityId, SubmitResponseRequest request, string participantToken, CancellationToken cancellationToken = default)
     {
         var json = JsonSerializer.Serialize(request, _jsonOptions);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync($"/api/sessions/{Uri.EscapeDataString(code)}/activities/{activityId}/responses", content, cancellationToken);
+        var requestMessage = new HttpRequestMessage(HttpMethod.Post, $"/api/sessions/{Uri.EscapeDataString(code)}/activities/{activityId}/responses")
+        {
+            Content = content
+        };
+        requestMessage.Headers.Add("X-Participant-Token", participantToken);
+
+        var response = await _httpClient.SendAsync(requestMessage, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {

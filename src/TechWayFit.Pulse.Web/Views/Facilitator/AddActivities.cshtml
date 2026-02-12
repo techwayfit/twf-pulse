@@ -170,9 +170,7 @@
                     <div class="tab-pane fade" id="ai-panel" role="tabpanel">
                         <div class="py-4">
                             <div class="text-center mb-4">
-                                <div class="fs-1 mb-3">🧠</div>
-                                <h5 class="mb-2">AI Activity Generator</h5>
-                                <p class="text-muted mb-0">AI will use your session title and goal to generate contextual activities</p>
+                                <h5 class="mb-2"><span class="me-2">🧠</span>AI Activity Generator <span class="text-muted fw-normal small">— AI will use your session title and goal to generate contextual activities</span></h5>
                             </div>
 
                             <!-- Session Context Info -->
@@ -184,7 +182,7 @@
 
                             <form id="aiGenerateForm">
                                 <div class="row g-3">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label class="form-label fw-medium">Workshop Type</label>
                                         <select class="form-select" id="aiWorkshopType">
                                             <option value="">Auto-detect from session</option>
@@ -197,7 +195,7 @@
                                             <option value="brainstorming">Brainstorming</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label class="form-label fw-medium">Session Duration <span class="text-danger">*</span></label>
                                         <select class="form-select" id="aiDuration" required>
                                             <option value="">-- Select Duration --</option>
@@ -207,15 +205,11 @@
                                             <option value="45">45 minutes (6-9 activities)</option>
                                             <option value="60" selected>60 minutes (8-12 activities)</option>
                                             <option value="75">75 minutes (10-15 activities)</option>
-                                            <option value="90">90 minutes (12-18 activities)</option>
-                                            <option value="120">2 hours (16-24 activities)</option>
-                                            <option value="150">2.5 hours (20-30 activities)</option>
-                                            <option value="180">3 hours (24-36 activities)</option>
-                                            <option value="240">4 hours (32-48 activities)</option>
                                         </select>
-                                        <small class="text-muted">AI will generate 1 activity per 5-10 minutes</small>
+                                        <small class="text-muted d-block">Max 15 activities per AI call. You can generate multiple times.</small>
+                                        <small class="text-muted">Sessions should have no more than 30 activities total.</small>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label class="form-label fw-medium">Number of Participants</label>
                                         <select class="form-select" id="aiParticipantCount">
                                             <option value="">Not specified</option>
@@ -255,11 +249,13 @@
 
                                 <div class="text-center mt-4">
                                     <button type="submit" class="btn btn-primary btn-lg px-5" id="aiGenerateBtn">
-                                        <span class="btn-text">
+                                        <span class="btn-text d-inline">
                                             <span class="me-2">🧠</span>Generate Activities
                                         </span>
                                         <span class="btn-loading d-none">
-                                            <span class="spinner-border spinner-border-sm me-2"></span>
+                                            <span class="spinner-border spinner-border-sm me-2" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </span>
                                             Generating with AI...
                                         </span>
                                     </button>
@@ -277,17 +273,12 @@
         <!-- Action Buttons -->
         <div class="card border-0 shadow-sm mt-4">
             <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <button type="button" class="btn btn-outline-secondary px-4" onclick="skipActivities()">
-                        Skip (Go Live Now)
-                    </button>
+                <div class="d-flex justify-content-center align-items-center flex-wrap gap-3">
                     <button type="button" class="btn btn-primary px-5" onclick="goLive()" id="goLiveBtn" disabled>
-                        <span class="me-2">🚀</span>Save & Go Live
+                        <span class="me-2">💾</span>Save Session
                     </button>
                 </div>
-                <div class="text-center mt-3">
-                    <small class="text-muted" id="activityCountBadge">No activities added yet</small>
-                </div>
+          
             </div>
         </div>
     </div>
@@ -337,6 +328,58 @@
                 </button>
                 <button type="button" class="btn btn-primary px-4" id="confirmTemplateBtn">
                     Add Activities
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 pb-4 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center mb-3" 
+                     style="width: 64px; height: 64px; border-radius: 50%;"
+                     id="notificationIconContainer">
+                    <span style="font-size: 32px;" id="notificationIcon"></span>
+                </div>
+                <h5 class="mb-3" id="notificationTitle"></h5>
+                <p class="text-muted mb-0" id="notificationMessage"></p>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-center">
+                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal (Reusable) -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 pb-4 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center mb-3" 
+                     style="width: 64px; height: 64px; background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%); border-radius: 50%;">
+                    <span style="font-size: 32px;" id="confirmIcon">⚠️</span>
+                </div>
+                <h5 class="mb-3" id="confirmTitle">Confirm Action</h5>
+                <p class="text-muted mb-0" id="confirmMessage">Are you sure?</p>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 justify-content-center gap-2">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal" id="confirmCancelBtn">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary px-4" id="confirmOkBtn">
+                    OK
                 </button>
             </div>
         </div>

@@ -220,7 +220,6 @@ class AddActivitiesManager {
         window.addActivity = (type) => this.addManualActivity(type);
         window.editActivity = (index) => this.editActivity(index);
         window.removeActivity = (index) => this.removeActivity(index);
-        window.skipActivities = () => this.skipActivities();
         window.goLive = () => this.goLive();
         window.selectTemplate = (templateId) => this.selectTemplate(templateId);
         
@@ -276,8 +275,14 @@ class AddActivitiesManager {
             const response = await fetch(`/api/sessions/${this.sessionCode}`);
             if (!response.ok) {
                 if (response.status === 404 || response.status === 403) {
-                    alert('Session not found or access denied');
-                    window.location.href = '/facilitator/dashboard';
+                    this.showNotification(
+                        'error',
+                        'Access Denied',
+                        'Session not found or access denied'
+                    );
+                    setTimeout(() => {
+                        window.location.href = '/facilitator/dashboard';
+                    }, 2000);
                     return;
                 }
                 throw new Error('Failed to load session');
@@ -297,8 +302,14 @@ class AddActivitiesManager {
             console.log('Session data loaded:', this.sessionData);
         } catch (error) {
             console.error('Error loading session:', error);
-            alert('Failed to load session data');
-            window.location.href = '/facilitator/dashboard';
+            this.showNotification(
+                'error',
+                'Failed to Load Session',
+                'Failed to load session data'
+            );
+            setTimeout(() => {
+                window.location.href = '/facilitator/dashboard';
+            }, 2000);
         }
     }
 
@@ -452,6 +463,16 @@ class AddActivitiesManager {
 
     async selectTemplate(templateId) {
         try {
+            // Check activity limit before loading template
+            if (this.activities.length >= 30) {
+                this.showNotification(
+                    'warning',
+                    'Activity Limit Reached',
+                    'Your session already has 30 activities. Sessions should not exceed 30 activities. Please remove some activities before adding a template.'
+                );
+                return;
+            }
+            
             // Store template ID for confirmation
             this.pendingTemplateId = templateId;
             
@@ -499,7 +520,11 @@ class AddActivitiesManager {
             
         } catch (error) {
             console.error('Error loading template:', error);
-            alert('Failed to load template details. Please try again.');
+            this.showNotification(
+                'error',
+                'Failed to Load Template',
+                'Failed to load template details. Please try again.'
+            );
         }
     }
     
@@ -515,8 +540,84 @@ class AddActivitiesManager {
         return icons[type.toLowerCase()] || '📋';
     }
 
+    showNotification(type, title, message) {
+        const modal = document.getElementById('notificationModal');
+        const iconContainer = document.getElementById('notificationIconContainer');
+        const icon = document.getElementById('notificationIcon');
+        const titleEl = document.getElementById('notificationTitle');
+        const messageEl = document.getElementById('notificationMessage');
+        
+        // Set icon and styling based on type
+        if (type === 'success') {
+            icon.textContent = '✅';
+            iconContainer.style.background = 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)';
+        } else if (type === 'error') {
+            icon.textContent = '❌';
+            iconContainer.style.background = 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
+        } else {
+            icon.textContent = 'ℹ️';
+            iconContainer.style.background = 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)';
+        }
+        
+        // Set content
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        
+        // Show modal
+        const notificationModal = new bootstrap.Modal(modal);
+        notificationModal.show();
+    }
+
+    showConfirmation(title, message, onConfirm, options = {}) {
+        const modal = document.getElementById('confirmModal');
+        const icon = document.getElementById('confirmIcon');
+        const titleEl = document.getElementById('confirmTitle');
+        const messageEl = document.getElementById('confirmMessage');
+        const okBtn = document.getElementById('confirmOkBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+        
+        // Set content
+        icon.textContent = options.icon || '⚠️';
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        okBtn.textContent = options.okText || 'OK';
+        cancelBtn.textContent = options.cancelText || 'Cancel';
+        
+        // Set OK button style
+        okBtn.className = `btn px-4 ${options.okClass || 'btn-primary'}`;
+        
+        // Remove any existing event listeners by cloning the button
+        const newOkBtn = okBtn.cloneNode(true);
+        okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+        
+        // Add new event listener
+        newOkBtn.addEventListener('click', () => {
+            const confirmModal = bootstrap.Modal.getInstance(modal);
+            if (confirmModal) {
+                confirmModal.hide();
+            }
+            if (onConfirm) {
+                onConfirm();
+            }
+        });
+        
+        // Show modal
+        const confirmModal = new bootstrap.Modal(modal);
+        confirmModal.show();
+    }
+
     async applyTemplate(templateId) {
         try {
+            // Check activity limit
+            if (this.activities.length >= 30) {
+                this.showNotification(
+                    'warning',
+                    'Activity Limit Reached',
+                    'Your session already has 30 activities. Sessions should not exceed 30 activities. Please remove some activities before adding a template.'
+                );
+                return;
+            }
+            
             // Get the modal if it's open
             const modalElement = document.getElementById('templateConfirmModal');
             const modal = modalElement ? bootstrap.Modal.getInstance(modalElement) : null;
@@ -567,7 +668,11 @@ class AddActivitiesManager {
             }
             
             // Show success message
-            alert(`Successfully added ${templateActivities.length} ${templateActivities.length === 1 ? 'activity' : 'activities'} from template!`);
+            this.showNotification(
+                'success',
+                'Template Applied Successfully!',
+                `Successfully added ${templateActivities.length} ${templateActivities.length === 1 ? 'activity' : 'activities'} from template!`
+            );
             
             // Remove templateId from URL to prevent re-triggering on page refresh
             const url = new URL(window.location);
@@ -589,7 +694,11 @@ class AddActivitiesManager {
             
         } catch (error) {
             console.error('Error applying template:', error);
-            alert('Failed to apply template:\n\n' + error.message);
+            this.showNotification(
+                'error',
+                'Failed to Apply Template',
+                error.message
+            );
             
             // Close modal if open
             if (modal) {
@@ -783,11 +892,46 @@ class AddActivitiesManager {
     }
     
     removeActivity(index) {
-        if (confirm('Remove this activity?')) {
-            // TODO: Call API to delete activity
-            this.activities.splice(index, 1);
-            this.updateActivityList();
-        }
+        this.showConfirmation(
+            'Remove Activity',
+            'Are you sure you want to remove this activity?',
+            async () => {
+                try {
+                    const activity = this.activities[index];
+                    console.log(`Removing activity at index ${index}:`, activity);
+                    
+                    // If activity has an ID, delete from server
+                    if (activity && activity.id) {
+                        const response = await fetch(`/api/sessions/${this.sessionCode}/activities/${activity.id}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Failed to delete activity from server');
+                        }
+                    }
+                    
+                    // Remove from local array
+                    this.activities.splice(index, 1);
+                    console.log(`Activities remaining: ${this.activities.length}`);
+                    
+                    // Update the display
+                    this.updateActivityList();
+                } catch (error) {
+                    console.error('Error removing activity:', error);
+                    this.showNotification(
+                        'error',
+                        'Failed to Remove Activity',
+                        'Could not remove the activity. Please try again.'
+                    );
+                }
+            },
+            {
+                icon: '🗑️',
+                okText: 'Remove',
+                okClass: 'btn-danger'
+            }
+        );
     }
 
     updateActivityList() {
@@ -795,30 +939,78 @@ class AddActivitiesManager {
         const goLiveBtn = document.getElementById('goLiveBtn');
         const badge = document.getElementById('activityCountBadge');
         
+        console.log(`Updating activity list. Total activities: ${this.activities.length}`);
+        
+        if (!container) {
+            console.error('Activity list container not found');
+            return;
+        }
+        
         if (this.activities.length === 0) {
             container.innerHTML = `
-                <div class="text-center py-5">
-                    <div class="mb-3">
-                        <i class="fas fa-clipboard-list fa-3x text-muted"></i>
-                    </div>
-                    <p class="text-muted mb-0">No activities yet. Create your first activity to get started.</p>
-                </div>
+                <div class="text-muted text-center small py-3">No activities yet. Choose an activity type below to add one.</div>
             `;
-            goLiveBtn.disabled = true;
-            badge.textContent = 'No activities added yet';
+            if (goLiveBtn) goLiveBtn.disabled = true;
+            if (badge) badge.textContent = 'No activities added yet';
         } else {
             // Use activity classes to render cards in a column layout
             const html = `<div class="d-flex flex-column gap-3">` + 
                 this.activities.map((activityData, index) => {
-                    const activity = ActivityFactory.create(activityData);
-                    return activity.renderCard(index);
+                    try {
+                        const activity = ActivityFactory.create(activityData);
+                        return activity.renderCard(index);
+                    } catch (error) {
+                        console.error(`Error rendering activity at index ${index}:`, error, activityData);
+                        return ''; // Skip this activity if there's an error
+                    }
                 }).join('') + 
                 `</div>`;
             
             container.innerHTML = html;
-            goLiveBtn.disabled = false;
-            badge.textContent = `${this.activities.length} ${this.activities.length === 1 ? 'activity' : 'activities'} added`;
+            
+            // Disable last down button since you can't move the last item down
+            const downButtons = container.querySelectorAll('.btn-rearrange:last-child');
+            if (downButtons.length > 0 && this.activities.length > 0) {
+                downButtons[downButtons.length - 1].disabled = true;
+            }
+            
+            if (goLiveBtn) goLiveBtn.disabled = false;
+            if (badge) badge.textContent = `${this.activities.length} ${this.activities.length === 1 ? 'activity' : 'activities'} added`;
         }
+    }
+    
+    moveActivityUp(index) {
+        if (index <= 0) return; // Can't move first item up
+        
+        // Swap with previous activity
+        const temp = this.activities[index];
+        this.activities[index] = this.activities[index - 1];
+        this.activities[index - 1] = temp;
+        
+        // Update order property
+        this.activities.forEach((activity, i) => {
+            activity.order = i;
+        });
+        
+        this.updateActivityList();
+        console.log(`Moved activity from index ${index} to ${index - 1}`);
+    }
+    
+    moveActivityDown(index) {
+        if (index >= this.activities.length - 1) return; // Can't move last item down
+        
+        // Swap with next activity
+        const temp = this.activities[index];
+        this.activities[index] = this.activities[index + 1];
+        this.activities[index + 1] = temp;
+        
+        // Update order property
+        this.activities.forEach((activity, i) => {
+            activity.order = i;
+        });
+        
+        this.updateActivityList();
+        console.log(`Moved activity from index ${index} to ${index + 1}`);
     }
 
     initializeAIForm() {
@@ -836,6 +1028,14 @@ class AddActivitiesManager {
             const btnLoading = submitBtn.querySelector('.btn-loading');
             const statusMessage = document.getElementById('aiStatusMessage');
             
+            // Check activity limit
+            if (this.activities.length >= 30) {
+                statusMessage.innerHTML = '<strong>⚠️ Activity Limit Reached:</strong> Your session already has 30 activities. Sessions should not exceed 30 activities.';
+                statusMessage.className = 'alert alert-warning';
+                statusMessage.classList.remove('d-none');
+                return;
+            }
+            
             // Validate duration is selected
             const duration = document.getElementById('aiDuration').value;
             if (!duration) {
@@ -847,7 +1047,9 @@ class AddActivitiesManager {
             
             // Show loading state
             btnText.classList.add('d-none');
+            btnText.classList.remove('d-inline');
             btnLoading.classList.remove('d-none');
+            btnLoading.classList.add('d-inline');
             submitBtn.disabled = true;
             statusMessage.classList.add('d-none');
             
@@ -859,13 +1061,17 @@ class AddActivitiesManager {
                 // Get selected participant types from Tom Select
                 const selectedTypes = this.participantTypeSelect ? this.participantTypeSelect.getValue() : [];
                 
+                // Build list of existing activities to avoid duplicates
+                const existingActivities = this.activities.map(a => `${a.title} | ${a.type}`).join('; ');
+                
                 // Build AI generation request - activity count will be auto-calculated from duration
                 const aiRequest = {
                     additionalContext: additionalContext || null,
                     workshopType: workshopType || null,
                     durationMinutes: parseInt(duration),
                     participantCount: participantCount ? parseInt(participantCount) : null,
-                    participantType: selectedTypes.length > 0 ? selectedTypes.join(', ') : null
+                    participantType: selectedTypes.length > 0 ? selectedTypes.join(', ') : null,
+                    existingActivities: existingActivities || null
                 };
                 
                 console.log('🧠 Requesting AI generation:', aiRequest);
@@ -927,7 +1133,9 @@ class AddActivitiesManager {
                 statusMessage.classList.remove('d-none');
             } finally {
                 btnText.classList.remove('d-none');
+                btnText.classList.add('d-inline');
                 btnLoading.classList.add('d-none');
+                btnLoading.classList.remove('d-inline');
                 submitBtn.disabled = false;
             }
         });
@@ -1016,15 +1224,13 @@ class AddActivitiesManager {
         });
     }
 
-    skipActivities() {
-        if (confirm('Go live without activities? You can add them later from the facilitator view.')) {
-            window.location.href = `/facilitator/live?code=${this.sessionCode}`;
-        }
-    }
-
     async goLive() {
         if (this.activities.length === 0) {
-            alert('Please add at least one activity before going live');
+            this.showNotification(
+                'error',
+                'No Activities Added',
+                'Please add at least one activity before going live'
+            );
             return;
         }
         

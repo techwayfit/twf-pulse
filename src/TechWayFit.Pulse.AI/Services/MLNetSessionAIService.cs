@@ -484,9 +484,11 @@ namespace TechWayFit.Pulse.AI.Services
             string? additionalContext,
             string? workshopType,
             int targetActivityCount,
+            int? durationMinutes = null,
+            string? existingActivities = null,
             CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("ML.NET Service: Generating activities for existing session {SessionId}", session.Id);
+            _logger.LogInformation("ML.NET Service: Generating {Count} activities for existing session {SessionId}", targetActivityCount, session.Id);
 
             // Build a request from session data
             var request = new CreateSessionRequest
@@ -497,7 +499,9 @@ namespace TechWayFit.Pulse.AI.Services
                 GenerationContext = new SessionGenerationContextDto
                 {
                     WorkshopType = workshopType ?? "general",
-                    DurationMinutes = targetActivityCount * 5 // Approximate duration based on activity count
+                    DurationMinutes = durationMinutes,
+                    TargetActivityCount = targetActivityCount,
+                    ExistingActivities = existingActivities
                 }
             };
 

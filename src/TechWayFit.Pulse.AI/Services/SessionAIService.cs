@@ -230,7 +230,16 @@ namespace TechWayFit.Pulse.AI.Services
                 {
                     prompt.AppendLine($"Workshop type: {ctx.WorkshopType}");
                 }
-                if (ctx.DurationMinutes > 0)
+                // Use explicit target count if provided, otherwise calculate from duration
+                if (ctx.TargetActivityCount.HasValue && ctx.TargetActivityCount.Value > 0)
+                {
+                    prompt.AppendLine($"Generate exactly {ctx.TargetActivityCount.Value} activities for this session.");
+                    if (ctx.DurationMinutes > 0)
+                    {
+                        prompt.AppendLine($"Total session duration: {ctx.DurationMinutes} minutes");
+                    }
+                }
+                else if (ctx.DurationMinutes > 0)
                 {
                     prompt.AppendLine($"Total session duration: {ctx.DurationMinutes} minutes");
                     var suggestedCount = CalculateActivityCount(ctx.DurationMinutes.Value);
@@ -284,6 +293,13 @@ namespace TechWayFit.Pulse.AI.Services
                 if (ctx.ExcludeActivityTypes?.Count > 0)
                 {
                     prompt.AppendLine($"\nAvoid these activity types: {string.Join(", ", ctx.ExcludeActivityTypes)}");
+                }
+                
+                // Existing activities to avoid duplicates
+                if (!string.IsNullOrEmpty(ctx.ExistingActivities))
+                {
+                    prompt.AppendLine($"\nExisting activities in this session (avoid duplicating these):");
+                    prompt.AppendLine(ctx.ExistingActivities);
                 }
                 
                 // Context documents (with PII sanitization)
@@ -614,9 +630,11 @@ Return ONLY a valid JSON array. No markdown, no explanation.";
             string? additionalContext,
             string? workshopType,
             int targetActivityCount,
+            int? durationMinutes = null,
+            string? existingActivities = null,
             CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Generating activities for existing session {SessionId}", session.Id);
+            _logger.LogInformation("Generating {Count} activities for existing session {SessionId}", targetActivityCount, session.Id);
 
             // Build a simplified request for AI generation
             var request = new CreateSessionRequest
@@ -627,7 +645,9 @@ Return ONLY a valid JSON array. No markdown, no explanation.";
                 GenerationContext = new SessionGenerationContextDto
                 {
                     WorkshopType = workshopType ?? "general",
-                    DurationMinutes = targetActivityCount * 5 // Approximate duration based on activity count
+                    DurationMinutes = durationMinutes,
+                    ExistingActivities = existingActivities,
+                    TargetActivityCount = targetActivityCount
                 }
             };
 

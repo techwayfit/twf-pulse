@@ -550,8 +550,8 @@
       var response = await ApiService.JoinAsParticipantAsync(sessionSummary.Code, request);
       participantId = response.ParticipantId;
       
-      // Store participant info in browser storage to prevent duplicate joins
-      await StoreParticipantSession(response.ParticipantId, sessionSummary.Code);
+      // Store participant info and token in browser storage to prevent duplicate joins
+      await StoreParticipantSession(response.ParticipantId, response.ParticipantToken, sessionSummary.Code);
       
       currentState = JoinState.Joined;
       
@@ -616,13 +616,17 @@
     return null;
   }
 
-  private async Task StoreParticipantSession(Guid participantId, string sessionCode)
+  private async Task StoreParticipantSession(Guid participantId, string participantToken, string sessionCode)
   {
     try
     {
       // Store participant ID in localStorage
       var storageKey = $"pulse_participant_{sessionCode}";
       await JS.InvokeVoidAsync("localStorage.setItem", storageKey, participantId.ToString());
+      
+      // Store participant token in localStorage
+      var tokenKey = $"pulse_participant_token_{sessionCode}";
+      await JS.InvokeVoidAsync("localStorage.setItem", tokenKey, participantToken);
       
       // Also store session timestamp for cleanup
       var timestampKey = $"pulse_session_time_{sessionCode}";

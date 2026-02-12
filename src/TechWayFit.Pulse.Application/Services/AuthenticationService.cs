@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
@@ -190,9 +191,10 @@ otpCode,
 
     private static string GenerateOtpCode()
     {
-        // Generate a 6-digit numeric OTP
-        var random = new Random();
-        return random.Next(100000, 999999).ToString();
+        // SECURITY: Generate a cryptographically secure 6-digit numeric OTP
+        // Use RandomNumberGenerator instead of Random() for security
+        var code = RandomNumberGenerator.GetInt32(100000, 1000000);
+        return code.ToString();
     }
 
     private static string ExtractDisplayNameFromEmail(string email)

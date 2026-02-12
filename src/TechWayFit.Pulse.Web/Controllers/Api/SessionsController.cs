@@ -26,6 +26,7 @@ public sealed class SessionsController : ControllerBase
     private readonly IRatingDashboardService _ratingDashboards;
     private readonly IGeneralFeedbackDashboardService _generalFeedbackDashboards;
     private readonly IFacilitatorTokenStore _facilitatorTokens;
+    private readonly IParticipantTokenStore _participantTokens;
     private readonly ISessionCodeGenerator _codeGenerator;
     private readonly IHubContext<WorkshopHub, IWorkshopClient> _hub;
     private readonly TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService _participantAI;
@@ -46,6 +47,7 @@ public sealed class SessionsController : ControllerBase
         IRatingDashboardService ratingDashboards,
         IGeneralFeedbackDashboardService generalFeedbackDashboards,
         IFacilitatorTokenStore facilitatorTokens,
+        IParticipantTokenStore participantTokens,
         ISessionCodeGenerator codeGenerator,
         TechWayFit.Pulse.Application.Abstractions.Services.IAIWorkQueue aiQueue,
         TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService sessionAI,
@@ -65,6 +67,7 @@ public sealed class SessionsController : ControllerBase
         _ratingDashboards = ratingDashboards;
         _generalFeedbackDashboards = generalFeedbackDashboards;
         _facilitatorTokens = facilitatorTokens;
+        _participantTokens = participantTokens;
         _codeGenerator = codeGenerator;
         _hub = hub;
         _participantAI = participantAI;
@@ -184,6 +187,8 @@ public sealed class SessionsController : ControllerBase
                 enhancedContext,
                 request.WorkshopType,
                 targetCount,
+                request.DurationMinutes,
+                request.ExistingActivities,
                 cancellationToken);
 
             return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(generated));
@@ -263,6 +268,13 @@ public sealed class SessionsController : ControllerBase
         if (session is null)
         {
             return NotFound(Error<JoinFacilitatorResponse>("not_found", "Session not found."));
+        }
+
+        // SECURITY: Only allow authenticated facilitators who own this session to mint tokens
+        var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+        if (userId == null || session.FacilitatorUserId != userId)
+        {
+            return Unauthorized(Error<JoinFacilitatorResponse>("unauthorized", "Only the session owner can join as facilitator."));
         }
 
         var auth = _facilitatorTokens.Create(session.Id);
@@ -893,7 +905,9 @@ public sealed class SessionsController : ControllerBase
             participantCount.Count,
                 DateTimeOffset.UtcNow));
 
-            return Ok(Wrap(new JoinParticipantResponse(participant.Id)));
+            // SECURITY: Issue a signed token to bind participant identity
+            var auth = _participantTokens.Create(session.Id, participant.Id);
+            return Ok(Wrap(new JoinParticipantResponse(participant.Id, auth.Token)));
         }
         catch (ArgumentException ex)
         {
@@ -918,6 +932,13 @@ public sealed class SessionsController : ControllerBase
             if (session is null)
             {
                 return NotFound(Error<SubmitResponseResponse>("not_found", "Session not found."));
+            }
+
+            // SECURITY: Validate participant token to prevent identity spoofing
+            var tokenValidationResult = RequireParticipantToken<SubmitResponseResponse>(session.Id, request.ParticipantId);
+            if (tokenValidationResult is not null)
+            {
+                return tokenValidationResult;
             }
 
             var response = await _responses.SubmitAsync(
@@ -1196,6 +1217,7 @@ filters ?? new Dictionary<string, string?>(),
     }
 
     private const string FacilitatorTokenHeader = "X-Facilitator-Token";
+    private const string ParticipantTokenHeader = "X-Participant-Token";
 
     private ActionResult<ApiResponse<T>>? RequireFacilitatorToken<T>(TechWayFit.Pulse.Domain.Entities.Session session)
     {
@@ -1207,10 +1229,11 @@ filters ?? new Dictionary<string, string?>(),
             return null;
         }
 
-        // Otherwise, check for session-specific facilitator token
+        // SECURITY: Require a valid session-specific facilitator token
+        // Reject requests when no token exists (do not treat missing tokens as "allowed")
         if (!_facilitatorTokens.TryGet(session.Id, out var auth))
         {
-            return null;
+            return Unauthorized(Error<T>("facilitator_token_required", "Facilitator token is required."));
         }
 
         if (Request.Headers.TryGetValue(FacilitatorTokenHeader, out var token)
@@ -1220,6 +1243,22 @@ filters ?? new Dictionary<string, string?>(),
         }
 
         return Unauthorized(Error<T>("facilitator_token_required", "Facilitator token is required."));
+    }
+
+    private ActionResult<ApiResponse<T>>? RequireParticipantToken<T>(Guid sessionId, Guid participantId)
+    {
+        // SECURITY: Validate that the request includes a valid participant token
+        if (!Request.Headers.TryGetValue(ParticipantTokenHeader, out var token))
+        {
+            return Unauthorized(Error<T>("participant_token_required", "Participant token is required."));
+        }
+
+        if (!_participantTokens.IsValid(sessionId, participantId, token.ToString()))
+        {
+            return Unauthorized(Error<T>("invalid_participant_token", "Invalid or mismatched participant token."));
+        }
+
+        return null;
     }
 
     /// <summary>

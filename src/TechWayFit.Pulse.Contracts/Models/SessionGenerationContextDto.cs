@@ -23,6 +23,16 @@ public class SessionGenerationContextDto
     
     public List<string>? ExcludeActivityTypes { get; set; }
     
+    /// <summary>
+    /// Target number of activities to generate (overrides duration-based calculation)
+    /// </summary>
+    public int? TargetActivityCount { get; set; }
+    
+    /// <summary>
+    /// List of existing activities in format "Title | Type" to avoid duplicates
+    /// </summary>
+    public string? ExistingActivities { get; set; }
+    
     public ContextDocumentsDto? ContextDocuments { get; set; }
 }
 

@@ -123,6 +123,7 @@ try
 
     builder.Services.AddSingleton<WeatherForecastService>();
     builder.Services.AddSingleton<IFacilitatorTokenStore, FacilitatorTokenStore>();
+    builder.Services.AddSingleton<IParticipantTokenStore, ParticipantTokenStore>();
 
     // Add HttpClient for API service with dynamic base URL
     builder.Services.AddHttpClient<IPulseApiService, PulseApiService>((serviceProvider, client) =>

@@ -23,6 +23,8 @@ namespace TechWayFit.Pulse.Application.Abstractions.Services
             string? additionalContext,
             string? workshopType,
             int targetActivityCount,
+            int? durationMinutes = null,
+            string? existingActivities = null,
             CancellationToken cancellationToken = default);
     }
 }

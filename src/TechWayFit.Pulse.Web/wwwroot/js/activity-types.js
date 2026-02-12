@@ -115,24 +115,45 @@ class Activity {
     renderCard(index) {
         const emoji = this.getEmoji();
         const details = this.renderCardDetails();
+        const activityNumber = index + 1;
         
         return `
             <div class="activity-card">
-                <div class="activity-header">
-                    <div class="activity-title">
-                        <span class="activity-icon">${emoji}</span>
-                        <h3>${this.escapeHtml(this.title)}</h3>
+                <div class="d-flex gap-3">
+                    <!-- Activity Number & Rearrange Controls -->
+                    <div class="activity-number-section">
+                        <div class="activity-number">#${activityNumber}</div>
+                        <div class="rearrange-controls">
+                            <button class="btn-rearrange" onclick="activityManager.moveActivityUp(${index})" 
+                                    ${index === 0 ? 'disabled' : ''} title="Move up">
+                                ▲
+                            </button>
+                            <button class="btn-rearrange" onclick="activityManager.moveActivityDown(${index})" 
+                                    title="Move down">
+                                ▼
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <p class="activity-description">${this.escapeHtml(this.prompt)}</p>
-                ${details ? `<p class="activity-meta">${details}</p>` : ''}
-                <div class="activity-actions-overlay">
-                    <button class="btn btn-sm btn-primary" onclick="activityManager.editActivity(${index})">
-                        Edit
-                    </button>
-                    <button class="btn btn-sm btn-secondary" onclick="activityManager.removeActivity(${index})">
-                        Remove
-                    </button>
+                    
+                    <!-- Activity Content -->
+                    <div class="activity-content flex-grow-1">
+                        <div class="activity-header">
+                            <div class="activity-title">
+                                <span class="activity-icon">${emoji}</span>
+                                <h3>${this.escapeHtml(this.title)}</h3>
+                            </div>
+                        </div>
+                        <p class="activity-description">${this.escapeHtml(this.prompt)}</p>
+                        ${details ? `<p class="activity-meta">${details}</p>` : ''}
+                        <div class="activity-actions-overlay">
+                            <button class="btn btn-sm btn-primary" onclick="activityManager.editActivity(${index})">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="activityManager.removeActivity(${index})">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;

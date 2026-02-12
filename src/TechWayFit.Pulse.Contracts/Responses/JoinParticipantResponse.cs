@@ -1,3 +1,3 @@
 namespace TechWayFit.Pulse.Contracts.Responses;
 
-public sealed record JoinParticipantResponse(Guid ParticipantId);
+public sealed record JoinParticipantResponse(Guid ParticipantId, string ParticipantToken);

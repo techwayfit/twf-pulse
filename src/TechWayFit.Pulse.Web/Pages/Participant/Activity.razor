@@ -201,6 +201,7 @@
     private bool isLoading = true;
     private string errorMessage = "";
     private string participantDisplayName = "";
+    private string participantToken = ""; // SECURITY: Store participant token from localStorage
     private int contributionsRemaining = -1;
     private int totalResponsesSubmitted = 0;
     private int activitiesParticipated = 0;
@@ -215,8 +216,28 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // SECURITY: Retrieve participant token from localStorage
+        await LoadParticipantToken();
         await LoadSession();
         await InitializeSignalR();
+    }
+
+    private async Task LoadParticipantToken()
+    {
+        try
+        {
+            var tokenKey = $"pulse_participant_token_{SessionCode}";
+            participantToken = await JS.InvokeAsync<string>("localStorage.getItem", tokenKey) ?? "";
+            
+            if (string.IsNullOrEmpty(participantToken))
+            {
+                errorMessage = "Participant token not found. Please rejoin the session.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to retrieve participant token: {ex.Message}";
+        }
     }
 
     private ParticipantActivityParameters CreateActivityParameters()
@@ -448,7 +469,7 @@
     {
         try
         {
-            await JS.InvokeVoidAsync("participantSession.removeFromSession", SessionCode);
+            await JS.InvokeVoidAsync("pulseParticipantSession.removeFromSession", SessionCode);
         }
         catch (Exception ex)
         {
@@ -502,7 +523,8 @@
                 Payload = payload
             };
 
-            await ApiService.SubmitResponseAsync(SessionCode, currentActivity.ActivityId, request);
+            // SECURITY: Pass participant token for validation
+            await ApiService.SubmitResponseAsync(SessionCode, currentActivity.ActivityId, request, participantToken);
 
             hasSubmittedResponse = true;
             totalResponsesSubmitted++;
