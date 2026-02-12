@@ -2,32 +2,32 @@
     ViewData["Title"] = "TechWayFit Pulse — Home";
 }
     <!-- Hero Section -->
-    <section class="py-5 hero-animated">
+    <section class="py-5">
         <div class="container container-wide">
-            <div class="row min-vh-75 align-items-center">
-                <div class="col-lg-7 hero-content-animated">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
                     <!-- Badge -->
                     <div class="mb-4">
-                        <div class="hero-badge">
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
                             <span aria-hidden="true">⚡</span>
                             Workshop Engagement Engine
-                        </div>
+                        </span>
                     </div>
 
                     <!-- Title -->
-                    <h1 class="hero-title mb-4">
-                        Run engaging workshops—<span class="hero-highlight">without losing the data</span>.
+                    <h1 class="display-4 fw-bold mb-4 lh-sm">
+                        Run engaging workshops—<span class="text-primary">without losing the data</span>.
                     </h1>
 
                     <!-- Description -->
-                    <p class="hero-lead mb-4">
+                    <p class="lead text-muted mb-4">
                         Polls, word clouds, 4-quadrant matrices, and guided 5-Whys—designed to help people open up,
                         and help you leave with measurable outcomes.
                     </p>
 
                     <!-- Action Buttons -->
                     <div class="d-flex flex-wrap gap-3 mb-4">
-                        <a class="btn btn-primary btn-lg pulse-btn-primary px-4 py-3" href="/facilitator/dashboard">
+                        <a class="btn btn-primary btn-lg px-4 py-3" href="/facilitator/dashboard">
                             <span class="me-2">📊</span>Manage Your Session
                         </a>
                         <a class="btn btn-outline-primary btn-lg px-4 py-3" href="/participant/join">
@@ -37,23 +37,23 @@
 
                     <!-- Feature Pills -->
                     <div class="d-flex flex-wrap gap-2">
-                        <span class="badge bg-white text-dark border px-3 py-2 feature-pill">
+                        <span class="badge bg-white text-dark border px-3 py-2">
                             <span class="me-1">✓</span>Anonymous optional
                         </span>
-                        <span class="badge bg-white text-dark border px-3 py-2 feature-pill">
+                        <span class="badge bg-white text-dark border px-3 py-2">
                             <span class="me-1">📊</span>Real-time dashboards
                         </span>
-                        <span class="badge bg-white text-dark border px-3 py-2 feature-pill">
+                        <span class="badge bg-white text-dark border px-3 py-2">
                             <span class="me-1">🎯</span>"5 Whys" output
                         </span>
-                        <span class="badge bg-white text-dark border px-3 py-2 feature-pill">
+                        <span class="badge bg-white text-dark border px-3 py-2">
                             <span class="me-1">⚡</span>AI-powered sessions
                         </span>
                     </div>
                 </div>
 
                 <!-- Hero Visual -->
-                <div class="col-lg-5 d-none d-lg-flex justify-content-center align-items-center hero-visual-animated">
+                <div class="col-lg-5 d-none d-lg-flex justify-content-center align-items-center">
                     <div class="gradient-orb">
                         <svg class="pulse-overlay" viewBox="0 0 200 80" width="200" height="80">
                             <polyline points="0,40 30,40 40,20 50,60 60,30 70,50 80,40 200,40"
@@ -77,11 +77,11 @@
                         <!-- AI Generated Image -->
                         <img src="~/images/ai-workshop-banner.jpg" 
                              alt="AI-powered workshop generation" 
-                             class="w-100 h-100" 
-                             style="object-fit: cover; min-height: 350px;"
+                             class="w-100 h-100 object-fit-cover" 
+                             style="min-height: 350px;"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <!-- Fallback if image doesn't exist -->
-                        <div class="d-none align-items-center justify-content-center h-100" style="min-height: 350px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                        <div class="d-none align-items-center justify-content-center h-100 bg-light" style="min-height: 350px;">
                             <div class="text-center p-4">
                                 <i class="fas fa-magic fa-4x text-primary opacity-50 mb-3"></i>
                                 <p class="text-muted">AI Workshop Generation</p>
@@ -91,32 +91,32 @@
                     <div class="col-lg-5 order-lg-1">
                         <div class="p-4 p-lg-5 h-100 d-flex flex-column justify-content-center">
                                 <div class="mb-3">
-                                    <span class="badge rounded-pill" style="background-color: #e3f2fd; color: #1976d2; font-weight: 500;">
+                                    <span class="badge rounded-pill bg-info bg-opacity-10 text-info fw-semibold">
                                         🧠 AI-Powered
                                     </span>
                                 </div>
-                                <h3 class="fw-bold mb-3" style="color: #1a1a1a; line-height: 1.3;">
+                                <h3 class="fw-bold mb-3 text-dark lh-sm">
                                     Generate Complete Workshop Sessions in Seconds
                                 </h3>
-                                <p class="mb-4" style="color: #666; line-height: 1.6;">
+                                <p class="mb-4 text-muted lh-base">
                                     Describe your workshop goal, and our AI will create a complete session with tailored activities 
                                     and thoughtful questions—ready to go live instantly.
                                 </p>
                                 <div class="d-flex flex-column gap-2 mb-4">
-                                    <div class="d-flex align-items-center" style="color: #555;">
-                                        <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>
+                                    <div class="d-flex align-items-center text-muted">
+                                        <i class="fas fa-check-circle me-2 text-success"></i>
                                         <span>Smart activity selection</span>
                                     </div>
-                                    <div class="d-flex align-items-center" style="color: #555;">
-                                        <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>
+                                    <div class="d-flex align-items-center text-muted">
+                                        <i class="fas fa-check-circle me-2 text-success"></i>
                                         <span>Custom questions</span>
                                     </div>
-                                    <div class="d-flex align-items-center" style="color: #555;">
-                                        <i class="fas fa-check-circle me-2" style="color: #10b981;"></i>
+                                    <div class="d-flex align-items-center text-muted">
+                                        <i class="fas fa-check-circle me-2 text-success"></i>
                                         <span>Template-based or free-form</span>
                                     </div>
                                 </div>
-                                <a href="/facilitator/create-session" class="btn btn-primary pulse-btn-primary">
+                                <a href="/facilitator/create-session" class="btn btn-primary">
                                     <i class="fas fa-plus-circle me-2"></i>Create Session
                                 </a>
                             </div>
@@ -140,7 +140,7 @@
                 <!-- Templates Grid -->
                 <div class="row g-3 g-lg-4">
                     <div class="col-6 col-lg-3">
-                        <a href="/facilitator/templates" class="card h-100 text-decoration-none border-0 shadow-sm hover-lift">
+                        <a href="/facilitator/templates" class="card h-100 text-decoration-none border-0 shadow-sm">
                             <div class="card-body text-center p-4">
                                 <div class="fs-1 mb-3">🔄</div>
                                 <h5 class="card-title fw-semibold mb-2">Retro Sprint Review</h5>
@@ -150,7 +150,7 @@
                     </div>
 
                     <div class="col-6 col-lg-3">
-                        <a href="/facilitator/templates" class="card h-100 text-decoration-none border-0 shadow-sm hover-lift">
+                        <a href="/facilitator/templates" class="card h-100 text-decoration-none border-0 shadow-sm">
                             <div class="card-body text-center p-4">
                                 <div class="fs-1 mb-3">⚙️</div>
                                 <h5 class="card-title fw-semibold mb-2">Ops Pain Points</h5>
@@ -160,7 +160,7 @@
                     </div>
 
                     <div class="col-6 col-lg-3">
-                        <a href="/facilitator/templates" class="card h-100 text-decoration-none border-0 shadow-sm hover-lift">
+                        <a href="/facilitator/templates" class="card h-100 text-decoration-none border-0 shadow-sm">
                             <div class="card-body text-center p-4">
                                 <div class="fs-1 mb-3">💡</div>
                                 <h5 class="card-title fw-semibold mb-2">Product Discovery</h5>
@@ -170,7 +170,7 @@
                     </div>
 
                     <div class="col-6 col-lg-3">
-                        <a href="/facilitator/templates" class="card h-100 text-decoration-none border-0 shadow-sm hover-lift">
+                        <a href="/facilitator/templates" class="card h-100 text-decoration-none border-0 shadow-sm">
                             <div class="card-body text-center p-4">
                                 <div class="fs-1 mb-3">🚨</div>
                                 <h5 class="card-title fw-semibold mb-2">Incident Review</h5>

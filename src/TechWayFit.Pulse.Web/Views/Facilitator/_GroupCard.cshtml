@@ -32,16 +32,16 @@
                 }
                 else
                 {
-                    <span style="font-size: 1.1rem;">@Model.Group.Icon</span>
+                    <span class="fs-5">@Model.Group.Icon</span>
                 }
                 
                 @* Group Name and Badge *@
                 <div class="flex-grow-1">
-                    <h6 class="mb-0 fw-semibold" style="font-size: 0.9rem; color: #1e293b;">@Model.Group.Name</h6>
+                    <h6 class="mb-0 fw-semibold text-dark" style="font-size: 0.9rem;">@Model.Group.Name</h6>
                     
                     @if (!string.IsNullOrEmpty(Model.Group.Description))
                     {
-                        <p class="text-muted mb-0" style="font-size: 0.75rem; margin-top: 0.25rem;">@Model.Group.Description</p>
+                        <p class="text-muted mb-0 fs-7" style="margin-top: 0.25rem;">@Model.Group.Description</p>
                     }
                 </div>
                 
@@ -53,18 +53,18 @@
                     }
                     else
                     {
-                        <span class="badge bg-@levelColor" style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">@levelLabel</span>
+                        <span class="badge bg-@levelColor fs-8" style="padding: 0.2rem 0.4rem;">@levelLabel</span>
                     }
                     @if (Model.TotalSessionCount > 0)
                     {
-                        <span class="badge bg-secondary" style="font-size: 0.65rem; padding: 0.2rem 0.4rem; white-space: nowrap;">@Model.TotalSessionCount @(Model.TotalSessionCount == 1 ? "session" : "sessions")</span>
+                        <span class="badge bg-secondary fs-8" style="padding: 0.2rem 0.4rem; white-space: nowrap;">@Model.TotalSessionCount @(Model.TotalSessionCount == 1 ? "session" : "sessions")</span>
                     }
                 </div>
             </div>
             
             @* Actions Menu *@
             <div class="dropdown" onclick="event.stopPropagation()">
-                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle fs-7" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.25rem 0.5rem;">
                     •••
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">

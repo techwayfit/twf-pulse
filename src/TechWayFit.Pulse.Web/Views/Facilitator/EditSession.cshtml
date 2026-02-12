@@ -57,7 +57,7 @@
                             <input type="text" class="form-control" id="sessionTitle" name="title" 
                                    value="@Model.Title" required maxlength="150" />
                             <div class="text-end">
-                                <span class="text-muted" style="font-size: 0.75rem;" id="titleCharCount">@(Model.Title?.Length ?? 0) / 150</span>
+                                <span class="text-muted fs-7" id="titleCharCount">@(Model.Title?.Length ?? 0) / 150</span>
                             </div>
                         </div>
 
@@ -102,7 +102,7 @@
                                   maxlength="250">@Model.Goal</textarea>
                         <div class="d-flex justify-content-between">
                             <div class="form-text">What do you want participants to achieve?</div>
-                            <span class="text-muted" style="font-size: 0.75rem;" id="goalCharCount">@(Model.Goal?.Length ?? 0) / 250</span>
+                            <span class="text-muted fs-7" id="goalCharCount">@(Model.Goal?.Length ?? 0) / 250</span>
                         </div>
                     </div>
 
@@ -113,7 +113,7 @@
                                   maxlength="2000">@Model.Context</textarea>
                         <div class="d-flex justify-content-between">
                             <div class="form-text">Detailed context for AI session generation (1000-2000 characters recommended)</div>
-                            <span class="text-muted" style="font-size: 0.75rem;" id="contextCharCount">@(Model.Context?.Length ?? 0) / 2000</span>
+                            <span class="text-muted fs-7" id="contextCharCount">@(Model.Context?.Length ?? 0) / 2000</span>
                         </div>
                     </div>
 

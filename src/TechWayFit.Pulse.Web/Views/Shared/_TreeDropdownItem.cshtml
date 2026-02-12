@@ -16,12 +16,12 @@
         @if (Model.HasChildren)
         {
             <button type="button" class="tree-toggle btn-link border-0 bg-transparent p-1 me-2" data-target="children-@Model.Value" data-bs-toggle="false">
-                <i class="fas fa-chevron-right" style="font-size: 0.75rem;"></i>
+                <i class="fas fa-chevron-right fs-7"></i>
             </button>
         }
         else
         {
-            <span class="tree-spacer me-2" style="width: 24px;"></span>
+            <span class="tree-spacer me-2 icon-spacer"></span>
         }
         <span class="tree-icon me-2">@Model.Icon</span>
         <span class="tree-item-text flex-grow-1">@Model.Text</span>

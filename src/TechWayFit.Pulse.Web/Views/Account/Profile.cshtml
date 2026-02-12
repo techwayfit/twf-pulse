@@ -23,8 +23,8 @@
         <!-- User Avatar Section -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4 text-center">
-                <div class="d-inline-flex align-items-center justify-content-center mb-3" 
-                     style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #2D7FF9, #2BC48A); color: white; font-size: 32px; font-weight: 600;">
+                <div class="d-inline-flex align-items-center justify-content-center mb-3 avatar-lg" 
+                     style="background: var(--pulse-gradient); color: white;">
                     @{
                         var displayName = Model.DisplayName;
                         var initials = string.Join("", displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => w[0]));
@@ -127,7 +127,7 @@
                             
                             @if (quotaStatus.Tier != "BYOK")
                             {
-                                <div class="progress mb-2" style="height: 8px;">
+                                <div class="progress mb-2 progress-sm">
                                     <div class="progress-bar bg-@progressColor" 
                                          role="progressbar" 
                                          style="width: @percentage%"
