@@ -1,0 +1,302 @@
+/* ============================================
+   PRESENTER MODE STYLES
+   Full-screen presentation mode for activities
+   ============================================ */
+
+/* Reset body styles for presenter mode */
+body {
+    overflow: hidden;
+}
+
+.presenter-mode-page {
+    position: fixed;
+    inset: 0;
+    background: var(--pulse-gray-50);
+    display: flex;
+    flex-direction: column;
+    z-index: 10100;
+    padding-top: 0;
+}
+
+/* Header */
+.presenter-header {
+    background: var(--pulse-gradient);
+    color: white;
+    padding: 1rem 0;
+    box-shadow: var(--pulse-shadow-lg);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10101;
+}
+
+.presenter-title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.presenter-subtitle {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.presenter-badge-live {
+    font-size: 1rem;
+    padding: 0.6rem 1rem;
+    font-weight: 600;
+}
+
+.presenter-badge-order {
+    font-size: 1.1rem;
+    padding: 0.6rem 0.9rem;
+    font-weight: 600;
+}
+
+.presenter-exit-btn {
+    font-size: 1.1rem;
+    padding: 0.6rem 1.2rem;
+    font-weight: 700;
+    background: var(--pulse-danger);
+    color: white;
+    border: 2px solid white;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.presenter-exit-btn:hover {
+    background: #DC2626;
+    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.6);
+}
+
+.timer-display-presenter {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--pulse-radius-lg);
+    font-weight: 700;
+    font-size: 1.5rem;
+    min-width: 120px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.timer-display-presenter.timer-warning {
+    background: rgba(245, 158, 11, 0.3);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.timer-display-presenter.timer-expired {
+    background: rgba(239, 68, 68, 0.3);
+    animation: pulse-glow 1s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 4px 16px rgba(255, 255, 255, 0.6);
+    }
+}
+
+/* Content */
+.presenter-content {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+    padding: 1rem 0;
+}
+
+.presenter-main-column {
+    height: 100%;
+    padding-right: 0.5rem;
+}
+
+.presenter-dashboard-wrapper {
+    height: 100%;
+    background: white;
+    border-radius: var(--pulse-radius-lg);
+    padding: 1.5rem;
+    overflow-y: auto;
+    box-shadow: var(--pulse-shadow-md);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Hide stat tiles from dashboard */
+.presenter-dashboard-wrapper .row.g-3,
+.presenter-dashboard-wrapper .mb-4:has(.bg-primary),
+.presenter-dashboard-wrapper .mb-4:has(.bg-info),
+.presenter-dashboard-wrapper .mb-4:has(.bg-success),
+.presenter-dashboard-wrapper .mb-4:has(.bg-warning) {
+    display: none;
+}
+
+/* Maximize chart and make text bigger */
+.presenter-dashboard-wrapper canvas {
+    max-height: 70vh;
+    width: 100%;
+}
+
+/* Make all dashboard text bigger */
+.presenter-dashboard-wrapper h1,
+.presenter-dashboard-wrapper h2,
+.presenter-dashboard-wrapper h3,
+.presenter-dashboard-wrapper h4,
+.presenter-dashboard-wrapper h5,
+.presenter-dashboard-wrapper h6,
+.presenter-dashboard-wrapper .card-title {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.presenter-dashboard-wrapper p,
+.presenter-dashboard-wrapper span,
+.presenter-dashboard-wrapper div {
+    font-size: 1.25rem;
+}
+
+.presenter-dashboard-wrapper .badge {
+    font-size: 1.1rem;
+    padding: 0.5rem 0.8rem;
+}
+
+.presenter-dashboard-wrapper .btn {
+    font-size: 1.2rem;
+    padding: 0.7rem 1.4rem;
+}
+
+/* Sidebar */
+.presenter-sidebar-column {
+    height: 100%;
+    padding-left: 0.5rem;
+}
+
+.presenter-sidebar-content {
+    height: 100%;
+    background: white;
+    border-radius: var(--pulse-radius-lg);
+    padding: 1rem;
+    box-shadow: var(--pulse-shadow-md);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+.presenter-stat-card {
+    background: linear-gradient(135deg, var(--pulse-gray-50) 0%, var(--pulse-gray-100) 100%);
+    border-radius: var(--pulse-radius-lg);
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat-icon {
+    font-size: 2rem;
+    color: var(--pulse-success);
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--pulse-success);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--pulse-gray-600);
+    text-transform: uppercase;
+}
+
+.presenter-feed-section {
+    flex: 1;
+    min-height: 0;
+    border-top: 2px solid var(--pulse-gray-200);
+    padding-top: 1rem;
+}
+
+.feed-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+/* Footer */
+.presenter-footer {
+    background: var(--pulse-gray-800);
+    color: white;
+    padding: 0.75rem 0;
+    box-shadow: var(--pulse-shadow-lg);
+    flex-shrink: 0;
+}
+
+.presenter-control-btn {
+    font-size: 1.1rem;
+    padding: 0.7rem 1.5rem;
+    font-weight: 600;
+}
+
+.presenter-footer-hint {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.05rem;
+}
+
+.presenter-footer-hint a {
+    text-decoration: underline;
+}
+
+.presenter-footer-hint .kbd-large {
+    font-size: 1.15rem;
+    padding: 0.5rem 0.8rem;
+    background: var(--pulse-gray-700);
+    color: white;
+    border-radius: var(--pulse-radius-sm);
+    border: 1px solid var(--pulse-gray-600);
+    font-weight: 700;
+    box-shadow: var(--pulse-shadow-sm);
+}
+
+/* Floating ESC Hint */
+.floating-esc-hint {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 10000;
+    background: rgba(31, 41, 55, 0.95);
+    color: white;
+    padding: 0.7rem 1.2rem;
+    border-radius: var(--pulse-radius-md);
+    font-size: 1.1rem;
+    font-weight: 600;
+    box-shadow: var(--pulse-shadow-lg);
+    backdrop-filter: blur(10px);
+    animation: fadeInSlide 0.3s ease;
+}
+
+.floating-esc-hint kbd {
+    background: var(--pulse-gray-700);
+    color: var(--pulse-warning);
+    padding: 0.4rem 0.7rem;
+    border-radius: var(--pulse-radius-sm);
+    border: 1px solid var(--pulse-gray-600);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-right: 0.4rem;
+}
+
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
