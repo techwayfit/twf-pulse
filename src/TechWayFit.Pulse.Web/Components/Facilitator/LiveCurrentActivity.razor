@@ -131,32 +131,30 @@
 
 <style>
     .timer-display {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
- color: white;
-     padding: 0.5rem 1rem;
-   border-radius: 8px;
-   font-weight: 600;
- font-size: 0.95rem;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-     min-width: 100px;
-      text-align: center;
+        background: var(--pulse-gradient);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: var(--pulse-radius-md);
+        font-weight: 600;
+        font-size: 0.95rem;
+        box-shadow: var(--pulse-shadow-gradient);
+        min-width: 100px;
+        text-align: center;
     }
 
     .timer-display.timer-warning {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: var(--pulse-warning);
         animation: pulse-glow 2s ease-in-out infinite;
- }
+    }
 
     .timer-display.timer-expired {
-     background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
- animation: pulse-glow 1s ease-in-out infinite;
+        background: var(--pulse-danger);
+        animation: pulse-glow 1s ease-in-out infinite;
     }
 
     @@keyframes pulse-glow {
-        0%, 100% { box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3); }
-      50% { box-shadow: 0 4px 16px rgba(245, 87, 108, 0.6); }
-  }
-
+        0%, 100% { box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3); }
+        50% { box-shadow: 0 4px 16px rgba(239, 68, 68, 0.6); }
     .timer-text {
         font-variant-numeric: tabular-nums;
     }

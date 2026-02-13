@@ -73,33 +73,117 @@
 
 /* Override Bootstrap's primary color with gradient */
 .btn-primary,
-.bg-primary,
 .badge-primary {
     --bs-primary-rgb: 14, 165, 233;
 }
 
+.bg-primary {
+    --bs-primary-rgb: 14, 165, 233;
+    background-color: rgba(var(--bs-primary-rgb), var(--bs-bg-opacity, 1));
+}
+
 .btn-success,
-.bg-success,
 .badge-success {
     --bs-success-rgb: 16, 185, 129;
 }
 
+.bg-success {
+    --bs-success-rgb: 16, 185, 129;
+    background-color: rgba(var(--bs-success-rgb), var(--bs-bg-opacity, 1));
+}
+
 .btn-warning,
-.bg-warning,
 .badge-warning {
     --bs-warning-rgb: 245, 158, 11;
 }
 
+.bg-warning {
+    --bs-warning-rgb: 245, 158, 11;
+    background-color: rgba(var(--bs-warning-rgb), var(--bs-bg-opacity, 1));
+}
+
 .btn-danger,
-.bg-danger,
 .badge-danger {
     --bs-danger-rgb: 239, 68, 68;
 }
 
+.bg-danger {
+    --bs-danger-rgb: 239, 68, 68;
+    background-color: rgba(var(--bs-danger-rgb), var(--bs-bg-opacity, 1));
+}
+
 .btn-info,
-.bg-info,
 .badge-info {
     --bs-info-rgb: 14, 165, 233;
+}
+
+.bg-info {
+    --bs-info-rgb: 14, 165, 233;
+    background-color: rgba(var(--bs-info-rgb), var(--bs-bg-opacity, 1));
+}
+
+/* Subtle background variants using Pulse colors */
+.bg-primary-subtle {
+    background-color: rgba(14, 165, 233, 0.1);
+    color: var(--pulse-blue);
+}
+
+.bg-success-subtle {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--pulse-success);
+}
+
+.bg-warning-subtle {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--pulse-warning);
+}
+
+.bg-danger-subtle {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--pulse-danger);
+}
+
+.bg-info-subtle {
+    background-color: rgba(14, 165, 233, 0.1);
+    color: var(--pulse-info);
+}
+
+/* Text color utilities using Pulse colors */
+.text-primary {
+    color: var(--pulse-blue);
+}
+
+.text-success {
+    color: var(--pulse-success);
+}
+
+.text-warning {
+    color: var(--pulse-warning);
+}
+
+.text-danger {
+    color: var(--pulse-danger);
+}
+
+.text-info {
+    color: var(--pulse-info);
+}
+
+/* Background opacity utilities */
+.bg-opacity-10 {
+    --bs-bg-opacity: 0.1;
+}
+
+.bg-opacity-25 {
+    --bs-bg-opacity: 0.25;
+}
+
+.bg-opacity-50 {
+    --bs-bg-opacity: 0.5;
+}
+
+.bg-opacity-75 {
+    --bs-bg-opacity: 0.75;
 }
 
 /* ------------------------------------------
@@ -489,30 +573,11 @@ body {
    7. FORM CONTROLS
    ------------------------------------------ */
 
-.form-control,
-.form-select {
+.form-control {
     border-radius: var(--pulse-radius-md);
     border: 1px solid var(--pulse-gray-300);
-    padding: 0.625rem 1rem;
     font-size: 0.875rem;
     transition: all 0.2s ease;
-}
-
-.form-control:focus,
-.form-select:focus {
-    border-color: var(--pulse-blue);
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
-}
-
-.form-label {
-    font-weight: 600;
-    color: var(--pulse-gray-700);
-    margin-bottom: 0.5rem;
-}
-
-.form-check-input:checked {
-    background-color: var(--pulse-blue);
-    border-color: var(--pulse-blue);
 }
 
 /* ------------------------------------------
@@ -577,12 +642,12 @@ body {
    ------------------------------------------ */
 
 .bg-gradient {
-    background: var(--pulse-gradient) !important;
+    background: var(--pulse-gradient);
     color: white;
 }
 
 .bg-gradient-subtle {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%) !important;
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);
 }
 
 .text-gradient {
@@ -593,7 +658,7 @@ body {
 }
 
 .shadow-gradient {
-    box-shadow: var(--pulse-shadow-gradient) !important;
+    box-shadow: var(--pulse-shadow-gradient);
 }
 
 /* Custom spacing utilities */
@@ -604,10 +669,10 @@ body {
 .gap-xl { gap: var(--pulse-spacing-xl); }
 
 /* Custom border radius utilities */
-.rounded-pulse-sm { border-radius: var(--pulse-radius-sm) !important; }
-.rounded-pulse-md { border-radius: var(--pulse-radius-md) !important; }
-.rounded-pulse-lg { border-radius: var(--pulse-radius-lg) !important; }
-.rounded-pulse-xl { border-radius: var(--pulse-radius-xl) !important; }
+.rounded-pulse-sm { border-radius: var(--pulse-radius-sm); }
+.rounded-pulse-md { border-radius: var(--pulse-radius-md); }
+.rounded-pulse-lg { border-radius: var(--pulse-radius-lg); }
+.rounded-pulse-xl { border-radius: var(--pulse-radius-xl); }
 
 /* ------------------------------------------
    11. NAVIGATION
@@ -744,7 +809,7 @@ body {
 
 .accordion-item {
     border: 1px solid var(--pulse-gray-200);
-    border-radius: var(--pulse-radius-lg) !important;
+    border-radius: var(--pulse-radius-lg);
     margin-bottom: 0.5rem;
 }
 
