@@ -13,7 +13,7 @@
         <span class="dropdown-text">@(string.IsNullOrEmpty(Model.Value) ? Model.Placeholder : GetSelectedText(Model.Items, Model.Value))</span>
     </button>
     
-    <div class="dropdown-menu dropdown-menu-tree" aria-labelledby="dropdown-@Model.Id">
+    <div class="dropdown-menu" aria-labelledby="dropdown-@Model.Id">
         @if (Model.AllowClear)
         {
             <div class="dropdown-item tree-item" data-value="" data-level="0">

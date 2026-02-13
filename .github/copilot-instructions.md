@@ -272,6 +272,12 @@ var useInMemory = bool.Parse(builder.Configuration["Pulse:UseInMemory"]);
 - Mock dependencies with interfaces
 - Test business logic, not infrastructure
 
+## Design System
+- Defined in `wwwroot/css/pulse.css`
+- Do not deviate from established styles
+- Do not add new colors, fonts, or spacing without approval
+- Do not create page-specific styles in global CSS files
+- Do not use inline styles or !important
 ## Questions?
 
 If unsure about any pattern or approach:

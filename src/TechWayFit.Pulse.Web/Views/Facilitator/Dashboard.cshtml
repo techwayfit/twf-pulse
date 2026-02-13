@@ -11,19 +11,18 @@
     var totalPages = (int)(ViewData["TotalPages"] ?? 0);
 }
 
-<main class="dashboard-main">
-    <div class="container container-wide">
+<div class="container container-wide">
         <!-- Header -->
-        <div class="dashboard-header">
-            <div class="dashboard-header-text">
-                <h2 class="dashboard-title">My Workshop Sessions</h2>
-                <p class="dashboard-subtitle">Welcome back, <strong>@userName</strong></p>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+            <div>
+                <h2 class="mb-2">My Workshop Sessions</h2>
+                <p class="text-muted mb-0">Welcome back, <strong>@userName</strong></p>
             </div>
-            <div class="dashboard-header-actions d-none d-md-flex">
-                <a href="@Url.Action("Groups", "Facilitator")" class="btn btn-pulse-outline">
+            <div class="d-none d-md-flex gap-2">
+                <a href="@Url.Action("Groups", "Facilitator")" class="btn btn-outline-primary">
                     <span class="d-none d-sm-inline">📁 </span>Manage Groups
                 </a>
-                <a class="btn btn-pulse-outline" href="@Url.Action("Create", "Facilitator")">
+                <a class="btn btn-outline-primary" href="@Url.Action("Create", "Facilitator")">
                                 <span class="d-none d-sm-inline">✏️</span> Create Session 
                 </a>
                 <!-- Create Session Dropdown -->
@@ -41,44 +40,28 @@
                     Icon = "fas fa-folder",
                     Value = Model.Count.ToString(),
                     Label = "Total Sessions",
-                    BackgroundGradient = "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
-                    BorderColor = "#3b82f6",
-                    IconGradient = "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-                    ValueColor = "#1e40af",
-                    IconShadowColor = "rgba(59, 130, 246, 0.3)"
+                    Variant = "blue"
                 },
                 new TechWayFit.Pulse.Web.Models.StatCardData
                 {
                     Icon = "fas fa-broadcast-tower",
                     Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Live).ToString(),
                     Label = "Live Sessions",
-                    BackgroundGradient = "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-                    BorderColor = "#10b981",
-                    IconGradient = "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                    ValueColor = "#047857",
-                    IconShadowColor = "rgba(16, 185, 129, 0.3)"
+                    Variant = "green"
                 },
                 new TechWayFit.Pulse.Web.Models.StatCardData
                 {
                     Icon = "fas fa-file-alt",
                     Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft).ToString(),
                     Label = "Draft Sessions",
-                    BackgroundGradient = "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
-                    BorderColor = "#f59e0b",
-                    IconGradient = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                    ValueColor = "#b45309",
-                    IconShadowColor = "rgba(245, 158, 11, 0.3)"
+                    Variant = "info"
                 },
                 new TechWayFit.Pulse.Web.Models.StatCardData
                 {
                     Icon = "fas fa-check-circle",
                     Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended).ToString(),
                     Label = "Completed",
-                    BackgroundGradient = "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-                    BorderColor = "#64748b",
-                    IconGradient = "linear-gradient(135deg, #64748b 0%, #475569 100%)",
-                    ValueColor = "#334155",
-                    IconShadowColor = "rgba(100, 116, 139, 0.3)"
+                    Variant = "gray"
                 }
             };
         }
@@ -96,8 +79,8 @@
         </div>
 
         <div class="collapse d-lg-block" id="filterSection">
-            <div class="filter-card">
-                <div class="filter-card-body">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
                 <div class="row g-3 align-items-end">
                     <div class="col-12 col-md-3">
                         <label class="form-label fw-semibold d-none d-md-block">Search</label>
@@ -149,10 +132,10 @@
                     <div class="col-12 col-md-3">
                         <label class="form-label fw-semibold d-none d-md-block">&nbsp;</label>
                         <div class="d-flex gap-2 flex-nowrap">
-                            <button type="button" class="btn btn-primary btn-lift" id="applyFilters" style="flex: 1; white-space: nowrap;">
+                            <button type="button" class="btn btn-primary" id="applyFilters" style="flex: 1; white-space: nowrap;">
                                 Apply
                             </button>
-                            <button type="button" class="btn btn-outline-secondary btn-lift" id="clearFilters" style="flex: 1; white-space: nowrap;">
+                            <button type="button" class="btn btn-outline-secondary" id="clearFilters" style="flex: 1; white-space: nowrap;">
                                 Clear
                             </button>
                         </div>
@@ -163,8 +146,8 @@
         </div>
 
         <!-- Sessions Table -->
-        <div class="sessions-card">
-            <div class="sessions-card-header">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0">Sessions</h5>
                     <div class="sort-controls">
@@ -193,12 +176,12 @@
                     </div>
                 </div>
             </div>
-            <div class="sessions-card-body">
+            <div class="card-body p-0">
                 @if (Model.Any())
                 {
                     <!-- Desktop Table View -->
                     <div class="d-none d-lg-block">
-                        <table class="sessions-table" id="sessionsTable">
+                        <table class="table table-hover" id="sessionsTable">
                             <thead>
                                 <tr>
                                     <th style="width: 140px;">Session Code</th>
@@ -388,7 +371,7 @@
                                 <div class="session-mobile-card-footer">
                                     <div class="d-flex gap-2">
                                         <a href="/facilitator/live?Code=@session.Code" 
-                                           class="btn btn-sm btn-pulse-primary flex-fill">
+                                           class="btn btn-sm btn-primary flex-fill">
                                             <i class="fas fa-eye"></i> View
                                         </a>
                                         <a href="/facilitator/edit-session/@session.Code?returnUrl=@Uri.EscapeDataString(Url.Action("Dashboard", "Facilitator", new { page = ViewData["CurrentPage"] }) ?? "/facilitator/dashboard")" 
@@ -490,7 +473,7 @@
                         </div>
                         <h3 class="empty-state-title">No Sessions Yet</h3>
                         <p class="empty-state-text">Create your first interactive workshop session and start engaging with participants!</p>
-                        <a href="@Url.Action("Create", "Facilitator")" class="btn btn-pulse-primary btn-lift">
+                        <a href="@Url.Action("Create", "Facilitator")" class="btn btn-primary">
                             ✨ Create Your First Session
                         </a>
                     </div>
@@ -498,7 +481,7 @@
             </div>
         </div>
     </div>
-</main>
+</div>
 
 <!-- Assign Group Modal -->
 <div class="modal fade" id="assignGroupModal" tabindex="-1" aria-labelledby="assignGroupModalLabel" aria-hidden="true">
@@ -546,7 +529,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-pulse-primary btn-lift" id="saveGroupAssignmentBtn">Assign Group</button>
+                <button type="button" class="btn btn-primary" id="saveGroupAssignmentBtn">Assign Group</button>
             </div>
         </div>
     </div>
@@ -659,11 +642,10 @@
                         const icon = toggle.querySelector('i');
                         
                         if (target) {
-                            if (target.style.display === 'none' || target.style.display === '') {
-                                target.style.display = 'block';
+                            target.classList.toggle('show');
+                            if (target.classList.contains('show')) {
                                 icon.className = 'fas fa-chevron-down';
                             } else {
-                                target.style.display = 'none';
                                 icon.className = 'fas fa-chevron-right';
                             }
                         }

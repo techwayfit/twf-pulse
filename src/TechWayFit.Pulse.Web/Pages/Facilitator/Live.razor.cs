@@ -17,7 +17,7 @@ public partial class Live : IAsyncDisposable
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IJSRuntime JS { get; set; } = default!;
     [Inject] private IPulseApiService ApiService { get; set; } = default!;
-  [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = default!;
+    [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = default!;
     [Inject] private IClientTokenService TokenService { get; set; } = default!;
     [Inject] private ILogger<Live> Logger { get; set; } = default!;
     [Inject] private IWebHostEnvironment Environment { get; set; } = default!;
@@ -49,20 +49,20 @@ public partial class Live : IAsyncDisposable
     private EditActivityModal? editActivityModal;
 
     protected override async Task OnInitializedAsync()
-  {
-      await LoadActivityModalsHtml();
-      await LoadSession();
-    await EnsureFacilitatorAuthentication();
+    {
+        await LoadActivityModalsHtml();
+        await LoadSession();
+        await EnsureFacilitatorAuthentication();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-          await InitializePageAsync();
+            await InitializePageAsync();
         }
     }
-    
+
     private async Task InitializeActivityManager()
     {
         try
@@ -72,14 +72,14 @@ public partial class Live : IAsyncDisposable
                 Logger.LogWarning("Cannot initialize activity manager - session code is empty");
                 return;
             }
-            
+
             // Get the facilitator token
             var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
             if (string.IsNullOrEmpty(token))
             {
                 Logger.LogWarning("No facilitator token available for session {SessionCode}", sessionCode);
             }
-            
+
             Logger.LogDebug("Initializing activity manager with session code: {SessionCode}", sessionCode);
             await JS.InvokeVoidAsync("initializeLiveActivityManager", sessionCode, token ?? "");
         }
@@ -180,7 +180,7 @@ public partial class Live : IAsyncDisposable
             var httpClient = HttpClientFactory.CreateClient();
             httpClient.BaseAddress = new Uri(Navigation.BaseUri);
             var response = await httpClient.GetAsync("/facilitator/activity-modals");
-            
+
             if (response.IsSuccessStatusCode)
             {
                 activityModalsHtml = await response.Content.ReadAsStringAsync();
@@ -204,30 +204,30 @@ public partial class Live : IAsyncDisposable
     private async Task EnsureFacilitatorAuthentication()
     {
         try
-     {
-       // Check if token was provided in query parameter first
+        {
+            // Check if token was provided in query parameter first
             if (!string.IsNullOrEmpty(Token))
             {
-         await TokenService.StoreFacilitatorTokenAsync(sessionCode, Token);
-         Logger.LogDebug("Stored facilitator token from query parameter for session {SessionCode}", sessionCode);
-            return;
-        }
+                await TokenService.StoreFacilitatorTokenAsync(sessionCode, Token);
+                Logger.LogDebug("Stored facilitator token from query parameter for session {SessionCode}", sessionCode);
+                return;
+            }
 
-     // Try to get a token (this will automatically join as facilitator if needed)
-     var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
-        if (!string.IsNullOrEmpty(token))
- {
-       Logger.LogInformation("Successfully obtained facilitator token for session {SessionCode}", sessionCode);
-}
-      else
-    {
-         Logger.LogError("Failed to obtain facilitator token for session {SessionCode}", sessionCode);
-             errorMessage = "Failed to authenticate as facilitator. Please refresh and try again.";
+            // Try to get a token (this will automatically join as facilitator if needed)
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (!string.IsNullOrEmpty(token))
+            {
+                Logger.LogInformation("Successfully obtained facilitator token for session {SessionCode}", sessionCode);
+            }
+            else
+            {
+                Logger.LogError("Failed to obtain facilitator token for session {SessionCode}", sessionCode);
+                errorMessage = "Failed to authenticate as facilitator. Please refresh and try again.";
             }
         }
-    catch (Exception ex)
+        catch (Exception ex)
         {
- Logger.LogError(ex, "Failed to ensure facilitator authentication for session {SessionCode}", sessionCode);
+            Logger.LogError(ex, "Failed to ensure facilitator authentication for session {SessionCode}", sessionCode);
             errorMessage = $"Authentication error: {ex.Message}. Please refresh and try again.";
         }
     }
@@ -239,109 +239,109 @@ public partial class Live : IAsyncDisposable
     private async Task LoadSession()
     {
         try
-  {
+        {
             isLoading = true;
-        errorMessage = string.Empty;
-  StateHasChanged();
+            errorMessage = string.Empty;
+            StateHasChanged();
 
             // Get session code from query parameter
             if (string.IsNullOrWhiteSpace(Code))
-       {
-        errorMessage = "No session code provided. Please create a session first.";
-                isLoading = false;
-    StateHasChanged();
-        return;
-       }
-
-      // Check for facilitator token (optional for now - TODO: implement proper auth)
-   if (string.IsNullOrWhiteSpace(Token))
             {
-Logger.LogWarning("Live page accessed without facilitator token for session {SessionCode}", Code);
-            // Continue loading the session but disable certain actions
+                errorMessage = "No session code provided. Please create a session first.";
+                isLoading = false;
+                StateHasChanged();
+                return;
             }
 
-  sessionCode = Code;
+            // Check for facilitator token (optional for now - TODO: implement proper auth)
+            if (string.IsNullOrWhiteSpace(Token))
+            {
+                Logger.LogWarning("Live page accessed without facilitator token for session {SessionCode}", Code);
+                // Continue loading the session but disable certain actions
+            }
 
-       // Load session data
- session = await ApiService.GetSessionAsync(sessionCode);
+            sessionCode = Code;
+
+            // Load session data
+            session = await ApiService.GetSessionAsync(sessionCode);
 
             // Load activities
-     activities = (await ApiService.GetAgendaAsync(sessionCode)).ToList();
-      currentActivity = activities.FirstOrDefault(a => a.Status == ActivityStatus.Open);
+            activities = (await ApiService.GetAgendaAsync(sessionCode)).ToList();
+            currentActivity = activities.FirstOrDefault(a => a.Status == ActivityStatus.Open);
 
             Logger.LogInformation("LoadSession completed - currentActivity: {Title}, DurationMinutes: {Duration}, OpenedAt: {OpenedAt}",
      currentActivity?.Title, currentActivity?.DurationMinutes, currentActivity?.OpenedAt);
 
-         // Load initial participant count from API
+            // Load initial participant count from API
             try
-         {
+            {
                 participantCount = await ApiService.GetParticipantCountAsync(sessionCode);
-}
-        catch (Exception ex)
- {
-      Logger.LogWarning(ex, "Failed to load initial participant count, defaulting to 0");
-           participantCount = 0; // Will be updated via SignalR events
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "Failed to load initial participant count, defaulting to 0");
+                participantCount = 0; // Will be updated via SignalR events
             }
 
             // Build join URL
             var uri = new Uri(Navigation.Uri);
-        joinUrl = $"{uri.Scheme}://{uri.Authority}/participant/join?sessionCode={sessionCode}";
+            joinUrl = $"{uri.Scheme}://{uri.Authority}/participant/join?sessionCode={sessionCode}";
 
-          // Setup SignalR connection for real-time updates
-       await SetupSignalRConnection();
-       
-       // Initialize activity manager now that session code is set
-       await InitializeActivityManager();
-}
+            // Setup SignalR connection for real-time updates
+            await SetupSignalRConnection();
+
+            // Initialize activity manager now that session code is set
+            await InitializeActivityManager();
+        }
         catch (Exception ex)
-      {
-    errorMessage = $"Failed to load session: {ex.Message}";
-      Logger.LogError(ex, "Failed to load session {Code}", Code);
-      }
+        {
+            errorMessage = $"Failed to load session: {ex.Message}";
+            Logger.LogError(ex, "Failed to load session {Code}", Code);
+        }
         finally
-     {
+        {
             isLoading = false;
-          StateHasChanged();
+            StateHasChanged();
         }
     }
 
-  #endregion
+    #endregion
 
     #region QR Code and Joining
 
     private async Task GenerateQRCode()
     {
-   try
-      {
+        try
+        {
             var canvasId = $"qr-{sessionCode.Replace("-", "")}";
-await JS.InvokeVoidAsync("generateQRCode", canvasId, joinUrl);
+            await JS.InvokeVoidAsync("generateQRCode", canvasId, joinUrl);
         }
         catch (Exception ex)
         {
-     Logger.LogError(ex, "Failed to generate QR code");
-   errorMessage = $"QR generation failed: {ex.Message}";
+            Logger.LogError(ex, "Failed to generate QR code");
+            errorMessage = $"QR generation failed: {ex.Message}";
             StateHasChanged();
-   }
+        }
     }
 
     private async Task ShowQRModal()
     {
         try
         {
-       // Open the modal
-       await JS.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('qrModal')).show()");
+            // Open the modal
+            await JS.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('qrModal')).show()");
 
             // Wait a bit for modal to render
-      await Task.Delay(100);
+            await Task.Delay(100);
 
             // Generate QR code in the modal
-   var canvasId = $"qr-modal-{sessionCode.Replace("-", "")}";
-          await JS.InvokeVoidAsync("generateQRCode", canvasId, joinUrl);
-  }
+            var canvasId = $"qr-modal-{sessionCode.Replace("-", "")}";
+            await JS.InvokeVoidAsync("generateQRCode", canvasId, joinUrl);
+        }
         catch (Exception ex)
         {
-   Logger.LogError(ex, "Failed to show QR modal");
-     }
+            Logger.LogError(ex, "Failed to show QR modal");
+        }
     }
 
     private async Task CopyJoinUrl()
@@ -369,27 +369,27 @@ await JS.InvokeVoidAsync("generateQRCode", canvasId, joinUrl);
 
     private async Task ManualGenerateQR()
     {
-      try
+        try
         {
-    isGeneratingQR = true;
-        StateHasChanged();
+            isGeneratingQR = true;
+            StateHasChanged();
 
             errorMessage = string.Empty;
-  await Task.Delay(100);
+            await Task.Delay(100);
 
             var canvasId = $"qr-{sessionCode.Replace("-", "")}";
-      await JS.InvokeVoidAsync("generateQRCode", canvasId, joinUrl);
+            await JS.InvokeVoidAsync("generateQRCode", canvasId, joinUrl);
         }
         catch (Exception ex)
         {
-     Logger.LogError(ex, "Manual QR generation failed");
+            Logger.LogError(ex, "Manual QR generation failed");
             errorMessage = $"Failed to generate QR code: {ex.Message}";
         }
         finally
         {
-      isGeneratingQR = false;
-   StateHasChanged();
-  }
+            isGeneratingQR = false;
+            StateHasChanged();
+        }
     }
 
     #endregion
@@ -400,73 +400,73 @@ await JS.InvokeVoidAsync("generateQRCode", canvasId, joinUrl);
     {
         try
         {
-          isPerformingAction = true;
+            isPerformingAction = true;
             StateHasChanged();
 
             // Get facilitator token from token service
-    var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
-if (string.IsNullOrEmpty(token))
-  {
-       errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
-     StateHasChanged();
-    return;
-  }
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                StateHasChanged();
+                return;
+            }
 
-     // Call API with facilitator token
-         session = await ApiService.EndSessionAsync(sessionCode, token);
+            // Call API with facilitator token
+            session = await ApiService.EndSessionAsync(sessionCode, token);
 
             // Session ended successfully - redirect to facilitator dashboard
-    Navigation.NavigateTo("/facilitator/dashboard");
+            Navigation.NavigateTo("/facilitator/dashboard");
         }
         catch (Exception ex)
         {
             errorMessage = $"Failed to end session: {ex.Message}";
         }
- finally
-     {
-         isPerformingAction = false;
-        StateHasChanged();
-   }
+        finally
+        {
+            isPerformingAction = false;
+            StateHasChanged();
+        }
     }
 
     private async Task StartSession()
     {
         try
-  {
-        isPerformingAction = true;
+        {
+            isPerformingAction = true;
             StateHasChanged();
 
-    // Get facilitator token from token service
-  var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
-    if (string.IsNullOrEmpty(token))
-         {
-           errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
-           StateHasChanged();
-return;
+            // Get facilitator token from token service
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                StateHasChanged();
+                return;
             }
 
- // Call API with facilitator token
+            // Call API with facilitator token
             session = await ApiService.StartSessionAsync(sessionCode, token);
         }
-      catch (Exception ex)
-      {
-    errorMessage = $"Failed to start session: {ex.Message}";
-  }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to start session: {ex.Message}";
+        }
         finally
         {
-      isPerformingAction = false;
-     StateHasChanged();
-}
-  }
+            isPerformingAction = false;
+            StateHasChanged();
+        }
+    }
 
     private string GetSessionStatusClass()
     {
         return session?.Status switch
-  {
- SessionStatus.Draft => "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25",
+        {
+            SessionStatus.Draft => "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25",
             SessionStatus.Live => "bg-success bg-opacity-10 text-success border border-success border-opacity-25",
-    SessionStatus.Ended => "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25",
-   SessionStatus.Expired => "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25",
+            SessionStatus.Ended => "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25",
+            SessionStatus.Expired => "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25",
             _ => "bg-light text-dark border"
         };
     }
@@ -484,126 +484,126 @@ return;
     private bool HasNextActivity()
     {
         if (currentActivity == null) return false;
-return activities.Any(a => a.Order > currentActivity.Order);
+        return activities.Any(a => a.Order > currentActivity.Order);
     }
 
     private int GetCurrentActivityResponseCount()
     {
- // TODO: Implement actual response count from API
+        // TODO: Implement actual response count from API
         // For now, return 0 - will be updated via SignalR
-   return 0;
+        return 0;
     }
 
     private async Task OpenActivity(Guid activityId)
     {
         try
-  {
-       isPerformingAction = true;
-   errorMessage = string.Empty;
-          StateHasChanged();
+        {
+            isPerformingAction = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
 
-    var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
-    if (string.IsNullOrEmpty(token))
-          {
-            errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
-       return;
-         }
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
+            }
 
             await ApiService.OpenActivityAsync(sessionCode, activityId, token);
 
-// Reload session to get updated activity status
-    await LoadSession();
+            // Reload session to get updated activity status
+            await LoadSession();
         }
         catch (Exception ex)
-    {
-        errorMessage = $"Failed to open activity: {ex.Message}";
-         Logger.LogError(ex, "Failed to open activity {ActivityId}", activityId);
-    }
-    finally
+        {
+            errorMessage = $"Failed to open activity: {ex.Message}";
+            Logger.LogError(ex, "Failed to open activity {ActivityId}", activityId);
+        }
+        finally
         {
             isPerformingAction = false;
             StateHasChanged();
         }
     }
 
-  private async Task CloseCurrentActivity()
-  {
+    private async Task CloseCurrentActivity()
+    {
         if (currentActivity == null) return;
 
         try
-  {
-          isPerformingAction = true;
+        {
+            isPerformingAction = true;
             errorMessage = string.Empty;
-         StateHasChanged();
+            StateHasChanged();
 
- var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
-   if (string.IsNullOrEmpty(token))
- {
-             errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
-           return;
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
             }
 
-       await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+            await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
 
-      // Reload session to get updated activity status
-  await LoadSession();
+            // Reload session to get updated activity status
+            await LoadSession();
         }
         catch (Exception ex)
         {
             errorMessage = $"Failed to close activity: {ex.Message}";
-Logger.LogError(ex, "Failed to close activity {ActivityId}", currentActivity?.ActivityId);
-   }
+            Logger.LogError(ex, "Failed to close activity {ActivityId}", currentActivity?.ActivityId);
+        }
         finally
         {
-         isPerformingAction = false;
-  StateHasChanged();
-   }
+            isPerformingAction = false;
+            StateHasChanged();
+        }
     }
 
- private async Task MoveNext()
+    private async Task MoveNext()
     {
         if (currentActivity == null) return;
 
         isPerformingAction = true;
         errorMessage = string.Empty;
 
- try
-   {
-    // 1. Find next pending activity
-        var nextActivity = activities
-       .Where(a => a.Order > currentActivity.Order && a.Status == ActivityStatus.Pending)
-       .OrderBy(a => a.Order)
-             .FirstOrDefault();
+        try
+        {
+            // 1. Find next pending activity
+            var nextActivity = activities
+           .Where(a => a.Order > currentActivity.Order && a.Status == ActivityStatus.Pending)
+           .OrderBy(a => a.Order)
+                 .FirstOrDefault();
 
-       if (nextActivity == null)
-      {
-    errorMessage = "No more activities to move to.";
-       return;
-   }
+            if (nextActivity == null)
+            {
+                errorMessage = "No more activities to move to.";
+                return;
+            }
 
-   var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
-         if (string.IsNullOrEmpty(token))
-          {
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
                 errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
-      return;
-}
+                return;
+            }
 
             // 2. Close current activity
-          await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+            await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
 
-        // 3. Open next activity
-    await ApiService.OpenActivityAsync(sessionCode, nextActivity.ActivityId, token);
+            // 3. Open next activity
+            await ApiService.OpenActivityAsync(sessionCode, nextActivity.ActivityId, token);
 
-      // 4. Reload session
-      await LoadSession();
+            // 4. Reload session
+            await LoadSession();
         }
         catch (Exception ex)
         {
             errorMessage = $"Failed to move to next activity: {ex.Message}";
-         Logger.LogError(ex, "Failed to move to next activity");
-    }
+            Logger.LogError(ex, "Failed to move to next activity");
+        }
         finally
-   {
+        {
             isPerformingAction = false;
             StateHasChanged();
         }
@@ -617,31 +617,31 @@ Logger.LogError(ex, "Failed to close activity {ActivityId}", currentActivity?.Ac
         errorMessage = string.Empty;
 
         try
-   {
+        {
             // 1. Find previous activity (either pending or closed)
             var previousActivity = activities
                 .Where(a => a.Order < currentActivity.Order)
       .OrderByDescending(a => a.Order)
          .FirstOrDefault();
 
-   if (previousActivity == null)
+            if (previousActivity == null)
             {
-       errorMessage = "No previous activity to go back to.";
-    return;
-        }
-
-var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
-     if (string.IsNullOrEmpty(token))
-            {
-           errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
-      return;
+                errorMessage = "No previous activity to go back to.";
+                return;
             }
 
-        // 2. Close current activity
-      await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
+            }
 
-         // 3. Open previous activity
-      await ApiService.OpenActivityAsync(sessionCode, previousActivity.ActivityId, token);
+            // 2. Close current activity
+            await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+
+            // 3. Open previous activity
+            await ApiService.OpenActivityAsync(sessionCode, previousActivity.ActivityId, token);
 
             // 4. Reload session
             await LoadSession();
@@ -649,77 +649,77 @@ var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
         catch (Exception ex)
         {
             errorMessage = $"Failed to go back: {ex.Message}";
-         Logger.LogError(ex, "Failed to go back to previous activity");
-  }
+            Logger.LogError(ex, "Failed to go back to previous activity");
+        }
         finally
         {
-          isPerformingAction = false;
-        StateHasChanged();
-     }
+            isPerformingAction = false;
+            StateHasChanged();
+        }
     }
 
     private async Task ReopenActivity(Guid activityId)
- {
+    {
         // Cannot reopen if session has ended
         if (session?.Status == SessionStatus.Ended || session?.Status == SessionStatus.Expired)
         {
-         errorMessage = "Cannot reopen activities. The session has ended.";
-      StateHasChanged();
-       return;
+            errorMessage = "Cannot reopen activities. The session has ended.";
+            StateHasChanged();
+            return;
         }
 
         // Close current activity if one is open
         if (currentActivity != null)
-   {
-       try
+        {
+            try
             {
-            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
-       if (string.IsNullOrEmpty(token))
- {
-         errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
-         StateHasChanged();
-          return;
- }
+                var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+                if (string.IsNullOrEmpty(token))
+                {
+                    errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                    StateHasChanged();
+                    return;
+                }
 
-             await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
-  }
- catch (Exception ex)
- {
-     errorMessage = $"Failed to close current activity: {ex.Message}";
-       Logger.LogError(ex, "Failed to close current activity {ActivityId} before reopening", currentActivity.ActivityId);
-  StateHasChanged();
-    return;
-       }
-      }
+                await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Failed to close current activity: {ex.Message}";
+                Logger.LogError(ex, "Failed to close current activity {ActivityId} before reopening", currentActivity.ActivityId);
+                StateHasChanged();
+                return;
+            }
+        }
 
-      try
+        try
         {
             isPerformingAction = true;
-         errorMessage = string.Empty;
- StateHasChanged();
+            errorMessage = string.Empty;
+            StateHasChanged();
 
-         var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
-  if (string.IsNullOrEmpty(token))
-     {
-     errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
-          return;
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
             }
 
-await ApiService.ReopenActivityAsync(sessionCode, activityId, token);
+            await ApiService.ReopenActivityAsync(sessionCode, activityId, token);
 
-       // Reload session to get updated activity status
+            // Reload session to get updated activity status
             await LoadSession();
         }
-  catch (Exception ex)
+        catch (Exception ex)
         {
- errorMessage = $"Failed to reopen activity: {ex.Message}";
+            errorMessage = $"Failed to reopen activity: {ex.Message}";
             Logger.LogError(ex, "Failed to reopen activity {ActivityId}", activityId);
- }
-finally
+        }
+        finally
         {
-   isPerformingAction = false;
+            isPerformingAction = false;
             StateHasChanged();
-   }
+        }
     }
 
     #endregion
@@ -729,52 +729,52 @@ finally
     private async Task ShowSetTimerModal()
     {
         // Reset input to current duration or default
-    timerDurationInput = currentActivity?.DurationMinutes ?? 5;
-     StateHasChanged();
+        timerDurationInput = currentActivity?.DurationMinutes ?? 5;
+        StateHasChanged();
 
         // Show modal using Bootstrap
-      await JS.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('setTimerModal')).show()");
+        await JS.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('setTimerModal')).show()");
     }
 
     private async Task SetActivityTimer(int minutes)
     {
-if (currentActivity == null) return;
+        if (currentActivity == null) return;
 
- try
+        try
         {
             isPerformingAction = true;
-  errorMessage = string.Empty;
+            errorMessage = string.Empty;
             StateHasChanged();
 
-     var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
-  if (string.IsNullOrEmpty(token))
-       {
-           errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
-         return;
-  }
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
+            }
 
-     // Update the activity with the new duration
+            // Update the activity with the new duration
             var updateRequest = new UpdateActivityRequest
             {
-  Title = currentActivity.Title,
- Prompt = currentActivity.Prompt,
-Config = currentActivity.Config,
-        DurationMinutes = minutes
-      };
+                Title = currentActivity.Title,
+                Prompt = currentActivity.Prompt,
+                Config = currentActivity.Config,
+                DurationMinutes = minutes
+            };
 
             await ApiService.UpdateActivityAsync(sessionCode, currentActivity.ActivityId, updateRequest, token);
 
-     // Give the database a moment to commit the transaction
-        await Task.Delay(100);
+            // Give the database a moment to commit the transaction
+            await Task.Delay(100);
 
             // Reload session to get updated activity
-    await LoadSession();
+            await LoadSession();
 
-    Logger.LogInformation("After LoadSession - currentActivity.DurationMinutes: {Duration}, OpenedAt: {OpenedAt}",
-           currentActivity?.DurationMinutes, currentActivity?.OpenedAt);
+            Logger.LogInformation("After LoadSession - currentActivity.DurationMinutes: {Duration}, OpenedAt: {OpenedAt}",
+                   currentActivity?.DurationMinutes, currentActivity?.OpenedAt);
 
             // Close modal and remove backdrop
-          await JS.InvokeVoidAsync("eval", @"
+            await JS.InvokeVoidAsync("eval", @"
             var modalEl = document.getElementById('setTimerModal');
         var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
    modal.hide();
@@ -787,10 +787,10 @@ Config = currentActivity.Config,
        }, 200);
  ");
 
-  // Wait for modal to close and Blazor to re-render, then start timer
+            // Wait for modal to close and Blazor to re-render, then start timer
             await Task.Delay(300);
             StateHasChanged();
-  await Task.Delay(100);
+            await Task.Delay(100);
             await JS.InvokeVoidAsync("eval", @"
        console.log('Attempting to start timer...');
               var timerEl = document.getElementById('activity-timer');
@@ -804,17 +804,17 @@ Config = currentActivity.Config,
  console.log('startActivityTimer function not found');
     }
 ");
-   }
+        }
         catch (Exception ex)
-      {
-         errorMessage = $"Failed to set timer: {ex.Message}";
+        {
+            errorMessage = $"Failed to set timer: {ex.Message}";
             Logger.LogError(ex, "Failed to set timer for activity {ActivityId}", currentActivity.ActivityId);
         }
- finally
-     {
+        finally
+        {
             isPerformingAction = false;
             StateHasChanged();
-  }
+        }
     }
 
     #endregion
@@ -829,104 +829,104 @@ Config = currentActivity.Config,
           .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
                 .Build();
 
-   // Handle session state changes (includes participant count)
+            // Handle session state changes (includes participant count)
             hubConnection.On<SessionStateChangedEvent>("SessionStateChanged", async (sessionEvent) =>
   {
-    await InvokeAsync(async () =>
-      {
-       if (session != null && sessionEvent.SessionCode == session.Code)
-                {
-             participantCount = sessionEvent.ParticipantCount;
-                 StateHasChanged();
-       }
-       });
-            });
+      await InvokeAsync(async () =>
+        {
+            if (session != null && sessionEvent.SessionCode == session.Code)
+            {
+                participantCount = sessionEvent.ParticipantCount;
+                StateHasChanged();
+            }
+        });
+  });
 
             // Handle participant joins
-     hubConnection.On<ParticipantJoinedEvent>("ParticipantJoined", async (participantEvent) =>
- {
-        await InvokeAsync(() =>
-   {
-      if (session != null && participantEvent.SessionCode == session.Code)
-          {
-     participantCount = participantEvent.TotalParticipantCount;
-     StateHasChanged();
-             }
-  });
-      });
+            hubConnection.On<ParticipantJoinedEvent>("ParticipantJoined", async (participantEvent) =>
+        {
+            await InvokeAsync(() =>
+{
+              if (session != null && participantEvent.SessionCode == session.Code)
+              {
+                  participantCount = participantEvent.TotalParticipantCount;
+                  StateHasChanged();
+              }
+          });
+        });
 
             // Handle response received events (for real-time response tracking)
-    hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
-            {
-      await InvokeAsync(() =>
-    {
-          if (session != null && responseEvent.SessionCode == session.Code)
-                 {
-   // Trigger UI refresh - the PollDashboard component handles its own SignalR updates
-             if (currentActivity != null &&
-      responseEvent.ActivityId == currentActivity.ActivityId)
-        {
-           StateHasChanged();
-     }
-        }
-                });
-    });
-
-   // Handle dashboard update events (for real-time dashboard updates)
-  hubConnection.On<DashboardUpdatedEvent>("DashboardUpdated", async (dashboardEvent) =>
- {
-                await InvokeAsync(() =>
-        {
-     if (session != null && dashboardEvent.SessionCode == session.Code)
-           {
-  // If this is an AI insight, capture payload for facilitator UI
-  try
-  {
-    if (string.Equals(dashboardEvent.AggregateType, "AIInsight", StringComparison.OrdinalIgnoreCase))
-    {
-      if (dashboardEvent.Payload is JsonElement je)
-      {
-        _aiInsightJson = je;
-      }
-      else
-      {
-        // Try to serialize/deserialize generic object into JsonElement
-        _aiInsightJson = JsonSerializer.SerializeToElement(dashboardEvent.Payload ?? new { });
-      }
-      _hasAiInsight = true;
-      _aiInsightTimestamp = dashboardEvent.Timestamp;
-    }
-
-    // Trigger UI refresh - the dashboard components handle their own updates
-    if (currentActivity != null && dashboardEvent.ActivityId.HasValue && dashboardEvent.ActivityId == currentActivity.ActivityId)
-    {
-      StateHasChanged();
-    }
-  }
-  catch
-  {
-    // ignore any payload parsing issues
-  }
-   }
-                });
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
+                    {
+                        await InvokeAsync(() =>
+              {
+                if (session != null && responseEvent.SessionCode == session.Code)
+                {
+                      // Trigger UI refresh - the PollDashboard component handles its own SignalR updates
+                    if (currentActivity != null &&
+     responseEvent.ActivityId == currentActivity.ActivityId)
+                    {
+                        StateHasChanged();
+                    }
+                }
             });
+                    });
 
-      // Handle activity deleted events
+            // Handle dashboard update events (for real-time dashboard updates)
+            hubConnection.On<DashboardUpdatedEvent>("DashboardUpdated", async (dashboardEvent) =>
+           {
+               await InvokeAsync(() =>
+{
+                      if (session != null && dashboardEvent.SessionCode == session.Code)
+                      {
+        // If this is an AI insight, capture payload for facilitator UI
+                          try
+                          {
+                              if (string.Equals(dashboardEvent.AggregateType, "AIInsight", StringComparison.OrdinalIgnoreCase))
+                              {
+                                  if (dashboardEvent.Payload is JsonElement je)
+                                  {
+                                      _aiInsightJson = je;
+                                  }
+                                  else
+                                  {
+                    // Try to serialize/deserialize generic object into JsonElement
+                                      _aiInsightJson = JsonSerializer.SerializeToElement(dashboardEvent.Payload ?? new { });
+                                  }
+                                  _hasAiInsight = true;
+                                  _aiInsightTimestamp = dashboardEvent.Timestamp;
+                              }
+
+            // Trigger UI refresh - the dashboard components handle their own updates
+                              if (currentActivity != null && dashboardEvent.ActivityId.HasValue && dashboardEvent.ActivityId == currentActivity.ActivityId)
+                              {
+                                  StateHasChanged();
+                              }
+                          }
+                          catch
+                          {
+            // ignore any payload parsing issues
+                          }
+                      }
+                  });
+           });
+
+            // Handle activity deleted events
             hubConnection.On<Guid>("ActivityDeleted", async (activityId) =>
             {
-        await InvokeAsync(() =>
-                {
-        // Remove the deleted activity from the list
-        activities.RemoveAll(a => a.ActivityId == activityId);
+                await InvokeAsync(() =>
+                        {
+                            // Remove the deleted activity from the list
+                            activities.RemoveAll(a => a.ActivityId == activityId);
 
-     // If the deleted activity was the current one, clear it
-         if (currentActivity?.ActivityId == activityId)
-  {
-    currentActivity = null;
-            }
+                            // If the deleted activity was the current one, clear it
+                            if (currentActivity?.ActivityId == activityId)
+                            {
+                                currentActivity = null;
+                            }
 
-     StateHasChanged();
-       });
+                            StateHasChanged();
+                        });
             });
 
             await hubConnection.StartAsync();
@@ -934,8 +934,8 @@ Config = currentActivity.Config,
         }
         catch (Exception ex)
         {
-      Logger.LogError(ex, "Failed to setup SignalR connection");
-    }
+            Logger.LogError(ex, "Failed to setup SignalR connection");
+        }
     }
 
     #endregion
@@ -951,7 +951,7 @@ Config = currentActivity.Config,
     private void ShowEditActivityModal(AgendaActivityResponse activity)
     {
         if (editActivityModal != null)
-     {
+        {
             editActivityModal.Activity = activity;
             editActivityModal.Show();
         }
@@ -972,11 +972,11 @@ Config = currentActivity.Config,
     private async Task HandleActivityUpdated()
     {
         await LoadSession();
- }
+    }
 
     private async Task HandleActivityDeleted()
-{
-await LoadSession();
+    {
+        await LoadSession();
     }
 
     #endregion
@@ -986,17 +986,17 @@ await LoadSession();
     public async ValueTask DisposeAsync()
     {
         if (hubConnection is not null)
-   {
+        {
             try
-      {
+            {
                 await hubConnection.InvokeAsync("Unsubscribe", sessionCode);
-          await hubConnection.DisposeAsync();
+                await hubConnection.DisposeAsync();
             }
-  catch (Exception ex)
-          {
-      Logger.LogError(ex, "Error disposing SignalR connection");
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error disposing SignalR connection");
             }
-    }
+        }
     }
 
     #endregion

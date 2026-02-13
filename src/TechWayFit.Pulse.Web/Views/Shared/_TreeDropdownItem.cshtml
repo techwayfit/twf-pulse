@@ -15,22 +15,22 @@
     <div class="d-flex align-items-center @indentClass">
         @if (Model.HasChildren)
         {
-            <button type="button" class="tree-toggle btn-link border-0 bg-transparent p-1 me-2" data-target="children-@Model.Value" data-bs-toggle="false">
-                <i class="fas fa-chevron-right fs-7"></i>
+            <button type="button" class="btn tree-toggle" data-target="children-@Model.Value" data-bs-toggle="false">
+                <i class="fas fa-chevron-right"></i>
             </button>
         }
         else
         {
-            <span class="tree-spacer me-2 icon-spacer"></span>
+            <span class="tree-spacer"></span>
         }
-        <span class="tree-icon me-2">@Model.Icon</span>
+        <span class="tree-icon">@Model.Icon</span>
         <span class="tree-item-text flex-grow-1">@Model.Text</span>
     </div>
 </div>
 
 @if (children.Any())
 {
-    <div class="tree-children" id="children-@Model.Value" style="display: none;">
+    <div class="tree-children" id="children-@Model.Value">
         @foreach (var child in children)
         {
             @await Html.PartialAsync("_TreeDropdownItem", child, new ViewDataDictionary(ViewData))

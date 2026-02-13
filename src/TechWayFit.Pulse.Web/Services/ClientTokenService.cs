@@ -1,5 +1,6 @@
-using Microsoft.AspNetCore.Components;
+using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Web.Api;
+using TechWayFit.Pulse.Web.Extensions;
 
 namespace TechWayFit.Pulse.Web.Services;
 
@@ -12,19 +13,25 @@ public interface IClientTokenService
 public class ClientTokenService : IClientTokenService
 {
     private readonly IFacilitatorTokenStore _tokenStore;
-    private readonly IPulseApiService _apiService;
+    private readonly ISessionService _sessionService;
+    private readonly IAuthenticationService _authService;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<ClientTokenService> _logger;
 
     // Simple in-memory cache for session code to token mapping
     private static readonly Dictionary<string, string> _sessionTokenCache = new();
 
     public ClientTokenService(
-        IFacilitatorTokenStore tokenStore, 
-        IPulseApiService apiService, 
+        IFacilitatorTokenStore tokenStore,
+        ISessionService sessionService,
+        IAuthenticationService authService,
+        IHttpContextAccessor httpContextAccessor,
         ILogger<ClientTokenService> logger)
     {
         _tokenStore = tokenStore;
-        _apiService = apiService;
+        _sessionService = sessionService;
+        _authService = authService;
+        _httpContextAccessor = httpContextAccessor;
         _logger = logger;
     }
 
@@ -44,26 +51,38 @@ public class ClientTokenService : IClientTokenService
                 return cachedToken;
             }
 
-            // If not in cache, try to join as facilitator to get a token
-            _logger.LogDebug("No cached token found for session {SessionCode}, attempting to join as facilitator", sessionCode);
+            // Get the session directly from the service (no HTTP call needed in server-side code!)
+            _logger.LogDebug("No cached token found for session {SessionCode}, generating facilitator token", sessionCode);
             
-            var joinRequest = new TechWayFit.Pulse.Contracts.Requests.JoinFacilitatorRequest
+            var session = await _sessionService.GetByCodeAsync(sessionCode);
+            if (session == null)
             {
-                DisplayName = "Facilitator"
-            };
-            
-            var joinResponse = await _apiService.JoinAsFacilitatorAsync(sessionCode, joinRequest);
-            
-            if (joinResponse?.Token != null)
-            {
-                // Cache the token for future use
-                _sessionTokenCache[sessionCode] = joinResponse.Token;
-                _logger.LogInformation("Successfully joined as facilitator for session {SessionCode}", sessionCode);
-                return joinResponse.Token;
+                _logger.LogWarning("Session {SessionCode} not found", sessionCode);
+                return null;
             }
 
-            _logger.LogWarning("Failed to join as facilitator for session {SessionCode}", sessionCode);
-            return null;
+            // Verify the current user owns this session
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
+            {
+                _logger.LogWarning("HttpContext is null, cannot verify facilitator authentication");
+                return null;
+            }
+
+            var userId = await httpContext.GetFacilitatorUserIdAsync(_authService);
+            if (userId == null || session.FacilitatorUserId != userId)
+            {
+                _logger.LogWarning("User {UserId} is not authorized as facilitator for session {SessionCode} (owner: {OwnerId})", 
+                    userId, sessionCode, session.FacilitatorUserId);
+                return null;
+            }
+
+            // Create and cache the facilitator token
+            var auth = _tokenStore.Create(session.Id);
+            _sessionTokenCache[sessionCode] = auth.Token;
+            
+            _logger.LogInformation("Successfully generated facilitator token for session {SessionCode}", sessionCode);
+            return auth.Token;
         }
         catch (Exception ex)
         {

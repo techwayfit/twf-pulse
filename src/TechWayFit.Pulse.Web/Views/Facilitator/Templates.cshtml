@@ -6,8 +6,7 @@
     var userName = ViewData["UserName"] as string;
 }
 
-<main class="dashboard-main">
-    <div class="container container-wide">
+<div class="container container-wide">
         <!-- Header -->
         <div class="mb-4">
             <h2 class="mb-2">Session Templates</h2>
@@ -74,7 +73,7 @@
                     @foreach (var template in Model.Where(t => t.IsSystemTemplate).OrderBy(t => t.Name))
                     {
                         <div class="col-12 col-sm-6 col-lg-4 template-card" data-category="@template.Category">
-                            <div class="card h-100 shadow-sm hover-lift">
+                            <div class="card h-100 shadow-sm template-card-item position-relative">
                                 <div class="card-body">
                                     <div class="d-flex align-items-start mb-3">
                                         <div class="fs-1 me-3">@template.IconEmoji</div>
@@ -95,9 +94,11 @@
                                         @activityCount @(activityCount == 1 ? "Activity" : "Activities")
                                     </div>
                                 </div>
-                                <div class="card-footer bg-transparent border-top-0">
+                                
+                                <!-- Desktop: Hover Overlay | Mobile: Always Visible Footer -->
+                                <div class="template-card-overlay">
                                     <a href="@Url.Action("Create", "Facilitator", new { templateId = template.Id })" 
-                                       class="btn btn-pulse-primary w-100">
+                                       class="btn btn-primary w-100">
                                         Use Template
                                     </a>
                                 </div>
@@ -120,7 +121,7 @@
                     @foreach (var template in Model.Where(t => !t.IsSystemTemplate).OrderBy(t => t.Name))
                     {
                         <div class="col-12 col-sm-6 col-lg-4 template-card" data-category="@template.Category">
-                            <div class="card h-100 shadow-sm hover-lift">
+                            <div class="card h-100 shadow-sm template-card-item position-relative">
                                 <div class="card-body">
                                     <div class="d-flex align-items-start mb-3">
                                         <div class="fs-1 me-3">@template.IconEmoji</div>
@@ -141,9 +142,11 @@
                                         @activityCount @(activityCount == 1 ? "Activity" : "Activities")
                                     </div>
                                 </div>
-                                <div class="card-footer bg-transparent border-top-0">
+                                
+                                <!-- Desktop: Hover Overlay | Mobile: Always Visible Footer -->
+                                <div class="template-card-overlay">
                                     <a href="@Url.Action("Create", "Facilitator", new { templateId = template.Id })" 
-                                       class="btn btn-pulse-primary w-100">
+                                       class="btn btn-primary w-100">
                                         Use Template
                                     </a>
                                 </div>
@@ -164,7 +167,6 @@
             </div>
         }
     </div>
-</main>
 
 @section Scripts {
     <script>

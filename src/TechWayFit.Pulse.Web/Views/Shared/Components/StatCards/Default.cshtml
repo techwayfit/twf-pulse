@@ -17,14 +17,14 @@
     @foreach (var card in Model)
     {
         <div class="@GetColumnClass()">
-            <div style="background: @card.BackgroundGradient; border-left: 4px solid @card.BorderColor; border-radius: 16px; padding: 1rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); transition: all 0.3s ease;">
+            <div class="stat-card stat-card-@card.Variant">
                 <div class="d-flex align-items-center gap-2 gap-md-3">
-                    <div class="flex-shrink-0" style="width: 56px; height: 56px; background: @card.IconGradient; border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px @card.IconShadowColor;">
-                        <i class="@card.Icon" style="color: white; font-size: 1.5rem;"></i>
+                    <div class="stat-card-icon flex-shrink-0">
+                        <i class="@card.Icon text-white fs-4"></i>
                     </div>
                     <div class="flex-grow-1 text-center text-md-start">
-                        <div class="h3 mb-0 fw-bold" style="color: @card.ValueColor; line-height: 1;">@card.Value</div>
-                        <small class="text-muted fw-semibold" style="font-size: 0.8rem;">@card.Label</small>
+                        <div class="stat-card-value h3 mb-0 fw-bold lh-1">@card.Value</div>
+                        <small class="stat-card-label text-muted fw-semibold">@card.Label</small>
                     </div>
                 </div>
             </div>

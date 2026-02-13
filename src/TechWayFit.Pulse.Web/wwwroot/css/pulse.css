@@ -193,6 +193,91 @@ body {
     box-shadow: var(--pulse-shadow-gradient);
 }
 
+/* Outline Button Variants */
+.btn-outline-primary {
+    background: transparent;
+    border: 1px solid var(--pulse-blue);
+    color: var(--pulse-blue);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+    background: var(--pulse-blue);
+    border-color: var(--pulse-blue);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    border: 1px solid var(--pulse-gray-400);
+    color: var(--pulse-gray-700);
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus {
+    background: var(--pulse-gray-100);
+    border-color: var(--pulse-gray-500);
+    color: var(--pulse-gray-900);
+    transform: translateY(-1px);
+}
+
+.btn-outline-success {
+    background: transparent;
+    border: 1px solid var(--pulse-success);
+    color: var(--pulse-success);
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus {
+    background: var(--pulse-success);
+    border-color: var(--pulse-success);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-outline-warning {
+    background: transparent;
+    border: 1px solid var(--pulse-warning);
+    color: var(--pulse-warning);
+}
+
+.btn-outline-warning:hover,
+.btn-outline-warning:focus {
+    background: var(--pulse-warning);
+    border-color: var(--pulse-warning);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-outline-danger {
+    background: transparent;
+    border: 1px solid var(--pulse-danger);
+    color: var(--pulse-danger);
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus {
+    background: var(--pulse-danger);
+    border-color: var(--pulse-danger);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-outline-info {
+    background: transparent;
+    border: 1px solid var(--pulse-info);
+    color: var(--pulse-info);
+}
+
+.btn-outline-info:hover,
+.btn-outline-info:focus {
+    background: var(--pulse-info);
+    border-color: var(--pulse-info);
+    color: white;
+    transform: translateY(-1px);
+}
+
 /* Secondary Button */
 .btn-secondary {
     background: white;

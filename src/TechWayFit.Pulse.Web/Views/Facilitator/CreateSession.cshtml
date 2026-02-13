@@ -371,11 +371,10 @@
                     const icon = toggle.querySelector('i');
                     
                     if (target) {
-                        if (target.style.display === 'none' || target.style.display === '') {
-                            target.style.display = 'block';
+                        target.classList.toggle('show');
+                        if (target.classList.contains('show')) {
                             icon.className = 'fas fa-chevron-down';
                         } else {
-                            target.style.display = 'none';
                             icon.className = 'fas fa-chevron-right';
                         }
                     }

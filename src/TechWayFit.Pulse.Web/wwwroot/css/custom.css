@@ -11,6 +11,11 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
+/* Main Content - Spacing from Sticky Navbar */
+main.flex-grow-1 {
+  padding-top: 2rem;
+}
+
 /* Brand Badge - Logo Component */
 .brand-badge {
   width: 40px;
@@ -247,6 +252,347 @@
   width: 24px;
 }
 
+/* ===== STAT CARDS ===== */
+
+/* Stat Cards - Base Styles */
+.stat-card {
+  background: white;
+  border-radius: var(--pulse-radius-xl);
+  padding: 1rem;
+  box-shadow: var(--pulse-shadow-sm);
+  transition: all 0.3s ease;
+  border-left: 4px solid;
+}
+
+.stat-card:hover {
+  box-shadow: var(--pulse-shadow-md);
+  transform: translateY(-2px);
+}
+
+.stat-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--pulse-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card-value {
+  color: var(--pulse-gray-900);
+}
+
+.stat-card-label {
+  font-size: 0.8rem;
+}
+
+/* Blue Variant */
+.stat-card-blue {
+  border-left-color: var(--pulse-blue);
+}
+
+.stat-card-blue .stat-card-icon {
+  background: linear-gradient(135deg, var(--pulse-blue) 0%, var(--pulse-blue-dark) 100%);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+/* Green Variant */
+.stat-card-green {
+  border-left-color: var(--pulse-green);
+}
+
+.stat-card-green .stat-card-icon {
+  background: linear-gradient(135deg, var(--pulse-green) 0%, var(--pulse-green-dark) 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Info Variant */
+.stat-card-info {
+  border-left-color: var(--pulse-info);
+}
+
+.stat-card-info .stat-card-icon {
+  background: linear-gradient(135deg, var(--pulse-info) 0%, var(--pulse-blue-dark) 100%);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+/* Gray Variant */
+.stat-card-gray {
+  border-left-color: var(--pulse-gray-500);
+}
+
+.stat-card-gray .stat-card-icon {
+  background: linear-gradient(135deg, var(--pulse-gray-500) 0%, var(--pulse-gray-600) 100%);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+}
+
+/* ===== TEMPLATE CARD OVERLAY ===== */
+
+/* Desktop: Hover overlay */
+@media (min-width: 768px) {
+  .template-card-item .template-card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(249, 250, 251, 0.98) 0%, rgba(249, 250, 251, 0.95) 50%, transparent 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 3rem 1.5rem 1.5rem;
+    border-radius: 0 0 var(--pulse-radius-lg) var(--pulse-radius-lg);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+
+  .template-card-item:hover .template-card-overlay {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .template-card-item.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--pulse-shadow-lg);
+  }
+}
+
+/* Mobile: Always visible as footer */
+@media (max-width: 767.98px) {
+  .template-card-overlay {
+    padding: 1rem;
+    background: var(--pulse-gray-50);
+    border-top: 1px solid var(--pulse-gray-200);
+  }
+}
+
+/* ===== DASHBOARD COMPONENTS ===== */
+
+/* Filter Toggle Button (Mobile) */
+.filter-toggle-wrapper {
+  margin-bottom: 1rem;
+}
+
+.filter-toggle-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 1px solid var(--pulse-gray-300);
+  border-radius: var(--pulse-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 500;
+  color: var(--pulse-gray-700);
+  transition: all 0.2s ease;
+}
+
+.filter-toggle-btn:hover {
+  border-color: var(--pulse-blue);
+  color: var(--pulse-blue);
+}
+
+.filter-toggle-arrow {
+  transition: transform 0.2s ease;
+}
+
+.filter-toggle-btn[aria-expanded="true"] .filter-toggle-arrow {
+  transform: rotate(180deg);
+}
+
+/* Fix dropdown clipping in collapse */
+#filterSection .card {
+  overflow: visible;
+}
+
+#filterSection .card-body {
+  overflow: visible;
+}
+
+#filterSection .card:hover {
+  transform: none;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.empty-state-icon {
+  margin-bottom: 1rem;
+}
+
+.empty-state-title {
+  color: var(--pulse-gray-700);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+  color: var(--pulse-gray-500);
+  margin-bottom: 1.5rem;
+}
+
+/* Session Mobile Cards */
+.session-mobile-card {
+  background: white;
+  border: 1px solid var(--pulse-gray-200);
+  border-radius: var(--pulse-radius-lg);
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+}
+
+.session-mobile-card:hover {
+  box-shadow: var(--pulse-shadow-md);
+}
+
+.session-mobile-card-header {
+  padding: 1rem;
+  border-bottom: 1px solid var(--pulse-gray-200);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.session-mobile-card-body {
+  padding: 1rem;
+}
+
+.session-mobile-title {
+  font-weight: 600;
+  color: var(--pulse-gray-900);
+  margin-bottom: 0.5rem;
+}
+
+.session-mobile-goal {
+  color: var(--pulse-gray-600);
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.session-mobile-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--pulse-gray-500);
+}
+
+.session-mobile-card-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--pulse-gray-200);
+  background: var(--pulse-gray-50);
+}
+
+/* Pagination Footer */
+.pagination-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-top: 1px solid var(--pulse-gray-200);
+  background: var(--pulse-gray-50);
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: var(--pulse-gray-600);
+}
+
+.session-count-badge {
+  text-align: center;
+  padding: 1rem;
+  color: var(--pulse-gray-600);
+  font-size: 0.875rem;
+  border-top: 1px solid var(--pulse-gray-200);
+  background: var(--pulse-gray-50);
+}
+
+/* Sort Controls */
+.sort-controls {
+  display: flex;
+  align-items: center;
+}
+
+/* ===== TREE DROPDOWN COMPONENT ===== */
+
+.tree-dropdown .dropdown-menu {
+  max-height: 320px;
+  overflow-y: auto;
+  min-width: 100%;
+}
+
+.tree-item {
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  transition: background-color 0.2s ease;
+  border-radius: var(--pulse-radius-sm);
+}
+
+.tree-item:hover {
+  background-color: var(--pulse-gray-100);
+}
+
+.tree-item.selected {
+  background-color: rgba(14, 165, 233, 0.1);
+  color: var(--pulse-blue);
+  font-weight: 600;
+}
+
+.tree-toggle {
+  border: 0;
+  background: transparent;
+  padding: 0.25rem;
+  margin-right: 0.5rem;
+  color: var(--pulse-gray-600);
+  cursor: pointer;
+  transition: color 0.2s ease;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tree-toggle:hover {
+  color: var(--pulse-blue);
+  background: transparent;
+}
+
+.tree-toggle:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.tree-toggle i {
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+}
+
+.tree-spacer {
+  display: inline-block;
+  width: 2rem;
+  margin-right: 0.5rem;
+}
+
+.tree-icon {
+  margin-right: 0.5rem;
+  font-size: 1rem;
+}
+
+.tree-item-text {
+  font-size: 0.875rem;
+}
+
+.tree-children {
+  display: none;
+}
+
+.tree-children.show {
+  display: block;
+}
+
 /* ===== MINIMAL HOMEPAGE STYLES ===== */
 
 /* Only essential custom styles that Bootstrap cannot provide */
@@ -313,6 +659,74 @@
   50% { opacity: 1; }
 }
 
+/* ============================================
+   GROUP TREE COMPONENTS - Minimal Custom Styles
+   ============================================ */
+
+/* Expand/Collapse Animation */
+.expand-icon {
+  display: inline-block;
+  transition: transform 0.2s ease;
+  width: 20px;
+  text-align: center;
+}
+
+.expand-icon.expanded {
+  transform: rotate(90deg);
+}
+
+/* Custom scrollbar for sessions list */
+.sessions-list {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.sessions-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sessions-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sessions-list::-webkit-scrollbar-thumb {
+  background: var(--pulse-gray-400);
+  border-radius: 2px;
+}
+
+.sessions-list::-webkit-scrollbar-thumb:hover {
+  background: var(--pulse-gray-500);
+}
+
+/* Session item hover effect */
+.session-item {
+  transition: all 0.15s ease;
+}
+
+.session-item:hover {
+  transform: translateX(2px);
+}
+
+/* Child groups indentation with border */
+.child-groups {
+  border-left: 2px solid var(--pulse-gray-300);
+}
+
+/* Icon & Color Picker sizing */
+.icon-picker-display {
+  width: 60px;
+  height: 60px;
+}
+
+.color-preview {
+  width: 60px;
+  height: 60px;
+}
+
+/* ============================================
+   BLAZOR ERROR BOUNDARY
+   ============================================ */
+
 /* Blazor Error Boundary */
 #blazor-error-ui {
     background: lightyellow;
@@ -332,13 +746,4 @@
     right: 0.75rem;
     top: 0.5rem;
 }
-
-.blazor-error-boundary {
-    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
-    padding: 1rem 1rem 1rem 3.7rem;
-    color: white;
-}
-
-.blazor-error-boundary::after {
-    content: "An error has occurred."
-}
+ 

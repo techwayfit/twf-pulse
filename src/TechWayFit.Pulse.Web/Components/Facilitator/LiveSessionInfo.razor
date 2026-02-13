@@ -26,44 +26,28 @@
                 Icon = "fas fa-users",
                 Value = ParticipantCount.ToString(),
                 Label = "Participants",
-                BackgroundGradient = "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
-                BorderColor = "#3b82f6",
-                IconGradient = "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-                ValueColor = "#1e40af",
-                IconShadowColor = "rgba(59, 130, 246, 0.3)"
+                Variant = "gray"
             },
             new StatCardData
             {
                 Icon = "fas fa-tasks",
                 Value = Activities.Count.ToString(),
                 Label = "Activities",
-                BackgroundGradient = "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)",
-                BorderColor = "#8b5cf6",
-                IconGradient = "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-                ValueColor = "#6d28d9",
-                IconShadowColor = "rgba(139, 92, 246, 0.3)"
+                Variant = "info"
             },
             new StatCardData
             {
                 Icon = "fas fa-play-circle",
                 Value = Activities.Count(a => a.Status == ActivityStatus.Open).ToString(),
                 Label = "Active",
-                BackgroundGradient = "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-                BorderColor = "#10b981",
-                IconGradient = "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                ValueColor = "#047857",
-                IconShadowColor = "rgba(16, 185, 129, 0.3)"
+                Variant = "blue"
             },
             new StatCardData
             {
                 Icon = "fas fa-check-circle",
                 Value = Activities.Count(a => a.Status == ActivityStatus.Closed).ToString(),
                 Label = "Completed",
-                BackgroundGradient = "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-                BorderColor = "#64748b",
-                IconGradient = "linear-gradient(135deg, #64748b 0%, #475569 100%)",
-                ValueColor = "#334155",
-                IconShadowColor = "rgba(100, 116, 139, 0.3)"
+                Variant = "green"
             }
         };
     }

@@ -15,20 +15,20 @@
     var childGroups = allGroups?.Where(g => g.Group.ParentGroupId == Model.Group.Id).OrderBy(g => g.Group.Name).ToList() ?? new List<TechWayFit.Pulse.Web.Models.GroupWithSessionsViewModel>();
 }
 
-<div class="card group-tree-card mb-2" data-group-id="@Model.Group.Id">
+<div class="card border shadow-sm mb-2" data-group-id="@Model.Group.Id">
     @* Header with expand/collapse *@
-    <div class="card-header p-2 cursor-pointer" onclick="toggleGroupExpand('@Model.Group.Id')">
+    <div class="card-header p-2 cursor-pointer user-select-none" onclick="toggleGroupExpand('@Model.Group.Id')">
         <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2 flex-grow-1">
                 @* Expand/Collapse Icon *@
-                <span class="expand-icon" id="expand-icon-@Model.Group.Id">
+                <span class="expand-icon fs-7 text-muted" id="expand-icon-@Model.Group.Id">
                     ▶
                 </span>
                 
                 @* Group Icon *@
                 @if (!string.IsNullOrEmpty(Model.Group.Color))
                 {
-                    <span style="font-size: 1.1rem; background: @Model.Group.Color; border-radius: 0.375rem; padding: 0.25rem 0.4rem; display: inline-flex; align-items: center; justify-content: center;">@Model.Group.Icon</span>
+                    <span class="d-inline-flex align-items-center justify-content-center rounded px-2 py-1" style="font-size: 1.1rem; background: @Model.Group.Color;">@Model.Group.Icon</span>
                 }
                 else
                 {
@@ -41,7 +41,7 @@
                     
                     @if (!string.IsNullOrEmpty(Model.Group.Description))
                     {
-                        <p class="text-muted mb-0 fs-7" style="margin-top: 0.25rem;">@Model.Group.Description</p>
+                        <p class="text-muted mb-0 fs-7 mt-1">@Model.Group.Description</p>
                     }
                 </div>
                 
@@ -49,22 +49,22 @@
                 <div class="d-flex align-items-center gap-2 ms-auto me-2">
                     @if (!string.IsNullOrEmpty(Model.Group.Color))
                     {
-                        <span class="badge" style="font-size: 0.65rem; padding: 0.2rem 0.4rem; background-color: @Model.Group.Color; color: white;">@levelLabel</span>
+                        <span class="badge fs-8 px-2 py-1 text-white" style="background-color: @Model.Group.Color;">@levelLabel</span>
                     }
                     else
                     {
-                        <span class="badge bg-@levelColor fs-8" style="padding: 0.2rem 0.4rem;">@levelLabel</span>
+                        <span class="badge bg-@levelColor fs-8 px-2 py-1">@levelLabel</span>
                     }
                     @if (Model.TotalSessionCount > 0)
                     {
-                        <span class="badge bg-secondary fs-8" style="padding: 0.2rem 0.4rem; white-space: nowrap;">@Model.TotalSessionCount @(Model.TotalSessionCount == 1 ? "session" : "sessions")</span>
+                        <span class="badge bg-secondary fs-8 px-2 py-1 text-nowrap">@Model.TotalSessionCount @(Model.TotalSessionCount == 1 ? "session" : "sessions")</span>
                     }
                 </div>
             </div>
             
             @* Actions Menu *@
             <div class="dropdown" onclick="event.stopPropagation()">
-                <button class="btn btn-outline-secondary btn-sm dropdown-toggle fs-7" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.25rem 0.5rem;">
+                <button class="btn btn-outline-secondary btn-sm dropdown-toggle fs-7 px-2 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     •••
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -93,18 +93,18 @@
     </div>
     
     @* Expandable Content *@
-    <div class="collapse group-content" id="content-@Model.Group.Id">
-        <div class="card-body p-2" style="padding-top: 0.5rem !important;">
+    <div class="collapse" id="content-@Model.Group.Id">
+        <div class="card-body p-2 pt-2">
             @* Sessions List *@
             @if (Model.Sessions.Any())
             {
-                <div class="sessions-section mb-2">
-                    <div class="sessions-list">
+                <div class="mb-2">
+                    <div class="sessions-list pe-2">
                         @foreach (var session in Model.Sessions)
                         {
-                            <div class="session-item p-2 mb-1">
+                            <div class="session-item bg-light rounded p-2 mb-1">
                                 <div class="d-flex align-items-start gap-2">
-                                    <span class="session-status-icon" style="margin-top: 2px;">
+                                    <span class="mt-1 lh-1">
                                         @if (session.IsCompleted)
                                         {
                                             <text>✅</text>
@@ -119,12 +119,12 @@
                                         }
                                     </span>
                                     <div class="flex-grow-1" style="min-width: 0;">
-                                        <a href="/facilitator/live?Code=@session.SessionCode" class="text-decoration-none fw-medium d-block text-truncate" style="font-size: 0.8rem; color: #334155;">
+                                        <a href="/facilitator/live?Code=@session.SessionCode" class="text-decoration-none fw-medium d-block text-truncate text-dark" style="font-size: 0.8rem;">
                                             @session.Title
                                         </a>
                                         @if (session.SessionStart.HasValue)
                                         {
-                                            <small class="text-muted d-block" style="font-size: 0.7rem; margin-top: 2px;">
+                                            <small class="text-muted d-block fs-7 mt-1">
                                                 📅 @session.SessionStart.Value.ToString("MMM dd, HH:mm")@(session.SessionEnd.HasValue ? $" - {session.SessionEnd.Value:HH:mm}" : "")
                                             </small>
                                         }
@@ -132,7 +132,7 @@
                                     <div class="text-end">
                                             <span class="badge text-bg-info">@session.SessionCode</span>
                                             </div>
-                                    <div class="text-muted text-end" style="font-size: 0.7rem; white-space: nowrap;">
+                                    <div class="text-muted text-end fs-7 text-nowrap">
                                         <div class="session-status-@session.Status.ToLower()">@session.Status</div>
                                         <div>Expires @session.ExpiresAt.ToString("MMM d")</div>
                                     </div>
@@ -144,14 +144,14 @@
             }
             
             @* Contextual Action Buttons *@
-            <div class="action-buttons">
+            <div class="d-flex gap-2 mt-3">
                 @if (Model.Group.Level < 3)
                 {
-                    <button class="btn btn-outline-primary" onclick="createSubGroup('@Model.Group.Id', @Model.Group.Level)">
+                    <button class="btn btn-outline-primary btn-sm fw-medium" onclick="createSubGroup('@Model.Group.Id', @Model.Group.Level)">
                         + Add @(Model.Group.Level == 1 ? "Level 2" : "Level 3") Group
                     </button>
                 }
-                <a href="/facilitator/create-session?groupId=@Model.Group.Id" class="btn btn-outline-success">
+                <a href="/facilitator/create-session?groupId=@Model.Group.Id" class="btn btn-outline-success btn-sm fw-medium">
                     + Add Session
                 </a>
             </div>
@@ -159,7 +159,7 @@
             @* Child Groups (Recursive) *@
             @if (childGroups.Any())
             {
-                <div class="child-groups ps-3" style="border-left: 2px solid #e3e8ef; margin-top: 0.5rem;">
+                <div class="child-groups ps-3 mt-2">
                     @foreach (var childGroup in childGroups)
                     {
                         @await Html.PartialAsync("_GroupCard", childGroup)
