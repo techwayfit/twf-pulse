@@ -98,6 +98,7 @@ window.savePollActivity = async function() {
         if (input.value) {
             const descInput = document.querySelectorAll('.poll-option-desc')[index];
             options.push({
+                id: `option_${index}`,
                 label: input.value,
                 description: descInput?.value || null
             });

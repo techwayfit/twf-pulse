@@ -1,9 +1,11 @@
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Enums
-@using TechWayFit.Pulse.Web.Services
+@using TechWayFit.Pulse.Application.Abstractions.Services
+@using TechWayFit.Pulse.Web.Api
 @using System.Text.Json
-@inject IPulseApiService ApiService
+@inject ISessionService SessionService
+@inject IActivityService ActivityService
 @inject ILogger<EditActivityModal> Logger
 
 <!-- Edit Activity Modal -->
@@ -296,17 +298,24 @@
                     return;
                 }
 
-                var response = await ApiService.PutAsync<UpdateActivityRequest, ActivityResponse>(
-                    $"/api/sessions/{SessionCode}/activities/{Activity.ActivityId}",
-                    editModel);
-
-                if (!response.Success)
+                // Get session entity
+                var sessionEntity = await SessionService.GetByCodeAsync(SessionCode);
+                if (sessionEntity == null)
                 {
-                    errorMessage = response.Errors?.FirstOrDefault()?.Message ?? "Failed to update activity";
+                    errorMessage = "Session not found";
                     isSaving = false;
                     StateHasChanged();
                     return;
                 }
+
+                // Update activity
+                await ActivityService.UpdateActivityAsync(
+                    sessionEntity.Id,
+                    Activity.ActivityId,
+                    editModel.Title ?? Activity.Title,
+                    editModel.Prompt,
+                    editModel.Config,
+                    editModel.DurationMinutes);
 
                 // Success (server persisted)
                 await OnActivityUpdated.InvokeAsync();
@@ -357,16 +366,18 @@
                 return;
             }
 
-            var response = await ApiService.DeleteAsync<object>(
-                $"/api/sessions/{SessionCode}/activities/{Activity.ActivityId}");
-
-            if (!response.Success)
+            // Get session entity
+            var sessionEntity = await SessionService.GetByCodeAsync(SessionCode);
+            if (sessionEntity == null)
             {
-                errorMessage = response.Errors?.FirstOrDefault()?.Message ?? "Failed to delete activity";
+                errorMessage = "Session not found";
                 isDeleting = false;
                 StateHasChanged();
                 return;
             }
+
+            // Delete activity
+            await ActivityService.DeleteActivityAsync(sessionEntity.Id, Activity.ActivityId);
 
             // Success
             await OnActivityDeleted.InvokeAsync();

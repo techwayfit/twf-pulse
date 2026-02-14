@@ -1,10 +1,13 @@
 @page "/participant/join"
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
-@inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
+@inject TechWayFit.Pulse.Application.Abstractions.Services.ISessionService SessionService
+@inject TechWayFit.Pulse.Application.Abstractions.Services.IParticipantService ParticipantService
+@inject TechWayFit.Pulse.Web.Api.IParticipantTokenStore ParticipantTokenStore
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Contracts.Models
+@using TechWayFit.Pulse.Web.Api
 @using System
 @using Microsoft.AspNetCore.SignalR.Client
 
@@ -354,7 +357,14 @@
       }
       
       // Load session data for new participants
-      sessionSummary = await ApiService.GetSessionAsync(sessionCode);
+      var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+      if (sessionEntity == null)
+      {
+        errorMessage = "Session not found.";
+        isLoading = false;
+        return;
+      }
+      sessionSummary = ApiMapper.ToSummary(sessionEntity);
       joinFormFields = sessionSummary?.JoinFormFields ?? new List<JoinFormFieldDto>();
 
       // Initialize field values
@@ -546,17 +556,34 @@
       .ToDictionary(kv => kv.Key, kv => kv.Value)
       };
 
-      var response = await ApiService.JoinAsParticipantAsync(sessionSummary.Code, request);
-      participantId = response.ParticipantId;
+      // Get session entity
+      var sessionEntity = await SessionService.GetByCodeAsync(sessionSummary.Code);
+      if (sessionEntity == null)
+      {
+        errorMessage = "Session not found.";
+        return;
+      }
+
+      // Join session
+      var participant = await ParticipantService.JoinAsync(
+        sessionEntity.Id,
+        request.DisplayName,
+        request.IsAnonymous,
+        request.Dimensions ?? new Dictionary<string, string?>(),
+        DateTimeOffset.UtcNow);
+
+      // Create participant token
+      var auth = ParticipantTokenStore.Create(sessionEntity.Id, participant.Id);
+      participantId = participant.Id;
       
       // Store participant info and token in browser storage to prevent duplicate joins
-      await StoreParticipantSession(response.ParticipantId, response.ParticipantToken, sessionSummary.Code);
+      await StoreParticipantSession(participant.Id, auth.Token, sessionSummary.Code);
       
       currentState = JoinState.Joined;
       
       // Redirect to activity page after a short delay
       await Task.Delay(1500);
-      Navigation.NavigateTo($"/participant/activity/{sessionSummary.Code}?Pid={response.ParticipantId}");
+      Navigation.NavigateTo($"/participant/activity/{sessionSummary.Code}?Pid={participant.Id}");
     }
     catch (Exception ex)
     {

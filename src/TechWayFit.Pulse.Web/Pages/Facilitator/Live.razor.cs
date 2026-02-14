@@ -8,6 +8,8 @@ using TechWayFit.Pulse.Contracts.Responses;
 using TechWayFit.Pulse.Web.Components.Facilitator;
 using TechWayFit.Pulse.Web.Hubs;
 using TechWayFit.Pulse.Web.Services;
+using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Web.Api;
 using System.Text.Json;
 
 namespace TechWayFit.Pulse.Web.Pages.Facilitator;
@@ -16,7 +18,9 @@ public partial class Live : IAsyncDisposable
 {
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IJSRuntime JS { get; set; } = default!;
-    [Inject] private IPulseApiService ApiService { get; set; } = default!;
+    [Inject] private ISessionService SessionService { get; set; } = default!;
+    [Inject] private IActivityService ActivityService { get; set; } = default!;
+    [Inject] private IParticipantService ParticipantService { get; set; } = default!;
     [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = default!;
     [Inject] private IClientTokenService TokenService { get; set; } = default!;
     [Inject] private ILogger<Live> Logger { get; set; } = default!;
@@ -263,19 +267,29 @@ public partial class Live : IAsyncDisposable
             sessionCode = Code;
 
             // Load session data
-            session = await ApiService.GetSessionAsync(sessionCode);
+            var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+            if (sessionEntity == null)
+            {
+                errorMessage = "Session not found.";
+                isLoading = false;
+                StateHasChanged();
+                return;
+            }
+            session = ApiMapper.ToSummary(sessionEntity);
 
             // Load activities
-            activities = (await ApiService.GetAgendaAsync(sessionCode)).ToList();
+            var activityEntities = await ActivityService.GetAgendaAsync(sessionEntity.Id);
+            activities = activityEntities.Select(ApiMapper.ToAgenda).ToList();
             currentActivity = activities.FirstOrDefault(a => a.Status == ActivityStatus.Open);
 
             Logger.LogInformation("LoadSession completed - currentActivity: {Title}, DurationMinutes: {Duration}, OpenedAt: {OpenedAt}",
      currentActivity?.Title, currentActivity?.DurationMinutes, currentActivity?.OpenedAt);
 
-            // Load initial participant count from API
+            // Load initial participant count
             try
             {
-                participantCount = await ApiService.GetParticipantCountAsync(sessionCode);
+                var participants = await ParticipantService.GetBySessionAsync(sessionEntity.Id);
+                participantCount = participants.Count;
             }
             catch (Exception ex)
             {
@@ -412,8 +426,24 @@ public partial class Live : IAsyncDisposable
                 return;
             }
 
-            // Call API with facilitator token
-            session = await ApiService.EndSessionAsync(sessionCode, token);
+            // Get session entity
+            var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+            if (sessionEntity == null)
+            {
+                errorMessage = "Session not found.";
+                StateHasChanged();
+                return;
+            }
+
+            // End session
+            await SessionService.SetStatusAsync(sessionEntity.Id, TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended, DateTimeOffset.UtcNow);
+
+            // Refresh session
+            sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+            if (sessionEntity != null)
+            {
+                session = ApiMapper.ToSummary(sessionEntity);
+            }
 
             // Session ended successfully - redirect to facilitator dashboard
             Navigation.NavigateTo("/facilitator/dashboard");
@@ -445,8 +475,24 @@ public partial class Live : IAsyncDisposable
                 return;
             }
 
-            // Call API with facilitator token
-            session = await ApiService.StartSessionAsync(sessionCode, token);
+            // Get session entity
+            var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+            if (sessionEntity == null)
+            {
+                errorMessage = "Session not found.";
+                StateHasChanged();
+                return;
+            }
+
+            // Start session
+            await SessionService.SetStatusAsync(sessionEntity.Id, TechWayFit.Pulse.Domain.Enums.SessionStatus.Live, DateTimeOffset.UtcNow);
+
+            // Refresh session
+            sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+            if (sessionEntity != null)
+            {
+                session = ApiMapper.ToSummary(sessionEntity);
+            }
         }
         catch (Exception ex)
         {
@@ -509,7 +555,15 @@ public partial class Live : IAsyncDisposable
                 return;
             }
 
-            await ApiService.OpenActivityAsync(sessionCode, activityId, token);
+            // Get session entity
+            var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+            if (sessionEntity == null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+
+            await ActivityService.OpenAsync(sessionEntity.Id, activityId, DateTimeOffset.UtcNow);
 
             // Reload session to get updated activity status
             await LoadSession();
@@ -543,7 +597,15 @@ public partial class Live : IAsyncDisposable
                 return;
             }
 
-            await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+            // Get session entity
+            var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+            if (sessionEntity == null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+
+            await ActivityService.CloseAsync(sessionEntity.Id, currentActivity.ActivityId, DateTimeOffset.UtcNow);
 
             // Reload session to get updated activity status
             await LoadSession();
@@ -588,11 +650,19 @@ public partial class Live : IAsyncDisposable
                 return;
             }
 
+            // Get session entity
+            var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+            if (sessionEntity == null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+
             // 2. Close current activity
-            await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+            await ActivityService.CloseAsync(sessionEntity.Id, currentActivity.ActivityId, DateTimeOffset.UtcNow);
 
             // 3. Open next activity
-            await ApiService.OpenActivityAsync(sessionCode, nextActivity.ActivityId, token);
+            await ActivityService.OpenAsync(sessionEntity.Id, nextActivity.ActivityId, DateTimeOffset.UtcNow);
 
             // 4. Reload session
             await LoadSession();
@@ -637,11 +707,19 @@ public partial class Live : IAsyncDisposable
                 return;
             }
 
+            // Get session entity
+            var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+            if (sessionEntity == null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+
             // 2. Close current activity
-            await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+            await ActivityService.CloseAsync(sessionEntity.Id, currentActivity.ActivityId, DateTimeOffset.UtcNow);
 
             // 3. Open previous activity
-            await ApiService.OpenActivityAsync(sessionCode, previousActivity.ActivityId, token);
+            await ActivityService.OpenAsync(sessionEntity.Id, previousActivity.ActivityId, DateTimeOffset.UtcNow);
 
             // 4. Reload session
             await LoadSession();
@@ -681,7 +759,14 @@ public partial class Live : IAsyncDisposable
                     return;
                 }
 
-                await ApiService.CloseActivityAsync(sessionCode, currentActivity.ActivityId, token);
+                var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+                if (sessionEntity == null)
+                {
+                    errorMessage = "Session not found.";
+                    StateHasChanged();
+                    return;
+                }
+                await ActivityService.CloseAsync(sessionEntity.Id, currentActivity.ActivityId, DateTimeOffset.UtcNow);
             }
             catch (Exception ex)
             {
@@ -705,7 +790,15 @@ public partial class Live : IAsyncDisposable
                 return;
             }
 
-            await ApiService.ReopenActivityAsync(sessionCode, activityId, token);
+            // Get session entity
+            var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+            if (sessionEntity == null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+
+            await ActivityService.ReopenAsync(sessionEntity.Id, activityId, DateTimeOffset.UtcNow);
 
             // Reload session to get updated activity status
             await LoadSession();
@@ -753,16 +846,22 @@ public partial class Live : IAsyncDisposable
                 return;
             }
 
-            // Update the activity with the new duration
-            var updateRequest = new UpdateActivityRequest
+            // Get session entity
+            var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+            if (sessionEntity == null)
             {
-                Title = currentActivity.Title,
-                Prompt = currentActivity.Prompt,
-                Config = currentActivity.Config,
-                DurationMinutes = minutes
-            };
+                errorMessage = "Session not found.";
+                return;
+            }
 
-            await ApiService.UpdateActivityAsync(sessionCode, currentActivity.ActivityId, updateRequest, token);
+            // Update the activity with the new duration
+            await ActivityService.UpdateActivityAsync(
+                sessionEntity.Id,
+                currentActivity.ActivityId,
+                currentActivity.Title,
+                currentActivity.Prompt,
+                currentActivity.Config,
+                minutes);
 
             // Give the database a moment to commit the transaction
             await Task.Delay(100);

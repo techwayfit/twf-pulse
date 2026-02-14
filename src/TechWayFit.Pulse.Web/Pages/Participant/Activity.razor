@@ -1,10 +1,14 @@
 @page "/participant/activity/{SessionCode}"
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
-@inject TechWayFit.Pulse.Web.Services.IPulseApiService ApiService
+@inject TechWayFit.Pulse.Application.Abstractions.Services.ISessionService SessionService
+@inject TechWayFit.Pulse.Application.Abstractions.Services.IActivityService ActivityService
+@inject TechWayFit.Pulse.Application.Abstractions.Services.IResponseService ResponseService
+@inject TechWayFit.Pulse.Web.Api.IParticipantTokenStore ParticipantTokenStore
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Enums
+@using TechWayFit.Pulse.Web.Api
 @using TechWayFit.Pulse.Web.Hubs
 @using TechWayFit.Pulse.Web.Components.Participant.Activities
 @using Microsoft.AspNetCore.SignalR.Client
@@ -262,12 +266,19 @@
 
         try
         {
-            session = await ApiService.GetSessionAsync(SessionCode);
+            var sessionEntity = await SessionService.GetByCodeAsync(SessionCode);
+            if (sessionEntity == null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+            session = ApiMapper.ToSummary(sessionEntity);
 
             // Load current activity
             if (session.CurrentActivityId.HasValue)
             {
-                var activities = await ApiService.GetAgendaAsync(SessionCode);
+                var agenda = await ActivityService.GetAgendaAsync(sessionEntity.Id);
+                var activities = agenda.Select(ApiMapper.ToAgenda).ToList();
                 var newActivity = activities.FirstOrDefault(a => a.ActivityId == session.CurrentActivityId);
 
                 // Reset submission state if activity changed
@@ -292,7 +303,8 @@
                 {
                     try
                     {
-                        var count = await ApiService.GetParticipantActivityResponseCountAsync(SessionCode, currentActivity.ActivityId, Pid.Value);
+                        var responses = await ResponseService.GetByParticipantAsync(sessionEntity.Id, Pid.Value);
+                        var count = responses.Count(r => r.ActivityId == currentActivity.ActivityId);
                         // If any responses exist, consider the participant as having submitted
                         hasSubmittedResponse = count > 0;
 
@@ -516,15 +528,30 @@
 
         try
         {
-            // Convert to proper request type
-            var request = new TechWayFit.Pulse.Contracts.Requests.SubmitResponseRequest
+            // Get session for validation
+            var sessionEntity = await SessionService.GetByCodeAsync(SessionCode);
+            if (sessionEntity == null)
             {
-                ParticipantId = Pid.Value,
-                Payload = payload
-            };
+                submitSuccess = false;
+                submitMessage = "Session not found.";
+                return;
+            }
 
-            // SECURITY: Pass participant token for validation
-            await ApiService.SubmitResponseAsync(SessionCode, currentActivity.ActivityId, request, participantToken);
+            // SECURITY: Validate participant token
+            if (!ParticipantTokenStore.IsValid(sessionEntity.Id, Pid.Value, participantToken))
+            {
+                submitSuccess = false;
+                submitMessage = "Invalid or expired participant token. Please rejoin the session.";
+                return;
+            }
+
+            // Submit response
+            await ResponseService.SubmitAsync(
+                sessionEntity.Id,
+                currentActivity.ActivityId,
+                Pid.Value,
+                payload,
+                DateTimeOffset.UtcNow);
 
             hasSubmittedResponse = true;
             totalResponsesSubmitted++;

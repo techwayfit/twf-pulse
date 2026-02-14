@@ -135,15 +135,35 @@ public sealed class PollDashboardService : IPollDashboardService
             var options = new List<PollOption>();
             if (root.TryGetProperty("options", out var optionsElement) && optionsElement.ValueKind == JsonValueKind.Array)
             {
+                var index = 0;
                 foreach (var optionElement in optionsElement.EnumerateArray())
                 {
-                    var id = optionElement.TryGetProperty("id", out var idElement) ? idElement.GetString() ?? "" : "";
-                    var label = optionElement.TryGetProperty("label", out var labelElement) ? labelElement.GetString() ?? "" : "";
-                    
-                    if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(label))
+                    // Handle both string and object formats
+                    if (optionElement.ValueKind == JsonValueKind.String)
                     {
-                        options.Add(new PollOption(id, label));
+                        // Legacy format: array of strings
+                        var label = optionElement.GetString();
+                        if (!string.IsNullOrEmpty(label))
+                        {
+                            options.Add(new PollOption($"option_{index}", label));
+                        }
                     }
+                    else if (optionElement.ValueKind == JsonValueKind.Object)
+                    {
+                        // Object format: {id?, label, description?}
+                        var label = optionElement.TryGetProperty("label", out var labelElement) ? labelElement.GetString() ?? "" : "";
+                        
+                        if (!string.IsNullOrEmpty(label))
+                        {
+                            // Get ID if present, otherwise generate one
+                            var id = optionElement.TryGetProperty("id", out var idElement) 
+                                ? idElement.GetString() ?? $"option_{index}" 
+                                : $"option_{index}";
+                            
+                            options.Add(new PollOption(id, label));
+                        }
+                    }
+                    index++;
                 }
             }
 

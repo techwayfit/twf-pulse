@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
+using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Contracts.Responses;
+using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Hubs;
 using TechWayFit.Pulse.Web.Services;
 
@@ -11,7 +13,9 @@ public partial class Presentation : IAsyncDisposable
 {
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IJSRuntime JS { get; set; } = default!;
-    [Inject] private IPulseApiService ApiService { get; set; } = default!;
+    [Inject] private ISessionService SessionService { get; set; } = default!;
+    [Inject] private IActivityService ActivityService { get; set; } = default!;
+    [Inject] private IParticipantService ParticipantService { get; set; } = default!;
     [Inject] private IClientTokenService TokenService { get; set; } = default!;
     [Inject] private ILogger<Presentation> Logger { get; set; } = default!;
 
@@ -144,7 +148,15 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
                 return;
             }
 
-            activities = (await ApiService.GetAgendaAsync(SessionCode)).ToList();
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session == null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+
+            var agenda = await ActivityService.GetAgendaAsync(session.Id);
+            activities = agenda.Select(ApiMapper.ToAgenda).ToList();
             activity = activities.FirstOrDefault(a => a.Status == Contracts.Enums.ActivityStatus.Open);
 
             if (activity == null)
@@ -158,7 +170,8 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
 
             try
             {
-                participantCount = await ApiService.GetParticipantCountAsync(SessionCode);
+                var participants = await ParticipantService.GetBySessionAsync(session.Id);
+                participantCount = participants.Count;
             }
             catch
             {
@@ -229,7 +242,11 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
             var token = await TokenService.GetFacilitatorTokenAsync(SessionCode);
             if (string.IsNullOrEmpty(token)) return;
 
-            await ApiService.CloseActivityAsync(SessionCode, activity.ActivityId, token);
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session != null)
+            {
+                await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
+            }
             Navigation.NavigateTo($"/facilitator/live?code={SessionCode}");
         }
         catch (Exception ex)
@@ -260,8 +277,12 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
 
             if (nextActivity == null) return;
 
-            await ApiService.CloseActivityAsync(SessionCode, activity.ActivityId, token);
-            await ApiService.OpenActivityAsync(SessionCode, nextActivity.ActivityId, token);
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session != null)
+            {
+                await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
+                await ActivityService.OpenAsync(session.Id, nextActivity.ActivityId, DateTimeOffset.UtcNow);
+            }
 
             await LoadPresentation();
         }
@@ -293,8 +314,12 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
 
             if (previousActivity == null) return;
 
-            await ApiService.CloseActivityAsync(SessionCode, activity.ActivityId, token);
-            await ApiService.OpenActivityAsync(SessionCode, previousActivity.ActivityId, token);
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session != null)
+            {
+                await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
+                await ActivityService.OpenAsync(session.Id, previousActivity.ActivityId, DateTimeOffset.UtcNow);
+            }
 
             await LoadPresentation();
         }

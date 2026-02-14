@@ -1,9 +1,10 @@
 @using TechWayFit.Pulse.Contracts.Responses
-@using TechWayFit.Pulse.Web.Services
+@using TechWayFit.Pulse.Application.Abstractions.Services
 @using Microsoft.AspNetCore.SignalR.Client
 @using TechWayFit.Pulse.Web.Hubs
 @namespace TechWayFit.Pulse.Web.Components.Dashboards
-@inject IPulseApiService ApiService
+@inject IGeneralFeedbackDashboardService GeneralFeedbackDashboardService
+@inject ISessionService SessionService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject ILogger<GeneralFeedbackDashboard> Logger
@@ -357,7 +358,18 @@
             errorMessage = string.Empty;
             StateHasChanged();
 
-            dashboard = await ApiService.GetGeneralFeedbackDashboardAsync(SessionCode, ActivityId, Filters);
+            // Get session by code
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session is null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+
+            dashboard = await GeneralFeedbackDashboardService.GetGeneralFeedbackDashboardAsync(
+                session.Id, 
+                ActivityId, 
+                Filters ?? new Dictionary<string, string?>());
         }
         catch (Exception ex)
         {

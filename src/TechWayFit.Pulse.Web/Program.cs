@@ -11,11 +11,9 @@ using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Application.Services;
 using TechWayFit.Pulse.Infrastructure.Persistence;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
-using TechWayFit.Pulse.Web.Data;
 using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Services;
 using TechWayFit.Pulse.Web.Configuration;
-using TechWayFit.Pulse.Web.Handlers;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -121,31 +119,9 @@ try
 
     // Add HttpContextAccessor for session access
     builder.Services.AddHttpContextAccessor();
-
-    builder.Services.AddSingleton<WeatherForecastService>();
+ 
     builder.Services.AddSingleton<IFacilitatorTokenStore, FacilitatorTokenStore>();
     builder.Services.AddSingleton<IParticipantTokenStore, ParticipantTokenStore>();
-
-    // Register authentication cookie handler
-    builder.Services.AddTransient<AuthenticationCookieHandler>();
-
-    // Add HttpClient for API service with dynamic base URL and authentication cookie forwarding
-    builder.Services.AddHttpClient<IPulseApiService, PulseApiService>((serviceProvider, client) =>
-    {
-        var httpContext = serviceProvider.GetService<IHttpContextAccessor>()?.HttpContext;
-        if (httpContext != null)
-        {
-            var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
-            client.BaseAddress = new Uri(baseUrl);
-        }
-        else
-        {
-            // Fallback for command line scenarios
-            client.BaseAddress = new Uri("https://localhost:7100");
-        }
-        client.Timeout = TimeSpan.FromSeconds(30);
-    })
-    .AddHttpMessageHandler<AuthenticationCookieHandler>();
 
     // Add default HttpClientFactory for dev/testing pages
     builder.Services.AddHttpClient();
