@@ -30,93 +30,14 @@
     {
       <div class="text-center py-4">
   <div class="mb-2">
-         <i class="fas fa-inbox fa-2x text-muted"></i>
+         <i class="fas fa-inbox fa-2x" style="color: #a0aec0;"></i>
      </div>
-    <p class="text-muted small mb-0">
+    <p class="small mb-0" style="color: #a0aec0;">
        Waiting for responses...
   </p>
         </div>
     }
 </div>
-
-<style>
-    .live-submissions-feed {
-   height: 100%;
-      display: flex;
-    flex-direction: column;
-    }
-
-    .submissions-list {
-        display: flex;
-        flex-direction: column-reverse;
-        gap: 0.75rem;
-    }
-
-    .submission-item {
-        background: white;
-     border-left: 3px solid #0d6efd;
-        padding: 0.75rem;
-        border-radius: 4px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        animation: slideInRight 0.3s ease;
-        transition: all 0.2s ease;
-    }
-
-    .submission-item:hover {
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-        transform: translateX(-2px);
-    }
-
-    .submission-item.recent {
-        border-left-color: #198754;
- background: linear-gradient(to right, #d1f4dd 0%, white 20%);
-    }
-
-    @@keyframes slideInRight {
-        from {
-opacity: 0;
-            transform: translateX(20px);
-        }
-        to {
- opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    .submission-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-        font-size: 0.75rem;
-    }
-
-    .submission-time {
-        color: #6c757d;
-        font-weight: 500;
-}
-
- .submission-participant {
-        color: #495057;
-        font-weight: 600;
-        max-width: 100px;
-        overflow: hidden;
-     text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .submission-content {
-        font-size: 0.875rem;
-     color: #212529;
-        word-break: break-word;
-    }
-
-    .submission-content .badge {
-        font-size: 0.75rem;
-     margin-right: 0.25rem;
-        margin-bottom: 0.25rem;
-    }
-</style>
 
 @code {
     [Parameter, EditorRequired]

@@ -1,0 +1,191 @@
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Application.Abstractions.Services
+@inject IDashboardService DashboardService
+@inject ISessionService SessionService
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<div class="activity-display">
+    <div class="activity-header">
+        <div class="activity-title-section">
+            <span class="activity-badge badge-quadrant">Quadrant Feedback</span>
+            <h2>@ActivityTitle</h2>
+            @if (!string.IsNullOrEmpty(ActivityPrompt))
+            {
+                <p class="activity-description">@ActivityPrompt</p>
+            }
+        </div>
+        @if (DurationMinutes.HasValue && OpenedAt.HasValue)
+        {
+            <div class="activity-timer">
+                <div class="timer-label">Time Remaining</div>
+                <div class="timer-value" id="timer-display">@TimeRemaining</div>
+            </div>
+        }
+    </div>
+
+    <div class="activity-content">
+        <div class="quadrant-container" style="position: relative; width: 100%; aspect-ratio: 1; max-width: 800px; margin: 0 auto;">
+            <!-- Quadrant Grid -->
+            <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
+                <!-- Axes -->
+                <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+                <line x1="50" y1="0" x2="50" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+                
+                <!-- Data Points -->
+                @foreach (var point in QuadrantPoints)
+                {
+                    var xPos = point.X;
+                    var yPos = 100 - point.Y; // Invert Y for SVG coordinate system
+                    <circle cx="@xPos" cy="@yPos" r="2" fill="#10B981" opacity="0.8"/>
+                }
+            </svg>
+            
+            <!-- Labels as HTML overlay -->
+            <div style="position: absolute; top: 20%; left: 20%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.6); font-size: 1.2rem;">Q2</div>
+            <div style="position: absolute; top: 20%; left: 80%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.6); font-size: 1.2rem;">Q1</div>
+            <div style="position: absolute; top: 80%; left: 20%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.6); font-size: 1.2rem;">Q3</div>
+            <div style="position: absolute; top: 80%; left: 80%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.6); font-size: 1.2rem;">Q4</div>
+            
+            @if (!QuadrantPoints.Any())
+            {
+                <div class="waiting-state" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <svg class="waiting-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 3V21H21V3H3ZM19 19H5V5H19V19ZM11 7H13V13H11V7ZM11 15H13V17H11V15Z"/>
+                    </svg>
+                    <h3>Waiting for feedback</h3>
+                    <p>Points will appear as participants place their feedback</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string SessionCode { get; set; }
+
+    [Parameter, EditorRequired]
+    public required Guid ActivityId { get; set; }
+
+    [Parameter]
+    public string ActivityTitle { get; set; } = "Quadrant Feedback";
+
+    [Parameter]
+    public string? ActivityPrompt { get; set; }
+
+    [Parameter]
+    public int? DurationMinutes { get; set; }
+
+    [Parameter]
+    public DateTimeOffset? OpenedAt { get; set; }
+
+    private HubConnection? hubConnection;
+    private List<QuadrantPoint> QuadrantPoints { get; set; } = new();
+    private string TimeRemaining { get; set; } = "--:--";
+    private System.Threading.Timer? timer;
+    private System.Threading.Timer? dataRefreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        await InitializeSignalR();
+        StartTimer();
+        StartDataRefresh();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session == null) return;
+
+            var dashboard = await DashboardService.GetDashboardAsync(
+                session.Id,
+                ActivityId,
+                new Dictionary<string, string?>(),
+                CancellationToken.None);
+
+            QuadrantPoints = dashboard.QuadrantPoints.ToList();
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading quadrant data: {ex.Message}");
+        }
+    }
+
+    private async Task InitializeSignalR()
+    {
+        var hubUrl = Navigation.ToAbsoluteUri($"/hubs/workshop");
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(hubUrl)
+            .WithAutomaticReconnect()
+            .Build();
+
+        hubConnection.On<TechWayFit.Pulse.Web.Hubs.ResponseReceivedEvent>("ResponseReceived", async (e) =>
+        {
+            if (e.SessionCode == SessionCode && e.ActivityId == ActivityId)
+            {
+                await LoadData();
+            }
+        });
+
+        try
+        {
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error connecting to hub: {ex.Message}");
+        }
+    }
+
+    private void StartDataRefresh()
+    {
+        dataRefreshTimer = new System.Threading.Timer(async _ => await LoadData(), null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+    }
+
+    private void StartTimer()
+    {
+        if (DurationMinutes.HasValue && OpenedAt.HasValue)
+        {
+            timer = new System.Threading.Timer(UpdateTimer, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        }
+    }
+
+    private void UpdateTimer(object? state)
+    {
+        if (DurationMinutes.HasValue && OpenedAt.HasValue)
+        {
+            var endTime = OpenedAt.Value.AddMinutes(DurationMinutes.Value);
+            var remaining = endTime - DateTimeOffset.UtcNow;
+
+            if (remaining.TotalSeconds > 0)
+            {
+                TimeRemaining = $"{remaining.Minutes}:{remaining.Seconds:D2}";
+            }
+            else
+            {
+                TimeRemaining = "0:00";
+            }
+
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        timer?.Dispose();
+        dataRefreshTimer?.Dispose();
+
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

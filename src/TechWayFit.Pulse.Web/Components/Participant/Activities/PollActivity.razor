@@ -126,9 +126,7 @@
         {
             try
             {
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, IncludeFields = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-                pollConfig = JsonSerializer.Deserialize<PollConfig>(Parameters.Config, options);
-                Debug.WriteLine($"Poll config parsed. Options count: {pollConfig?.Options?.Count ?? 0}");
+                pollConfig = ParsePollConfig(Parameters.Config);
             }
             catch (JsonException ex)
             {
@@ -136,6 +134,74 @@
                 Debug.WriteLine($"Config JSON: {Parameters.Config}");
             }
         }
+    }
+
+    private PollConfig? ParsePollConfig(string configJson)
+    {
+        using var document = JsonDocument.Parse(configJson);
+        var root = document.RootElement;
+
+        var options = new List<PollOption>();
+        
+        // Parse options - handle both string array (legacy/AI) and object array (standard) formats
+        if (root.TryGetProperty("options", out var optionsElement) && optionsElement.ValueKind == JsonValueKind.Array)
+        {
+            var index = 0;
+            foreach (var optionElement in optionsElement.EnumerateArray())
+            {
+                if (optionElement.ValueKind == JsonValueKind.String)
+                {
+                    // Legacy format: array of strings
+                    var label = optionElement.GetString();
+                    if (!string.IsNullOrEmpty(label))
+                    {
+                        options.Add(new PollOption($"option_{index}", label));
+                    }
+                }
+                else if (optionElement.ValueKind == JsonValueKind.Object)
+                {
+                    // Standard format: {id, label, description?}
+                    var id = optionElement.TryGetProperty("id", out var idElement) 
+                        ? idElement.GetString() ?? $"option_{index}" 
+                        : $"option_{index}";
+                    var label = optionElement.TryGetProperty("label", out var labelElement) 
+                        ? labelElement.GetString() ?? "" 
+                        : "";
+                    var description = optionElement.TryGetProperty("description", out var descElement) 
+                        ? descElement.GetString() 
+                        : null;
+
+                    if (!string.IsNullOrEmpty(label))
+                    {
+                        options.Add(new PollOption(id, label, description));
+                    }
+                }
+                index++;
+            }
+        }
+
+        // Parse other properties with defaults
+        var allowMultiple = root.TryGetProperty("allowMultiple", out var allowMultipleElement) 
+            && allowMultipleElement.GetBoolean();
+        var allowCustomOption = root.TryGetProperty("allowCustomOption", out var allowCustomElement) 
+            && allowCustomElement.GetBoolean();
+        var customPlaceholder = root.TryGetProperty("customOptionPlaceholder", out var placeholderElement) 
+            ? placeholderElement.GetString() 
+            : "Other (please specify)";
+        var minSelections = root.TryGetProperty("minSelections", out var minElement) 
+            ? minElement.GetInt32() 
+            : 1;
+        var maxSelections = root.TryGetProperty("maxSelections", out var maxElement) 
+            ? (int?)maxElement.GetInt32() 
+            : null;
+
+        return new PollConfig(
+            options,
+            allowMultiple,
+            minSelections,
+            maxSelections,
+            allowCustomOption,
+            customPlaceholder);
     }
 
     private void SelectOption(string optionId)

@@ -489,7 +489,7 @@ For each activity, return:
 - config: Activity-specific configuration object
 
 Activity Guidelines:
-- Poll: Use for quick consensus, voting, or decision-making. Config should include 'options' array with 2-6 choices. Set MaxResponsesPerParticipant (1 is typical).
+- Poll: Use for quick consensus, voting, or decision-making. Config must include 'options' as array of objects with {""id"": ""opt-1"", ""label"": ""Option text"", ""description"": ""Optional detail""}. Provide 2-6 choices with unique IDs (opt-1, opt-2, etc.). Set MaxResponsesPerParticipant (1 is typical). Optionally set allowMultiple: true for multi-select.
 - WordCloud: Use for brainstorming or sentiment capture. Config should set 'maxWords' (1-3), 'allowMultipleSubmissions', and MaxSubmissionsPerParticipant (1-3 is typical).
 - Rating: Use for satisfaction or confidence checks. Config should set 'scale' (5 or 10), 'minLabel', 'maxLabel', 'allowComments', and MaxResponsesPerParticipant (1 is typical).
 - GeneralFeedback: Use for open-ended input. Config can include 'categories' for organization and MaxResponsesPerParticipant (1-5 is typical).

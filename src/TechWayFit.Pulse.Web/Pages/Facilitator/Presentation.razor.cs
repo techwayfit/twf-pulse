@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Contracts.Responses;
+using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Hubs;
 using TechWayFit.Pulse.Web.Services;
@@ -26,113 +27,51 @@ public partial class Presentation : IAsyncDisposable
 
     private AgendaActivityResponse? activity;
     private List<AgendaActivityResponse> activities = new();
+    private Session? session;
     private int participantCount = 0;
     private int responseCount = 0;
     private bool hasPrevious = false;
     private bool hasNext = false;
     private bool isLoading = true;
     private bool isPerformingAction = false;
+    private bool isFullscreen = false;
     private string errorMessage = string.Empty;
     private HubConnection? hubConnection;
+    private bool _disposed = false;
+    private CancellationTokenSource? _autoFullscreenCts;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadPresentation();
         await SetupSignalR();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
+        
+        // Try to enter fullscreen on load
+        _autoFullscreenCts = new CancellationTokenSource();
+        _ = Task.Run(async () =>
         {
             try
             {
-                // Enter fullscreen mode automatically
-                await JS.InvokeVoidAsync("eval", @"
-          // Request fullscreen
-         const elem = document.documentElement;
-         if (elem.requestFullscreen) {
-   elem.requestFullscreen().catch(err => {
-    console.log('Fullscreen request denied:', err);
-              });
-     } else if (elem.webkitRequestFullscreen) {
-     elem.webkitRequestFullscreen();
-          } else if (elem.msRequestFullscreen) {
-          elem.msRequestFullscreen();
-    }
-          ");
-
-                await JS.InvokeVoidAsync("eval", @"
-     let timerInterval = null;
-
-       function startPresenterTimer() {
-           const timerEl = document.getElementById('activity-timer-presenter');
-      if (!timerEl) return;
-
-     const durationMinutes = parseInt(timerEl.dataset.duration);
-      const openedAt = new Date(timerEl.dataset.openedAt);
-    const timerText = timerEl.querySelector('.timer-text');
-
-             if (timerInterval) clearInterval(timerInterval);
-
-        function updateTimer() {
-             const now = new Date();
-      const elapsedMs = now - openedAt;
-           const elapsedSeconds = Math.floor(elapsedMs / 1000);
-    const totalSeconds = durationMinutes * 60;
-      const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
-
-     const minutes = Math.floor(remainingSeconds / 60);
-       const seconds = remainingSeconds % 60;
-
-      timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-          if (remainingSeconds === 0) {
-   timerEl.classList.add('timer-expired');
-        timerText.textContent = 'Time\\'s Up!';
-               } else if (remainingSeconds <= 60) {
-  timerEl.classList.add('timer-warning');
-          timerEl.classList.remove('timer-expired');
-            } else {
-        timerEl.classList.remove('timer-warning', 'timer-expired');
- }
-     }
-
-         updateTimer();
-    timerInterval = setInterval(updateTimer, 1000);
-  }
-
-            startPresenterTimer();
-
-       // ESC key to exit fullscreen and return to live view
-               document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-         e.preventDefault(); // Prevent default ESC behavior
-     
- // Exit fullscreen first
-  if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
-          if (document.exitFullscreen) {
-    document.exitFullscreen();
-          } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
-       }
-        }
-       
-       // Navigate after a short delay to allow fullscreen to exit
-setTimeout(() => {
-window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
-         }, 200);
-  }
-           });
-  ");
+                await Task.Delay(500, _autoFullscreenCts.Token);
+                if (!_disposed)
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        try
+                        {
+                            await EnterFullscreen();
+                        }
+                        catch
+                        {
+                            // Ignore errors - fullscreen may not be allowed on auto-load
+                        }
+                    });
+                }
             }
-            catch (Exception ex)
+            catch (TaskCanceledException)
             {
-                Logger.LogError(ex, "Failed to initialize presenter mode");
+                // Component disposed, ignore
             }
-        }
+        });
     }
 
     private async Task LoadPresentation()
@@ -148,7 +87,7 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
                 return;
             }
 
-            var session = await SessionService.GetByCodeAsync(SessionCode);
+            session = await SessionService.GetByCodeAsync(SessionCode);
             if (session == null)
             {
                 errorMessage = "Session not found.";
@@ -242,7 +181,6 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
             var token = await TokenService.GetFacilitatorTokenAsync(SessionCode);
             if (string.IsNullOrEmpty(token)) return;
 
-            var session = await SessionService.GetByCodeAsync(SessionCode);
             if (session != null)
             {
                 await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
@@ -277,7 +215,6 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
 
             if (nextActivity == null) return;
 
-            var session = await SessionService.GetByCodeAsync(SessionCode);
             if (session != null)
             {
                 await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
@@ -314,7 +251,6 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
 
             if (previousActivity == null) return;
 
-            var session = await SessionService.GetByCodeAsync(SessionCode);
             if (session != null)
             {
                 await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
@@ -339,15 +275,7 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
         try
         {
             // Exit fullscreen mode first
-            await JS.InvokeVoidAsync("eval", @"
-        if (document.exitFullscreen) {
-    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-       document.webkitExitFullscreen();
-} else if (document.msExitFullscreen) {
-      document.msExitFullscreen();
-    }
-    ");
+            await JS.InvokeVoidAsync("eval", "if (document.exitFullscreen) document.exitFullscreen();");
 
             // Wait a bit for fullscreen to exit
             await Task.Delay(200);
@@ -363,8 +291,98 @@ window.location.href = '/facilitator/live?code=' + '" + SessionCode + @"';
         }
     }
 
+    private async Task EnterFullscreen()
+    {
+        if (_disposed)
+        {
+            Logger.LogDebug("Component disposed, skipping fullscreen");
+            return;
+        }
+
+        try
+        {
+            Logger.LogInformation("EnterFullscreen called");
+            
+            // Try entering fullscreen
+            await JS.InvokeVoidAsync("eval", @"
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().then(() => {
+                        console.log('Fullscreen entered successfully');
+                    }).catch(err => {
+                        console.log('Fullscreen blocked (expected on auto-load):', err.message);
+                    });
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                } else {
+                    console.error('Fullscreen API not supported');
+                }
+            ");
+            
+            if (_disposed) return;
+            
+            // Check if we actually entered fullscreen after a short delay
+            await Task.Delay(300);
+            
+            if (_disposed) return;
+            
+            var isNowFullscreen = await JS.InvokeAsync<bool>("eval", @"
+                !!(document.fullscreenElement || 
+                   document.webkitFullscreenElement || 
+                   document.mozFullScreenElement || 
+                   document.msFullscreenElement)
+            ");
+            
+            isFullscreen = isNowFullscreen;
+            StateHasChanged();
+            
+            Logger.LogInformation($"Fullscreen state: {isFullscreen}");
+        }
+        catch (JSDisconnectedException)
+        {
+            Logger.LogDebug("Circuit disconnected, cannot enter fullscreen");
+            isFullscreen = false;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to enter fullscreen");
+            isFullscreen = false;
+            if (!_disposed)
+            {
+                StateHasChanged();
+            }
+        }
+    }
+
+    // Computed properties for layout
+    private string SessionTitle => session?.Title ?? "Workshop Session";
+    private string? SessionTTL
+    {
+        get
+        {
+            if (session == null) return null;
+            var ttl = session.ExpiresAt - DateTimeOffset.UtcNow;
+            if (ttl.TotalHours > 0)
+            {
+                return $"{(int)ttl.TotalHours}h";
+            }
+            return null;
+        }
+    }
+    private int CurrentActivityNumber => activity?.Order ?? 0;
+    private int TotalActivities => activities.Count;
+
     public async ValueTask DisposeAsync()
     {
+        if (_disposed) return;
+        _disposed = true;
+        
+        // Cancel any pending fullscreen attempts
+        _autoFullscreenCts?.Cancel();
+        _autoFullscreenCts?.Dispose();
+        
         if (hubConnection != null)
         {
             try

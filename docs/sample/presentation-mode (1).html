@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentation Mode - API Design & Technical Standards</title>
+    <style>
+        :root {
+            /* Primary Brand Colors */
+            --pulse-blue: #0EA5E9;
+            --pulse-green: #10B981;
+            --pulse-gradient: linear-gradient(135deg, #0EA5E9 0%, #10B981 100%);
+            
+            /* Brand Color Variations */
+            --pulse-blue-light: #38BDF8;
+            --pulse-blue-dark: #0284C7;
+            --pulse-green-light: #34D399;
+            --pulse-green-dark: #059669;
+            
+            /* Semantic Colors */
+            --pulse-success: #10B981;
+            --pulse-warning: #F59E0B;
+            --pulse-danger: #EF4444;
+            --pulse-info: #0EA5E9;
+            
+            /* Neutral Grays */
+            --pulse-gray-50: #F9FAFB;
+            --pulse-gray-100: #F3F4F6;
+            --pulse-gray-200: #E5E7EB;
+            --pulse-gray-300: #D1D5DB;
+            --pulse-gray-400: #9CA3AF;
+            --pulse-gray-500: #6B7280;
+            --pulse-gray-600: #4B5563;
+            --pulse-gray-700: #374151;
+            --pulse-gray-800: #1F2937;
+            --pulse-gray-900: #111827;
+            
+            /* Typography */
+            --pulse-font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --pulse-font-mono: 'Space Mono', 'Courier New', monospace;
+            
+            /* Spacing */
+            --pulse-spacing-xs: 0.25rem;
+            --pulse-spacing-sm: 0.5rem;
+            --pulse-spacing-md: 1rem;
+            --pulse-spacing-lg: 1.5rem;
+            --pulse-spacing-xl: 2rem;
+            --pulse-spacing-2xl: 3rem;
+            
+            /* Border Radius */
+            --pulse-radius-sm: 6px;
+            --pulse-radius-md: 8px;
+            --pulse-radius-lg: 12px;
+            --pulse-radius-xl: 16px;
+            --pulse-radius-full: 9999px;
+            
+            /* Shadows */
+            --pulse-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --pulse-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --pulse-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --pulse-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --pulse-shadow-gradient: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--pulse-font-family);
+            background: var(--pulse-gradient);
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .presentation-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Header Bar */
+        .presentation-header {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: var(--pulse-spacing-lg) var(--pulse-spacing-2xl);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .session-info h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .session-meta {
+            font-size: 14px;
+            opacity: 0.8;
+            display: flex;
+            gap: var(--pulse-spacing-lg);
+            align-items: center;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--pulse-spacing-sm);
+            background: rgba(239, 68, 68, 0.2);
+            padding: 6px 12px;
+            border-radius: var(--pulse-radius-full);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--pulse-danger);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .presentation-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .participant-count {
+            display: flex;
+            align-items: center;
+            gap: var(--pulse-spacing-sm);
+            background: rgba(255, 255, 255, 0.1);
+            padding: var(--pulse-spacing-sm) var(--pulse-spacing-md);
+            border-radius: var(--pulse-radius-full);
+            font-size: 14px;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: var(--pulse-spacing-sm) var(--pulse-spacing-md);
+            border-radius: var(--pulse-radius-md);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--pulse-spacing-sm);
+            font-family: var(--pulse-font-family);
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .exit-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .exit-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        /* Main Content Area */
+        .presentation-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: var(--pulse-spacing-2xl);
+            overflow: hidden;
+        }
+
+        /* Activity Display */
+        .activity-display {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--pulse-radius-xl);
+            padding: 60px;
+            color: var(--pulse-gray-800);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--pulse-shadow-xl);
+        }
+
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--pulse-spacing-2xl);
+        }
+
+        .activity-title-section {
+            flex: 1;
+        }
+
+        .activity-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: var(--pulse-radius-full);
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: var(--pulse-spacing-md);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-workshop { background: #dbeafe; color: var(--pulse-blue-dark); }
+        .badge-poll { background: #dcfce7; color: var(--pulse-green-dark); }
+        .badge-feedback { background: #fef3c7; color: #92400e; }
+        .badge-rating { background: #ffe4e6; color: #be123c; }
+        .badge-quadrant { background: #f3e8ff; color: #6b21a8; }
+
+        .activity-title-section h2 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.2;
+            color: var(--pulse-gray-900);
+        }
+
+        .activity-description {
+            font-size: 20px;
+            color: var(--pulse-gray-500);
+            line-height: 1.6;
+        }
+
+        .activity-timer {
+            text-align: right;
+        }
+
+        .timer-label {
+            font-size: 14px;
+            color: var(--pulse-gray-500);
+            margin-bottom: var(--pulse-spacing-sm);
+        }
+
+        .timer-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--pulse-gray-900);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Activity Content Area */
+        .activity-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: var(--pulse-spacing-xl);
+            overflow: auto;
+        }
+
+        /* Word Cloud View */
+        .word-cloud-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--pulse-gray-50) 0%, #e0f2fe 100%);
+            border-radius: var(--pulse-radius-xl);
+            padding: var(--pulse-spacing-2xl);
+            position: relative;
+        }
+
+        .word-cloud-placeholder {
+            text-align: center;
+            color: var(--pulse-gray-400);
+        }
+
+        .word-cloud-placeholder svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: var(--pulse-spacing-lg);
+            opacity: 0.3;
+        }
+
+        .word-cloud-placeholder p {
+            font-size: 18px;
+        }
+
+        .word-cloud-placeholder .sub {
+            font-size: 14px;
+            margin-top: var(--pulse-spacing-sm);
+            opacity: 0.7;
+        }
+
+        /* Response Stats */
+        .response-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--pulse-spacing-lg);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--pulse-gray-50) 0%, var(--pulse-gray-100) 100%);
+            padding: 24px;
+            border-radius: var(--pulse-radius-lg);
+            text-align: center;
+            border: 1px solid var(--pulse-gray-200);
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--pulse-gray-900);
+            margin-bottom: var(--pulse-spacing-sm);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--pulse-gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Footer Navigation */
+        .presentation-footer {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: var(--pulse-spacing-lg) var(--pulse-spacing-2xl);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .activity-progress {
+            display: flex;
+            align-items: center;
+            gap: var(--pulse-spacing-lg);
+        }
+
+        .progress-text {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--pulse-success);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            gap: var(--pulse-spacing-md);
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px var(--pulse-spacing-lg);
+            border-radius: var(--pulse-radius-md);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: var(--pulse-spacing-sm);
+            font-weight: 500;
+            font-family: var(--pulse-font-family);
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .nav-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Waiting State */
+        .waiting-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .waiting-icon {
+            width: 100px;
+            height: 100px;
+            margin-bottom: var(--pulse-spacing-xl);
+            opacity: 0.3;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .waiting-state h3 {
+            font-size: 32px;
+            margin-bottom: 12px;
+            color: var(--pulse-gray-900);
+        }
+
+        .waiting-state p {
+            font-size: 18px;
+            color: var(--pulse-gray-500);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .activity-title-section h2 {
+                font-size: 32px;
+            }
+            .timer-value {
+                font-size: 36px;
+            }
+            .response-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Header -->
+        <div class="presentation-header">
+            <div class="session-info">
+                <h1>API Design & Technical Standards</h1>
+                <div class="session-meta">
+                    <span>Code: 304-939-MD0K</span>
+                    <span>TTL: 4h</span>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span>LIVE</span>
+                    </div>
+                </div>
+            </div>
+            <div class="presentation-controls">
+                <div class="participant-count">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 8C10.21 8 12 6.21 12 4C12 1.79 10.21 0 8 0C5.79 0 4 1.79 4 4C4 6.21 5.79 8 8 8ZM8 10C5.33 10 0 11.34 0 14V16H16V14C16 11.34 10.67 10 8 10Z" fill="currentColor"/>
+                    </svg>
+                    <span>1 Participant</span>
+                </div>
+                <button class="control-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M13 1H3C1.89543 1 1 1.89543 1 3V13C1 14.1046 1.89543 15 3 15H13C14.1046 15 15 14.1046 15 13V3C15 1.89543 14.1046 1 13 1Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M1 6H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M6 1V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Grid View
+                </button>
+                <button class="control-btn exit-btn">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M6 14H2C1.44772 14 1 13.5523 1 13V3C1 2.44772 1.44772 2 2 2H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M11 11L15 7L11 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M15 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Exit
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="presentation-content">
+            <div class="activity-display">
+                <div class="activity-header">
+                    <div class="activity-title-section">
+                        <span class="activity-badge badge-workshop">Workshop Live</span>
+                        <h2>API Design Principles</h2>
+                        <p class="activity-description">What principles should guide our API design?</p>
+                    </div>
+                    <div class="activity-timer">
+                        <div class="timer-label">Time Remaining</div>
+                        <div class="timer-value">5:00</div>
+                    </div>
+                </div>
+
+                <div class="activity-content">
+                    <!-- Response Stats -->
+                    <div class="response-stats">
+                        <div class="stat-card">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Responses</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Participants</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Total Words</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Unique Words</div>
+                        </div>
+                    </div>
+
+                    <!-- Word Cloud Display -->
+                    <div class="word-cloud-container">
+                        <div class="word-cloud-placeholder">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4C9.11 4 6.6 5.64 5.35 8.04C2.34 8.36 0 10.91 0 14C0 17.31 2.69 20 6 20H19C21.76 20 24 17.76 24 15C24 12.36 21.95 10.22 19.35 10.04Z"/>
+                            </svg>
+                            <p>No words to display yet</p>
+                            <p class="sub">Word cloud will appear as participants submit their responses</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Navigation -->
+        <div class="presentation-footer">
+            <div class="activity-progress">
+                <span class="progress-text">Activity 1 of 7</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 14%;"></div>
+                </div>
+            </div>
+            <div class="navigation-buttons">
+                <button class="nav-btn" disabled>
+                    <svg viewBox="0 0 16 16" fill="none">
+                        <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Previous
+                </button>
+                <button class="nav-btn">
+                    Next
+                    <svg viewBox="0 0 16 16" fill="none">
+                        <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Timer countdown simulation
+        let timeRemaining = 300; // 5 minutes in seconds
+        const timerElement = document.querySelector('.timer-value');
+        
+        function updateTimer() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeRemaining > 0) {
+                timeRemaining--;
+            }
+        }
+        
+        // Update timer every second
+        setInterval(updateTimer, 1000);
+        
+        // Simulate real-time stat updates
+        function simulateStats() {
+            const statValues = document.querySelectorAll('.stat-value');
+            setTimeout(() => {
+                statValues[0].textContent = Math.floor(Math.random() * 5) + 1;
+                statValues[1].textContent = Math.floor(Math.random() * 3) + 1;
+                statValues[2].textContent = Math.floor(Math.random() * 20) + 5;
+                statValues[3].textContent = Math.floor(Math.random() * 15) + 3;
+            }, 3000);
+        }
+        
+        // Exit presentation mode
+        document.querySelector('.exit-btn').addEventListener('click', () => {
+            if (confirm('Exit presentation mode?')) {
+                // Handle exit
+                console.log('Exiting presentation mode');
+            }
+        });
+        
+        // Fullscreen toggle
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        // Escape key to exit fullscreen
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.fullscreenElement) {
+                // Handle escape
+            }
+        });
+    </script>
+</body>
+</html>

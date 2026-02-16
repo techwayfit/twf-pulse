@@ -1,0 +1,133 @@
+<div class="presentation-container">
+    <!-- Header -->
+    <div class="presentation-header">
+        <div class="session-info">
+            <h1>@SessionTitle</h1>
+            <div class="session-meta">
+                <span>Code: @SessionCode</span>
+                @if (!string.IsNullOrEmpty(SessionTTL))
+                {
+                    <span>TTL: @SessionTTL</span>
+                }
+                <div class="live-indicator">
+                    <div class="live-dot"></div>
+                    <span>LIVE</span>
+                </div>
+            </div>
+        </div>
+        <div class="presentation-controls">
+            @if (ParticipantCount.HasValue)
+            {
+                <div class="participant-count">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 8C10.21 8 12 6.21 12 4C12 1.79 10.21 0 8 0C5.79 0 4 1.79 4 4C4 6.21 5.79 8 8 8ZM8 10C5.33 10 0 11.34 0 14V16H16V14C16 11.34 10.67 10 8 10Z" fill="currentColor"/>
+                    </svg>
+                    <span>@ParticipantCount Participant@(ParticipantCount != 1 ? "s" : "")</span>
+                </div>
+            }
+            @HeaderButtons
+            <button class="control-btn exit-btn" @onclick="OnExit">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M6 14H2C1.44772 14 1 13.5523 1 13V3C1 2.44772 1.44772 2 2 2H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M11 11L15 7L11 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 7H6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Exit
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="presentation-content">
+        @ChildContent
+    </div>
+
+    <!-- Footer Navigation -->
+    @if (ShowFooter)
+    {
+        <div class="presentation-footer">
+            <div class="activity-progress">
+                @if (CurrentActivityNumber.HasValue && TotalActivities.HasValue)
+                {
+                    <span class="progress-text">Activity @CurrentActivityNumber of @TotalActivities</span>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: @ProgressPercentage%;"></div>
+                    </div>
+                }
+            </div>
+            <div class="navigation-buttons">
+                <button class="nav-btn" @onclick="OnPrevious" disabled="@(!HasPrevious)">
+                    <svg viewBox="0 0 16 16" fill="none">
+                        <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Previous
+                </button>
+                <button class="nav-btn" @onclick="OnNext" disabled="@(!HasNext)">
+                    Next
+                    <svg viewBox="0 0 16 16" fill="none">
+                        <path d="M6 4L10 8L6 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "Presentation Mode";
+
+    [Parameter]
+    public string SessionTitle { get; set; } = "";
+
+    [Parameter]
+    public string SessionCode { get; set; } = "";
+
+    [Parameter]
+    public string? SessionTTL { get; set; }
+
+    [Parameter]
+    public int? ParticipantCount { get; set; }
+
+    [Parameter]
+    public RenderFragment? HeaderButtons { get; set; }
+
+    [Parameter]
+    public bool ShowFooter { get; set; } = true;
+
+    [Parameter]
+    public int? CurrentActivityNumber { get; set; }
+
+    [Parameter]
+    public int? TotalActivities { get; set; }
+
+    [Parameter]
+    public bool HasPrevious { get; set; }
+
+    [Parameter]
+    public bool HasNext { get; set; }
+
+    [Parameter]
+    public EventCallback OnExit { get; set; }
+
+    [Parameter]
+    public EventCallback OnPrevious { get; set; }
+
+    [Parameter]
+    public EventCallback OnNext { get; set; }
+
+    private double ProgressPercentage
+    {
+        get
+        {
+            if (CurrentActivityNumber.HasValue && TotalActivities.HasValue && TotalActivities.Value > 0)
+            {
+                return (CurrentActivityNumber.Value / (double)TotalActivities.Value) * 100;
+            }
+            return 0;
+        }
+    }
+}

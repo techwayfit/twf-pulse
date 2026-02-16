@@ -1,0 +1,189 @@
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Application.Abstractions.Services
+@inject IPollDashboardService DashboardService
+@inject ISessionService SessionService
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<div class="activity-display">
+    <div class="activity-header">
+        <div class="activity-title-section">
+            <span class="activity-badge badge-poll">Poll</span>
+            <h2>@ActivityTitle</h2>
+            @if (!string.IsNullOrEmpty(ActivityPrompt))
+            {
+                <p class="activity-description">@ActivityPrompt</p>
+            }
+        </div>
+        @if (DurationMinutes.HasValue && OpenedAt.HasValue)
+        {
+            <div class="activity-timer">
+                <div class="timer-label">Time Remaining</div>
+                <div class="timer-value" id="timer-display">@TimeRemaining</div>
+            </div>
+        }
+    </div>
+
+    <div class="activity-content">
+        <div class="poll-results">
+            @if (PollOptions != null && PollOptions.Any())
+            {
+                foreach (var option in PollOptions.OrderByDescending(o => o.Count))
+                {
+                    var percentage = option.Percentage;
+                    <div class="poll-option">
+                        <div class="poll-option-bg" style="width: @(percentage)%;"></div>
+                        <div class="poll-option-content">
+                            <div class="poll-option-text">@option.Label</div>
+                            <div class="poll-option-stats">
+                                <span class="poll-votes">@option.Count vote@(option.Count != 1 ? "s" : "")</span>
+                                <span class="poll-percentage">@percentage.ToString("F1")%</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="waiting-state">
+                    <svg class="waiting-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z"/>
+                    </svg>
+                    <h3>Waiting for votes</h3>
+                    <p>Results will appear as participants vote</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string SessionCode { get; set; }
+
+    [Parameter, EditorRequired]
+    public required Guid ActivityId { get; set; }
+
+    [Parameter]
+    public string ActivityTitle { get; set; } = "Poll";
+
+    [Parameter]
+    public string? ActivityPrompt { get; set; }
+
+    [Parameter]
+    public int? DurationMinutes { get; set; }
+
+    [Parameter]
+    public DateTimeOffset? OpenedAt { get; set; }
+
+    private HubConnection? hubConnection;
+    private List<PollOptionResult> PollOptions { get; set; } = new();
+    private int TotalVotes { get; set; } = 0;
+    private string TimeRemaining { get; set; } = "--:--";
+    private System.Threading.Timer? timer;
+    private System.Threading.Timer? dataRefreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        await InitializeSignalR();
+        StartTimer();
+        StartDataRefresh();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session == null) return;
+
+            var dashboard = await DashboardService.GetPollDashboardAsync(
+                session.Id,
+                ActivityId,
+                new Dictionary<string, string?>(),
+                CancellationToken.None);
+
+            PollOptions = dashboard.Results.ToList();
+            TotalVotes = dashboard.TotalResponses;
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading poll data: {ex.Message}");
+        }
+    }
+
+    private async Task InitializeSignalR()
+    {
+        var hubUrl = Navigation.ToAbsoluteUri($"/hubs/workshop");
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(hubUrl)
+            .WithAutomaticReconnect()
+            .Build();
+
+        hubConnection.On<TechWayFit.Pulse.Web.Hubs.ResponseReceivedEvent>("ResponseReceived", async (e) =>
+        {
+            if (e.SessionCode == SessionCode && e.ActivityId == ActivityId)
+            {
+                await LoadData();
+            }
+        });
+
+        try
+        {
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error connecting to hub: {ex.Message}");
+        }
+    }
+
+    private void StartTimer()
+    {
+        if (DurationMinutes.HasValue && OpenedAt.HasValue)
+        {
+            timer = new System.Threading.Timer(UpdateTimer, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        }
+    }
+
+    private void StartDataRefresh()
+    {
+        dataRefreshTimer = new System.Threading.Timer(async _ => await LoadData(), null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+    }
+
+    private void UpdateTimer(object? state)
+    {
+        if (DurationMinutes.HasValue && OpenedAt.HasValue)
+        {
+            var endTime = OpenedAt.Value.AddMinutes(DurationMinutes.Value);
+            var remaining = endTime - DateTimeOffset.UtcNow;
+
+            if (remaining.TotalSeconds > 0)
+            {
+                TimeRemaining = $"{remaining.Minutes}:{remaining.Seconds:D2}";
+            }
+            else
+            {
+                TimeRemaining = "0:00";
+            }
+
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        timer?.Dispose();
+        dataRefreshTimer?.Dispose();
+
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

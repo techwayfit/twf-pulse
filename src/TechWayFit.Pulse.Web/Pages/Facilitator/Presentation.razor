@@ -1,243 +1,121 @@
 @page "/facilitator/live/presentation"
+@layout PresentationModeLayout
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using TechWayFit.Pulse.Contracts.Enums
-@using TechWayFit.Pulse.Web.Components.Dashboards
-@rendermode InteractiveServer
+@using TechWayFit.Pulse.Web.Components.Presentation
 
-<PageTitle>Presenter Mode - TechWayFit Pulse</PageTitle>
-<HeadContent>
-    <link rel="stylesheet" href="~/css/presenter-mode.css" />
-</HeadContent>
+<PageTitle>Presentation Mode - @(session?.Title ?? "TechWayFit Pulse")</PageTitle>
 
 @if (isLoading)
 {
-    <div class="d-flex justify-content-center align-items-center h-viewport">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+    <div class="presentation-container">
+        <div class="presentation-content">
+            <div class="activity-display">
+                <div class="waiting-state">
+                    <svg class="waiting-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z"/>
+                    </svg>
+                    <h3>Loading presentation...</h3>
+                    <p>Please wait</p>
+                </div>
+            </div>
         </div>
     </div>
 }
-else if (!string.IsNullOrEmpty(errorMessage))
+else
 {
-    <div class="container mt-5">
-        <div class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            @errorMessage
-        </div>
-        <a href="/facilitator/live?code=@SessionCode" class="btn btn-primary">Return to Live View</a>
-    </div>
-}
-else if (activity != null)
-{
-    <!-- Presenter Mode Full Screen -->
-    <div class="presenter-mode-page">
-        <!-- Compact Header -->
-        <div class="presenter-header">
-            <div class="container-fluid">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="badge bg-success presenter-badge-live">
-                            <span class="pulse-dot me-2"></span>LIVE
-                        </span>
-                        <h1 class="mb-0 presenter-title">@activity.Title</h1>
-                        @if (!string.IsNullOrEmpty(activity.Prompt))
-                        {
-                            <span class="presenter-subtitle">@activity.Prompt</span>
-                        }
-                    </div>
-                    <div class="d-flex align-items-center gap-3">
-                        @if (activity.DurationMinutes.HasValue && activity.OpenedAt.HasValue)
-                        {
-                            <div id="activity-timer-presenter" data-duration="@activity.DurationMinutes.Value"
-                                data-opened-at="@activity.OpenedAt.Value.ToString("o")" class="timer-display-presenter">
-                                <i class="fas fa-clock me-2"></i>
-                                <span class="timer-text">--:--</span>
-                            </div>
-                        }
-                        <span class="badge bg-light text-dark presenter-badge-order">#@activity.Order</span>
-                        <button class="btn btn-danger presenter-exit-btn" @onclick="ExitPresenterMode">
-                            <i class="fas fa-times-circle me-2"></i><span class="d-none d-lg-inline">Exit Presenter
-                                Mode</span><span class="d-inline d-lg-none">Exit</span>
-                        </button>
-                    </div>
+    <PresentationLayout
+        Title="Presentation Mode"
+        SessionTitle="@SessionTitle"
+        SessionCode="@SessionCode"
+        SessionTTL="@SessionTTL"
+        ParticipantCount="@participantCount"
+        ShowFooter="true"
+        CurrentActivityNumber="@CurrentActivityNumber"
+        TotalActivities="@TotalActivities"
+        HasPrevious="@hasPrevious"
+        HasNext="@hasNext"
+        OnExit="@ExitPresenterMode"
+        OnPrevious="@GoBack"
+        OnNext="@MoveNext">
+        
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="activity-display">
+                <div class="waiting-state">
+                    <svg class="waiting-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
+                    </svg>
+                    <h3>@errorMessage</h3>
+                    <p>Please return to the live view</p>
                 </div>
             </div>
-        </div>
-
-        <!-- Main Content: 10-2 Layout -->
-        <div class="presenter-content">
-            <div class="container-fluid h-100">
-                <div class="row g-0 h-100">
-                    <!-- Dashboard (10/12) -->
-                    <div class="col-10 presenter-main-column">
-                        <div class="presenter-dashboard-wrapper">
-                            @if (activity.Type == ActivityType.Poll)
-                            {
-                                <PollDashboard SessionCode="@SessionCode" ActivityId="@activity.ActivityId" />
-                            }
-                            else if (activity.Type == ActivityType.WordCloud)
-                            {
-                                <WordCloudDashboard SessionCode="@SessionCode" ActivityId="@activity.ActivityId" />
-                            }
-                            else if (activity.Type == ActivityType.Rating)
-                            {
-                                <RatingDashboard SessionCode="@SessionCode" ActivityId="@activity.ActivityId" />
-                            }
-                            else if (activity.Type == ActivityType.GeneralFeedback)
-                            {
-                                <GeneralFeedbackDashboard SessionCode="@SessionCode" ActivityId="@activity.ActivityId" />
-                            }
-                            else
-                            {
-                                <div class="text-center py-5">
-                                    <p class="presenter-empty-message">
-                                        <i class="fas fa-chart-bar me-3"></i>
-                                        Live dashboard for @activity.Type activities coming soon
-                                    </p>
-                                </div>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- Stats Sidebar (2/12) -->
-                    <div class="col-2 presenter-sidebar-column">
-                        <div class="presenter-sidebar-content">
-                            <div class="presenter-stat-card">
-                                <div class="stat-icon">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                                <div class="stat-value">@participantCount</div>
-                                <div class="stat-label">Participants</div>
-                            </div>
-
-                            <div class="presenter-stat-card">
-                                <div class="stat-icon text-primary">
-                                    <i class="fas fa-comment-dots"></i>
-                                </div>
-                                <div class="stat-value text-primary">@responseCount</div>
-                                <div class="stat-label">Responses</div>
-                            </div>
-
-                            <div class="presenter-feed-section">
-                                <h6 class="feed-title">
-                                    <i class="fas fa-stream me-2"></i>Live Feed
-                                </h6>
-                                <LiveSubmissionsFeed SessionCode="@SessionCode" ActivityId="@activity.ActivityId" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer Controls -->
-        <div class="presenter-footer">
-            <div class="container-fluid">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex gap-2">
-                        @if (hasPrevious)
-                        {
-                            <button class="btn btn-outline-light presenter-control-btn" @onclick="GoBack"
-                                disabled="@isPerformingAction">
-                                <i class="fas fa-arrow-left me-2"></i>Previous
-                            </button>
-                        }
-                        <button class="btn btn-warning presenter-control-btn" @onclick="CloseActivity"
-                            disabled="@isPerformingAction">
-                            <i class="fas fa-stop me-2"></i>Close Activity
-                        </button>
-
-                    </div>
-                    <div class="presenter-footer-hint">
-                        @if (hasNext)
-                        {
-                            <button class="btn btn-primary presenter-control-btn" @onclick="MoveNext"
-                                disabled="@isPerformingAction">
-                                Next<i class="fas fa-arrow-right ms-2"></i>
-                            </button>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-    </div>
-}
-
-<script>
-    let presenterTimerInterval = null;
-
-    function startPresenterTimer() {
-        console.log('startPresenterTimer called');
-        const timerEl = document.getElementById('activity-timer-presenter');
-        console.log('Presenter timer element:', timerEl);
-
-        if (!timerEl) {
-            console.log('No presenter timer element found');
-            return;
         }
-
-        const durationMinutes = parseInt(timerEl.dataset.duration);
-        const openedAt = new Date(timerEl.dataset.openedAt);
-        const timerText = timerEl.querySelector('.timer-text');
-
-        console.log('Duration:', durationMinutes, 'OpenedAt:', openedAt, 'TimerText:', timerText);
-
-        if (presenterTimerInterval) clearInterval(presenterTimerInterval);
-
-        function updateTimer() {
-            const now = new Date();
-            const elapsedMs = now - openedAt;
-            const elapsedSeconds = Math.floor(elapsedMs / 1000);
-            const totalSeconds = durationMinutes * 60;
-            const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
-
-            const minutes = Math.floor(remainingSeconds / 60);
-            const seconds = remainingSeconds % 60;
-
-            timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-            // Visual feedback
-            if (remainingSeconds === 0) {
-                timerEl.classList.add('timer-expired');
-                timerText.textContent = "Time's Up!";
-            } else if (remainingSeconds <= 60) {
-                timerEl.classList.add('timer-warning');
-                timerEl.classList.remove('timer-expired');
-            } else {
-                timerEl.classList.remove('timer-warning', 'timer-expired');
+        else if (activity != null)
+        {
+            @if (activity.Type == ActivityType.Poll)
+            {
+                <PollPresentation 
+                    SessionCode="@SessionCode" 
+                    ActivityId="@activity.ActivityId"
+                    ActivityTitle="@activity.Title"
+                    ActivityPrompt="@activity.Prompt"
+                    DurationMinutes="@activity.DurationMinutes"
+                    OpenedAt="@activity.OpenedAt" />
+            }
+            else if (activity.Type == ActivityType.WordCloud)
+            {
+                <WordCloudPresentation 
+                    SessionCode="@SessionCode" 
+                    ActivityId="@activity.ActivityId"
+                    ActivityTitle="@activity.Title"
+                    ActivityPrompt="@activity.Prompt"
+                    DurationMinutes="@activity.DurationMinutes"
+                    OpenedAt="@activity.OpenedAt" />
+            }
+            else if (activity.Type == ActivityType.Rating)
+            {
+                <RatingPresentation 
+                    SessionCode="@SessionCode" 
+                    ActivityId="@activity.ActivityId"
+                    ActivityTitle="@activity.Title"
+                    ActivityPrompt="@activity.Prompt"
+                    DurationMinutes="@activity.DurationMinutes"
+                    OpenedAt="@activity.OpenedAt"
+                    MaxRating="5" />
+            }
+            else if (activity.Type == ActivityType.Quadrant)
+            {
+                <QuadrantPresentation 
+                    SessionCode="@SessionCode" 
+                    ActivityId="@activity.ActivityId"
+                    ActivityTitle="@activity.Title"
+                    ActivityPrompt="@activity.Prompt"
+                    DurationMinutes="@activity.DurationMinutes"
+                    OpenedAt="@activity.OpenedAt" />
+            }
+            else if (activity.Type == ActivityType.GeneralFeedback)
+            {
+                <GeneralFeedbackPresentation 
+                    SessionCode="@SessionCode" 
+                    ActivityId="@activity.ActivityId"
+                    ActivityTitle="@activity.Title"
+                    ActivityPrompt="@activity.Prompt"
+                    DurationMinutes="@activity.DurationMinutes"
+                    OpenedAt="@activity.OpenedAt" />
+            }
+            else
+            {
+                <div class="activity-display">
+                    <div class="waiting-state">
+                        <svg class="waiting-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z"/>
+                        </svg>
+                        <h3>Activity type not supported</h3>
+                        <p>Presentation mode for @activity.Type activities is coming soon</p>
+                    </div>
+                </div>
             }
         }
-
-        updateTimer();
-        presenterTimerInterval = setInterval(updateTimer, 1000);
-    }
-
-    // Auto-start timer when page loads
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', startPresenterTimer);
-    } else {
-        startPresenterTimer();
-    }
-
-    // Restart timer on Blazor re-render
-    let lastPresenterTimerElement = document.getElementById('activity-timer-presenter');
-    const presenterObserver = new MutationObserver(() => {
-        const currentTimerElement = document.getElementById('activity-timer-presenter');
-
-        // Only restart timer if the element was added
-        if (currentTimerElement && !lastPresenterTimerElement) {
-            startPresenterTimer();
-        }
-        // Clear timer if element was removed
-        else if (!currentTimerElement && lastPresenterTimerElement && presenterTimerInterval) {
-            clearInterval(presenterTimerInterval);
-            presenterTimerInterval = null;
-        }
-
-        lastPresenterTimerElement = currentTimerElement;
-    });
-
-    presenterObserver.observe(document.body, { childList: true, subtree: true });
-</script>
+    </PresentationLayout>
+}

@@ -1,3 +1,11 @@
 @{
-    Layout = "_Layout";
+    // Skip layout for presentation mode to prevent MainLayout navigation from appearing
+    if (Context.Request.Path.StartsWithSegments("/facilitator/live/presentation"))
+    {
+        Layout = null;
+    }
+    else
+    {
+        Layout = "_Layout";
+    }
 }
