@@ -59,4 +59,12 @@ public class HomeController : Controller
     {
         return View();
     }
+
+    /// <summary>
+    /// View Components showcase
+    /// </summary>
+    public IActionResult Components()
+    {
+        return View();
+    }
 }

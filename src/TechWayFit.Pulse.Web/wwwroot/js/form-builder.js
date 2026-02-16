@@ -53,11 +53,11 @@ class FormBuilder {
         }
 
         const fieldTypes = [
-            { type: 'text', label: 'Text Box', icon: '📝' },
-            { type: 'checkbox', label: 'Checkbox', icon: '☑️' },
-            { type: 'dropdown', label: 'Dropdown', icon: '▼' },
-            { type: 'textarea', label: 'Text Area', icon: '📄' },
-            { type: 'radio', label: 'Radio Button', icon: '◉' }
+            { type: 'text', label: 'Text Box', icon: '<i class="fas fa-pen"></i>' },
+            { type: 'checkbox', label: 'Checkbox', icon: '<i class="fas fa-check-square"></i>' },
+            { type: 'dropdown', label: 'Dropdown', icon: '<i class="fas fa-chevron-down"></i>' },
+            { type: 'textarea', label: 'Text Area', icon: '<i class="fas fa-align-left"></i>' },
+            { type: 'radio', label: 'Radio Button', icon: '<i class="fas fa-circle-dot"></i>' }
         ];
 
         typesSection.innerHTML = fieldTypes.map(ft => `

@@ -35,7 +35,7 @@
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
                         <h4 class="card-title fw-bold mb-1">Rating Results</h4>
-                        <div class="text-muted">⭐ Live Ratings</div>
+                        <div class="text-muted"><i class="ics ics-star ic-sm"></i> Live Ratings</div>
                     </div>
                     <div class="text-end">
                         <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mb-2">
@@ -92,7 +92,7 @@
                                     <div class="rating-label fw-semibold">
                                         @for (int i = 0; i < rating.Value; i++)
                                         {
-                                            <span class="text-warning">⭐</span>
+                                            <i class="ics ics-star ic-sm text-warning"></i>
                                         }
                                         <span class="ms-2">@rating.Value</span>
                                     </div>
@@ -113,7 +113,7 @@
                 else
                 {
                     <div class="text-center py-5">
-                        <div class="display-4 text-muted mb-3">⭐</div>
+                        <div class="mb-3"><i class="ics ics-star ic-2xl text-muted"></i></div>
                         <h6 class="text-muted">No ratings yet</h6>
                         <p class="text-muted mb-0">Results will appear here once participants start rating.</p>
                     </div>
@@ -138,7 +138,7 @@
                                     <div>
                                         @for (int i = 0; i < comment.Rating; i++)
                                         {
-                                            <span class="text-warning">⭐</span>
+                                            <i class="ics ics-star ic-sm text-warning"></i>
                                         }
                                     </div>
                                     <small class="text-muted">@comment.CreatedAt.ToString("HH:mm:ss")</small>

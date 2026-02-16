@@ -21,7 +21,7 @@
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <a href="@Url.Action("Create", "Facilitator")" class="btn btn-sm btn-outline-primary">
-                    <span class="me-1">✏️</span>Create Manually
+                    <i class="fas fa-pencil me-1"></i>Create Manually
                 </a>
             </div>
         </div>
@@ -31,11 +31,11 @@
             <!-- Mobile: Dropdown -->
             <select class="form-select d-md-none" id="categoryFilterMobile" aria-label="Filter templates by category">
                 <option value="all">All Templates</option>
-                <option value="Retrospective">🔄 Retrospective</option>
-                <option value="ProductDiscovery">💡 Product Discovery</option>
-                <option value="IncidentReview">🚨 Incident Review</option>
-                <option value="TeamBuilding">🤝 Team Building</option>
-                <option value="Training">📚 Training</option>
+                <option value="Retrospective">Retrospective</option>
+                <option value="ProductDiscovery">Product Discovery</option>
+                <option value="IncidentReview">Incident Review</option>
+                <option value="TeamBuilding">Team Building</option>
+                <option value="Training">Training</option>
             </select>
             
             <!-- Desktop: Buttons -->
@@ -44,19 +44,19 @@
                     All Templates
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="Retrospective">
-                    🔄 Retrospective
+                    <i class="fas fa-rotate me-1"></i>Retrospective
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="ProductDiscovery">
-                    💡 Product Discovery
+                    <i class="fas fa-lightbulb me-1"></i>Product Discovery
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="IncidentReview">
-                    🚨 Incident Review
+                    <i class="fas fa-triangle-exclamation me-1"></i>Incident Review
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="TeamBuilding">
-                    🤝 Team Building
+                    <i class="fas fa-handshake me-1"></i>Team Building
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="Training">
-                    📚 Training
+                    <i class="fas fa-book me-1"></i>Training
                 </button>
             </div>
         </div>
@@ -66,7 +66,7 @@
         {
             <div class="mb-5">
                 <h3 class="h5 mb-3 fw-semibold">
-                    <span class="badge bg-primary-subtle text-primary me-2">★</span>
+                    <i class="fas fa-star text-primary me-2"></i>
                     System Templates
                 </h3>
                 <div class="row g-3 g-md-4">
@@ -76,7 +76,7 @@
                             <div class="card h-100 shadow-sm template-card-item position-relative">
                                 <div class="card-body">
                                     <div class="d-flex align-items-start mb-3">
-                                        <div class="fs-1 me-3">@template.IconEmoji</div>
+                                        <div class="template-icon-display fs-1 me-3" data-icon="@template.IconEmoji"></div>
                                         <div class="flex-grow-1">
                                             <h5 class="card-title mb-1">@template.Name</h5>
                                             <span class="badge bg-secondary-subtle text-secondary">@template.Category</span>
@@ -114,7 +114,7 @@
         {
             <div class="mb-5">
                 <h3 class="h5 mb-3 fw-semibold">
-                    <span class="badge bg-success-subtle text-success me-2">✎</span>
+                    <i class="fas fa-pen text-success me-2"></i>
                     Custom Templates
                 </h3>
                 <div class="row g-3 g-md-4">
@@ -124,7 +124,7 @@
                             <div class="card h-100 shadow-sm template-card-item position-relative">
                                 <div class="card-body">
                                     <div class="d-flex align-items-start mb-3">
-                                        <div class="fs-1 me-3">@template.IconEmoji</div>
+                                        <div class="template-icon-display fs-1 me-3" data-icon="@template.IconEmoji"></div>
                                         <div class="flex-grow-1">
                                             <h5 class="card-title mb-1">@template.Name</h5>
                                             <span class="badge bg-secondary-subtle text-secondary">@template.Category</span>
@@ -161,7 +161,7 @@
         @if (!Model.Any())
         {
             <div class="text-center py-5">
-                <div class="fs-1 mb-3">📝</div>
+                <div class="fs-1 mb-3"><i class="fas fa-file-lines"></i></div>
                 <h5 class="text-muted">No templates available</h5>
                 <p class="text-muted">System templates will be initialized on first application startup.</p>
             </div>
@@ -170,6 +170,19 @@
 
 @section Scripts {
     <script>
+        // Render template icons using IconHelper
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.IconHelper) {
+                const iconElements = document.querySelectorAll('.template-icon-display[data-icon]');
+                iconElements.forEach(element => {
+                    const iconValue = element.getAttribute('data-icon');
+                    if (iconValue) {
+                        element.innerHTML = IconHelper.toFontAwesome(iconValue);
+                    }
+                });
+            }
+        });
+
         // Template filtering function
         function filterTemplates(filterValue) {
             const cards = document.querySelectorAll('.template-card');

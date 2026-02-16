@@ -4,7 +4,17 @@
     @foreach (var feature in Model.Items)
     {
         <article class="promo-feature-card">
-            <div class="promo-feature-icon">@feature.Icon</div>
+            <div class="promo-feature-icon">
+                @if (feature.Icon.EndsWith(".svg"))
+                {
+                    var iconName = feature.Icon.Replace(".svg", "");
+                    <i class="ics ics-@iconName ic-xl"></i>
+                }
+                else
+                {
+                    @feature.Icon
+                }
+            </div>
             <h3 class="promo-feature-title">@feature.Title</h3>
             <p class="promo-feature-description">@feature.Description</p>
             <a href="@feature.LinkUrl" class="promo-feature-link">

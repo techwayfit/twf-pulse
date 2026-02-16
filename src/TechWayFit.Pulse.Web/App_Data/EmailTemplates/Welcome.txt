@@ -5,16 +5,16 @@ Welcome to TechWayFit Pulse! Your facilitator account has been created successfu
 You can now create and manage interactive workshop sessions with real-time participant engagement.
 
 What you can do:
-✨ Create Sessions - Set up workshops in seconds with customizable join forms
-📊 Real-time Activities - Run polls, word clouds, quadrant matrices, and 5-Whys
-📈 Live Dashboards - View insights and filter by participant attributes
-🔒 Secure & Private - Passwordless authentication and encrypted sessions
+✓ Create Sessions - Set up workshops in seconds with customizable join forms
+✓ Real-time Activities - Run polls, word clouds, quadrant matrices, and 5-Whys
+✓ Live Dashboards - View insights and filter by participant attributes
+✓ Secure & Private - Passwordless authentication and encrypted sessions
 
 Get started: {{DASHBOARD_URL}}
 
 If you have any questions or need help getting started, don't hesitate to reach out to our support team.
 
-Happy facilitating! 🚀
+Happy facilitating!
 TechWayFit Pulse Team
 
 ---

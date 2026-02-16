@@ -53,7 +53,7 @@
                                     ParentValue = group.ParentGroupId?.ToString(),
                                     Level = group.Level - 1,
                                     HasChildren = groups.Any(g => g.ParentGroupId == group.Id),
-                                    Icon = group.Level == 1 ? "📁" : group.Level == 2 ? "📂" : "📄"
+                                    Icon = group.Level == 1 ? "folder" : group.Level == 2 ? "folder-open" : "file"
                                 });
                             }
                         }
@@ -194,11 +194,11 @@
                                     <div class="d-flex gap-2">
                                         <select class="form-select" id="mobileFieldTypeSelect">
                                             <option value="">Select field type...</option>
-                                            <option value="text">📝 Text Box</option>
-                                            <option value="checkbox">☑️ Checkbox</option>
-                                            <option value="dropdown">📋 Dropdown</option>
-                                            <option value="textarea">📄 Text Area</option>
-                                            <option value="radio">◉ Radio Button</option>
+                                            <option value="text">Text Box</option>
+                                            <option value="checkbox">Checkbox</option>
+                                            <option value="dropdown">Dropdown</option>
+                                            <option value="textarea">Text Area</option>
+                                            <option value="radio">Radio Button</option>
                                         </select>
                                         <button type="button" class="btn btn-primary" id="mobileAddFieldBtn" style="white-space: nowrap;">
                                             + Add
@@ -209,23 +209,23 @@
                                 <!-- Desktop: Draggable Field Types -->
                                 <div class="d-flex flex-column gap-2" id="fieldTypes">
                                     <div class="field-type" draggable="true" data-type="text">
-                                        <span class="icon">📝</span>
+                                        <span class="icon"><i class="fas fa-font"></i></span>
                                         <span class="label">Text Box</span>
                                     </div>
                                     <div class="field-type" draggable="true" data-type="checkbox">
-                                        <span class="icon">☑️</span>
+                                        <span class="icon"><i class="fas fa-check-square"></i></span>
                                         <span class="label">Checkbox</span>
                                     </div>
                                     <div class="field-type" draggable="true" data-type="dropdown">
-                                        <span class="icon">📋</span>
+                                        <span class="icon"><i class="fas fa-list"></i></span>
                                         <span class="label">Dropdown</span>
                                     </div>
                                     <div class="field-type" draggable="true" data-type="textarea">
-                                        <span class="icon">📄</span>
+                                        <span class="icon"><i class="fas fa-align-left"></i></span>
                                         <span class="label">Text Area</span>
                                     </div>
                                     <div class="field-type" draggable="true" data-type="radio">
-                                        <span class="icon">◉</span>
+                                        <span class="icon"><i class="fas fa-circle-dot"></i></span>
                                         <span class="label">Radio Button</span>
                                     </div>
                                 </div>
@@ -235,7 +235,7 @@
                             <div class="form-drop-zone" id="formDropZone">
                                 <div class="drop-zone-placeholder">
                                     <div class="text-center text-muted">
-                                        <div class="fs-1 mb-2">⬇️</div>
+                                        <div class="fs-1 mb-2"><i class="fas fa-arrow-down"></i></div>
                                         <div class="fw-medium">Drag field types here to build your join form</div>
                                         <small class="d-block mt-2">Maximum 5 fields allowed</small>
                                     </div>

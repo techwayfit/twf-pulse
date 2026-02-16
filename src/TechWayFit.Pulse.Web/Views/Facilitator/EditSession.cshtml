@@ -78,7 +78,7 @@
                                             ParentValue = group.ParentGroupId?.ToString(),
                                             Level = group.Level - 1,
                                             HasChildren = groups.Any(g => g.ParentGroupId == group.Id),
-                                            Icon = group.Level == 1 ? "📁" : group.Level == 2 ? "📂" : "📄"
+                                            Icon = group.Level == 1 ? "folder" : group.Level == 2 ? "folder-open" : "file"
                                         });
                                     }
                                 }

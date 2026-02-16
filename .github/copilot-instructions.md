@@ -278,6 +278,7 @@ var useInMemory = bool.Parse(builder.Configuration["Pulse:UseInMemory"]);
 - Do not add new colors, fonts, or spacing without approval
 - Do not create page-specific styles in global CSS files
 - Do not use inline styles or !important
+- Do not use unicode emojis, instead use font-awesome icons or SVGs
 ## Questions?
 
 If unsure about any pattern or approach:

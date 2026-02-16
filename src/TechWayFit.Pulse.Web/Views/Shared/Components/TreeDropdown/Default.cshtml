@@ -52,3 +52,30 @@
         return string.Join(" → ", path);
     }
 }
+
+<script>
+    // Render tree icons using IconHelper when dropdown is shown
+    (function() {
+        const dropdownElement = document.querySelector('[data-dropdown-id="@Model.Id"]');
+        if (dropdownElement && window.IconHelper) {
+            const renderIcons = function() {
+                const iconElements = dropdownElement.querySelectorAll('.tree-icon-display[data-icon]');
+                iconElements.forEach(element => {
+                    const iconValue = element.getAttribute('data-icon');
+                    if (iconValue && !element.querySelector('i')) {
+                        element.innerHTML = IconHelper.toFontAwesome(iconValue);
+                    }
+                });
+            };
+            
+            // Render icons on load
+            renderIcons();
+            
+            // Re-render when dropdown is shown (in case new items are added dynamically)
+            const dropdownButton = dropdownElement.querySelector('.dropdown-toggle');
+            if (dropdownButton) {
+                dropdownButton.addEventListener('shown.bs.dropdown', renderIcons);
+            }
+        }
+    })();
+</script>

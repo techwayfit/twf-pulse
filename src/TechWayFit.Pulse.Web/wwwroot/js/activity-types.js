@@ -186,7 +186,7 @@ class PollActivity extends Activity {
     }
 
     getEmoji() {
-        return '📊';
+        return '<i class="fas fa-chart-bar"></i>';
     }
 
     populateSpecificFields(prefix) {
@@ -303,7 +303,7 @@ class WordCloudActivity extends Activity {
     }
 
     getEmoji() {
-        return '☁️';
+        return '<i class="fas fa-cloud"></i>';
     }
 
     populateSpecificFields(prefix) {
@@ -364,7 +364,7 @@ class QuadrantActivity extends Activity {
     }
 
     getEmoji() {
-        return '📐';
+        return '<i class="fas fa-chart-line"></i>';
     }
 
     populateSpecificFields(prefix) {
@@ -424,7 +424,7 @@ class FiveWhysActivity extends Activity {
     }
 
     getEmoji() {
-        return '🤔';
+        return '<i class="fas fa-question"></i>';
     }
 
     collectData() {
@@ -458,7 +458,7 @@ class RatingActivity extends Activity {
     }
 
     getEmoji() {
-        return '⭐';
+        return '<i class="fas fa-star"></i>';
     }
 
     populateSpecificFields(prefix) {
@@ -517,7 +517,7 @@ class FeedbackActivity extends Activity {
     }
 
     getEmoji() {
-        return '💬';
+        return '<i class="fas fa-comment"></i>';
     }
 
     populateSpecificFields(prefix) {
@@ -580,12 +580,12 @@ class ActivityFactory {
 
     static getAvailableTypes() {
         return [
-            { type: 'Poll', class: PollActivity, emoji: '📊', description: 'Multiple choice questions' },
-            { type: 'WordCloud', class: WordCloudActivity, emoji: '☁️', description: 'Collect words or short phrases' },
-            { type: 'Quadrant', class: QuadrantActivity, emoji: '📐', description: '2x2 matrix for categorization' },
-            { type: 'FiveWhys', class: FiveWhysActivity, emoji: '🤔', description: 'Root cause analysis' },
-            { type: 'Rating', class: RatingActivity, emoji: '⭐', description: 'Star or numeric ratings' },
-            { type: 'Feedback', class: FeedbackActivity, emoji: '💬', description: 'Open-ended feedback' }
+            { type: 'Poll', class: PollActivity, emoji: '<i class="fas fa-chart-bar"></i>', description: 'Multiple choice questions' },
+            { type: 'WordCloud', class: WordCloudActivity, emoji: '<i class="fas fa-cloud"></i>', description: 'Collect words or short phrases' },
+            { type: 'Quadrant', class: QuadrantActivity, emoji: '<i class="fas fa-chart-line"></i>', description: '2x2 matrix for categorization' },
+            { type: 'FiveWhys', class: FiveWhysActivity, emoji: '<i class="fas fa-question"></i>', description: 'Root cause analysis' },
+            { type: 'Rating', class: RatingActivity, emoji: '<i class="fas fa-star"></i>', description: 'Star or numeric ratings' },
+            { type: 'Feedback', class: FeedbackActivity, emoji: '<i class="fas fa-comment"></i>', description: 'Open-ended feedback' }
         ];
     }
 }

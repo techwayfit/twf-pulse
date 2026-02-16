@@ -20,10 +20,10 @@
             </div>
             <div class="d-none d-md-flex gap-2">
                 <a href="@Url.Action("Groups", "Facilitator")" class="btn btn-outline-primary">
-                    <span class="d-none d-sm-inline">📁 </span>Manage Groups
+                    <span class="d-none d-sm-inline"><i class="fas fa-folder me-1"></i></span>Manage Groups
                 </a>
                 <a class="btn btn-outline-primary" href="@Url.Action("Create", "Facilitator")">
-                                <span class="d-none d-sm-inline">✏️</span> Create Session 
+                                <span class="d-none d-sm-inline"><i class="fas fa-pencil"></i></span> Create Session 
                 </a>
                 <!-- Create Session Dropdown -->
                 
@@ -72,7 +72,7 @@
         <!-- Collapsible Search and Filter Bar -->
         <div class="filter-toggle-wrapper d-lg-none">
             <button class="filter-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
-                <span class="filter-toggle-icon">🔍</span>
+                <span class="filter-toggle-icon"><i class="ics ics-search ic-xs"></i></span>
                 <span class="filter-toggle-text">Search & Filter</span>
                 <span class="filter-toggle-arrow">▼</span>
             </button>
@@ -114,7 +114,7 @@
                                                 ParentValue = group.ParentGroupId?.ToString(),
                                                 Level = group.Level - 1,
                                                 HasChildren = sessionGroups.Any(g => g.ParentGroupId == group.Id),
-                                                Icon = group.Level == 1 ? "📁" : group.Level == 2 ? "📂" : "📄"
+                                                Icon = group.Level == 1 ? "folder" : group.Level == 2 ? "folder-open" : "file"
                                             });
                                         }
                                     }
@@ -196,7 +196,7 @@
                                 @foreach (var session in Model)
                                 {
                                     var groupColor = "#6366f1";
-                                    var groupIcon = "📁";
+                                    var groupIcon = "folder";
                                     var groupName = "";
                                     if (session.GroupId.HasValue && sessionGroups != null)
                                     {
@@ -245,7 +245,7 @@
                                             @if (!string.IsNullOrEmpty(groupName))
                                             {
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <span class="group-icon-square" style="background-color: @groupColor;">@groupIcon</span>
+                                                    <span class="group-icon-display group-icon-square" style="background-color: @groupColor;" data-icon="@groupIcon"></span>
                                                     <span class="group-name-text">@groupName</span>
                                                 </div>
                                             }
@@ -358,12 +358,12 @@
                                             var group = sessionGroups.FirstOrDefault(g => g.Id == session.GroupId.Value);
                                             if (group != null)
                                             {
-                                                <span class="session-mobile-group">📁 @group.Name</span>
+                                                <span class="session-mobile-group"><i class="fas fa-folder"></i> @group.Name</span>
                                             }
                                         }
                                         @if (session.SessionStart.HasValue)
                                         {
-                                            <span class="session-mobile-schedule">📅 @session.SessionStart.Value.ToString("MMM dd, HH:mm")</span>
+                                            <span class="session-mobile-schedule"><i class="fas fa-calendar"></i> @session.SessionStart.Value.ToString("MMM dd, HH:mm")</span>
                                         }
                                         <span class="session-mobile-date">Created: @session.CreatedAt.ToString("MMM dd, yyyy")</span>
                                     </div>
@@ -474,7 +474,7 @@
                         <h3 class="empty-state-title">No Sessions Yet</h3>
                         <p class="empty-state-text">Create your first interactive workshop session and start engaging with participants!</p>
                         <a href="@Url.Action("Create", "Facilitator")" class="btn btn-primary">
-                            ✨ Create Your First Session
+                            <i class="fas fa-sparkles me-2"></i>Create Your First Session
                         </a>
                     </div>
                 }
@@ -513,7 +513,7 @@
                                     ParentValue = group.ParentGroupId?.ToString(),
                                     Level = group.Level - 1,
                                     HasChildren = sessionGroups.Any(g => g.ParentGroupId == group.Id),
-                                    Icon = group.Level == 1 ? "📁" : group.Level == 2 ? "📂" : "📄"
+                                    Icon = group.Level == 1 ? "folder" : group.Level == 2 ? "folder-open" : "file"
                                 });
                             }
                         }
@@ -538,6 +538,17 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Render group icons using IconHelper
+            if (window.IconHelper) {
+                const iconElements = document.querySelectorAll('.group-icon-display[data-icon]');
+                iconElements.forEach(element => {
+                    const iconValue = element.getAttribute('data-icon');
+                    if (iconValue) {
+                        element.innerHTML = IconHelper.toFontAwesome(iconValue);
+                    }
+                });
+            }
+
             const searchInput = document.getElementById('sessionSearch');
             const groupFilter = document.getElementById('groupFilter');
             const statusFilter = document.getElementById('statusFilter');

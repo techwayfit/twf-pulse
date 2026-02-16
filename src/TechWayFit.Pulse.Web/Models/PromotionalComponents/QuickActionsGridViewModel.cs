@@ -7,7 +7,7 @@ public class QuickActionsGridViewModel
 
 public class QuickActionItemViewModel
 {
-    public string Icon { get; set; } = "📌";
+    public string Icon { get; set; } = "pin.svg";
     public string Label { get; set; } = string.Empty;
     public string Url { get; set; } = "#";
 }

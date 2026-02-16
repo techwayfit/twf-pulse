@@ -4,7 +4,17 @@
     @foreach (var action in Model.Items)
     {
         <a href="@action.Url" class="promo-quick-action">
-            <div class="promo-quick-action-icon">@action.Icon</div>
+            <div class="promo-quick-action-icon">
+                @if (action.Icon.EndsWith(".svg"))
+                {
+                    var iconName = action.Icon.Replace(".svg", "");
+                    <i class="ics ics-@iconName ic-lg"></i>
+                }
+                else
+                {
+                    @action.Icon
+                }
+            </div>
             <div class="promo-quick-action-label">@action.Label</div>
         </a>
     }

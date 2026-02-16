@@ -1,0 +1,407 @@
+@{
+    ViewData["Title"] = "View Components Showcase";
+}
+
+<div class="container-fluid py-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-5 fw-bold mb-2">View Components Showcase</h1>
+            <p class="text-muted">A comprehensive reference of all available view components in TechWayFit Pulse</p>
+        </div>
+    </div>
+
+    <!-- StatCards -->
+    <div class="row mb-5 pb-4 border-bottom">
+        <div class="col-lg-6">
+            <h3 class="mb-3">StatCards</h3>
+            <pre class="bg-light p-3 rounded"><code>@@await Component.InvokeAsync("StatCards", new
+{
+    cards = new List&lt;StatCardData&gt;
+    {
+        new() { Icon = "fa-solid fa-bolt", Value = "42", Label = "Active Sessions", Variant = "blue" },
+        new() { Icon = "fa-solid fa-users", Value = "1,234", Label = "Total Participants", Variant = "green" },
+        new() { Icon = "fa-solid fa-chart-line", Value = "89%", Label = "Engagement Rate", Variant = "info" }
+    }
+})</code></pre>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="text-muted mb-3">Rendered Component</h5>
+            @await Component.InvokeAsync("StatCards", new
+            {
+                cards = new List<TechWayFit.Pulse.Web.Models.StatCardData>
+                {
+                    new() { Icon = "fa-solid fa-bolt", Value = "42", Label = "Active Sessions", Variant = "blue" },
+                    new() { Icon = "fa-solid fa-users", Value = "1,234", Label = "Total Participants", Variant = "green" },
+                    new() { Icon = "fa-solid fa-chart-line", Value = "89%", Label = "Engagement Rate", Variant = "info" }
+                }
+            })
+        </div>
+    </div>
+
+    <!-- TreeDropdown -->
+    <div class="row mb-5 pb-4 border-bottom">
+        <div class="col-lg-6">
+            <h3 class="mb-3">TreeDropdown</h3>
+            <pre class="bg-light p-3 rounded"><code>@@await Component.InvokeAsync("TreeDropdown", new
+{
+    id = "categoryDropdown",
+    placeholder = "Select a category",
+    items = new List&lt;TreeDropdownItem&gt;
+    {
+        new() { Value = "workshops", Text = "Workshops", Icon = "fa-solid fa-users" },
+        new() { Value = "retrospectives", Text = "Retrospectives", ParentValue = "workshops", Level = 1 },
+        new() { Value = "brainstorming", Text = "Brainstorming", ParentValue = "workshops", Level = 1 }
+    },
+    allowClear = true
+})</code></pre>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="text-muted mb-3">Rendered Component</h5>
+            @await Component.InvokeAsync("TreeDropdown", new
+            {
+                id = "categoryDropdown",
+                placeholder = "Select a category",
+                items = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>
+                {
+                    new() { Value = "workshops", Text = "Workshops", Icon = "fa-solid fa-users" },
+                    new() { Value = "retrospectives", Text = "Retrospectives", ParentValue = "workshops", Level = 1 },
+                    new() { Value = "brainstorming", Text = "Brainstorming", ParentValue = "workshops", Level = 1 }
+                },
+                allowClear = true
+            })
+        </div>
+    </div>
+
+    <h2 class="mt-5 mb-4 text-primary">Promotional Components</h2>
+
+    <!-- HeroBanner -->
+    <div class="row mb-5 pb-4 border-bottom">
+        <div class="col-lg-6">
+            <h3 class="mb-3">HeroBanner</h3>
+            <pre class="bg-light p-3 rounded"><code>@@await Component.InvokeAsync("HeroBanner", new
+{
+    model = new HeroBannerViewModel
+    {
+        BadgeText = "New Feature",
+        Title = "AI-Powered Workshop Sessions",
+        Description = "Generate complete workshop sessions in seconds with AI.",
+        PrimaryActionText = "Try AI Sessions",
+        PrimaryActionUrl = "/facilitator/create",
+        SecondaryActionText = "Learn More",
+        SecondaryActionUrl = "/getting-started"
+    }
+})</code></pre>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="text-muted mb-3">Rendered Component</h5>
+            @await Component.InvokeAsync("HeroBanner", new
+            {
+                model = new TechWayFit.Pulse.Web.Models.PromotionalComponents.HeroBannerViewModel
+                {
+                    BadgeText = "New Feature",
+                    Title = "AI-Powered Workshop Sessions",
+                    Description = "Generate complete workshop sessions in seconds with AI.",
+                    PrimaryActionText = "Try AI Sessions",
+                    PrimaryActionUrl = "/facilitator/create",
+                    SecondaryActionText = "Learn More",
+                    SecondaryActionUrl = "/getting-started"
+                }
+            })
+        </div>
+    </div>
+
+    <!-- AnnouncementBanner -->
+    <div class="row mb-5 pb-4 border-bottom">
+        <div class="col-lg-6">
+            <h3 class="mb-3">AnnouncementBanner</h3>
+            <pre class="bg-light p-3 rounded"><code>@@await Component.InvokeAsync("AnnouncementBanner", new
+{
+    model = new AnnouncementBannerViewModel
+    {
+        IconClass = "fas fa-circle-info",
+        Title = "Limited Time: 50% Off Annual Plans",
+        Description = "Upgrade today and save on unlimited sessions.",
+        ActionText = "View Pricing",
+        ActionUrl = "#"
+    }
+})</code></pre>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="text-muted mb-3">Rendered Component</h5>
+            @await Component.InvokeAsync("AnnouncementBanner", new
+            {
+                model = new TechWayFit.Pulse.Web.Models.PromotionalComponents.AnnouncementBannerViewModel
+                {
+                    IconClass = "fas fa-circle-info",
+                    Title = "Limited Time: 50% Off Annual Plans",
+                    Description = "Upgrade today and save on unlimited sessions.",
+                    ActionText = "View Pricing",
+                    ActionUrl = "#"
+                }
+            })
+        </div>
+    </div>
+
+    <!-- NotificationStrip -->
+    <div class="row mb-5 pb-4 border-bottom">
+        <div class="col-lg-6">
+            <h3 class="mb-3">NotificationStrip</h3>
+            <pre class="bg-light p-3 rounded"><code>@@await Component.InvokeAsync("NotificationStrip", new
+{
+    model = new NotificationStripViewModel
+    {
+        Message = "New: Presentation Mode is now live!",
+        LinkText = "Learn More",
+        LinkUrl = "#",
+        ShowPulseIndicator = true
+    }
+})</code></pre>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="text-muted mb-3">Rendered Component</h5>
+            @await Component.InvokeAsync("NotificationStrip", new
+            {
+                model = new TechWayFit.Pulse.Web.Models.PromotionalComponents.NotificationStripViewModel
+                {
+                    Message = "New: Presentation Mode is now live!",
+                    LinkText = "Learn More",
+                    LinkUrl = "#",
+                    ShowPulseIndicator = true
+                }
+            })
+        </div>
+    </div>
+
+    <!-- QuickActionsGrid -->
+    <div class="row mb-5 pb-4 border-bottom">
+        <div class="col-lg-6">
+            <h3 class="mb-3">QuickActionsGrid</h3>
+            <pre class="bg-light p-3 rounded"><code>@@await Component.InvokeAsync("QuickActionsGrid", new
+{
+    model = new QuickActionsGridViewModel
+    {
+        Items = new[]
+        {
+            new QuickActionItemViewModel { Icon = "rocket.svg", Label = "Create Session", Url = "/facilitator/create" },
+            new QuickActionItemViewModel { Icon = "chart.svg", Label = "View Dashboard", Url = "/facilitator/dashboard" },
+            new QuickActionItemViewModel { Icon = "people.svg", Label = "Join Session", Url = "/participant/join" },
+            new QuickActionItemViewModel { Icon = "books.svg", Label = "Getting Started", Url = "/getting-started" }
+        }
+    }
+})</code></pre>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="text-muted mb-3">Rendered Component</h5>
+            @await Component.InvokeAsync("QuickActionsGrid", new
+            {
+                model = new TechWayFit.Pulse.Web.Models.PromotionalComponents.QuickActionsGridViewModel
+                {
+                    Items = new[]
+                    {
+                        new TechWayFit.Pulse.Web.Models.PromotionalComponents.QuickActionItemViewModel { Icon = "rocket.svg", Label = "Create Session", Url = "/facilitator/create" },
+                        new TechWayFit.Pulse.Web.Models.PromotionalComponents.QuickActionItemViewModel { Icon = "chart.svg", Label = "View Dashboard", Url = "/facilitator/dashboard" },
+                        new TechWayFit.Pulse.Web.Models.PromotionalComponents.QuickActionItemViewModel { Icon = "people.svg", Label = "Join Session", Url = "/participant/join" },
+                        new TechWayFit.Pulse.Web.Models.PromotionalComponents.QuickActionItemViewModel { Icon = "books.svg", Label = "Getting Started", Url = "/getting-started" }
+                    }
+                }
+            })
+        </div>
+    </div>
+
+    <!-- TestimonialCard -->
+    <div class="row mb-5 pb-4 border-bottom">
+        <div class="col-lg-6">
+            <h3 class="mb-3">TestimonialCard</h3>
+            <pre class="bg-light p-3 rounded"><code>@@await Component.InvokeAsync("TestimonialCard", new
+{
+    model = new TestimonialCardViewModel
+    {
+        Quote = "Pulse transformed how we run retrospectives.",
+        AuthorName = "Sarah Kim",
+        AuthorRole = "Engineering Manager",
+        AvatarText = "SK",
+        Rating = 5
+    }
+})</code></pre>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="text-muted mb-3">Rendered Component</h5>
+            @await Component.InvokeAsync("TestimonialCard", new
+            {
+                model = new TechWayFit.Pulse.Web.Models.PromotionalComponents.TestimonialCardViewModel
+                {
+                    Quote = "Pulse transformed how we run retrospectives.",
+                    AuthorName = "Sarah Kim",
+                    AuthorRole = "Engineering Manager",
+                    AvatarText = "SK",
+                    Rating = 5
+                }
+            })
+        </div>
+    </div>
+
+    <!-- StatsBanner -->
+    <div class="row mb-5 pb-4 border-bottom">
+        <div class="col-lg-6">
+            <h3 class="mb-3">StatsBanner</h3>
+            <pre class="bg-light p-3 rounded"><code>@@await Component.InvokeAsync("StatsBanner", new
+{
+    model = new StatsBannerViewModel
+    {
+        Items = new[]
+        {
+            new StatsBannerItemViewModel { Value = "10K+", Label = "Active Users", SubLabel = "And growing" },
+            new StatsBannerItemViewModel { Value = "50K+", Label = "Sessions Run", SubLabel = "This year" },
+            new StatsBannerItemViewModel { Value = "98%", Label = "Satisfaction", SubLabel = "5-star rated" }
+        }
+    }
+})</code></pre>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="text-muted mb-3">Rendered Component</h5>
+            @await Component.InvokeAsync("StatsBanner", new
+            {
+                model = new TechWayFit.Pulse.Web.Models.PromotionalComponents.StatsBannerViewModel
+                {
+                    Items = new[]
+                    {
+                        new TechWayFit.Pulse.Web.Models.PromotionalComponents.StatsBannerItemViewModel { Value = "10K+", Label = "Active Users", SubLabel = "And growing" },
+                        new TechWayFit.Pulse.Web.Models.PromotionalComponents.StatsBannerItemViewModel { Value = "50K+", Label = "Sessions Run", SubLabel = "This year" },
+                        new TechWayFit.Pulse.Web.Models.PromotionalComponents.StatsBannerItemViewModel { Value = "98%", Label = "Satisfaction", SubLabel = "5-star rated" }
+                    }
+                }
+            })
+        </div>
+    </div>
+
+    <!-- FeatureHighlights -->
+    <div class="row mb-5 pb-4 border-bottom">
+        <div class="col-lg-6">
+            <h3 class="mb-3">FeatureHighlights</h3>
+            <pre class="bg-light p-3 rounded"><code>@@await Component.InvokeAsync("FeatureHighlights", new
+{
+    model = new FeatureHighlightsViewModel
+    {
+        Items = new[]
+        {
+            new FeatureHighlightItemViewModel
+            {
+                Icon = "target.svg",
+                Title = "Real-Time Engagement",
+                Description = "See responses as they happen with live dashboards.",
+                LinkText = "Learn More",
+                LinkUrl = "#"
+            },
+            new FeatureHighlightItemViewModel
+            {
+                Icon = "robot.svg",
+                Title = "AI-Powered Sessions",
+                Description = "Generate workshops automatically based on your goals.",
+                LinkText = "Try AI",
+                LinkUrl = "#"
+            },
+            new FeatureHighlightItemViewModel
+            {
+                Icon = "chart.svg",
+                Title = "Export Data",
+                Description = "Download all responses and analytics in multiple formats.",
+                LinkText = "View Formats",
+                LinkUrl = "#"
+            }
+        }
+    }
+})</code></pre>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="text-muted mb-3">Rendered Component</h5>
+            @await Component.InvokeAsync("FeatureHighlights", new
+            {
+                model = new TechWayFit.Pulse.Web.Models.PromotionalComponents.FeatureHighlightsViewModel
+                {
+                    Items = new[]
+                    {
+                        new TechWayFit.Pulse.Web.Models.PromotionalComponents.FeatureHighlightItemViewModel
+                        {
+                            Icon = "target.svg",
+                            Title = "Real-Time Engagement",
+                            Description = "See responses as they happen with live dashboards.",
+                            LinkText = "Learn More",
+                            LinkUrl = "#"
+                        },
+                        new TechWayFit.Pulse.Web.Models.PromotionalComponents.FeatureHighlightItemViewModel
+                        {
+                            Icon = "robot.svg",
+                            Title = "AI-Powered Sessions",
+                            Description = "Generate workshops automatically based on your goals.",
+                            LinkText = "Try AI",
+                            LinkUrl = "#"
+                        },
+                        new TechWayFit.Pulse.Web.Models.PromotionalComponents.FeatureHighlightItemViewModel
+                        {
+                            Icon = "chart.svg",
+                            Title = "Export Data",
+                            Description = "Download all responses and analytics in multiple formats.",
+                            LinkText = "View Formats",
+                            LinkUrl = "#"
+                        }
+                    }
+                }
+            })
+        </div>
+    </div>
+
+    <!-- CtaCard -->
+    <div class="row mb-5 pb-4">
+        <div class="col-lg-6">
+            <h3 class="mb-3">CtaCard</h3>
+            <pre class="bg-light p-3 rounded"><code>@@await Component.InvokeAsync("CtaCard", new
+{
+    model = new CtaCardViewModel
+    {
+        BadgeText = "Resource",
+        Title = "Workshop Facilitator's Guide",
+        Description = "Download our comprehensive guide with tips and templates.",
+        PrimaryActionText = "Download Guide",
+        PrimaryActionUrl = "#",
+        SecondaryActionText = "View Sample",
+        SecondaryActionUrl = "#",
+        ImageIconClass = "fas fa-file-alt",
+        ImageText = "Guide Preview"
+    }
+})</code></pre>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="text-muted mb-3">Rendered Component</h5>
+            @await Component.InvokeAsync("CtaCard", new
+            {
+                model = new TechWayFit.Pulse.Web.Models.PromotionalComponents.CtaCardViewModel
+                {
+                    BadgeText = "Resource",
+                    Title = "Workshop Facilitator's Guide",
+                    Description = "Download our comprehensive guide with tips and templates.",
+                    PrimaryActionText = "Download Guide",
+                    PrimaryActionUrl = "#",
+                    SecondaryActionText = "View Sample",
+                    SecondaryActionUrl = "#",
+                    ImageIconClass = "fas fa-file-alt",
+                    ImageText = "Guide Preview"
+                }
+            })
+        </div>
+    </div>
+
+</div>
+
+@section Styles {
+    <style>
+        pre {
+            border: 1px solid #dee2e6;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        pre code {
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+    </style>
+}

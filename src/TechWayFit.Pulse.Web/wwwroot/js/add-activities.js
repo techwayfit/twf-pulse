@@ -402,7 +402,7 @@ class AddActivitiesManager {
         if (this.templates.length === 0) {
             container.innerHTML = `
                 <div class="col-12 text-center py-5">
-                    <div class="fs-1 mb-3">📝</div>
+                    <div class="fs-1 mb-3"><i class="fas fa-pen"></i></div>
                     <h5 class="text-muted">No templates available</h5>
                     <p class="text-muted">System templates will be initialized on first application startup.</p>
                 </div>
@@ -430,13 +430,14 @@ class AddActivitiesManager {
     }
 
     renderTemplateCard(template) {
+        const iconHtml = window.IconHelper ? IconHelper.toFontAwesome(template.iconEmoji || 'clipboard-list') : (template.iconEmoji || '<i class="fas fa-clipboard-list"></i>');
         return `
             <div class="col-md-6 col-lg-4 template-card-container" data-category="${template.category}">
                 <div class="activity-card template-card" style="cursor: pointer; position: relative;" onclick="activityManager.selectTemplate('${template.id}')">
                     ${template.isSystemTemplate ? '<span class="template-badge badge bg-primary-subtle text-primary">★ System</span>' : '<span class="template-badge badge bg-success-subtle text-success">✎ Custom</span>'}
                     <div class="activity-header">
                         <div class="activity-title">
-                            <span class="activity-icon">${template.iconEmoji || '📋'}</span>
+                            <span class="activity-icon">${iconHtml}</span>
                             <h3>${this.escapeHtml(template.name)}</h3>
                         </div>
                     </div>
@@ -490,7 +491,12 @@ class AddActivitiesManager {
             }
             
             // Update modal content
-            document.getElementById('templateModalIcon').textContent = template.iconEmoji || '📋';
+            const templateIconEl = document.getElementById('templateModalIcon');
+            if (window.IconHelper) {
+                templateIconEl.innerHTML = IconHelper.toFontAwesome(template.iconEmoji || 'clipboard-list');
+            } else {
+                templateIconEl.textContent = template.iconEmoji || '📋';
+            }
             document.getElementById('templateModalName').textContent = template.name;
             document.getElementById('templateModalDescription').textContent = template.description || '';
             
@@ -530,14 +536,14 @@ class AddActivitiesManager {
     
     getActivityIcon(type) {
         const icons = {
-            'poll': '📊',
-            'wordcloud': '☁️',
-            'quadrant': '📈',
-            'fivewhys': '🔍',
-            'rating': '⭐',
-            'feedback': '💬'
+            'poll': '<i class="fas fa-chart-bar"></i>',
+            'wordcloud': '<i class="fas fa-cloud"></i>',
+            'quadrant': '<i class="fas fa-chart-line"></i>',
+            'fivewhys': '<i class="fas fa-magnifying-glass"></i>',
+            'rating': '<i class="fas fa-star"></i>',
+            'feedback': '<i class="fas fa-comment"></i>'
         };
-        return icons[type.toLowerCase()] || '📋';
+        return icons[type.toLowerCase()] || '<i class="fas fa-clipboard-list"></i>';
     }
 
     showNotification(type, title, message) {
@@ -549,13 +555,13 @@ class AddActivitiesManager {
         
         // Set icon and styling based on type
         if (type === 'success') {
-            icon.textContent = '✅';
+            icon.innerHTML = '<i class="fas fa-circle-check"></i>';
             iconContainer.style.background = 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)';
         } else if (type === 'error') {
-            icon.textContent = '❌';
+            icon.innerHTML = '<i class="fas fa-circle-xmark"></i>';
             iconContainer.style.background = 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
         } else {
-            icon.textContent = 'ℹ️';
+            icon.innerHTML = '<i class="fas fa-circle-info"></i>';
             iconContainer.style.background = 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)';
         }
         
@@ -577,7 +583,7 @@ class AddActivitiesManager {
         const cancelBtn = document.getElementById('confirmCancelBtn');
         
         // Set content
-        icon.textContent = options.icon || '⚠️';
+        icon.innerHTML = options.icon |'<i class="fas fa-triangle-exclamation"></i>';
         titleEl.textContent = title;
         messageEl.textContent = message;
         okBtn.textContent = options.okText || 'OK';
@@ -927,7 +933,7 @@ class AddActivitiesManager {
                 }
             },
             {
-                icon: '🗑️',
+                icon: '<i class="fas fa-trash-can"></i>',
                 okText: 'Remove',
                 okClass: 'btn-danger'
             }
@@ -1030,7 +1036,7 @@ class AddActivitiesManager {
             
             // Check activity limit
             if (this.activities.length >= 30) {
-                statusMessage.innerHTML = '<strong>⚠️ Activity Limit Reached:</strong> Your session already has 30 activities. Sessions should not exceed 30 activities.';
+                statusMessage.innerHTML = '<strong><i class="fas fa-triangle-exclamation"></i> Activity Limit Reached:</strong> Your session already has 30 activities. Sessions should not exceed 30 activities.';
                 statusMessage.className = 'alert alert-warning';
                 statusMessage.classList.remove('d-none');
                 return;
@@ -1039,7 +1045,7 @@ class AddActivitiesManager {
             // Validate duration is selected
             const duration = document.getElementById('aiDuration').value;
             if (!duration) {
-                statusMessage.textContent = '⚠️ Please select a session duration';
+                statusMessage.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Please select a session duration';
                 statusMessage.className = 'alert alert-warning';
                 statusMessage.classList.remove('d-none');
                 return;
@@ -1105,7 +1111,7 @@ class AddActivitiesManager {
                 // Show success message
                 statusMessage.innerHTML = `
                     <div class="alert alert-success">
-                        <strong>✅ Success!</strong> Generated ${generatedActivities.length} AI-powered activities
+                        <strong><i class="fas fa-circle-check"></i> Success!</strong> Generated ${generatedActivities.length} AI-powered activities
                     </div>
                 `;
                 statusMessage.classList.remove('d-none');

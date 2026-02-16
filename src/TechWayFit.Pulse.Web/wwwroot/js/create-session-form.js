@@ -232,11 +232,11 @@ if (!this.form || !this.dropZone || !this.submitBtn) {
      */
     createFieldHTML(type, fieldId) {
         const typeIcons = {
-         'text': '📝',
-            'checkbox': '☑️',
-      'dropdown': '📋',
-          'textarea': '📄',
-        'radio': '◉'
+         'text': '<i class="fas fa-pen"></i>',
+            'checkbox': '<i class="fas fa-check-square"></i>',
+      'dropdown': '<i class="fas fa-chevron-down"></i>',
+          'textarea': '<i class="fas fa-align-left"></i>',
+        'radio': '<i class="fas fa-circle-dot"></i>'
         };
         
         const optionsInput = (type === 'dropdown' || type === 'radio') ? `
@@ -253,7 +253,7 @@ if (!this.form || !this.dropZone || !this.submitBtn) {
      <div class="field-header">
   <div class="drag-handle" title="Drag to reorder"></div>
        <div class="d-flex align-items-center gap-2 flex-grow-1">
- <span class="field-icon">${typeIcons[type] || '📄'}</span>
+ <span class="field-icon">${typeIcons[type] || '<i class="fas fa-file"></i>'}</span>
     <span class="field-type-label" data-field-name="${fieldId}">${this.getFieldTypeLabel(type)}</span>
 </div>
    <button type="button" class="btn-remove-field" onclick="removeFormField('${fieldId}')" title="Remove field">

@@ -21,18 +21,19 @@
         <div class="d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-2 flex-grow-1">
                 @* Expand/Collapse Icon *@
-                <span class="expand-icon fs-7 text-muted" id="expand-icon-@Model.Group.Id">
-                    ▶
-                </span>
+                <i class="ics ics-right-arrow ic-xs text-muted expand-icon" id="expand-icon-@Model.Group.Id"></i>
                 
                 @* Group Icon *@
                 @if (!string.IsNullOrEmpty(Model.Group.Color))
                 {
-                    <span class="d-inline-flex align-items-center justify-content-center rounded px-2 py-1" style="font-size: 1.1rem; background: @Model.Group.Color;">@Model.Group.Icon</span>
+                    <span class="d-inline-flex align-items-center justify-content-center rounded px-2 py-1" 
+                          style="background: @Model.Group.Color;">
+                        <i class="ics @Model.Group.Icon ic-sm"></i>
+                    </span>
                 }
                 else
                 {
-                    <span class="fs-5">@Model.Group.Icon</span>
+                    <i class="ics @Model.Group.Icon ic-sm"></i>
                 }
                 
                 @* Group Name and Badge *@
@@ -70,21 +71,21 @@
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li>
                         <a class="dropdown-item" href="javascript:void(0)" onclick="editGroup('@Model.Group.Id.ToString()', '@(Model.Group.Name.Replace("'", "\\'"))', '@((Model.Group.Description ?? "").Replace("'", "\\'"))', '@Model.Group.Icon', '@(Model.Group.Color ?? "")')">
-                            ✏️ Edit
+                            <i class="ics ics-pencil ic-xs me-1"></i>Edit
                         </a>
                     </li>
                     @if (Model.Group.Level < 3)
                     {
                         <li>
                             <a class="dropdown-item" href="javascript:void(0)" onclick="createSubGroup('@Model.Group.Id', @Model.Group.Level)">
-                                📁 Add Sub Group
+                                <i class="ics ics-folder ic-xs me-1"></i>Add Sub Group
                             </a>
                         </li>
                     }
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteGroup('@Model.Group.Id.ToString()', '@(Model.Group.Name.Replace("'", "\\'"))')">
-                            🗑️ Delete
+                            <i class="ics ics-trash ic-xs me-1"></i>Delete
                         </a>
                     </li>
                 </ul>
@@ -107,15 +108,15 @@
                                     <span class="mt-1 lh-1">
                                         @if (session.IsCompleted)
                                         {
-                                            <text>✅</text>
+                                            <i class="ics ics-check-mark ic-sm text-success"></i>
                                         }
                                         else if (session.IsActive)
                                         {
-                                            <text>⏱️</text>
+                                            <i class="ics ics-stopwatch ic-sm text-warning"></i>
                                         }
                                         else
                                         {
-                                            <text>📅</text>
+                                            <i class="ics ics-calendar ic-sm text-muted"></i>
                                         }
                                     </span>
                                     <div class="flex-grow-1" style="min-width: 0;">
@@ -125,7 +126,7 @@
                                         @if (session.SessionStart.HasValue)
                                         {
                                             <small class="text-muted d-block fs-7 mt-1">
-                                                📅 @session.SessionStart.Value.ToString("MMM dd, HH:mm")@(session.SessionEnd.HasValue ? $" - {session.SessionEnd.Value:HH:mm}" : "")
+                                                <i class="ics ics-calendar ic-xs me-1"></i>@session.SessionStart.Value.ToString("MMM dd, HH:mm")@(session.SessionEnd.HasValue ? $" - {session.SessionEnd.Value:HH:mm}" : "")
                                             </small>
                                         }
                                     </div>
