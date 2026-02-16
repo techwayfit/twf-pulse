@@ -10,7 +10,7 @@ using TechWayFit.Pulse.Web.Services;
 
 namespace TechWayFit.Pulse.Web.Pages.Facilitator;
 
-public partial class Presentation : IAsyncDisposable
+public partial class Presentation : ComponentBase, IAsyncDisposable
 {
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IJSRuntime JS { get; set; } = default!;
@@ -279,16 +279,13 @@ public partial class Presentation : IAsyncDisposable
 
             // Wait a bit for fullscreen to exit
             await Task.Delay(200);
-
-            // Navigate back to live view
-            Navigation.NavigateTo($"/facilitator/live?code={SessionCode}");
+ 
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to exit presenter mode");
-            // Still try to navigate even if fullscreen exit fails
-            Navigation.NavigateTo($"/facilitator/live?code={SessionCode}");
-        }
+        } 
+            Navigation.NavigateTo($"/facilitator/live?code={SessionCode}",true);
     }
 
     private async Task EnterFullscreen()
