@@ -1,0 +1,17 @@
+@model TechWayFit.Pulse.Web.Models.PromotionalComponents.StatsBannerViewModel
+
+<section class="promo-stats-banner">
+    <div class="promo-stats-grid">
+        @foreach (var stat in Model.Items)
+        {
+            <div class="promo-stat-item">
+                <div class="promo-stat-value">@stat.Value</div>
+                <div class="promo-stat-label">@stat.Label</div>
+                @if (!string.IsNullOrWhiteSpace(stat.SubLabel))
+                {
+                    <div class="promo-stat-sublabel">@stat.SubLabel</div>
+                }
+            </div>
+        }
+    </div>
+</section>

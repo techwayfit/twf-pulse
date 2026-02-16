@@ -1,0 +1,23 @@
+@model TechWayFit.Pulse.Web.Models.PromotionalComponents.TestimonialCardViewModel
+
+@{
+    var rating = Math.Clamp(Model.Rating, 0, 5);
+}
+
+<section class="promo-testimonial-card">
+    <blockquote class="promo-testimonial-quote">"@Model.Quote"</blockquote>
+
+    <div class="promo-testimonial-author">
+        <div class="promo-testimonial-avatar">@Model.AvatarText</div>
+        <div class="promo-testimonial-info">
+            <div class="promo-testimonial-name">@Model.AuthorName</div>
+            <div class="promo-testimonial-role">@Model.AuthorRole</div>
+        </div>
+        <div class="promo-testimonial-stars" aria-label="Rating: @rating out of 5">
+            @for (var i = 0; i < rating; i++)
+            {
+                <span>★</span>
+            }
+        </div>
+    </div>
+</section>

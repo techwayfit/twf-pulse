@@ -1,0 +1,29 @@
+@model TechWayFit.Pulse.Web.Models.PromotionalComponents.CtaCardViewModel
+
+<section class="promo-cta-card">
+    <div class="promo-cta-content">
+        @if (!string.IsNullOrWhiteSpace(Model.BadgeText))
+        {
+            <span class="promo-cta-badge">@Model.BadgeText</span>
+        }
+
+        <h2 class="promo-cta-title">@Model.Title</h2>
+        <p class="promo-cta-description">@Model.Description</p>
+
+        <div class="promo-hero-actions">
+            <a href="@Model.PrimaryActionUrl" class="promo-btn-light">@Model.PrimaryActionText</a>
+
+            @if (!string.IsNullOrWhiteSpace(Model.SecondaryActionText))
+            {
+                <a href="@Model.SecondaryActionUrl" class="promo-btn-outline-light">@Model.SecondaryActionText</a>
+            }
+        </div>
+    </div>
+
+    <div class="promo-cta-image">
+        <div class="promo-cta-image-content">
+            <i class="@Model.ImageIconClass" aria-hidden="true"></i>
+            <p>@Model.ImageText</p>
+        </div>
+    </div>
+</section>

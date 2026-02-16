@@ -1,0 +1,20 @@
+@model TechWayFit.Pulse.Web.Models.PromotionalComponents.AnnouncementBannerViewModel
+
+<section class="promo-announcement-banner">
+    <div class="promo-announcement-content">
+        <div class="promo-announcement-icon" aria-hidden="true">
+            <i class="@Model.IconClass"></i>
+        </div>
+        <div class="promo-announcement-text">
+            <div class="promo-announcement-title">@Model.Title</div>
+            <div class="promo-announcement-description">@Model.Description</div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ActionText))
+    {
+        <div class="promo-announcement-action">
+            <a href="@Model.ActionUrl" class="promo-btn-small-light">@Model.ActionText</a>
+        </div>
+    }
+</section>

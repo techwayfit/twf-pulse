@@ -1,0 +1,11 @@
+@model TechWayFit.Pulse.Web.Models.PromotionalComponents.QuickActionsGridViewModel
+
+<section class="promo-quick-actions">
+    @foreach (var action in Model.Items)
+    {
+        <a href="@action.Url" class="promo-quick-action">
+            <div class="promo-quick-action-icon">@action.Icon</div>
+            <div class="promo-quick-action-label">@action.Label</div>
+        </a>
+    }
+</section>

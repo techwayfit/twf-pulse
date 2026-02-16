@@ -1,0 +1,16 @@
+@model TechWayFit.Pulse.Web.Models.PromotionalComponents.NotificationStripViewModel
+
+<section class="promo-notification-strip">
+    <div class="promo-notification-content">
+        @if (Model.ShowPulseIndicator)
+        {
+            <span class="promo-notification-dot"></span>
+        }
+        <span class="promo-notification-text">@Model.Message</span>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.LinkText))
+    {
+        <a href="@Model.LinkUrl" class="promo-notification-link">@Model.LinkText</a>
+    }
+</section>
