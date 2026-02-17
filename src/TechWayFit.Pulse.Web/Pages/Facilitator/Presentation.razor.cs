@@ -36,6 +36,7 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
     private bool isLoading = true;
     private bool isPerformingAction = false;
     private bool isFullscreen = false;
+    private bool isReviewNavigation = false;
     private string errorMessage = string.Empty;
     private HubConnection? hubConnection;
     private bool _disposed = false;
@@ -96,17 +97,42 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
             }
 
             var agenda = await ActivityService.GetAgendaAsync(session.Id);
-            activities = agenda.Select(ApiMapper.ToAgenda).ToList();
-            activity = activities.FirstOrDefault(a => a.Status == Contracts.Enums.ActivityStatus.Open);
-
-            if (activity == null)
+            activities = agenda
+                .Select(ApiMapper.ToAgenda)
+                .OrderBy(a => a.Order)
+                .ThenBy(a => a.ActivityId)
+                .ToList();
+            if (activities.Count == 0)
             {
-                errorMessage = "No active activity found. Please open an activity first.";
+                errorMessage = "No activities found for this session.";
                 return;
             }
 
-            hasPrevious = activities.Any(a => a.Order < activity.Order);
-            hasNext = activities.Any(a => a.Order > activity.Order && a.Status != Contracts.Enums.ActivityStatus.Closed);
+            var openActivity = activities.FirstOrDefault(a => a.Status == Contracts.Enums.ActivityStatus.Open);
+
+            if (activity == null)
+            {
+                activity = openActivity ?? activities.First();
+            }
+            else
+            {
+                var currentSelection = activities.FirstOrDefault(a => a.ActivityId == activity.ActivityId);
+                if (!isReviewNavigation && openActivity != null)
+                {
+                    activity = openActivity;
+                }
+                else if (currentSelection != null)
+                {
+                    activity = currentSelection;
+                }
+                else
+                {
+                    activity = openActivity ?? activities.First();
+                    isReviewNavigation = false;
+                }
+            }
+
+            UpdateNavigationFlags();
 
             try
             {
@@ -207,56 +233,140 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
         }
     }
 
-    private async Task MoveNext()
+    private Task MoveNext()
     {
-        if (activity == null) return;
+        if (activity == null) return Task.CompletedTask;
 
         try
         {
-            isPerformingAction = true;
-            var token = await TokenService.GetFacilitatorTokenAsync(SessionCode);
-            if (string.IsNullOrEmpty(token)) return;
-
-            var nextActivity = activities
-    .Where(a => a.Order > activity.Order)
-  .OrderBy(a => a.Order)
-      .FirstOrDefault();
-
-            if (nextActivity == null) return;
-
-            if (session != null)
+            var currentIndex = GetCurrentActivityIndex();
+            if (currentIndex < 0 || currentIndex >= activities.Count - 1)
             {
-                await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
-                await ActivityService.OpenAsync(session.Id, nextActivity.ActivityId, DateTimeOffset.UtcNow);
-                await SessionService.SetCurrentActivityAsync(session.Id, nextActivity.ActivityId, DateTimeOffset.UtcNow);
-
-                // Broadcast SignalR events
-                var updatedSession = await SessionService.GetByCodeAsync(SessionCode);
-                if (updatedSession != null)
-                {
-                    await HubNotifications.PublishSessionStateChangedAsync(updatedSession);
-                }
-
-                var agenda = await ActivityService.GetAgendaAsync(session.Id);
-                var closedActivity = agenda.FirstOrDefault(a => a.Id == activity.ActivityId);
-                if (closedActivity != null)
-                {
-                    await HubNotifications.PublishActivityStateChangedAsync(SessionCode, closedActivity);
-                }
-
-                var openedActivity = agenda.FirstOrDefault(a => a.Id == nextActivity.ActivityId);
-                if (openedActivity != null)
-                {
-                    await HubNotifications.PublishActivityStateChangedAsync(SessionCode, openedActivity);
-                }
+                return Task.CompletedTask;
             }
 
-            await LoadPresentation();
+            var nextActivity = activities[currentIndex + 1];
+
+            if (nextActivity == null) return Task.CompletedTask;
+
+            activity = nextActivity;
+            isReviewNavigation = true;
+            errorMessage = string.Empty;
+            UpdateNavigationFlags();
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to move next");
             errorMessage = $"Failed to move to next activity: {ex.Message}";
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task GoBack()
+    {
+        if (activity == null) return Task.CompletedTask;
+
+        try
+        {
+            var currentIndex = GetCurrentActivityIndex();
+            if (currentIndex <= 0)
+            {
+                return Task.CompletedTask;
+            }
+
+            var previousActivity = activities[currentIndex - 1];
+
+            if (previousActivity == null) return Task.CompletedTask;
+
+            activity = previousActivity;
+            isReviewNavigation = true;
+            errorMessage = string.Empty;
+            UpdateNavigationFlags();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to go back");
+            errorMessage = $"Failed to go back: {ex.Message}";
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task ActivateCurrentActivity()
+    {
+        if (activity == null || session == null)
+        {
+            return;
+        }
+
+        if (activity.Status == Contracts.Enums.ActivityStatus.Open)
+        {
+            isReviewNavigation = false;
+            return;
+        }
+
+        try
+        {
+            isPerformingAction = true;
+            errorMessage = string.Empty;
+
+            var token = await TokenService.GetFacilitatorTokenAsync(SessionCode);
+            if (string.IsNullOrEmpty(token))
+            {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
+            }
+
+            var currentlyOpen = activities.FirstOrDefault(a =>
+                a.Status == Contracts.Enums.ActivityStatus.Open &&
+                a.ActivityId != activity.ActivityId);
+
+            if (currentlyOpen != null)
+            {
+                await ActivityService.CloseAsync(session.Id, currentlyOpen.ActivityId, DateTimeOffset.UtcNow);
+            }
+
+            if (activity.Status == Contracts.Enums.ActivityStatus.Closed)
+            {
+                await ActivityService.ReopenAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
+            }
+            else
+            {
+                await ActivityService.OpenAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
+            }
+
+            await SessionService.SetCurrentActivityAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
+
+            var updatedSession = await SessionService.GetByCodeAsync(SessionCode);
+            if (updatedSession != null)
+            {
+                await HubNotifications.PublishSessionStateChangedAsync(updatedSession);
+            }
+
+            var agenda = await ActivityService.GetAgendaAsync(session.Id);
+            if (currentlyOpen != null)
+            {
+                var closedActivity = agenda.FirstOrDefault(a => a.Id == currentlyOpen.ActivityId);
+                if (closedActivity != null)
+                {
+                    await HubNotifications.PublishActivityStateChangedAsync(SessionCode, closedActivity);
+                }
+            }
+
+            var openedActivity = agenda.FirstOrDefault(a => a.Id == activity.ActivityId);
+            if (openedActivity != null)
+            {
+                await HubNotifications.PublishActivityStateChangedAsync(SessionCode, openedActivity);
+            }
+
+            isReviewNavigation = false;
+            await LoadPresentation();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to activate selected activity");
+            errorMessage = $"Failed to activate activity: {ex.Message}";
         }
         finally
         {
@@ -264,61 +374,89 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
         }
     }
 
-    private async Task GoBack()
+    private async Task CompleteCurrentActivity()
     {
-        if (activity == null) return;
+        if (activity == null || session == null)
+        {
+            return;
+        }
+
+        if (activity.Status != Contracts.Enums.ActivityStatus.Open)
+        {
+            return;
+        }
 
         try
         {
             isPerformingAction = true;
+            errorMessage = string.Empty;
+
             var token = await TokenService.GetFacilitatorTokenAsync(SessionCode);
-            if (string.IsNullOrEmpty(token)) return;
-
-            var previousActivity = activities
-              .Where(a => a.Order < activity.Order)
-                  .OrderByDescending(a => a.Order)
-             .FirstOrDefault();
-
-            if (previousActivity == null) return;
-
-            if (session != null)
+            if (string.IsNullOrEmpty(token))
             {
-                await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
-                await ActivityService.OpenAsync(session.Id, previousActivity.ActivityId, DateTimeOffset.UtcNow);
-                await SessionService.SetCurrentActivityAsync(session.Id, previousActivity.ActivityId, DateTimeOffset.UtcNow);
-
-                // Broadcast SignalR events
-                var updatedSession = await SessionService.GetByCodeAsync(SessionCode);
-                if (updatedSession != null)
-                {
-                    await HubNotifications.PublishSessionStateChangedAsync(updatedSession);
-                }
-
-                var agenda = await ActivityService.GetAgendaAsync(session.Id);
-                var closedActivity = agenda.FirstOrDefault(a => a.Id == activity.ActivityId);
-                if (closedActivity != null)
-                {
-                    await HubNotifications.PublishActivityStateChangedAsync(SessionCode, closedActivity);
-                }
-
-                var openedActivity = agenda.FirstOrDefault(a => a.Id == previousActivity.ActivityId);
-                if (openedActivity != null)
-                {
-                    await HubNotifications.PublishActivityStateChangedAsync(SessionCode, openedActivity);
-                }
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+                return;
             }
 
+            await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
+            await SessionService.SetCurrentActivityAsync(session.Id, null, DateTimeOffset.UtcNow);
+
+            var updatedSession = await SessionService.GetByCodeAsync(SessionCode);
+            if (updatedSession != null)
+            {
+                await HubNotifications.PublishSessionStateChangedAsync(updatedSession);
+            }
+
+            var agenda = await ActivityService.GetAgendaAsync(session.Id);
+            var closedActivity = agenda.FirstOrDefault(a => a.Id == activity.ActivityId);
+            if (closedActivity != null)
+            {
+                await HubNotifications.PublishActivityStateChangedAsync(SessionCode, closedActivity);
+            }
+
+            isReviewNavigation = true;
             await LoadPresentation();
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to go back");
-            errorMessage = $"Failed to go back: {ex.Message}";
+            Logger.LogError(ex, "Failed to complete selected activity");
+            errorMessage = $"Failed to complete activity: {ex.Message}";
         }
         finally
         {
             isPerformingAction = false;
         }
+    }
+
+    private void UpdateNavigationFlags()
+    {
+        if (activity == null)
+        {
+            hasPrevious = false;
+            hasNext = false;
+            return;
+        }
+
+        var currentIndex = GetCurrentActivityIndex();
+        if (currentIndex < 0)
+        {
+            hasPrevious = false;
+            hasNext = false;
+            return;
+        }
+
+        hasPrevious = currentIndex > 0;
+        hasNext = currentIndex < activities.Count - 1;
+    }
+
+    private int GetCurrentActivityIndex()
+    {
+        if (activity == null || activities.Count == 0)
+        {
+            return -1;
+        }
+
+        return activities.FindIndex(a => a.ActivityId == activity.ActivityId);
     }
 
     private async Task ExitPresenterMode()
@@ -419,7 +557,14 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
             return null;
         }
     }
-    private int CurrentActivityNumber => activity?.Order ?? 0;
+    private int CurrentActivityNumber
+    {
+        get
+        {
+            var index = GetCurrentActivityIndex();
+            return index >= 0 ? index + 1 : 0;
+        }
+    }
     private int TotalActivities => activities.Count;
 
     public async ValueTask DisposeAsync()

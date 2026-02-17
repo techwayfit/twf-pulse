@@ -36,81 +36,122 @@ else
         OnExit="@ExitPresenterMode"
         OnPrevious="@GoBack"
         OnNext="@MoveNext">
-        
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="activity-display">
-                <div class="waiting-state">
-                    <i class="ics ics-warning waiting-icon"></i>
-                    <h3>@errorMessage</h3>
-                    <p>Please return to the live view</p>
-                </div>
-            </div>
-        }
-        else if (activity != null)
-        {
-            @if (activity.Type == ActivityType.Poll)
+
+        <HeaderButtons />
+
+        <FooterButtons>
+            @if (activity != null)
             {
-                <PollPresentation 
-                    SessionCode="@SessionCode" 
-                    ActivityId="@activity.ActivityId"
-                    ActivityTitle="@activity.Title"
-                    ActivityPrompt="@activity.Prompt"
-                    DurationMinutes="@activity.DurationMinutes"
-                    OpenedAt="@activity.OpenedAt" />
+                @if (activity.Status == ActivityStatus.Open)
+                {
+                    <button class="nav-btn activity-action-btn activity-action-complete" @onclick="CompleteCurrentActivity" disabled="@isPerformingAction">
+                        @(isPerformingAction ? "Completing..." : "Complete")
+                    </button>
+                }
+                else
+                {
+                    <button class="nav-btn activity-action-btn @(activity.Status == ActivityStatus.Closed ? "activity-action-restart" : "activity-action-start")" @onclick="ActivateCurrentActivity" disabled="@isPerformingAction">
+                        @(isPerformingAction
+                            ? "Starting..."
+                            : activity.Status == ActivityStatus.Closed
+                                ? "Restart"
+                                : "Start")
+                    </button>
+                }
             }
-            else if (activity.Type == ActivityType.WordCloud)
-            {
-                <WordCloudPresentation 
-                    SessionCode="@SessionCode" 
-                    ActivityId="@activity.ActivityId"
-                    ActivityTitle="@activity.Title"
-                    ActivityPrompt="@activity.Prompt"
-                    DurationMinutes="@activity.DurationMinutes"
-                    OpenedAt="@activity.OpenedAt" />
-            }
-            else if (activity.Type == ActivityType.Rating)
-            {
-                <RatingPresentation 
-                    SessionCode="@SessionCode" 
-                    ActivityId="@activity.ActivityId"
-                    ActivityTitle="@activity.Title"
-                    ActivityPrompt="@activity.Prompt"
-                    DurationMinutes="@activity.DurationMinutes"
-                    OpenedAt="@activity.OpenedAt"
-                    MaxRating="5" />
-            }
-            else if (activity.Type == ActivityType.Quadrant)
-            {
-                <QuadrantPresentation 
-                    SessionCode="@SessionCode" 
-                    ActivityId="@activity.ActivityId"
-                    ActivityTitle="@activity.Title"
-                    ActivityPrompt="@activity.Prompt"
-                    DurationMinutes="@activity.DurationMinutes"
-                    OpenedAt="@activity.OpenedAt"
-                    ActivityConfig="@activity.Config" />
-            }
-            else if (activity.Type == ActivityType.GeneralFeedback)
-            {
-                <GeneralFeedbackPresentation 
-                    SessionCode="@SessionCode" 
-                    ActivityId="@activity.ActivityId"
-                    ActivityTitle="@activity.Title"
-                    ActivityPrompt="@activity.Prompt"
-                    DurationMinutes="@activity.DurationMinutes"
-                    OpenedAt="@activity.OpenedAt" />
-            }
-            else
+        </FooterButtons>
+
+        <ChildContent>
+            @if (!string.IsNullOrEmpty(errorMessage))
             {
                 <div class="activity-display">
                     <div class="waiting-state">
-                        <i class="ics ics-info waiting-icon"></i>
-                        <h3>Activity type not supported</h3>
-                        <p>Presentation mode for @activity.Type activities is coming soon</p>
+                        <i class="ics ics-warning waiting-icon"></i>
+                        <h3>@errorMessage</h3>
+                        <p>Please return to the live view</p>
                     </div>
                 </div>
             }
-        }
+            else if (activity != null)
+            {
+                @if (activity.Status != ActivityStatus.Open)
+                {
+                    <div class="alert alert-warning presentation-review-alert d-flex flex-nowrap align-items-center justify-content-between gap-3 mb-3" role="alert" aria-live="polite">
+                        <div class="presentation-review-alert-body">
+                            <div class="presentation-review-alert-title">Review Mode</div>
+                            <div class="presentation-review-alert-text">
+                                Status: @activity.Status
+                                @(activity.Status == ActivityStatus.Closed
+                                    ? " — This activity is closed and visible in review mode."
+                                    : " — This activity is pending and visible in review mode.")
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @if (activity.Type == ActivityType.Poll)
+                {
+                    <PollPresentation 
+                        SessionCode="@SessionCode" 
+                        ActivityId="@activity.ActivityId"
+                        ActivityTitle="@activity.Title"
+                        ActivityPrompt="@activity.Prompt"
+                        DurationMinutes="@activity.DurationMinutes"
+                        OpenedAt="@activity.OpenedAt" />
+                }
+                else if (activity.Type == ActivityType.WordCloud)
+                {
+                    <WordCloudPresentation 
+                        SessionCode="@SessionCode" 
+                        ActivityId="@activity.ActivityId"
+                        ActivityTitle="@activity.Title"
+                        ActivityPrompt="@activity.Prompt"
+                        DurationMinutes="@activity.DurationMinutes"
+                        OpenedAt="@activity.OpenedAt" />
+                }
+                else if (activity.Type == ActivityType.Rating)
+                {
+                    <RatingPresentation 
+                        SessionCode="@SessionCode" 
+                        ActivityId="@activity.ActivityId"
+                        ActivityTitle="@activity.Title"
+                        ActivityPrompt="@activity.Prompt"
+                        DurationMinutes="@activity.DurationMinutes"
+                        OpenedAt="@activity.OpenedAt"
+                        MaxRating="5" />
+                }
+                else if (activity.Type == ActivityType.Quadrant)
+                {
+                    <QuadrantPresentation 
+                        SessionCode="@SessionCode" 
+                        ActivityId="@activity.ActivityId"
+                        ActivityTitle="@activity.Title"
+                        ActivityPrompt="@activity.Prompt"
+                        DurationMinutes="@activity.DurationMinutes"
+                        OpenedAt="@activity.OpenedAt"
+                        ActivityConfig="@activity.Config" />
+                }
+                else if (activity.Type == ActivityType.GeneralFeedback)
+                {
+                    <GeneralFeedbackPresentation 
+                        SessionCode="@SessionCode" 
+                        ActivityId="@activity.ActivityId"
+                        ActivityTitle="@activity.Title"
+                        ActivityPrompt="@activity.Prompt"
+                        DurationMinutes="@activity.DurationMinutes"
+                        OpenedAt="@activity.OpenedAt" />
+                }
+                else
+                {
+                    <div class="activity-display">
+                        <div class="waiting-state">
+                            <i class="ics ics-info waiting-icon"></i>
+                            <h3>Activity type not supported</h3>
+                            <p>Presentation mode for @activity.Type activities is coming soon</p>
+                        </div>
+                    </div>
+                }
+            }
+        </ChildContent>
     </PresentationLayout>
 }

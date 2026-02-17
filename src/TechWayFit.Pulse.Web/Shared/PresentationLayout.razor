@@ -56,6 +56,7 @@
                 }
             </div>
             <div class="navigation-buttons">
+                @FooterButtons
                 <button class="nav-btn" @onclick="OnPrevious" disabled="@(!HasPrevious)">
                     <svg viewBox="0 0 16 16" fill="none">
                         <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -94,6 +95,9 @@
 
     [Parameter]
     public RenderFragment? HeaderButtons { get; set; }
+
+    [Parameter]
+    public RenderFragment? FooterButtons { get; set; }
 
     [Parameter]
     public bool ShowFooter { get; set; } = true;
