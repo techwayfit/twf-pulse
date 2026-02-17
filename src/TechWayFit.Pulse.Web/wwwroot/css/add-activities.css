@@ -1,69 +1,101 @@
 /* ============================================
-   ADD ACTIVITIES - ACTIVITY CARDS
-   Minimal custom styles for activity management
-   All colors from Bootstrap + pulse.css
+   ADD ACTIVITIES
+   Minimal custom CSS on top of Bootstrap 5.3
    ============================================ */
 
-/* Activities Grid */
-.activities-grid {
-    display: grid;
-    gap: 16px;
-}
-
-/* Activity Cards - Use Bootstrap cards with minimal overrides */
-.activity-card {
-    transition: all 0.2s ease;
-}
-
-.activity-card:hover {
-    transform: translateY(-2px);
-}
-
-/* Activity Number Section */
-.activity-number-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
+.activity-order-column {
     min-width: 60px;
-    padding-top: 4px;
 }
 
-/* Rearrange Controls */
-.rearrange-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+.activity-order-badge {
+    width: 36px;
+    height: 36px;
+    font-size: 0.875rem;
 }
 
-.btn-rearrange {
+.activity-order-btn {
     width: 32px;
     height: 28px;
-    padding: 0;
-    border-radius: var(--pulse-radius-sm);
     font-size: 12px;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-.btn-rearrange:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-/* Activity Content */
-.activity-content {
+.activity-content-col {
     min-width: 0;
 }
 
-/* Drag and Drop States */
-.activity-card.dragging {
-    opacity: 0.5;
-    transform: scale(0.95);
+.add-mode-tab {
+    border-color: var(--pulse-blue);
+    color: var(--pulse-blue);
+    background-color: rgba(14, 165, 233, 0.06);
 }
 
-.activity-card.drop-target {
-    border-top: 3px solid var(--pulse-blue);
+.add-mode-tab:hover {
+    border-color: var(--pulse-blue);
+    color: var(--pulse-blue-dark);
+    background-color: rgba(14, 165, 233, 0.14);
+}
+
+.add-mode-tab.active,
+.add-mode-tab:active,
+.add-mode-tab.show {
+    background-color: var(--pulse-blue);
+    border-color: var(--pulse-blue);
+    color: #fff;
+}
+
+#manualActivityList .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#manualActivityList .card:hover {
+    transform: translateY(-2px);
+}
+
+.tab-intro {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tab-intro h5 {
+    font-size: 1.5rem;
+}
+
+.tab-intro p {
+    font-size: 1rem;
+}
+
+.manual-actions-sticky {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background-color: var(--bs-body-bg, #fff);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.template-card-item {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.template-card-item:hover {
+    transform: translateY(-2px);
+}
+
+.template-card-title {
+    line-height: 1.3;
+}
+
+.template-badge {
+    z-index: 2;
+}
+
+.template-card-icon .ics {
+    width: 24px;
+    height: 24px;
+}
+
+.template-activity-icon .ics {
+    width: 20px;
+    height: 20px;
 }

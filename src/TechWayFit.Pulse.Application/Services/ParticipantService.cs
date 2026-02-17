@@ -87,13 +87,17 @@ public sealed class ParticipantService : IParticipantService
             }
         }
 
+        // Generate authentication token for participant
+        var token = Guid.NewGuid().ToString("N");
+
         var participant = new Participant(
             Guid.NewGuid(),
             sessionId,
             string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim(),
             isAnonymous,
             dimensions,
-            joinedAt);
+            joinedAt,
+            token);
 
         await _participants.AddAsync(participant, cancellationToken);
         return participant;

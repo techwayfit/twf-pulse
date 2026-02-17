@@ -34,6 +34,7 @@ public sealed class SessionsController : ControllerBase
     private readonly TechWayFit.Pulse.Application.Abstractions.Services.IAIWorkQueue _aiQueue;
     private readonly TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService _sessionAI;
     private readonly ISessionGroupService _sessionGroups;
+    private readonly TechWayFit.Pulse.Web.Services.IHubNotificationService _hubNotifications;
 
     public SessionsController(
         ISessionService sessions,
@@ -54,7 +55,8 @@ public sealed class SessionsController : ControllerBase
         IHubContext<WorkshopHub, IWorkshopClient> hub,
         TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService participantAI,
         TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService facilitatorAI,
-        ISessionGroupService sessionGroups)
+        ISessionGroupService sessionGroups,
+        TechWayFit.Pulse.Web.Services.IHubNotificationService hubNotifications)
     {
         _sessions = sessions;
         _authService = authService;
@@ -75,6 +77,7 @@ public sealed class SessionsController : ControllerBase
         _aiQueue = aiQueue;
         _sessionAI = sessionAI;
         _sessionGroups = sessionGroups;
+        _hubNotifications = hubNotifications;
     }
 
     [HttpPost]
@@ -302,7 +305,7 @@ public sealed class SessionsController : ControllerBase
         var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (updated is not null)
         {
-            await PublishSessionStateChangedAsync(updated, cancellationToken);
+            await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
         }
         return Ok(Wrap(ApiMapper.ToSummary(updated ?? session)));
     }
@@ -328,7 +331,7 @@ public sealed class SessionsController : ControllerBase
         var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (updated is not null)
         {
-            await PublishSessionStateChangedAsync(updated, cancellationToken);
+            await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
         }
         return Ok(Wrap(ApiMapper.ToSummary(updated ?? session)));
     }
@@ -440,7 +443,7 @@ public sealed class SessionsController : ControllerBase
                 request.DurationMinutes,
                 cancellationToken);
 
-            await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+            await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
             return Ok(Wrap(new ActivityResponse(activity.Id)));
         }
         catch (ArgumentException ex)
@@ -622,7 +625,7 @@ public sealed class SessionsController : ControllerBase
                 request.DurationMinutes,
                 cancellationToken);
 
-            await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+            await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
             return Ok(Wrap(new ActivityResponse(activity.Id)));
         }
         catch (ArgumentException ex)
@@ -754,14 +757,14 @@ public sealed class SessionsController : ControllerBase
             var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
             if (updated is not null)
             {
-                await PublishSessionStateChangedAsync(updated, cancellationToken);
+                await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
             }
 
             var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
             var activity = agenda.FirstOrDefault(item => item.Id == activityId);
             if (activity is not null)
             {
-                await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+                await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
             }
             return Ok(Wrap(new ActivityResponse(activityId)));
         }
@@ -806,14 +809,14 @@ public sealed class SessionsController : ControllerBase
             var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
             if (updated is not null)
             {
-                await PublishSessionStateChangedAsync(updated, cancellationToken);
+                await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
             }
 
             var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
             var activity = agenda.FirstOrDefault(item => item.Id == activityId);
             if (activity is not null)
             {
-                await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+                await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
             }
             return Ok(Wrap(new ActivityResponse(activityId)));
         }
@@ -852,14 +855,14 @@ public sealed class SessionsController : ControllerBase
             var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
             if (updated is not null)
             {
-                await PublishSessionStateChangedAsync(updated, cancellationToken);
+                await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
             }
 
             var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
             var activity = agenda.FirstOrDefault(item => item.Id == activityId);
             if (activity is not null)
             {
-                await PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+                await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
             }
             return Ok(Wrap(new ActivityResponse(activityId)));
         }
@@ -905,9 +908,14 @@ public sealed class SessionsController : ControllerBase
             participantCount.Count,
                 DateTimeOffset.UtcNow));
 
-            // SECURITY: Issue a signed token to bind participant identity
-            var auth = _participantTokens.Create(session.Id, participant.Id);
-            return Ok(Wrap(new JoinParticipantResponse(participant.Id, auth.Token)));
+            // SECURITY: Return the participant's token (generated during creation and persisted to database)
+            // Add to in-memory cache for performance
+            if (!string.IsNullOrEmpty(participant.Token))
+            {
+                _participantTokens.TryGet(session.Id, participant.Id, out _); // This will cache it from DB
+            }
+            
+            return Ok(Wrap(new JoinParticipantResponse(participant.Id, participant.Token ?? throw new InvalidOperationException("Participant token not generated"))));
         }
         catch (ArgumentException ex)
         {
@@ -1259,46 +1267,6 @@ filters ?? new Dictionary<string, string?>(),
         }
 
         return null;
-    }
-
-    /// <summary>
-    /// Broadcast session state change event to all session participants
-    /// </summary>
-    private async Task PublishSessionStateChangedAsync(
-        TechWayFit.Pulse.Domain.Entities.Session session,
-    CancellationToken cancellationToken)
-    {
-        var participants = await _participants.GetBySessionAsync(session.Id, cancellationToken);
-
-        var sessionStateEvent = new SessionStateChangedEvent(
-    session.Code,
- ApiMapper.MapSessionStatus(session.Status),
-   session.CurrentActivityId,
- participants.Count,
-            DateTimeOffset.UtcNow);
-
-        await _hub.Clients.Group(session.Code).SessionStateChanged(sessionStateEvent);
-    }
-
-    /// <summary>
-    /// Broadcast activity state change event to all session participants
-    /// </summary>
-    private async Task PublishActivityStateChangedAsync(
-        string sessionCode,
-        TechWayFit.Pulse.Domain.Entities.Activity activity,
-        CancellationToken cancellationToken)
-    {
-        var activityStateEvent = new ActivityStateChangedEvent(
-            sessionCode,
-            activity.Id,
-            activity.Order,
-            activity.Title,
-            ApiMapper.MapActivityStatus(activity.Status),
-            activity.OpenedAt,
-            activity.ClosedAt,
-            DateTimeOffset.UtcNow);
-
-        await _hub.Clients.Group(sessionCode).ActivityStateChanged(activityStateEvent);
     }
 
     /// <summary>

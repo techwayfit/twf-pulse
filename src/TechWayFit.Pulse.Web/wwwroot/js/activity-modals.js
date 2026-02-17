@@ -276,6 +276,7 @@ window.saveQuadrantActivity = async function() {
     const config = {
         xAxisLabel: document.getElementById('quadrantXAxis').value || 'X Axis',
         yAxisLabel: document.getElementById('quadrantYAxis').value || 'Y Axis',
+        scale: parseInt(document.getElementById('quadrantScale').value) || 10,
         topLeftLabel: document.getElementById('quadrantTopLeft').value || 'Top Left',
         topRightLabel: document.getElementById('quadrantTopRight').value || 'Top Right',
         bottomLeftLabel: document.getElementById('quadrantBottomLeft').value || 'Bottom Left',

@@ -253,6 +253,9 @@ try
     builder.Services.AddSingleton<IFacilitatorTokenService, FacilitatorTokenService>();
     builder.Services.AddScoped<IClientTokenService, ClientTokenService>();
 
+    // Hub Notification Service for real-time events
+    builder.Services.AddScoped<IHubNotificationService, HubNotificationService>();
+
     // Register file service and memory cache for template caching
     builder.Services.AddMemoryCache();
     builder.Services.AddSingleton<IFileService, FileService>();

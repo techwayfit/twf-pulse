@@ -1,6 +1,8 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Application.Abstractions.Services
+@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using System.Text.Json
 @inject IDashboardService DashboardService
 @inject ISessionService SessionService
 @inject NavigationManager Navigation
@@ -26,37 +28,37 @@
     </div>
 
     <div class="activity-content">
-        <div class="quadrant-container" style="position: relative; width: 100%; aspect-ratio: 1; max-width: 800px; margin: 0 auto;">
-            <!-- Quadrant Grid -->
-            <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
-                <!-- Axes -->
-                <line x1="0" y1="50" x2="100" y2="50" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
-                <line x1="50" y1="0" x2="50" y2="100" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
-                
-                <!-- Data Points -->
-                @foreach (var point in QuadrantPoints)
-                {
-                    var xPos = point.X;
-                    var yPos = 100 - point.Y; // Invert Y for SVG coordinate system
-                    <circle cx="@xPos" cy="@yPos" r="2" fill="#10B981" opacity="0.8"/>
-                }
-            </svg>
-            
-            <!-- Labels as HTML overlay -->
-            <div style="position: absolute; top: 20%; left: 20%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.6); font-size: 1.2rem;">Q2</div>
-            <div style="position: absolute; top: 20%; left: 80%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.6); font-size: 1.2rem;">Q1</div>
-            <div style="position: absolute; top: 80%; left: 20%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.6); font-size: 1.2rem;">Q3</div>
-            <div style="position: absolute; top: 80%; left: 80%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.6); font-size: 1.2rem;">Q4</div>
-            
+        <div class="quadrant-container" >
             @if (!QuadrantPoints.Any())
             {
-                <div class="waiting-state" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                    <svg class="waiting-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M3 3V21H21V3H3ZM19 19H5V5H19V19ZM11 7H13V13H11V7ZM11 15H13V17H11V15Z"/>
-                    </svg>
+                <div class="waiting-state">
+                    <i class="ics ics-chart waiting-icon"></i>
                     <h3>Waiting for feedback</h3>
                     <p>Points will appear as participants place their feedback</p>
                 </div>
+            }
+            else
+            {
+                <!-- Quadrant Grid -->
+                <svg viewBox="0 0 100 100" style="width: 90%; max-width: 600px; aspect-ratio: 1; position: relative;">
+                    <!-- Axes -->
+                    <line x1="0" y1="50" x2="100" y2="50" stroke="#0EA5E9" stroke-width="0.5" opacity="0.6"/>
+                    <line x1="50" y1="0" x2="50" y2="100" stroke="#0EA5E9" stroke-width="0.5" opacity="0.6"/>
+                    
+                    <!-- Data Points -->
+                    @foreach (var point in QuadrantPoints)
+                    {
+                        var xPos = point.X;
+                        var yPos = 100 - point.Y; // Invert Y for SVG coordinate system
+                        <circle cx="@xPos" cy="@yPos" r="2" fill="#10B981" opacity="0.8"/>
+                    }
+                </svg>
+                
+                <!-- Labels as HTML overlay -->
+                <div style="position: absolute; top: 15%; left: 15%; color: #6B7280; font-size: 1rem;">@topLeftLabel</div>
+                <div style="position: absolute; top: 15%; right: 15%; color: #6B7280; font-size: 1rem;">@topRightLabel</div>
+                <div style="position: absolute; bottom: 15%; left: 15%; color: #6B7280; font-size: 1rem;">@bottomLeftLabel</div>
+                <div style="position: absolute; bottom: 15%; right: 15%; color: #6B7280; font-size: 1rem;">@bottomRightLabel</div>
             }
         </div>
     </div>
@@ -80,19 +82,53 @@
 
     [Parameter]
     public DateTimeOffset? OpenedAt { get; set; }
+    
+    [Parameter]
+    public string? ActivityConfig { get; set; }
 
     private HubConnection? hubConnection;
     private List<QuadrantPoint> QuadrantPoints { get; set; } = new();
     private string TimeRemaining { get; set; } = "--:--";
     private System.Threading.Timer? timer;
     private System.Threading.Timer? dataRefreshTimer;
+    
+    private string topLeftLabel = "Top Left";
+    private string topRightLabel = "Top Right";
+    private string bottomLeftLabel = "Bottom Left";
+    private string bottomRightLabel = "Bottom Right";
 
     protected override async Task OnInitializedAsync()
     {
+        LoadConfig();
         await LoadData();
         await InitializeSignalR();
         StartTimer();
         StartDataRefresh();
+    }
+    
+    private void LoadConfig()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(ActivityConfig)) return;
+            
+            var config = JsonSerializer.Deserialize<QuadrantConfig>(
+                ActivityConfig,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+            
+            if (config != null)
+            {
+                topLeftLabel = config.TopLeftLabel;
+                topRightLabel = config.TopRightLabel;
+                bottomLeftLabel = config.BottomLeftLabel;
+                bottomRightLabel = config.BottomRightLabel;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading quadrant config: {ex.Message}");
+        }
     }
 
     private async Task LoadData()

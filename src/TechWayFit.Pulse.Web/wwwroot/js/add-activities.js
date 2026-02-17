@@ -254,8 +254,23 @@ class AddActivitiesManager {
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 // Add active class to clicked button
                 event.target.classList.add('active');
+
+                const targetPanel = event.target.getAttribute('data-bs-target');
+                this.updateSaveSessionVisibility(targetPanel);
             });
         });
+
+        const activeTab = document.querySelector('[data-bs-toggle="tab"].active');
+        const activePanel = activeTab ? activeTab.getAttribute('data-bs-target') : '#manual-panel';
+        this.updateSaveSessionVisibility(activePanel);
+    }
+
+    updateSaveSessionVisibility(activePanel) {
+        const saveSessionSection = document.getElementById('saveSessionSection');
+        if (!saveSessionSection) return;
+
+        const isManual = activePanel === '#manual-panel';
+        saveSessionSection.classList.toggle('d-none', !isManual);
     }
 
     initializeTemplateModal() {
@@ -402,7 +417,7 @@ class AddActivitiesManager {
         if (this.templates.length === 0) {
             container.innerHTML = `
                 <div class="col-12 text-center py-5">
-                    <div class="fs-1 mb-3"><i class="fas fa-pen"></i></div>
+                    <div class="mb-3"><i class="ics ics-pen ic-xl"></i></div>
                     <h5 class="text-muted">No templates available</h5>
                     <p class="text-muted">System templates will be initialized on first application startup.</p>
                 </div>
@@ -430,23 +445,23 @@ class AddActivitiesManager {
     }
 
     renderTemplateCard(template) {
-        const iconHtml = window.IconHelper ? IconHelper.toFontAwesome(template.iconEmoji || 'clipboard-list') : (template.iconEmoji || '<i class="fas fa-clipboard-list"></i>');
+        const iconHtml = window.IconHelper ? IconHelper.toFontAwesome(template.iconEmoji || 'ics-clipboard', 'ic-md') : '<i class="ics ics-clipboard ic-md"></i>';
         return `
             <div class="col-md-6 col-lg-4 template-card-container" data-category="${template.category}">
-                <div class="activity-card template-card" style="cursor: pointer; position: relative;" onclick="activityManager.selectTemplate('${template.id}')">
-                    ${template.isSystemTemplate ? '<span class="template-badge badge bg-primary-subtle text-primary">★ System</span>' : '<span class="template-badge badge bg-success-subtle text-success">✎ Custom</span>'}
-                    <div class="activity-header">
-                        <div class="activity-title">
-                            <span class="activity-icon">${iconHtml}</span>
-                            <h3>${this.escapeHtml(template.name)}</h3>
+                <div class="card border-0 shadow-sm h-100 position-relative template-card-item" onclick="activityManager.selectTemplate('${template.id}')" role="button" tabindex="0">
+                    ${template.isSystemTemplate ? '' : '<span class="badge bg-success-subtle text-success position-absolute top-0 start-0 m-3 template-badge">✎ Custom</span>'}
+                    <div class="card-body p-4 pb-3 d-flex flex-column">
+                        <div class="d-flex align-items-start gap-2 mb-3">
+                            <span class="template-card-icon">${iconHtml}</span>
+                            <h5 class="mb-0 fw-semibold template-card-title">${this.escapeHtml(template.name)}</h5>
+                        </div>
+                        <p class="text-muted mb-3 flex-grow-1">${this.escapeHtml(template.description)}</p>
+                        <div>
+                            <span class="badge bg-secondary-subtle text-secondary text-uppercase small">${template.category}</span>
                         </div>
                     </div>
-                    <p class="activity-description">${this.escapeHtml(template.description)}</p>
-                    <p class="activity-meta">
-                        <span class="badge bg-secondary-subtle text-secondary">${template.category}</span>
-                    </p>
-                    <div class="template-overlay">
-                        <button class="btn btn-primary" onclick="event.stopPropagation(); activityManager.selectTemplate('${template.id}')">
+                    <div class="template-card-overlay text-center">
+                        <button type="button" class="btn btn-primary" onclick="event.stopPropagation(); activityManager.selectTemplate('${template.id}')">
                             Use Template
                         </button>
                     </div>
@@ -493,9 +508,9 @@ class AddActivitiesManager {
             // Update modal content
             const templateIconEl = document.getElementById('templateModalIcon');
             if (window.IconHelper) {
-                templateIconEl.innerHTML = IconHelper.toFontAwesome(template.iconEmoji || 'clipboard-list');
+                templateIconEl.innerHTML = IconHelper.toFontAwesome(template.iconEmoji || 'ics-clipboard', 'ic-xl');
             } else {
-                templateIconEl.textContent = template.iconEmoji || '📋';
+                templateIconEl.innerHTML = '<i class="ics ics-clipboard ic-xl"></i>';
             }
             document.getElementById('templateModalName').textContent = template.name;
             document.getElementById('templateModalDescription').textContent = template.description || '';
@@ -510,7 +525,7 @@ class AddActivitiesManager {
                 
                 return `
                     <div class="list-group-item d-flex align-items-start gap-2">
-                        <span class="me-1" style="font-size: 1.2rem;">${activityIcon}</span>
+                        <span class="me-1 template-activity-icon">${activityIcon}</span>
                         <div class="flex-grow-1">
                             <div class="fw-medium">${this.escapeHtml(activity.title)}</div>
                             ${activity.prompt ? `<small class="text-muted">${this.escapeHtml(activity.prompt)}</small>` : ''}
@@ -536,14 +551,14 @@ class AddActivitiesManager {
     
     getActivityIcon(type) {
         const icons = {
-            'poll': '<i class="fas fa-chart-bar"></i>',
-            'wordcloud': '<i class="fas fa-cloud"></i>',
-            'quadrant': '<i class="fas fa-chart-line"></i>',
-            'fivewhys': '<i class="fas fa-magnifying-glass"></i>',
-            'rating': '<i class="fas fa-star"></i>',
-            'feedback': '<i class="fas fa-comment"></i>'
+            'poll': '<i class="ics ics-chart ic-sm"></i>',
+            'wordcloud': '<i class="ics ics-thought-balloon ic-sm"></i>',
+            'quadrant': '<i class="ics ics-chart-increasing ic-sm"></i>',
+            'fivewhys': '<i class="ics ics-search ic-sm"></i>',
+            'rating': '<i class="ics ics-star ic-sm"></i>',
+            'feedback': '<i class="ics ics-chat ic-sm"></i>'
         };
-        return icons[type.toLowerCase()] || '<i class="fas fa-clipboard-list"></i>';
+        return icons[type.toLowerCase()] || '<i class="ics ics-clipboard ic-sm"></i>';
     }
 
     showNotification(type, title, message) {
@@ -555,13 +570,13 @@ class AddActivitiesManager {
         
         // Set icon and styling based on type
         if (type === 'success') {
-            icon.innerHTML = '<i class="fas fa-circle-check"></i>';
+            icon.innerHTML = '<i class="ics ics-check-mark ic-xl"></i>';
             iconContainer.style.background = 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)';
         } else if (type === 'error') {
-            icon.innerHTML = '<i class="fas fa-circle-xmark"></i>';
+            icon.innerHTML = '<i class="ics ics-cross-mark ic-xl"></i>';
             iconContainer.style.background = 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
         } else {
-            icon.innerHTML = '<i class="fas fa-circle-info"></i>';
+            icon.innerHTML = '<i class="ics ics-info ic-xl"></i>';
             iconContainer.style.background = 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)';
         }
         
@@ -583,7 +598,7 @@ class AddActivitiesManager {
         const cancelBtn = document.getElementById('confirmCancelBtn');
         
         // Set content
-        icon.innerHTML = options.icon |'<i class="fas fa-triangle-exclamation"></i>';
+        icon.innerHTML = options.icon || '<i class="ics ics-warning ic-xl"></i>';
         titleEl.textContent = title;
         messageEl.textContent = message;
         okBtn.textContent = options.okText || 'OK';
@@ -933,7 +948,7 @@ class AddActivitiesManager {
                 }
             },
             {
-                icon: '<i class="fas fa-trash-can"></i>',
+                icon: '<i class="ics ics-trash ic-xl"></i>',
                 okText: 'Remove',
                 okClass: 'btn-danger'
             }
@@ -975,7 +990,7 @@ class AddActivitiesManager {
             container.innerHTML = html;
             
             // Disable last down button since you can't move the last item down
-            const downButtons = container.querySelectorAll('.btn-rearrange:last-child');
+            const downButtons = container.querySelectorAll('.activity-order-btn:last-child');
             if (downButtons.length > 0 && this.activities.length > 0) {
                 downButtons[downButtons.length - 1].disabled = true;
             }
@@ -1036,7 +1051,7 @@ class AddActivitiesManager {
             
             // Check activity limit
             if (this.activities.length >= 30) {
-                statusMessage.innerHTML = '<strong><i class="fas fa-triangle-exclamation"></i> Activity Limit Reached:</strong> Your session already has 30 activities. Sessions should not exceed 30 activities.';
+                statusMessage.innerHTML = '<strong><i class="ics ics-warning ic-sm ic-mr"></i>Activity Limit Reached:</strong> Your session already has 30 activities. Sessions should not exceed 30 activities.';
                 statusMessage.className = 'alert alert-warning';
                 statusMessage.classList.remove('d-none');
                 return;
@@ -1045,7 +1060,7 @@ class AddActivitiesManager {
             // Validate duration is selected
             const duration = document.getElementById('aiDuration').value;
             if (!duration) {
-                statusMessage.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Please select a session duration';
+                statusMessage.innerHTML = '<i class="ics ics-warning ic-sm ic-mr"></i>Please select a session duration';
                 statusMessage.className = 'alert alert-warning';
                 statusMessage.classList.remove('d-none');
                 return;
@@ -1111,7 +1126,7 @@ class AddActivitiesManager {
                 // Show success message
                 statusMessage.innerHTML = `
                     <div class="alert alert-success">
-                        <strong><i class="fas fa-circle-check"></i> Success!</strong> Generated ${generatedActivities.length} AI-powered activities
+                        <strong><i class="ics ics-check-mark ic-sm ic-mr"></i>Success!</strong> Generated ${generatedActivities.length} AI-powered activities
                     </div>
                 `;
                 statusMessage.classList.remove('d-none');

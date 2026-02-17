@@ -29,18 +29,21 @@ public sealed class ContributionCounterRepository : IContributionCounterReposito
 
     public async Task UpsertAsync(ContributionCounter counter, CancellationToken cancellationToken = default)
     {
-        var record = counter.ToRecord();
-        var exists = await _dbContext.ContributionCounters
-            .AsNoTracking()
-            .AnyAsync(x => x.ParticipantId == record.ParticipantId && x.SessionId == record.SessionId, cancellationToken);
+        // Try to find the existing tracked entity using the primary key
+        var existingRecord = await _dbContext.ContributionCounters
+            .FindAsync(new object[] { counter.ParticipantId }, cancellationToken);
 
-        if (exists)
+        if (existingRecord != null)
         {
-            _dbContext.ContributionCounters.Update(record);
+            // Update the existing tracked entity's properties
+            existingRecord.SessionId = counter.SessionId;
+            existingRecord.TotalContributions = counter.TotalContributions;
+            existingRecord.UpdatedAt = counter.UpdatedAt;
         }
         else
         {
-            _dbContext.ContributionCounters.Add(record);
+            // Add a new record
+            _dbContext.ContributionCounters.Add(counter.ToRecord());
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);

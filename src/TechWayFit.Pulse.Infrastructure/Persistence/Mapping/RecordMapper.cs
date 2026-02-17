@@ -92,7 +92,8 @@ internal static class RecordMapper
             record.DisplayName,
             record.IsAnonymous,
             PersistenceJson.DeserializeDimensions(record.DimensionsJson),
-            record.JoinedAt);
+            record.JoinedAt,
+            record.Token);
     }
 
     internal static ParticipantRecord ToRecord(this Participant participant)
@@ -104,6 +105,7 @@ internal static class RecordMapper
             DisplayName = participant.DisplayName,
             IsAnonymous = participant.IsAnonymous,
             DimensionsJson = PersistenceJson.SerializeDimensions(participant.Dimensions),
+            Token = participant.Token,
             JoinedAt = participant.JoinedAt
         };
     }

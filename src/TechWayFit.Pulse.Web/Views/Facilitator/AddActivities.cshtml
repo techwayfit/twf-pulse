@@ -20,9 +20,9 @@
         </div>
 
         <!-- Session Info Badge -->
-        <div class="card border-0 shadow-sm mb-4 bg-primary-subtle border-start border-primary border-4">
+        <div class="card border-0 shadow-sm mb-4 bg-success-subtle border-start border-success border-4">
             <div class="card-body d-flex align-items-center gap-3 py-3">
-                <div class="fs-4"><i class="fas fa-clipboard-list"></i></div>
+                <div><i class="ics ics-clipboard ic-md"></i></div>
                 <div class="flex-grow-1">
                     <div class="fw-semibold mb-1 text-primary">Session: <span id="sessionTitle">@ViewData["SessionTitle"]</span></div>
                     <small class="text-muted">Code: <strong id="sessionCode" class="text-primary">@ViewData["SessionCode"]</strong></small>
@@ -43,18 +43,18 @@
             <div class="card-header bg-white border-bottom pt-4 px-4">
                 <div class="row g-2" role="tablist">
                     <div class="col-4">
-                        <button class="btn btn-outline-primary w-100 active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-panel" type="button" role="tab" aria-controls="manual-panel" aria-selected="true">
-                            <i class="fas fa-pencil me-1"></i>Manual
+                        <button class="btn btn-outline-primary w-100 active add-mode-tab" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-panel" type="button" role="tab" aria-controls="manual-panel" aria-selected="true">
+                            <i class="ics ics-pencil ic-sm ic-mr"></i>Manual
                         </button>
                     </div>
                     <div class="col-4">
-                        <button class="btn btn-outline-primary w-100" id="template-tab" data-bs-toggle="tab" data-bs-target="#template-panel" type="button" role="tab" aria-controls="template-panel" aria-selected="false">
-                            <i class="fas fa-clipboard-list me-1"></i>Template
+                        <button class="btn btn-outline-primary w-100 add-mode-tab" id="template-tab" data-bs-toggle="tab" data-bs-target="#template-panel" type="button" role="tab" aria-controls="template-panel" aria-selected="false">
+                            <i class="ics ics-clipboard ic-sm ic-mr"></i>Template
                         </button>
                     </div>
                     <div class="col-4">
-                        <button class="btn btn-outline-primary w-100" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai-panel" type="button" role="tab" aria-controls="ai-panel" aria-selected="false">
-                            <i class="fas fa-brain me-1"></i>AI Create
+                        <button class="btn btn-outline-primary w-100 add-mode-tab" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai-panel" type="button" role="tab" aria-controls="ai-panel" aria-selected="false">
+                            <i class="ics ics-robot ic-sm ic-mr"></i>AI Create
                         </button>
                     </div>
                 </div>
@@ -65,46 +65,53 @@
                     <!-- Manual Mode -->
                     <div class="tab-pane fade show active" id="manual-panel" role="tabpanel">
                         <div class="py-3">
+                            <div class="text-center mb-4 tab-intro">
+                                <h5 class="mb-2 d-flex align-items-center justify-content-center gap-2">
+                                    <i class="ics ics-pencil ic-md"></i>
+                                    <span>Add Activities Manually</span>
+                                </h5>
+                                <p class="text-muted mb-0">Build your session by adding activities one by one</p>
+                            </div>
+
                             <!-- Activity List -->
                             <div id="manualActivityList" class="mb-4">
                                 <div class="text-muted text-center small py-3">No activities yet. Choose an activity type below to add one.</div>
                             </div>
-                            
-                            <div class="text-center mb-3">
-                                <h5 class="mb-2"><i class="fas fa-pencil me-2"></i>Add Activities Manually</h5>
-                                <p class="text-muted mb-0">Choose from different activity types to build your session</p>
-                            </div>
-                            
-                            <div class="row g-2 mb-3">
-                                <div class="col-4">
-                                    <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#pollModal">
-                                        <i class="fas fa-chart-bar me-1"></i>Poll
-                                    </button>
-                                </div>
-                                <div class="col-4">
-                                    <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#wordcloudModal">
-                                        <i class="fas fa-cloud me-1"></i>Word Cloud
-                                    </button>
-                                </div>
-                                <div class="col-4">
-                                    <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="quadrantModal">
-                                        <i class="fas fa-chart-line me-1"></i>Quadrant
-                                    </button>
-                                </div>
-                                <div class="col-4">
-                                    <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#fivewhysModal">
-                                        <i class="fas fa-magnifying-glass me-1"></i>5 Whys
-                                    </button>
-                                </div>
-                                <div class="col-4">
-                                    <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#ratingModal">
-                                        <i class="fas fa-star me-1"></i>Rating
-                                    </button>
-                                </div>
-                                <div class="col-4">
-                                    <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#feedbackModal">
-                                        <i class="fas fa-comment me-1"></i>Feedback
-                                    </button>
+
+                            <div class="manual-actions-sticky pt-3 border-top mt-3">
+                                <p class="text-muted text-center mb-3">Choose an activity type to add</p>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#pollModal">
+                                            <i class="ics ics-chart ic-sm ic-mr"></i>Poll
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#wordcloudModal">
+                                            <i class="ics ics-thought-balloon ic-sm ic-mr"></i>Word Cloud
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#quadrantModal">
+                                            <i class="ics ics-chart-increasing ic-sm ic-mr"></i>Quadrant
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#fivewhysModal">
+                                            <i class="ics ics-search ic-sm ic-mr"></i>5 Whys
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#ratingModal">
+                                            <i class="ics ics-star ic-sm ic-mr"></i>Rating
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+                                            <i class="ics ics-chat ic-sm ic-mr"></i>Feedback
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -113,9 +120,11 @@
                     <!-- Template Mode -->
                     <div class="tab-pane fade" id="template-panel" role="tabpanel">
                         <div class="py-4">
-                            <div class="text-center mb-4">
-                                <div class="fs-1 mb-3"><i class="fas fa-clipboard-list"></i></div>
-                                <h5 class="mb-2">Choose a Template</h5>
+                            <div class="text-center mb-4 tab-intro">
+                                <h5 class="mb-2 d-flex align-items-center justify-content-center gap-2">
+                                    <i class="ics ics-clipboard ic-md"></i>
+                                    <span>Choose a Template</span>
+                                </h5>
                                 <p class="text-muted mb-0">Select a pre-configured activity set for your session</p>
                             </div>
                             
@@ -137,19 +146,19 @@
                                         All Templates
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-template-filter="Retrospective">
-                                        <i class="fas fa-rotate me-1"></i>Retrospective
+                                        <i class="ics ics-memo ic-xs ic-mr"></i>Retrospective
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-template-filter="ProductDiscovery">
-                                        <i class="fas fa-lightbulb me-1"></i>Product Discovery
+                                        <i class="ics ics-lightbulb ic-xs ic-mr"></i>Product Discovery
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-template-filter="IncidentReview">
-                                        <i class="fas fa-triangle-exclamation me-1"></i>Incident Review
+                                        <i class="ics ics-warning ic-xs ic-mr"></i>Incident Review
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-template-filter="TeamBuilding">
-                                        <i class="fas fa-handshake me-1"></i>Team Building
+                                        <i class="ics ics-handshake ic-xs ic-mr"></i>Team Building
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-template-filter="Training">
-                                        <i class="fas fa-book me-1"></i>Training
+                                        <i class="ics ics-books ic-xs ic-mr"></i>Training
                                     </button>
                                 </div>
                             </div>
@@ -169,8 +178,12 @@
                     <!-- AI Mode -->
                     <div class="tab-pane fade" id="ai-panel" role="tabpanel">
                         <div class="py-4">
-                            <div class="text-center mb-4">
-                                <h5 class="mb-2"><i class="fas fa-brain me-2"></i>AI Activity Generator <span class="text-muted fw-normal small">— AI will use your session title and goal to generate contextual activities</span></h5>
+                            <div class="text-center mb-4 tab-intro">
+                                <h5 class="mb-2 d-flex align-items-center justify-content-center gap-2">
+                                    <i class="ics ics-robot ic-md"></i>
+                                    <span>AI Activity Generator</span>
+                                </h5>
+                                <p class="text-muted mb-0">AI will use your session title and goal to generate contextual activities</p>
                             </div>
 
                             <!-- Session Context Info -->
@@ -250,7 +263,7 @@
                                 <div class="text-center mt-4">
                                     <button type="submit" class="btn btn-primary btn-lg px-5" id="aiGenerateBtn">
                                         <span class="btn-text d-inline">
-                                            <i class="fas fa-brain me-2"></i>Generate Activities
+                                            <i class="ics ics-robot ic-sm ic-mr"></i>Generate Activities
                                         </span>
                                         <span class="btn-loading d-none">
                                             <span class="spinner-border spinner-border-sm me-2" role="status">
@@ -271,11 +284,11 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="card border-0 shadow-sm mt-4">
+        <div class="card border-0 shadow-sm mt-4" id="saveSessionSection">
             <div class="card-body p-4">
                 <div class="d-flex justify-content-center align-items-center flex-wrap gap-3">
                     <button type="button" class="btn btn-primary px-5" onclick="goLive()" id="goLiveBtn" disabled>
-                        <i class="fas fa-floppy-disk me-2"></i>Save Session
+                        <i class="ics ics-save ic-sm ic-mr"></i>Save Session
                     </button>
                 </div>
           
@@ -298,7 +311,7 @@
             <div class="modal-body px-4 pb-4">
                 <div class="text-center mb-3">
                     <div class="d-inline-flex align-items-center justify-content-center icon-circle icon-circle-64 bg-primary-subtle"> 
-                        <i class="fas fa-clipboard-list fs-1" id="templateModalIcon"></i>
+                        <span id="templateModalIcon"><i class="ics ics-clipboard ic-xl"></i></span>
                     </div>
                 </div>
                 <h6 class="text-center mb-3" id="templateModalName"></h6>
@@ -314,7 +327,7 @@
                 
                 <div class="alert alert-info border-0 mb-0 bg-info-subtle">
                     <div class="d-flex align-items-start gap-2">
-                        <span class="fs-4"><i class="fas fa-info-circle"></i></span>
+                        <span><i class="ics ics-info ic-md"></i></span>
                         <small class="mb-0">
                             These activities will be <strong>added to your existing activities</strong>. Your current activities will not be removed.
                         </small>
@@ -366,7 +379,7 @@
             </div>
             <div class="modal-body px-4 pb-4 text-center">
                 <div class="d-inline-flex align-items-center justify-content-center mb-3 icon-circle icon-circle-64 bg-warning-subtle"> 
-                    <i class="fas fa-triangle-exclamation fs-1" id="confirmIcon"></i>
+                    <span id="confirmIcon"><i class="ics ics-warning ic-xl"></i></span>
                 </div>
                 <h5 class="mb-3" id="confirmTitle">Confirm Action</h5>
                 <p class="text-muted mb-0" id="confirmMessage">Are you sure?</p>

@@ -8,7 +8,8 @@ public sealed class Participant
         string? displayName,
         bool isAnonymous,
         IReadOnlyDictionary<string, string?> dimensions,
-        DateTimeOffset joinedAt)
+        DateTimeOffset joinedAt,
+        string? token = null)
     {
         Id = id;
         SessionId = sessionId;
@@ -16,6 +17,7 @@ public sealed class Participant
         IsAnonymous = isAnonymous;
         Dimensions = dimensions;
         JoinedAt = joinedAt;
+        Token = token;
     }
 
     public Guid Id { get; }
@@ -27,6 +29,8 @@ public sealed class Participant
     public bool IsAnonymous { get; private set; }
 
     public IReadOnlyDictionary<string, string?> Dimensions { get; private set; }
+
+    public string? Token { get; private set; }
 
     public DateTimeOffset JoinedAt { get; }
 }

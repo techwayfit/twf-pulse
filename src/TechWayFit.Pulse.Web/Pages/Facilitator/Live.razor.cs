@@ -25,6 +25,7 @@ public partial class Live : IAsyncDisposable
     [Inject] private IClientTokenService TokenService { get; set; } = default!;
     [Inject] private ILogger<Live> Logger { get; set; } = default!;
     [Inject] private IWebHostEnvironment Environment { get; set; } = default!;
+    [Inject] private TechWayFit.Pulse.Web.Services.IHubNotificationService HubNotifications { get; set; } = default!;
 
     [SupplyParameterFromQuery]
     public string? Code { get; set; }
@@ -564,6 +565,21 @@ public partial class Live : IAsyncDisposable
             }
 
             await ActivityService.OpenAsync(sessionEntity.Id, activityId, DateTimeOffset.UtcNow);
+            await SessionService.SetCurrentActivityAsync(sessionEntity.Id, activityId, DateTimeOffset.UtcNow);
+
+            // Broadcast SignalR events to participants
+            var updatedSession = await SessionService.GetByCodeAsync(sessionCode);
+            if (updatedSession != null)
+            {
+                await HubNotifications.PublishSessionStateChangedAsync(updatedSession);
+            }
+
+            var agenda = await ActivityService.GetAgendaAsync(sessionEntity.Id);
+            var activity = agenda.FirstOrDefault(a => a.Id == activityId);
+            if (activity != null)
+            {
+                await HubNotifications.PublishActivityStateChangedAsync(sessionCode, activity);
+            }
 
             // Reload session to get updated activity status
             await LoadSession();
@@ -606,6 +622,14 @@ public partial class Live : IAsyncDisposable
             }
 
             await ActivityService.CloseAsync(sessionEntity.Id, currentActivity.ActivityId, DateTimeOffset.UtcNow);
+
+            // Broadcast SignalR events to participants
+            var agenda = await ActivityService.GetAgendaAsync(sessionEntity.Id);
+            var activity = agenda.FirstOrDefault(a => a.Id == currentActivity.ActivityId);
+            if (activity != null)
+            {
+                await HubNotifications.PublishActivityStateChangedAsync(sessionCode, activity);
+            }
 
             // Reload session to get updated activity status
             await LoadSession();
@@ -663,6 +687,27 @@ public partial class Live : IAsyncDisposable
 
             // 3. Open next activity
             await ActivityService.OpenAsync(sessionEntity.Id, nextActivity.ActivityId, DateTimeOffset.UtcNow);
+            await SessionService.SetCurrentActivityAsync(sessionEntity.Id, nextActivity.ActivityId, DateTimeOffset.UtcNow);
+
+            // Broadcast SignalR events to participants
+            var updatedSession = await SessionService.GetByCodeAsync(sessionCode);
+            if (updatedSession != null)
+            {
+                await HubNotifications.PublishSessionStateChangedAsync(updatedSession);
+            }
+
+            var agenda = await ActivityService.GetAgendaAsync(sessionEntity.Id);
+            var closedActivity = agenda.FirstOrDefault(a => a.Id == currentActivity.ActivityId);
+            if (closedActivity != null)
+            {
+                await HubNotifications.PublishActivityStateChangedAsync(sessionCode, closedActivity);
+            }
+
+            var openedActivity = agenda.FirstOrDefault(a => a.Id == nextActivity.ActivityId);
+            if (openedActivity != null)
+            {
+                await HubNotifications.PublishActivityStateChangedAsync(sessionCode, openedActivity);
+            }
 
             // 4. Reload session
             await LoadSession();
@@ -720,6 +765,27 @@ public partial class Live : IAsyncDisposable
 
             // 3. Open previous activity
             await ActivityService.OpenAsync(sessionEntity.Id, previousActivity.ActivityId, DateTimeOffset.UtcNow);
+            await SessionService.SetCurrentActivityAsync(sessionEntity.Id, previousActivity.ActivityId, DateTimeOffset.UtcNow);
+
+            // Broadcast SignalR events to participants
+            var updatedSession = await SessionService.GetByCodeAsync(sessionCode);
+            if (updatedSession != null)
+            {
+                await HubNotifications.PublishSessionStateChangedAsync(updatedSession);
+            }
+
+            var agenda = await ActivityService.GetAgendaAsync(sessionEntity.Id);
+            var closedActivity = agenda.FirstOrDefault(a => a.Id == currentActivity.ActivityId);
+            if (closedActivity != null)
+            {
+                await HubNotifications.PublishActivityStateChangedAsync(sessionCode, closedActivity);
+            }
+
+            var openedActivity = agenda.FirstOrDefault(a => a.Id == previousActivity.ActivityId);
+            if (openedActivity != null)
+            {
+                await HubNotifications.PublishActivityStateChangedAsync(sessionCode, openedActivity);
+            }
 
             // 4. Reload session
             await LoadSession();
@@ -767,6 +833,14 @@ public partial class Live : IAsyncDisposable
                     return;
                 }
                 await ActivityService.CloseAsync(sessionEntity.Id, currentActivity.ActivityId, DateTimeOffset.UtcNow);
+
+                // Broadcast SignalR event for closed activity
+                var agenda = await ActivityService.GetAgendaAsync(sessionEntity.Id);
+                var closedActivity = agenda.FirstOrDefault(a => a.Id == currentActivity.ActivityId);
+                if (closedActivity != null)
+                {
+                    await HubNotifications.PublishActivityStateChangedAsync(sessionCode, closedActivity);
+                }
             }
             catch (Exception ex)
             {
@@ -799,6 +873,21 @@ public partial class Live : IAsyncDisposable
             }
 
             await ActivityService.ReopenAsync(sessionEntity.Id, activityId, DateTimeOffset.UtcNow);
+            await SessionService.SetCurrentActivityAsync(sessionEntity.Id, activityId, DateTimeOffset.UtcNow);
+
+            // Broadcast SignalR events to participants
+            var updatedSession = await SessionService.GetByCodeAsync(sessionCode);
+            if (updatedSession != null)
+            {
+                await HubNotifications.PublishSessionStateChangedAsync(updatedSession);
+            }
+
+            var agenda = await ActivityService.GetAgendaAsync(sessionEntity.Id);
+            var activity = agenda.FirstOrDefault(a => a.Id == activityId);
+            if (activity != null)
+            {
+                await HubNotifications.PublishActivityStateChangedAsync(sessionCode, activity);
+            }
 
             // Reload session to get updated activity status
             await LoadSession();

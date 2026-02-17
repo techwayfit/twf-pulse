@@ -161,6 +161,10 @@
                                 {
                                     <GeneralFeedbackActivity Parameters="@CreateActivityParameters()" />
                                 }
+                                else if (currentActivity.Type == ActivityType.Quadrant)
+                                {
+                                    <QuadrantActivity Parameters="@CreateActivityParameters()" />
+                                }
                                 else
                                 {
                                     <GenericActivity Parameters="@CreateActivityParameters()" ActivityType="@currentActivity.Type.ToString()" />
@@ -231,6 +235,8 @@
             var tokenKey = $"pulse_participant_token_{SessionCode}";
             participantToken = await JS.InvokeAsync<string>("localStorage.getItem", tokenKey) ?? "";
             
+            Console.WriteLine($"Loaded token for session {SessionCode}: {(string.IsNullOrEmpty(participantToken) ? "EMPTY" : "EXISTS")}");
+            
             if (string.IsNullOrEmpty(participantToken))
             {
                 errorMessage = "Participant token not found. Please rejoin the session.";
@@ -238,6 +244,7 @@
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"Error loading participant token: {ex.Message}");
             errorMessage = $"Failed to retrieve participant token: {ex.Message}";
         }
     }
@@ -536,10 +543,29 @@
             }
 
             // SECURITY: Validate participant token
+            if (string.IsNullOrEmpty(participantToken))
+            {
+                submitSuccess = false;
+                submitMessage = "Participant token not found. Please refresh the page or rejoin the session.";
+                Console.WriteLine($"Token is empty for participant {Pid.Value}");
+                return;
+            }
+            
+            // Check if token exists in store
+            if (!ParticipantTokenStore.TryGet(sessionEntity.Id, Pid.Value, out var storedAuth))
+            {
+                submitSuccess = false;
+                submitMessage = "Session state lost (server restart). Please rejoin the session by refreshing and entering your name again.";
+                Console.WriteLine($"No token found in store for participant {Pid.Value} in session {sessionEntity.Id}");
+                return;
+            }
+            
             if (!ParticipantTokenStore.IsValid(sessionEntity.Id, Pid.Value, participantToken))
             {
                 submitSuccess = false;
-                submitMessage = "Invalid or expired participant token. Please rejoin the session.";
+                submitMessage = "Invalid or expired participant token. The token doesn't match. Please rejoin the session.";
+                Console.WriteLine($"Token validation failed for participant {Pid.Value} in session {sessionEntity.Id}");
+                Console.WriteLine($"Expected: {storedAuth.Token.Substring(0, 8)}..., Got: {participantToken.Substring(0, Math.Min(8, participantToken.Length))}...");
                 return;
             }
 

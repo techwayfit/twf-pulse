@@ -12,5 +12,7 @@ public sealed class ParticipantRecord
 
     public string DimensionsJson { get; set; } = string.Empty;
 
+    public string? Token { get; set; }
+
     public DateTimeOffset JoinedAt { get; set; }
 }

@@ -3,7 +3,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-chart-bar"></i> Create Poll Activity</h5>
+                <h5 class="modal-title"><i class="ics ics-chart ic-sm ic-mr"></i>Create Poll Activity</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body modal-body-scroll">
@@ -52,7 +52,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-cloud"></i> Create Word Cloud Activity</h5>
+                <h5 class="modal-title"><i class="ics ics-thought-balloon ic-sm ic-mr"></i>Create Word Cloud Activity</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body modal-body-scroll">
@@ -100,7 +100,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-star"></i> Create Rating Activity</h5>
+                <h5 class="modal-title"><i class="ics ics-star ic-sm ic-mr"></i>Create Rating Activity</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body modal-body-scroll">
@@ -155,7 +155,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-comment"></i> Create General Feedback Activity</h5>
+                <h5 class="modal-title"><i class="ics ics-chat ic-sm ic-mr"></i>Create General Feedback Activity</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body modal-body-scroll">
@@ -193,7 +193,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-chart-line"></i> Create Quadrant Matrix Activity</h5>
+                <h5 class="modal-title"><i class="ics ics-chart-increasing ic-sm ic-mr"></i>Create Quadrant Matrix Activity</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body modal-body-scroll">
@@ -215,6 +215,11 @@
                             <label class="form-label fw-medium">Y-Axis Label</label>
                             <input type="text" class="form-control" id="quadrantYAxis" placeholder="e.g., Impact" />
                         </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Rating Scale (1 to N)</label>
+                        <input type="number" class="form-control" id="quadrantScale" value="10" min="5" max="20" />
+                        <small class="form-text text-muted">Participants will rate from 1 to this number for each axis (default: 10)</small>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">

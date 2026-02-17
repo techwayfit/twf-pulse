@@ -19,6 +19,7 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
     [Inject] private IParticipantService ParticipantService { get; set; } = default!;
     [Inject] private IClientTokenService TokenService { get; set; } = default!;
     [Inject] private ILogger<Presentation> Logger { get; set; } = default!;
+    [Inject] private TechWayFit.Pulse.Web.Services.IHubNotificationService HubNotifications { get; set; } = default!;
 
     [SupplyParameterFromQuery]
     public string? Code { get; set; }
@@ -184,6 +185,14 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
             if (session != null)
             {
                 await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
+
+                // Broadcast SignalR event
+                var agenda = await ActivityService.GetAgendaAsync(session.Id);
+                var closedActivity = agenda.FirstOrDefault(a => a.Id == activity.ActivityId);
+                if (closedActivity != null)
+                {
+                    await HubNotifications.PublishActivityStateChangedAsync(SessionCode, closedActivity);
+                }
             }
             Navigation.NavigateTo($"/facilitator/live?code={SessionCode}");
         }
@@ -219,6 +228,27 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
             {
                 await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
                 await ActivityService.OpenAsync(session.Id, nextActivity.ActivityId, DateTimeOffset.UtcNow);
+                await SessionService.SetCurrentActivityAsync(session.Id, nextActivity.ActivityId, DateTimeOffset.UtcNow);
+
+                // Broadcast SignalR events
+                var updatedSession = await SessionService.GetByCodeAsync(SessionCode);
+                if (updatedSession != null)
+                {
+                    await HubNotifications.PublishSessionStateChangedAsync(updatedSession);
+                }
+
+                var agenda = await ActivityService.GetAgendaAsync(session.Id);
+                var closedActivity = agenda.FirstOrDefault(a => a.Id == activity.ActivityId);
+                if (closedActivity != null)
+                {
+                    await HubNotifications.PublishActivityStateChangedAsync(SessionCode, closedActivity);
+                }
+
+                var openedActivity = agenda.FirstOrDefault(a => a.Id == nextActivity.ActivityId);
+                if (openedActivity != null)
+                {
+                    await HubNotifications.PublishActivityStateChangedAsync(SessionCode, openedActivity);
+                }
             }
 
             await LoadPresentation();
@@ -255,6 +285,27 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
             {
                 await ActivityService.CloseAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
                 await ActivityService.OpenAsync(session.Id, previousActivity.ActivityId, DateTimeOffset.UtcNow);
+                await SessionService.SetCurrentActivityAsync(session.Id, previousActivity.ActivityId, DateTimeOffset.UtcNow);
+
+                // Broadcast SignalR events
+                var updatedSession = await SessionService.GetByCodeAsync(SessionCode);
+                if (updatedSession != null)
+                {
+                    await HubNotifications.PublishSessionStateChangedAsync(updatedSession);
+                }
+
+                var agenda = await ActivityService.GetAgendaAsync(session.Id);
+                var closedActivity = agenda.FirstOrDefault(a => a.Id == activity.ActivityId);
+                if (closedActivity != null)
+                {
+                    await HubNotifications.PublishActivityStateChangedAsync(SessionCode, closedActivity);
+                }
+
+                var openedActivity = agenda.FirstOrDefault(a => a.Id == previousActivity.ActivityId);
+                if (openedActivity != null)
+                {
+                    await HubNotifications.PublishActivityStateChangedAsync(SessionCode, openedActivity);
+                }
             }
 
             await LoadPresentation();

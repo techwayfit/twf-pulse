@@ -257,7 +257,7 @@ namespace TechWayFit.Pulse.AI.Services
                 TechWayFit.Pulse.Contracts.Enums.ActivityType.Quadrant,
                 "Impact vs Effort Matrix",
                 $"Plot {quadrantItems} on Impact (Y-axis) and Effort (X-axis)",
-                "{}",
+                "{\"xAxisLabel\": \"Effort Required\", \"yAxisLabel\": \"Impact\", \"topLeftLabel\": \"High Impact, Low Effort (Quick Wins)\", \"topRightLabel\": \"High Impact, High Effort (Major Projects)\", \"bottomLeftLabel\": \"Low Impact, Low Effort (Fill-ins)\", \"bottomRightLabel\": \"Low Impact, High Effort (Time Wasters)\", \"scale\": 10}",
                 TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
                 null, null, 8
             ));

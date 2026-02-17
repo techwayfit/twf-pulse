@@ -118,40 +118,46 @@ class Activity {
         const activityNumber = index + 1;
         
         return `
-            <div class="activity-card">
-                <div class="d-flex gap-3">
-                    <!-- Activity Number & Rearrange Controls -->
-                    <div class="activity-number-section">
-                        <div class="activity-number">#${activityNumber}</div>
-                        <div class="rearrange-controls">
-                            <button class="btn-rearrange" onclick="activityManager.moveActivityUp(${index})" 
-                                    ${index === 0 ? 'disabled' : ''} title="Move up">
-                                ▲
-                            </button>
-                            <button class="btn-rearrange" onclick="activityManager.moveActivityDown(${index})" 
-                                    title="Move down">
-                                ▼
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Activity Content -->
-                    <div class="activity-content flex-grow-1">
-                        <div class="activity-header">
-                            <div class="activity-title">
-                                <span class="activity-icon">${emoji}</span>
-                                <h3>${this.escapeHtml(this.title)}</h3>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex gap-3">
+                        <!-- Activity Number & Rearrange Controls -->
+                        <div class="activity-order-column d-flex flex-column align-items-center gap-2">
+                            <div class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center activity-order-badge">
+                                #${activityNumber}
+                            </div>
+                            <div class="d-flex flex-column gap-1">
+                                <button class="btn btn-sm btn-outline-secondary py-0 activity-order-btn" 
+                                        onclick="activityManager.moveActivityUp(${index})" 
+                                        ${index === 0 ? 'disabled' : ''} title="Move up">
+                                    ▲
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary py-0 activity-order-btn" 
+                                        onclick="activityManager.moveActivityDown(${index})" 
+                                        title="Move down">
+                                    ▼
+                                </button>
                             </div>
                         </div>
-                        <p class="activity-description">${this.escapeHtml(this.prompt)}</p>
-                        ${details ? `<p class="activity-meta">${details}</p>` : ''}
-                        <div class="activity-actions-overlay">
-                            <button class="btn btn-sm btn-primary" onclick="activityManager.editActivity(${index})">
-                                Edit
-                            </button>
-                            <button class="btn btn-sm btn-secondary" onclick="activityManager.removeActivity(${index})">
-                                Remove
-                            </button>
+                        
+                        <!-- Activity Content -->
+                        <div class="flex-grow-1 activity-content-col">
+                            <div class="d-flex align-items-start justify-content-between mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-primary fs-5">${emoji}</span>
+                                    <h5 class="mb-0 fw-semibold">${this.escapeHtml(this.title)}</h5>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-primary" onclick="activityManager.editActivity(${index})">
+                                        <i class="ics ics-pencil ic-xs ic-mr"></i>Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="activityManager.removeActivity(${index})">
+                                        <i class="ics ics-trash ic-xs ic-mr"></i>Remove
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-2">${this.escapeHtml(this.prompt)}</p>
+                            ${details ? `<div class="small text-muted"><i class="ics ics-info ic-xs ic-mr"></i>${details}</div>` : ''}
                         </div>
                     </div>
                 </div>
@@ -160,7 +166,7 @@ class Activity {
     }
 
     getEmoji() {
-        return '📋'; // Override in subclasses
+        return '<i class="ics ics-clipboard ic-sm"></i>'; // Override in subclasses
     }
 
     renderCardDetails() {
@@ -186,7 +192,7 @@ class PollActivity extends Activity {
     }
 
     getEmoji() {
-        return '<i class="fas fa-chart-bar"></i>';
+        return '<i class="ics ics-chart ic-sm"></i>';
     }
 
     populateSpecificFields(prefix) {
@@ -303,7 +309,7 @@ class WordCloudActivity extends Activity {
     }
 
     getEmoji() {
-        return '<i class="fas fa-cloud"></i>';
+        return '<i class="ics ics-thought-balloon ic-sm"></i>';
     }
 
     populateSpecificFields(prefix) {
@@ -364,7 +370,7 @@ class QuadrantActivity extends Activity {
     }
 
     getEmoji() {
-        return '<i class="fas fa-chart-line"></i>';
+        return '<i class="ics ics-chart-increasing ic-sm"></i>';
     }
 
     populateSpecificFields(prefix) {
@@ -424,7 +430,7 @@ class FiveWhysActivity extends Activity {
     }
 
     getEmoji() {
-        return '<i class="fas fa-question"></i>';
+        return '<i class="ics ics-question ic-sm"></i>';
     }
 
     collectData() {
@@ -458,7 +464,7 @@ class RatingActivity extends Activity {
     }
 
     getEmoji() {
-        return '<i class="fas fa-star"></i>';
+        return '<i class="ics ics-star ic-sm"></i>';
     }
 
     populateSpecificFields(prefix) {
@@ -517,7 +523,7 @@ class FeedbackActivity extends Activity {
     }
 
     getEmoji() {
-        return '<i class="fas fa-comment"></i>';
+        return '<i class="ics ics-chat ic-sm"></i>';
     }
 
     populateSpecificFields(prefix) {
@@ -538,8 +544,8 @@ class FeedbackActivity extends Activity {
     }
 
     renderCardDetails() {
-        return `<span style="display: inline-flex; align-items: center; gap: 0.25rem; color: #6b7280; font-size: 0.9rem; font-weight: 600;">
-            <i class="far fa-comments" style="color: #6366f1;"></i>
+        return `<span class="d-inline-flex align-items-center gap-1 text-muted small fw-semibold">
+            <i class="ics ics-chat ic-xs"></i>
             Max ${this.maxResponses} responses
         </span>`;
     }
@@ -580,12 +586,12 @@ class ActivityFactory {
 
     static getAvailableTypes() {
         return [
-            { type: 'Poll', class: PollActivity, emoji: '<i class="fas fa-chart-bar"></i>', description: 'Multiple choice questions' },
-            { type: 'WordCloud', class: WordCloudActivity, emoji: '<i class="fas fa-cloud"></i>', description: 'Collect words or short phrases' },
-            { type: 'Quadrant', class: QuadrantActivity, emoji: '<i class="fas fa-chart-line"></i>', description: '2x2 matrix for categorization' },
-            { type: 'FiveWhys', class: FiveWhysActivity, emoji: '<i class="fas fa-question"></i>', description: 'Root cause analysis' },
-            { type: 'Rating', class: RatingActivity, emoji: '<i class="fas fa-star"></i>', description: 'Star or numeric ratings' },
-            { type: 'Feedback', class: FeedbackActivity, emoji: '<i class="fas fa-comment"></i>', description: 'Open-ended feedback' }
+            { type: 'Poll', class: PollActivity, emoji: '<i class="ics ics-chart ic-sm"></i>', description: 'Multiple choice questions' },
+            { type: 'WordCloud', class: WordCloudActivity, emoji: '<i class="ics ics-thought-balloon ic-sm"></i>', description: 'Collect words or short phrases' },
+            { type: 'Quadrant', class: QuadrantActivity, emoji: '<i class="ics ics-chart-increasing ic-sm"></i>', description: '2x2 matrix for categorization' },
+            { type: 'FiveWhys', class: FiveWhysActivity, emoji: '<i class="ics ics-question ic-sm"></i>', description: 'Root cause analysis' },
+            { type: 'Rating', class: RatingActivity, emoji: '<i class="ics ics-star ic-sm"></i>', description: 'Star or numeric ratings' },
+            { type: 'Feedback', class: FeedbackActivity, emoji: '<i class="ics ics-chat ic-sm"></i>', description: 'Open-ended feedback' }
         ];
     }
 }
