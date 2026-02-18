@@ -119,6 +119,7 @@ try
 
     // Add HttpContextAccessor for session access
     builder.Services.AddHttpContextAccessor();
+    builder.Services.AddMemoryCache();
  
     builder.Services.AddSingleton<IFacilitatorTokenStore, FacilitatorTokenStore>();
     builder.Services.AddSingleton<IParticipantTokenStore, ParticipantTokenStore>();

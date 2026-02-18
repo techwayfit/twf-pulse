@@ -26,7 +26,14 @@ public sealed class FacilitatorTokenStore : IFacilitatorTokenStore
 
     public bool TryGet(Guid sessionId, out FacilitatorAuth auth)
     {
-        return _tokens.TryGetValue(sessionId, out auth);
+        if (_tokens.TryGetValue(sessionId, out var storedAuth))
+        {
+            auth = storedAuth;
+            return true;
+        }
+
+        auth = default!;
+        return false;
     }
 
     public bool IsValid(Guid sessionId, string token)

@@ -3,8 +3,13 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using TechWayFit.Pulse.Contracts.Enums
 @using TechWayFit.Pulse.Web.Components.Presentation
+@using TechWayFit.Pulse.Web.Components.Facilitator
 
 <PageTitle>Presentation Mode - @(session?.Title ?? "TechWayFit Pulse")</PageTitle>
+
+<LiveQRModal SessionCode="@SessionCode"
+             JoinUrl="@joinUrl"
+             OnCopyUrl="@CopyJoinUrl" />
 
 @if (isLoading)
 {
@@ -37,7 +42,22 @@ else
         OnPrevious="@GoBack"
         OnNext="@MoveNext">
 
-        <HeaderButtons />
+        <HeaderButtons>
+            <button type="button" class="control-btn" @onclick="ShowQRModal">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 2H6V6H2V2Z" stroke="currentColor" stroke-width="1.5" />
+                    <path d="M10 2H14V6H10V2Z" stroke="currentColor" stroke-width="1.5" />
+                    <path d="M2 10H6V14H2V10Z" stroke="currentColor" stroke-width="1.5" />
+                    <path d="M10 10H11V11H10V10Z" fill="currentColor" />
+                    <path d="M12 10H13V11H12V10Z" fill="currentColor" />
+                    <path d="M13 11H14V12H13V11Z" fill="currentColor" />
+                    <path d="M10 12H11V13H10V12Z" fill="currentColor" />
+                    <path d="M12 12H13V13H12V12Z" fill="currentColor" />
+                    <path d="M13 13H14V14H13V13Z" fill="currentColor" />
+                </svg>
+                Join Instructions
+            </button>
+        </HeaderButtons>
 
         <FooterButtons>
             @if (activity != null)

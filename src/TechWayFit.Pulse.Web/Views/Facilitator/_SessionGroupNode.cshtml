@@ -2,7 +2,14 @@
 
 @{
     var group = Model.Group as TechWayFit.Pulse.Domain.Entities.SessionGroup;
-    var allGroups = Model.AllGroups as List<TechWayFit.Pulse.Domain.Entities.SessionGroup>;
+    var allGroups = Model.AllGroups as IEnumerable<TechWayFit.Pulse.Domain.Entities.SessionGroup> 
+        ?? Enumerable.Empty<TechWayFit.Pulse.Domain.Entities.SessionGroup>();
+
+    if (group == null)
+    {
+        return;
+    }
+
     var subGroups = allGroups.Where(g => g.ParentGroupId == group.Id).ToList();
 }
 

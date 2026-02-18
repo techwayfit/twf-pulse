@@ -802,6 +802,10 @@ class AddActivitiesManager {
 
     async createActivityFromData(activityData) {
         try {
+            if (String(activityData.type).toLowerCase() === 'fivewhys') {
+                throw new Error('5 Whys is temporarily disabled until full workflow support is completed.');
+            }
+
             // Ensure config is a JSON string
             const configString = typeof activityData.config === 'string' 
                 ? activityData.config 

@@ -3,6 +3,18 @@
 @using System.Diagnostics
 
 <div class="poll-activity">
+    @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
+    {
+        <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+            <i class="fas fa-check-circle me-3 fs-4" aria-hidden="true"></i>
+            <div>
+                <strong>Response submitted successfully!</strong>
+                <div class="small">Your choice has been recorded. Waiting for the next activity...</div>
+            </div>
+        </div>
+    }
+    else
+    {
     <div class="mb-4">
         <h3 class="h5 fw-semibold text-secondary mb-4">@(pollConfig?.AllowMultiple == true ? "Select one or more:" : "Make your choice:")</h3>
 
@@ -16,7 +28,7 @@
                     <div class="form-check poll-option mb-3 p-3 border rounded-3 position-relative
           @(isSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-2")
                  poll-option-interactive"
-                         style="cursor: pointer; transition: all 0.2s ease-in-out;"
+                         style="cursor: @(Parameters.HasSubmitted ? "not-allowed" : "pointer"); transition: all 0.2s ease-in-out;"
                          @onclick="@(async () => await HandleOptionClick(optionId))">
                         @if (pollConfig.AllowMultiple)
                         {
@@ -25,6 +37,7 @@
                                    id="poll-@optionId"
                                    checked="@isSelected"
                                    style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                                   disabled="@Parameters.HasSubmitted"
                                    @onchange="@((e) => ToggleOption(optionId))" />
                         }
                         else
@@ -35,6 +48,7 @@
                                    id="poll-@optionId"
                                    checked="@isSelected"
                                    style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                                   disabled="@Parameters.HasSubmitted"
                                    @onchange="@((e) => SelectOption(optionId))" />
                         }
                         <label class="form-check-label w-100 ps-4 ms-1" for="poll-@optionId" style="cursor: pointer;">
@@ -53,7 +67,7 @@
                     <div class="form-check poll-option mb-3 p-3 border rounded-3 position-relative
            @(isCustomSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-2")
                     poll-option-interactive"
-                         style="cursor: pointer; transition: all 0.2s ease-in-out;"
+                        style="cursor: @(Parameters.HasSubmitted ? "not-allowed" : "pointer"); transition: all 0.2s ease-in-out;"
                          @onclick="@(async () => await HandleOptionClick("custom"))">
                         @if (pollConfig.AllowMultiple)
                         {
@@ -62,6 +76,7 @@
                                    id="poll-custom"
                                    checked="@isCustomSelected"
                                    style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                                   disabled="@Parameters.HasSubmitted"
                                    @onchange="@((e) => ToggleOption("custom"))" />
                         }
                         else
@@ -72,6 +87,7 @@
                                    id="poll-custom"
                                    checked="@isCustomSelected"
                                    style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
+                                   disabled="@Parameters.HasSubmitted"
                                    @onchange="@((e) => SelectOption("custom"))" />
                         }
                         <label class="form-check-label w-100 ps-4 ms-1" for="poll-custom" style="cursor: pointer;">
@@ -83,6 +99,7 @@
                                        placeholder="@pollConfig.CustomOptionPlaceholder"
                                        @bind="customText"
                                        @onclick:stopPropagation="true"
+                                       disabled="@Parameters.HasSubmitted"
                                        maxlength="100" />
                             }
                         </label>
@@ -97,14 +114,23 @@
             </div>
         }
     </div>
+    }
 
-    <button class="btn btn-primary btn-lg w-100 py-3" tabindex="1"
+    <button class="@(Parameters.HasSubmitted ? "btn-secondary" : "btn-primary") btn-lg w-100 py-3" tabindex="1"
             @onclick="HandleSubmit"
             disabled="@(Parameters.IsSubmitting || selectedOptionIds.Count == 0 || Parameters.HasSubmitted)">
-        @GetSubmitButtonText()
+        @if (Parameters.HasSubmitted)
+        {
+            <i class="fas fa-check-circle me-2" aria-hidden="true"></i>
+            <text>Response already submitted</text>
+        }
+        else
+        {
+            <text>@GetSubmitButtonText()</text>
+        }
     </button>
 
-    @if (!string.IsNullOrEmpty(Parameters.SubmitMessage))
+    @if (!string.IsNullOrEmpty(Parameters.SubmitMessage) && !Parameters.SubmitSuccess)
     {
         <div class="alert @(Parameters.SubmitSuccess ? "alert-success" : "alert-danger") mt-3 mb-0">
             @Parameters.SubmitMessage
@@ -206,12 +232,16 @@
 
     private void SelectOption(string optionId)
     {
+        if (Parameters.HasSubmitted) return;
+
         selectedOptionIds.Clear();
         selectedOptionIds.Add(optionId);
     }
 
     private void ToggleOption(string optionId)
     {
+        if (Parameters.HasSubmitted) return;
+
         if (selectedOptionIds.Contains(optionId))
         {
             selectedOptionIds.Remove(optionId);
@@ -224,6 +254,11 @@
 
     private async Task HandleOptionClick(string optionId)
     {
+        if (Parameters.HasSubmitted)
+        {
+            return;
+        }
+
         if (pollConfig?.AllowMultiple == true)
         {
             ToggleOption(optionId);
@@ -238,6 +273,11 @@
 
     private async Task HandleSubmit()
     {
+        if (Parameters.HasSubmitted)
+        {
+            return;
+        }
+
         var payload = new
         {
             selectedOptionIds = selectedOptionIds,
@@ -250,7 +290,7 @@
     private string GetSubmitButtonText()
     {
         if (Parameters.HasSubmitted)
-            return "Response Submitted ✓";
+            return "Response already submitted";
         if (Parameters.IsSubmitting)
             return "Submitting...";
         return "Submit Response";

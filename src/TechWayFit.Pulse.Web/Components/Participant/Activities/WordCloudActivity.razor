@@ -7,7 +7,7 @@
     {
     <!-- Success confirmation overlay -->
     <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
-      <div class="me-3 fs-4">?</div>
+      <i class="fas fa-check-circle me-3 fs-4" aria-hidden="true"></i>
     <div>
    <strong>Response submitted successfully!</strong>
            <div class="small">Your input has been recorded. Waiting for the next activity...</div>
@@ -51,7 +51,8 @@
  disabled="@(Parameters.IsSubmitting || string.IsNullOrWhiteSpace(inputText) || Parameters.HasSubmitted || !IsInputValid())">
         @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
         {
-    <text>? Response Submitted</text>
+      <i class="fas fa-check-circle me-2" aria-hidden="true"></i>
+      <text>Response Submitted</text>
         }
         else
     {
@@ -151,7 +152,7 @@
     private string GetSubmitButtonText()
     {
         if (Parameters.HasSubmitted)
-            return "Response Submitted ?";
+        return "Response Submitted";
         if (Parameters.IsSubmitting)
     return "Submitting...";
   return "Submit Response";

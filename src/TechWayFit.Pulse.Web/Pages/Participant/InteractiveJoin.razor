@@ -572,12 +572,17 @@
         request.Dimensions ?? new Dictionary<string, string?>(),
         DateTimeOffset.UtcNow);
 
-      // Create participant token
-      var auth = ParticipantTokenStore.Create(sessionEntity.Id, participant.Id);
+      var persistedToken = participant.Token;
+      if (string.IsNullOrWhiteSpace(persistedToken))
+      {
+        errorMessage = "Failed to initialize participant authentication. Please try joining again.";
+        return;
+      }
+
       participantId = participant.Id;
       
       // Store participant info and token in browser storage to prevent duplicate joins
-      await StoreParticipantSession(participant.Id, auth.Token, sessionSummary.Code);
+      await StoreParticipantSession(participant.Id, persistedToken, sessionSummary.Code);
       
       currentState = JoinState.Joined;
       
@@ -621,14 +626,43 @@
     {
       // Check localStorage for existing participant session
       var storageKey = $"pulse_participant_{sessionCode}";
+      var tokenKey = $"pulse_participant_token_{sessionCode}";
       var participantData = await JS.InvokeAsync<string?>("localStorage.getItem", storageKey);
+      var participantToken = await JS.InvokeAsync<string?>("localStorage.getItem", tokenKey);
       
       if (!string.IsNullOrEmpty(participantData))
       {
         // Parse stored participant ID
         if (Guid.TryParse(participantData, out var storedParticipantId))
         {
-          // TODO: Optionally verify with server that participant is still active
+          if (string.IsNullOrWhiteSpace(participantToken))
+          {
+            await ClearStoredParticipantSession();
+            return null;
+          }
+
+          var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+          if (sessionEntity == null)
+          {
+            await ClearStoredParticipantSession();
+            return null;
+          }
+
+          var participants = await ParticipantService.GetBySessionAsync(sessionEntity.Id);
+          var participantExists = participants.Any(p => p.Id == storedParticipantId);
+          if (!participantExists)
+          {
+            await ClearStoredParticipantSession();
+            return null;
+          }
+
+          var tokenValid = ParticipantTokenStore.IsValid(sessionEntity.Id, storedParticipantId, participantToken);
+          if (!tokenValid)
+          {
+            await ClearStoredParticipantSession();
+            return null;
+          }
+
           return storedParticipantId;
         }
       }
@@ -640,6 +674,17 @@
     }
     
     return null;
+  }
+
+  private async Task ClearStoredParticipantSession()
+  {
+    var storageKey = $"pulse_participant_{sessionCode}";
+    var tokenKey = $"pulse_participant_token_{sessionCode}";
+    var timestampKey = $"pulse_session_time_{sessionCode}";
+
+    await JS.InvokeVoidAsync("localStorage.removeItem", storageKey);
+    await JS.InvokeVoidAsync("localStorage.removeItem", tokenKey);
+    await JS.InvokeVoidAsync("localStorage.removeItem", timestampKey);
   }
 
   private async Task StoreParticipantSession(Guid participantId, string participantToken, string sessionCode)

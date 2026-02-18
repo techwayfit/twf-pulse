@@ -31,6 +31,7 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
     private Session? session;
     private int participantCount = 0;
     private int responseCount = 0;
+    private string joinUrl = string.Empty;
     private bool hasPrevious = false;
     private bool hasNext = false;
     private bool isLoading = true;
@@ -143,6 +144,9 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
             {
                 participantCount = 0;
             }
+
+            var uri = new Uri(Navigation.Uri);
+            joinUrl = $"{uri.Scheme}://{uri.Authority}/participant/join?sessionCode={SessionCode}";
         }
         catch (Exception ex)
         {
@@ -475,6 +479,43 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
             Logger.LogError(ex, "Failed to exit presenter mode");
         } 
             Navigation.NavigateTo($"/facilitator/live?code={SessionCode}",true);
+    }
+
+    private async Task ShowQRModal()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("eval", "new bootstrap.Modal(document.getElementById('qrModal')).show()");
+            await Task.Delay(100);
+
+            var canvasId = $"qr-modal-{SessionCode.Replace("-", "")}";
+            await JS.InvokeVoidAsync("generateQRCode", canvasId, joinUrl);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to show QR modal in presentation mode");
+        }
+    }
+
+    private async Task CopyJoinUrl()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", joinUrl);
+            Logger.LogInformation("Presentation join URL copied to clipboard");
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("copyToClipboard", joinUrl);
+                Logger.LogInformation("Presentation join URL copied using fallback method");
+            }
+            catch
+            {
+                Logger.LogWarning($"Presentation copy failed: {ex.Message}");
+            }
+        }
     }
 
     private async Task EnterFullscreen()

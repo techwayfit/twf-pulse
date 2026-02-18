@@ -1,0 +1,266 @@
+@using TechWayFit.Pulse.Application.Abstractions.Services
+@using TechWayFit.Pulse.Contracts.Responses
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Web.Hubs
+@namespace TechWayFit.Pulse.Web.Components.Dashboards
+@inject IDashboardService DashboardService
+@inject ISessionService SessionService
+@inject NavigationManager Navigation
+@inject ILogger<QuadrantDashboard> Logger
+@implements IAsyncDisposable
+
+<div class="quadrant-dashboard">
+    @if (isLoading)
+    {
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mt-2 text-muted">Loading quadrant data...</div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mb-0">@errorMessage</div>
+    }
+    else if (dashboard is not null)
+    {
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-lg-3">
+                <div class="border rounded p-3 bg-light text-center">
+                    <div class="h4 mb-0 text-primary">@dashboard.TotalResponses</div>
+                    <small class="text-muted">Total Responses</small>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="border rounded p-3 bg-light text-center">
+                    <div class="h4 mb-0 text-success">@dashboard.RespondedParticipants</div>
+                    <small class="text-muted">Participants</small>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="border rounded p-3 bg-light text-center">
+                    <div class="h4 mb-0 text-info">@GetParticipationRate().ToString("F0")%</div>
+                    <small class="text-muted">Participation</small>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="border rounded p-3 bg-light text-center">
+                    <div class="h4 mb-0 text-warning">@dashboard.QuadrantPoints.Count</div>
+                    <small class="text-muted">Mapped Points</small>
+                </div>
+            </div>
+        </div>
+
+        @if (dashboard.QuadrantPoints.Count > 0)
+        {
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="fw-semibold text-muted small">Top Left</div>
+                        <div class="h5 mb-0">@quadrantCounts.TopLeft</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="fw-semibold text-muted small">Top Right</div>
+                        <div class="h5 mb-0">@quadrantCounts.TopRight</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="fw-semibold text-muted small">Bottom Left</div>
+                        <div class="h5 mb-0">@quadrantCounts.BottomLeft</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="border rounded p-3 h-100">
+                        <div class="fw-semibold text-muted small">Bottom Right</div>
+                        <div class="h5 mb-0">@quadrantCounts.BottomRight</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Label</th>
+                            <th>X</th>
+                            <th>Y</th>
+                            <th>Quadrant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var point in dashboard.QuadrantPoints.Take(20))
+                        {
+                            <tr>
+                                <td>@(string.IsNullOrWhiteSpace(point.Label) ? "(no label)" : point.Label)</td>
+                                <td>@point.X.ToString("F1")</td>
+                                <td>@point.Y.ToString("F1")</td>
+                                <td>@GetQuadrantName(point)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4 text-muted">
+                No quadrant points yet. Results will appear as participants submit.
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string SessionCode { get; set; } = string.Empty;
+    [Parameter] public Guid ActivityId { get; set; }
+
+    private DashboardResponse? dashboard;
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private HubConnection? hubConnection;
+    private (int TopLeft, int TopRight, int BottomLeft, int BottomRight) quadrantCounts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboard();
+        await SetupSignalRConnection();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!isLoading)
+        {
+            await LoadDashboard();
+        }
+    }
+
+    private async Task LoadDashboard()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session is null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+
+            dashboard = await DashboardService.GetDashboardAsync(
+                session.Id,
+                ActivityId,
+                new Dictionary<string, string?>());
+
+            quadrantCounts = BuildQuadrantCounts(dashboard.QuadrantPoints);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load quadrant dashboard for session {SessionCode} activity {ActivityId}", SessionCode, ActivityId);
+            errorMessage = $"Failed to load quadrant dashboard: {ex.Message}";
+            dashboard = null;
+            quadrantCounts = default;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SetupSignalRConnection()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (responseEvent.SessionCode == SessionCode && responseEvent.ActivityId == ActivityId)
+                    {
+                        await LoadDashboard();
+                    }
+                });
+            });
+
+            hubConnection.On<DashboardUpdatedEvent>("DashboardUpdated", async (dashboardEvent) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (dashboardEvent.SessionCode == SessionCode && dashboardEvent.ActivityId == ActivityId)
+                    {
+                        await LoadDashboard();
+                    }
+                });
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to setup SignalR for quadrant dashboard");
+        }
+    }
+
+    private static (int TopLeft, int TopRight, int BottomLeft, int BottomRight) BuildQuadrantCounts(IReadOnlyList<QuadrantPoint> points)
+    {
+        var topLeft = 0;
+        var topRight = 0;
+        var bottomLeft = 0;
+        var bottomRight = 0;
+
+        foreach (var point in points)
+        {
+            if (point.Y >= 50 && point.X < 50) topLeft++;
+            else if (point.Y >= 50 && point.X >= 50) topRight++;
+            else if (point.Y < 50 && point.X < 50) bottomLeft++;
+            else bottomRight++;
+        }
+
+        return (topLeft, topRight, bottomLeft, bottomRight);
+    }
+
+    private static string GetQuadrantName(QuadrantPoint point)
+    {
+        if (point.Y >= 50 && point.X < 50) return "Top Left";
+        if (point.Y >= 50 && point.X >= 50) return "Top Right";
+        if (point.Y < 50 && point.X < 50) return "Bottom Left";
+        return "Bottom Right";
+    }
+
+    private double GetParticipationRate()
+    {
+        if (dashboard is null || dashboard.ParticipantCount == 0)
+        {
+            return 0;
+        }
+
+        return dashboard.RespondedParticipants * 100.0 / dashboard.ParticipantCount;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            try
+            {
+                await hubConnection.DisposeAsync();
+            }
+            catch
+            {
+            }
+        }
+    }
+}

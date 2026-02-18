@@ -312,38 +312,7 @@ window.saveQuadrantActivity = async function() {
 };
 
 window.saveFiveWhysActivity = async function() {
-    const title = document.getElementById('fivewhysTitle').value;
-    if (!title) {
-        alert('Please enter an activity title');
-        return;
-    }
-    
-    const activity = {
-        type: 'FiveWhys',
-        title: title,
-        prompt: document.getElementById('fivewhysPrompt').value || null,
-        durationMinutes: parseInt(document.getElementById('fivewhysDuration').value) || 10,
-        config: '{}'
-    };
-    
-    console.log('Saving five whys activity:', activity);
-    
-    if (!window.addActivitiesManager) {
-        console.error('addActivitiesManager not found!');
-        alert('Activity manager not initialized. Please refresh the page.');
-        return;
-    }
-    
-    try {
-        await window.addActivitiesManager.createActivityFromData(activity);
-        // Don't hide modal here - page will reload anyway
-        // bootstrap.Modal.getInstance(document.getElementById('fivewhysModal')).hide();
-    } catch (error) {
-        console.error('Error creating five whys activity:', error);
-        alert('Failed to create activity: ' + error.message);
-    } finally {
-        resetFiveWhysForm();
-    }
+    alert('5 Whys creation is temporarily disabled until the full participant and facilitator experience is implemented.');
 };
 
 // Reset functions

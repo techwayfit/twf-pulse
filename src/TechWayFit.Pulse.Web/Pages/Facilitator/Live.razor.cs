@@ -21,6 +21,7 @@ public partial class Live : IAsyncDisposable
     [Inject] private ISessionService SessionService { get; set; } = default!;
     [Inject] private IActivityService ActivityService { get; set; } = default!;
     [Inject] private IParticipantService ParticipantService { get; set; } = default!;
+    [Inject] private IResponseService ResponseService { get; set; } = default!;
     [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = default!;
     [Inject] private IClientTokenService TokenService { get; set; } = default!;
     [Inject] private ILogger<Live> Logger { get; set; } = default!;
@@ -38,10 +39,10 @@ public partial class Live : IAsyncDisposable
     private List<AgendaActivityResponse> activities = new();
     private AgendaActivityResponse? currentActivity;
     private int participantCount = 0;
+    private int currentActivityResponseCount = 0;
     private string joinUrl = string.Empty;
     private bool isLoading = true;
     private bool isPerformingAction = false;
-    private bool isGeneratingQR = false;
     private string errorMessage = string.Empty;
     private HubConnection? hubConnection;
     private JsonElement _aiInsightJson;
@@ -56,8 +57,16 @@ public partial class Live : IAsyncDisposable
     protected override async Task OnInitializedAsync()
     {
         await LoadActivityModalsHtml();
+
+        var isAuthorized = await EnsureFacilitatorAuthentication();
+        if (!isAuthorized)
+        {
+            isLoading = false;
+            StateHasChanged();
+            return;
+        }
+
         await LoadSession();
-        await EnsureFacilitatorAuthentication();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -206,34 +215,42 @@ public partial class Live : IAsyncDisposable
 
     #region Authentication
 
-    private async Task EnsureFacilitatorAuthentication()
+    private async Task<bool> EnsureFacilitatorAuthentication()
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(Code))
+            {
+                errorMessage = "No session code provided. Please create a session first.";
+                return false;
+            }
+
+            sessionCode = Code;
+
             // Check if token was provided in query parameter first
             if (!string.IsNullOrEmpty(Token))
             {
                 await TokenService.StoreFacilitatorTokenAsync(sessionCode, Token);
                 Logger.LogDebug("Stored facilitator token from query parameter for session {SessionCode}", sessionCode);
-                return;
             }
 
-            // Try to get a token (this will automatically join as facilitator if needed)
+            // Require a valid facilitator token for this authenticated user/session owner
             var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
             if (!string.IsNullOrEmpty(token))
             {
                 Logger.LogInformation("Successfully obtained facilitator token for session {SessionCode}", sessionCode);
+                return true;
             }
-            else
-            {
-                Logger.LogError("Failed to obtain facilitator token for session {SessionCode}", sessionCode);
-                errorMessage = "Failed to authenticate as facilitator. Please refresh and try again.";
-            }
+
+            Logger.LogError("Failed to obtain facilitator token for session {SessionCode}", sessionCode);
+            errorMessage = "You are not authorized to access this live session.";
+            return false;
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to ensure facilitator authentication for session {SessionCode}", sessionCode);
             errorMessage = $"Authentication error: {ex.Message}. Please refresh and try again.";
+            return false;
         }
     }
 
@@ -258,13 +275,6 @@ public partial class Live : IAsyncDisposable
                 return;
             }
 
-            // Check for facilitator token (optional for now - TODO: implement proper auth)
-            if (string.IsNullOrWhiteSpace(Token))
-            {
-                Logger.LogWarning("Live page accessed without facilitator token for session {SessionCode}", Code);
-                // Continue loading the session but disable certain actions
-            }
-
             sessionCode = Code;
 
             // Load session data
@@ -282,6 +292,8 @@ public partial class Live : IAsyncDisposable
             var activityEntities = await ActivityService.GetAgendaAsync(sessionEntity.Id);
             activities = activityEntities.Select(ApiMapper.ToAgenda).ToList();
             currentActivity = activities.FirstOrDefault(a => a.Status == ActivityStatus.Open);
+
+            await RefreshCurrentActivityResponseCount();
 
             Logger.LogInformation("LoadSession completed - currentActivity: {Title}, DurationMinutes: {Duration}, OpenedAt: {OpenedAt}",
      currentActivity?.Title, currentActivity?.DurationMinutes, currentActivity?.OpenedAt);
@@ -386,9 +398,6 @@ public partial class Live : IAsyncDisposable
     {
         try
         {
-            isGeneratingQR = true;
-            StateHasChanged();
-
             errorMessage = string.Empty;
             await Task.Delay(100);
 
@@ -402,7 +411,6 @@ public partial class Live : IAsyncDisposable
         }
         finally
         {
-            isGeneratingQR = false;
             StateHasChanged();
         }
     }
@@ -536,9 +544,27 @@ public partial class Live : IAsyncDisposable
 
     private int GetCurrentActivityResponseCount()
     {
-        // TODO: Implement actual response count from API
-        // For now, return 0 - will be updated via SignalR
-        return 0;
+        return currentActivityResponseCount;
+    }
+
+    private async Task RefreshCurrentActivityResponseCount()
+    {
+        if (currentActivity is null)
+        {
+            currentActivityResponseCount = 0;
+            return;
+        }
+
+        try
+        {
+            var responses = await ResponseService.GetByActivityAsync(currentActivity.ActivityId);
+            currentActivityResponseCount = responses.Count;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to load response count for activity {ActivityId}", currentActivity.ActivityId);
+            currentActivityResponseCount = 0;
+        }
     }
 
     private async Task OpenActivity(Guid activityId)
@@ -1054,6 +1080,7 @@ public partial class Live : IAsyncDisposable
                     if (currentActivity != null &&
      responseEvent.ActivityId == currentActivity.ActivityId)
                     {
+                        currentActivityResponseCount++;
                         StateHasChanged();
                     }
                 }

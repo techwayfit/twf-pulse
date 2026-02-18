@@ -12,7 +12,7 @@ public class GroupWithSessionsViewModel
 public class SessionSummary
 {
     public Guid Id { get; set; }
-    public string SessionCode { get; set; }
+    public string SessionCode { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public DateTimeOffset ExpiresAt { get; set; }

@@ -66,6 +66,10 @@
             {
                 <GeneralFeedbackDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
             }
+            else if (Activity.Type == ActivityType.Quadrant)
+            {
+                <QuadrantDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
+            }
             else
             {
                 <div class="text-center">

@@ -96,7 +96,7 @@
             {
                 <div class="card border-0 shadow-sm">
                     <div class="card-body text-center py-5">
-                        <div class="mb-3"><i class="ics ics-check-mark ic-2xl text-success"></i></div>
+                        <div class="mb-3"><i class="fas fa-check-circle text-success fa-3x" aria-hidden="true"></i></div>
                         <h4 class="h5 fw-semibold mb-3">Workshop completed!</h4>
                         <p class="text-muted mb-4">Thank you for participating in this workshop. The session has ended.</p>
 
@@ -145,7 +145,17 @@
                         <div class="response-section mt-4">
                             @if (currentActivity.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open)
                             {
-                                @if (currentActivity.Type == ActivityType.Poll)
+                                @if (!participantId.HasValue)
+                                {
+                                    <div class="alert alert-danger d-flex align-items-center" role="alert">
+                                        <div class="me-3"><i class="fas fa-exclamation-circle fa-lg" aria-hidden="true"></i></div>
+                                        <div>
+                                            <h6 class="alert-heading mb-1">Unable to identify participant</h6>
+                                            <div class="mb-0">Please rejoin the session from the join page.</div>
+                                        </div>
+                                    </div>
+                                }
+                                else if (currentActivity.Type == ActivityType.Poll)
                                 {
                                     <PollActivity Parameters="@CreateActivityParameters()" />
                                 }
@@ -180,6 +190,19 @@
                                     </div>
                                 </div>
                             }
+
+                            @if (showRejoinAction && !submitSuccess)
+                            {
+                                <div class="alert alert-danger d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3" role="alert">
+                                    <div>
+                                        <strong>Session authentication expired.</strong>
+                                        <div class="small">Please rejoin to continue participating.</div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="RejoinSession">
+                                        Rejoin Session
+                                    </button>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -208,6 +231,7 @@
     private string errorMessage = "";
     private string participantDisplayName = "";
     private string participantToken = ""; // SECURITY: Store participant token from localStorage
+    private Guid? participantId;
     private int contributionsRemaining = -1;
     private int totalResponsesSubmitted = 0;
     private int activitiesParticipated = 0;
@@ -217,6 +241,7 @@
     private bool hasSubmittedResponse = false;
     private string submitMessage = "";
     private bool submitSuccess = false;
+    private bool showRejoinAction = false;
 
     private HubConnection? hubConnection;
 
@@ -224,8 +249,37 @@
     {
         // SECURITY: Retrieve participant token from localStorage
         await LoadParticipantToken();
+        await ResolveParticipantId();
         await LoadSession();
         await InitializeSignalR();
+    }
+
+    private async Task ResolveParticipantId()
+    {
+        if (Pid.HasValue)
+        {
+            participantId = Pid.Value;
+            return;
+        }
+
+        try
+        {
+            var storageKey = $"pulse_participant_{SessionCode}";
+            var storedParticipantId = await JS.InvokeAsync<string?>("localStorage.getItem", storageKey);
+
+            if (Guid.TryParse(storedParticipantId, out var parsedParticipantId))
+            {
+                participantId = parsedParticipantId;
+                Pid = parsedParticipantId;
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error resolving participant ID: {ex.Message}");
+        }
+
+        participantId = null;
     }
 
     private async Task LoadParticipantToken()
@@ -254,7 +308,7 @@
         return new ParticipantActivityParameters
         {
             SessionCode = SessionCode,
-            ParticipantId = Pid!.Value,
+            ParticipantId = participantId.GetValueOrDefault(),
             ActivityId = currentActivity!.ActivityId,
             Config = currentActivity.Config ?? "{}",
             HasSubmitted = hasSubmittedResponse,
@@ -279,6 +333,8 @@
             }
             session = ApiMapper.ToSummary(sessionEntity);
 
+            await EnsureParticipantIdentityConsistency(sessionEntity.Id);
+
             // Load current activity
             if (session.CurrentActivityId.HasValue)
             {
@@ -292,13 +348,14 @@
                     hasSubmittedResponse = false;
                     submitMessage = "";
                     submitSuccess = false;
+                    showRejoinAction = false;
                 }
 
                 currentActivity = newActivity;
             }
 
             // TODO: Load participant dashboard/stats
-            if (Pid.HasValue)
+            if (participantId.HasValue)
             {
                 // Load participant-specific data
                 participantDisplayName = "Participant"; // Placeholder
@@ -308,7 +365,7 @@
                 {
                     try
                     {
-                        var responses = await ResponseService.GetByParticipantAsync(sessionEntity.Id, Pid.Value);
+                        var responses = await ResponseService.GetByParticipantAsync(sessionEntity.Id, participantId.Value);
                         var count = responses.Count(r => r.ActivityId == currentActivity.ActivityId);
                         // If any responses exist, consider the participant as having submitted
                         hasSubmittedResponse = count > 0;
@@ -368,6 +425,43 @@
         {
             isLoading = false;
             StateHasChanged();
+        }
+    }
+
+    private async Task EnsureParticipantIdentityConsistency(Guid sessionId)
+    {
+        try
+        {
+            var storageKey = $"pulse_participant_{SessionCode}";
+            var tokenKey = $"pulse_participant_token_{SessionCode}";
+
+            var storedParticipantIdValue = await JS.InvokeAsync<string?>("localStorage.getItem", storageKey);
+            var storedToken = await JS.InvokeAsync<string?>("localStorage.getItem", tokenKey);
+
+            if (!Guid.TryParse(storedParticipantIdValue, out var storedParticipantId) || string.IsNullOrWhiteSpace(storedToken))
+            {
+                return;
+            }
+
+            var currentIsValid = participantId.HasValue
+                && !string.IsNullOrWhiteSpace(participantToken)
+                && ParticipantTokenStore.IsValid(sessionId, participantId.Value, participantToken);
+
+            if (currentIsValid)
+            {
+                return;
+            }
+
+            if (ParticipantTokenStore.IsValid(sessionId, storedParticipantId, storedToken))
+            {
+                participantId = storedParticipantId;
+                Pid = storedParticipantId;
+                participantToken = storedToken;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error reconciling participant identity: {ex.Message}");
         }
     }
 
@@ -443,7 +537,7 @@
     private string GetSubmitButtonText()
     {
         if (hasSubmittedResponse)
-            return "Response Submitted ✓";
+            return "Response Submitted";
         if (isSubmittingResponse)
             return "Submitting...";
         return "Submit Response";
@@ -519,9 +613,10 @@
 
     private async Task SubmitResponse(string payload)
     {
-        if (currentActivity == null || !Pid.HasValue)
+        if (currentActivity == null || !participantId.HasValue)
         {
             submitMessage = "ERROR: Validation failed in SubmitResponse";
+            showRejoinAction = false;
             StateHasChanged();
             return;
         }
@@ -529,6 +624,7 @@
         isSubmittingResponse = true;
         submitMessage = "";
         submitSuccess = false;
+        showRejoinAction = false;
         StateHasChanged();
 
         try
@@ -539,6 +635,7 @@
             {
                 submitSuccess = false;
                 submitMessage = "Session not found.";
+                showRejoinAction = false;
                 return;
             }
 
@@ -547,33 +644,42 @@
             {
                 submitSuccess = false;
                 submitMessage = "Participant token not found. Please refresh the page or rejoin the session.";
-                Console.WriteLine($"Token is empty for participant {Pid.Value}");
+                showRejoinAction = true;
+                Console.WriteLine($"Token is empty for participant {participantId.Value}");
                 return;
             }
             
             // Check if token exists in store
-            if (!ParticipantTokenStore.TryGet(sessionEntity.Id, Pid.Value, out var storedAuth))
+            if (!ParticipantTokenStore.TryGet(sessionEntity.Id, participantId.Value, out var storedAuth))
             {
                 submitSuccess = false;
                 submitMessage = "Session state lost (server restart). Please rejoin the session by refreshing and entering your name again.";
-                Console.WriteLine($"No token found in store for participant {Pid.Value} in session {sessionEntity.Id}");
+                showRejoinAction = true;
+                Console.WriteLine($"No token found in store for participant {participantId.Value} in session {sessionEntity.Id}");
                 return;
             }
             
-            if (!ParticipantTokenStore.IsValid(sessionEntity.Id, Pid.Value, participantToken))
+            if (!ParticipantTokenStore.IsValid(sessionEntity.Id, participantId.Value, participantToken))
             {
-                submitSuccess = false;
-                submitMessage = "Invalid or expired participant token. The token doesn't match. Please rejoin the session.";
-                Console.WriteLine($"Token validation failed for participant {Pid.Value} in session {sessionEntity.Id}");
-                Console.WriteLine($"Expected: {storedAuth.Token.Substring(0, 8)}..., Got: {participantToken.Substring(0, Math.Min(8, participantToken.Length))}...");
-                return;
+                await EnsureParticipantIdentityConsistency(sessionEntity.Id);
+
+                if (!participantId.HasValue || string.IsNullOrWhiteSpace(participantToken) ||
+                    !ParticipantTokenStore.IsValid(sessionEntity.Id, participantId.Value, participantToken))
+                {
+                    submitSuccess = false;
+                    submitMessage = "Invalid or expired participant token. The token doesn't match. Please rejoin the session.";
+                    showRejoinAction = true;
+                    Console.WriteLine($"Token validation failed for participant {participantId.Value} in session {sessionEntity.Id}");
+                    Console.WriteLine($"Expected: {storedAuth.Token.Substring(0, 8)}..., Got: {participantToken.Substring(0, Math.Min(8, participantToken.Length))}...");
+                    return;
+                }
             }
 
             // Submit response
             await ResponseService.SubmitAsync(
                 sessionEntity.Id,
                 currentActivity.ActivityId,
-                Pid.Value,
+                participantId.Value,
                 payload,
                 DateTimeOffset.UtcNow);
 
@@ -582,16 +688,24 @@
             contributionsRemaining--;
             submitSuccess = true;
             submitMessage = "Response submitted successfully!";
+            showRejoinAction = false;
         }
         catch (Exception ex)
         {
             submitSuccess = false;
             submitMessage = $"API Error: {ex.Message}";
+            showRejoinAction = false;
         }
         finally
         {
             isSubmittingResponse = false;
             StateHasChanged();
         }
+    }
+
+    private Task RejoinSession()
+    {
+        Navigation.NavigateTo($"/participant/join?sessionCode={SessionCode}", true);
+        return Task.CompletedTask;
     }
 }

@@ -108,6 +108,15 @@
         StartDataRefresh();
     }
 
+    protected override void OnParametersSet()
+    {
+        if (DurationMinutes.HasValue && OpenedAt.HasValue)
+        {
+            StartTimer();
+            UpdateTimer(null);
+        }
+    }
+
     private async Task LoadData()
     {
         try
@@ -167,6 +176,8 @@
 
     private void StartTimer()
     {
+        timer?.Dispose();
+
         if (DurationMinutes.HasValue && OpenedAt.HasValue)
         {
             timer = new System.Threading.Timer(UpdateTimer, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
@@ -196,6 +207,7 @@
     public async ValueTask DisposeAsync()
     {
         timer?.Dispose();
+        dataRefreshTimer?.Dispose();
 
         if (hubConnection is not null)
         {

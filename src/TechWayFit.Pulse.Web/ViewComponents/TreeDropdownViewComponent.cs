@@ -6,10 +6,10 @@ namespace TechWayFit.Pulse.Web.ViewComponents.TreeDropdown
     {
         public IViewComponentResult Invoke(
             string id, 
-            string name = null, 
-            string value = null, 
+            string? name = null, 
+            string? value = null, 
             string placeholder = "Select an option", 
-            IEnumerable<TreeDropdownItem> items = null, 
+            IEnumerable<TreeDropdownItem>? items = null, 
             bool allowClear = false, 
             string cssClass = "")
         {

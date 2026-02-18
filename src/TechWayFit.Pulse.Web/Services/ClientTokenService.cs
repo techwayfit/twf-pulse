@@ -44,16 +44,7 @@ public class ClientTokenService : IClientTokenService
                 throw new ArgumentException("Session code is required", nameof(sessionCode));
             }
 
-            // Check our simple cache first
-            if (_sessionTokenCache.TryGetValue(sessionCode, out var cachedToken))
-            {
-                _logger.LogDebug("Found cached facilitator token for session {SessionCode}", sessionCode);
-                return cachedToken;
-            }
-
-            // Get the session directly from the service (no HTTP call needed in server-side code!)
-            _logger.LogDebug("No cached token found for session {SessionCode}, generating facilitator token", sessionCode);
-            
+            // Always validate current user ownership before token reuse/generation
             var session = await _sessionService.GetByCodeAsync(sessionCode);
             if (session == null)
             {
@@ -76,6 +67,15 @@ public class ClientTokenService : IClientTokenService
                     userId, sessionCode, session.FacilitatorUserId);
                 return null;
             }
+
+            // Check cache only after ownership validation
+            if (_sessionTokenCache.TryGetValue(sessionCode, out var cachedToken))
+            {
+                _logger.LogDebug("Found cached facilitator token for authorized user in session {SessionCode}", sessionCode);
+                return cachedToken;
+            }
+
+            _logger.LogDebug("No cached token found for session {SessionCode}, generating facilitator token", sessionCode);
 
             // Create and cache the facilitator token
             var auth = _tokenStore.Create(session.Id);

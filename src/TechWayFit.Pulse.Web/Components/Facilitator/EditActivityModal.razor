@@ -4,9 +4,11 @@
 @using TechWayFit.Pulse.Application.Abstractions.Services
 @using TechWayFit.Pulse.Web.Api
 @using System.Text.Json
+@using Microsoft.JSInterop
 @inject ISessionService SessionService
 @inject IActivityService ActivityService
 @inject ILogger<EditActivityModal> Logger
+@inject IJSRuntime JS
 
 <!-- Edit Activity Modal -->
 <div class="modal fade @(IsVisible ? "show" : "")" id="editActivityModal" tabindex="-1" 
@@ -397,8 +399,14 @@
 
     private async Task<bool> ConfirmDelete()
     {
-        // Simple confirmation - in production, you might want a better modal
-        return await Task.FromResult(true); // For now, always confirm
-        // TODO: Implement proper confirmation dialog
+        try
+        {
+            var title = Activity?.Title ?? "this activity";
+            return await JS.InvokeAsync<bool>("confirm", $"Delete '{title}'? This action cannot be undone.");
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
