@@ -1,0 +1,320 @@
+@model TechWayFit.Pulse.Web.Models.SessionReportViewModel
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = $"Session Report - {Model.SessionCode}";
+    var chartPayload = Model.Activities.Select(a => new
+    {
+        activityId = a.ActivityId,
+        title = a.Title,
+        chart = a.Chart
+    });
+}
+
+<div class="container container-wide session-report-page py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4 report-no-print">
+        <div>
+            <h2 class="mb-1">Session Report</h2>
+            <p class="text-muted mb-0">Code: <span class="badge bg-primary">@Model.SessionCode</span></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="@Url.Action("Dashboard", "Facilitator")">Back to Dashboard</a>
+            <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-lg-8">
+                    <h4 class="mb-1">@Model.SessionTitle</h4>
+                    <p class="text-muted mb-2">Status: <strong>@Model.Status</strong></p>
+                    @if (!string.IsNullOrWhiteSpace(Model.Goal))
+                    {
+                        <p class="mb-2"><strong>Goal:</strong> @Model.Goal</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.Context))
+                    {
+                        <p class="mb-0"><strong>Context:</strong> @Model.Context</p>
+                    }
+                </div>
+                <div class="col-lg-4">
+                    <div class="small text-muted">Generated @Model.GeneratedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                    <div class="small mt-2"><strong>Created:</strong> @Model.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                    <div class="small"><strong>Last Updated:</strong> @Model.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                    <div class="small"><strong>Planned Start:</strong> @(Model.PlannedStart?.ToString("yyyy-MM-dd HH:mm") ?? "Not set")</div>
+                    <div class="small"><strong>Planned End:</strong> @(Model.PlannedEnd?.ToString("yyyy-MM-dd HH:mm") ?? "Not set")</div>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="border rounded p-3 text-center bg-light">
+                        <div class="h4 mb-0">@Model.ParticipantCount</div>
+                        <small class="text-muted">Participants</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="border rounded p-3 text-center bg-light">
+                        <div class="h4 mb-0">@Model.Activities.Count</div>
+                        <small class="text-muted">Activities</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="border rounded p-3 text-center bg-light">
+                        <div class="h4 mb-0">@Model.TotalResponses</div>
+                        <small class="text-muted">Total Responses</small>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="border rounded p-3 text-center bg-light">
+                        <div class="h4 mb-0">@Model.Activities.Sum(x => x.ResponseCount)</div>
+                        <small class="text-muted">Recorded Entries</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Participant Details</h5>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Participants.Count == 0)
+            {
+                <div class="p-4 text-muted">No participants found for this session.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Participant</th>
+                                <th>Joined At</th>
+                                @foreach (var column in Model.ParticipantColumns)
+                                {
+                                    <th>@column.Label</th>
+                                }
+                                <th>Responses</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var participant in Model.Participants.OrderBy(p => p.JoinedAt))
+                            {
+                                <tr>
+                                    <td>@participant.DisplayName</td>
+                                    <td>@participant.JoinedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                                    @foreach (var column in Model.ParticipantColumns)
+                                    {
+                                        <td>@(participant.Dimensions.TryGetValue(column.Id, out var value) ? value : "-")</td>
+                                    }
+                                    <td>@participant.ResponseCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @foreach (var activity in Model.Activities.OrderBy(a => a.Order))
+    {
+        var chartCanvasId = $"activity-chart-{activity.ActivityId:N}";
+
+        <div class="card shadow-sm mb-4 report-activity-block">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h5 class="mb-0">#@activity.Order @activity.Title</h5>
+                        <small class="text-muted">@activity.Type @if (!string.IsNullOrWhiteSpace(activity.Prompt)) { <text>• @activity.Prompt</text> }</small>
+                    </div>
+                    <div class="small text-muted">
+                        Responses: <strong>@activity.ResponseCount</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4"><small class="text-muted">Opened</small><div>@(activity.OpenedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-")</div></div>
+                    <div class="col-md-4"><small class="text-muted">Closed</small><div>@(activity.ClosedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-")</div></div>
+                    <div class="col-md-4"><small class="text-muted">Duration</small><div>@(activity.DurationMinutes.HasValue ? $"{activity.DurationMinutes} min" : "-")</div></div>
+                </div>
+
+                <div class="report-chart-wrap mb-4">
+                    <canvas id="@chartCanvasId" data-chart-id="@activity.ActivityId"></canvas>
+                </div>
+
+                <h6 class="mb-2">Responses</h6>
+                @if (activity.Responses.Count == 0)
+                {
+                    <div class="text-muted">No responses recorded.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Participant</th>
+                                    <th>Response</th>
+                                    <th>Submitted At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var response in activity.Responses)
+                                {
+                                    <tr>
+                                        <td>@response.ParticipantName</td>
+                                        <td>@response.Summary</td>
+                                        <td>@response.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const chartPayload = @Html.Raw(JsonSerializer.Serialize(chartPayload));
+            const chartInstances = [];
+
+            function pick(obj, camel, pascal, fallback) {
+                if (!obj) return fallback;
+                if (Object.prototype.hasOwnProperty.call(obj, camel) && obj[camel] !== undefined && obj[camel] !== null) {
+                    return obj[camel];
+                }
+                if (Object.prototype.hasOwnProperty.call(obj, pascal) && obj[pascal] !== undefined && obj[pascal] !== null) {
+                    return obj[pascal];
+                }
+                return fallback;
+            }
+
+            function renderChart(item) {
+                const chartContainer = document.getElementById(`activity-chart-${item.activityId.replaceAll('-', '')}`);
+                if (!chartContainer || !item.chart) {
+                    return;
+                }
+
+                const chartType = String(pick(item.chart, 'type', 'Type', 'bar')).toLowerCase();
+                const chartTitle = String(pick(item.chart, 'title', 'Title', item.title || 'Activity Chart'));
+
+                if (chartType === 'scatter') {
+                    const scatterPoints = (pick(item.chart, 'points', 'Points', []) || []).map(p => ({
+                        x: pick(p, 'x', 'X', 0),
+                        y: pick(p, 'y', 'Y', 0),
+                        label: pick(p, 'label', 'Label', '')
+                    }));
+                    chartInstances.push(new Chart(chartContainer, {
+                        type: 'scatter',
+                        data: {
+                            datasets: [{
+                                label: chartTitle,
+                                data: scatterPoints,
+                                backgroundColor: 'rgba(13,110,253,0.65)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { min: 0, max: 100, title: { display: true, text: 'X' } },
+                                y: { min: 0, max: 100, title: { display: true, text: 'Y' } }
+                            },
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (ctx) {
+                                            const raw = ctx.raw || {};
+                                            const base = `x=${raw.x}, y=${raw.y}`;
+                                            return raw.label ? `${raw.label} (${base})` : base;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }));
+                    return;
+                }
+
+                const labels = pick(item.chart, 'labels', 'Labels', []) || [];
+                const values = pick(item.chart, 'values', 'Values', []) || [];
+
+                chartInstances.push(new Chart(chartContainer, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: chartTitle,
+                            data: values,
+                            backgroundColor: 'rgba(13,110,253,0.65)',
+                            borderColor: 'rgba(13,110,253,1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { precision: 0 }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                }));
+            }
+
+            chartPayload.forEach(renderChart);
+
+            const downloadBtn = document.getElementById('downloadPdfBtn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', function () {
+                    window.print();
+                });
+            }
+        })();
+    </script>
+}
+
+<style>
+    .report-chart-wrap {
+        position: relative;
+        min-height: 320px;
+    }
+
+    @@media print {
+        .report-no-print,
+        .navbar,
+        .footer-dark {
+            display: none !important;
+        }
+
+        .session-report-page {
+            max-width: 100% !important;
+        }
+
+        .report-activity-block {
+            page-break-inside: avoid;
+        }
+
+        .report-chart-wrap {
+            min-height: 260px;
+        }
+    }
+</style>

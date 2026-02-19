@@ -480,8 +480,8 @@ public partial class Live : IAsyncDisposable
                 session = ApiMapper.ToSummary(sessionEntity);
             }
 
-            // Session ended successfully - redirect to facilitator dashboard
-            Navigation.NavigateTo("/facilitator/dashboard", forceLoad: true);
+            // Session ended successfully - redirect to session report
+            Navigation.NavigateTo($"/facilitator/report/{sessionCode}", forceLoad: true);
         }
         catch (Exception ex)
         {

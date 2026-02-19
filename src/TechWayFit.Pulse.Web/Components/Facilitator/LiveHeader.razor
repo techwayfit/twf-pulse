@@ -1,5 +1,6 @@
 @using TechWayFit.Pulse.Contracts.Enums
 @using TechWayFit.Pulse.Contracts.Responses
+@inject NavigationManager Navigation
 
 <!-- Header - Mobile Optimized -->
 <div class="mb-3">
@@ -19,6 +20,9 @@
             }
             <button class="btn btn-sm btn-outline-secondary" @onclick="OnShowEditSession">
                 <i class="fas fa-edit me-1"></i>Edit Session
+            </button>
+            <button class="btn btn-sm btn-outline-info" @onclick="NavigateToReport">
+                <i class="fas fa-file-lines me-1"></i>Report
             </button>
             <button class="btn btn-sm btn-outline-primary" @onclick="OnShowQRModal">
                 <i class="fas fa-qrcode me-1"></i>Show Joining Information
@@ -55,6 +59,9 @@
         </div>
         <!-- Line 3: Buttons -->
         <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-info" @onclick="NavigateToReport">
+                <i class="fas fa-file-lines me-1"></i>Report
+            </button>
             <button class="btn btn-sm btn-outline-primary flex-grow-1" @onclick="OnShowQRModal">
                 <i class="fas fa-qrcode me-1"></i>Join Info
             </button>
@@ -95,4 +102,9 @@
 
     [Parameter]
     public EventCallback OnEndSession { get; set; }
+
+    private void NavigateToReport()
+    {
+        Navigation.NavigateTo($"/facilitator/report/{SessionCode}", forceLoad: true);
+    }
 }
