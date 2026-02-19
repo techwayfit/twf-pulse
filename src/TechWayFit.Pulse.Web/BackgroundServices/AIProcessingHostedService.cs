@@ -85,7 +85,7 @@ namespace TechWayFit.Pulse.Web.BackgroundServices
                             }
                         };
 
-                        await hub.Clients.Group(session.Code).DashboardUpdated(new DashboardUpdatedEvent(
+                        await hub.Clients.Group(WorkshopGroupNames.ForSession(session.Code)).DashboardUpdated(new DashboardUpdatedEvent(
                             session.Code,
                             activityId,
                             "AIInsight",

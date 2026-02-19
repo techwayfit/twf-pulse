@@ -186,6 +186,9 @@
     private WordCloudDashboardResponse? dashboard;
     private HubConnection? hubConnection;
     private string viewType = "cloud";
+    private bool shouldRenderVisualization;
+    private string? lastLoadedSessionCode;
+    private Guid lastLoadedActivityId;
 
     private class WordData
     {
@@ -207,7 +210,13 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (ActivityId != Guid.Empty)
+        if (ActivityId == Guid.Empty || string.IsNullOrWhiteSpace(SessionCode))
+        {
+            return;
+        }
+
+        if (!string.Equals(lastLoadedSessionCode, SessionCode, StringComparison.OrdinalIgnoreCase)
+            || lastLoadedActivityId != ActivityId)
         {
             await LoadDashboard();
         }
@@ -215,7 +224,14 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (dashboard?.WordFrequencies?.Any() == true && viewType == "cloud")
+        if (!shouldRenderVisualization)
+        {
+            return;
+        }
+
+        shouldRenderVisualization = false;
+
+        if (dashboard?.WordFrequencies?.Any() == true && (viewType == "cloud" || viewType == "chart"))
         {
             // Single render attempt - canvas should be ready in DOM
             await Task.Delay(300);
@@ -240,6 +256,9 @@
 
             var filters = new Dictionary<string, string?>();
             dashboard = await WordCloudDashboardService.GetWordCloudDashboardAsync(session.Id, ActivityId, filters);
+            lastLoadedSessionCode = SessionCode;
+            lastLoadedActivityId = ActivityId;
+            shouldRenderVisualization = true;
         }
         catch (HttpRequestException ex)
         {
@@ -275,6 +294,23 @@
                 .WithAutomaticReconnect()
                 .Build();
 
+            hubConnection.Reconnected += async _ =>
+            {
+                try
+                {
+                    await hubConnection.InvokeAsync("Subscribe", SessionCode);
+                    await InvokeAsync(async () =>
+                    {
+                        await LoadDashboard();
+                        StateHasChanged();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to re-subscribe WordCloud dashboard after reconnect");
+                }
+            };
+
             hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
             {
                 Logger.LogInformation("WordCloud received ResponseReceived event: SessionCode={SessionCode}, ActivityId={ActivityId}", 
@@ -287,7 +323,6 @@
                     await InvokeAsync(async () =>
                     {
                         await LoadDashboard();
-                        await RenderVisualization();
                         StateHasChanged();
                     });
                 }
@@ -306,9 +341,9 @@
     {
         Logger.LogInformation("Switching view type to: {ViewType}", type);
         viewType = type;
+        shouldRenderVisualization = true;
         StateHasChanged();
-        await Task.Delay(100); // Allow UI to update
-        await RenderVisualization();
+        await Task.CompletedTask;
     }
 
     private async Task RenderVisualization()

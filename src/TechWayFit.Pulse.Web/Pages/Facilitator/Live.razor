@@ -42,7 +42,7 @@
                         OnShowQRModal="@ShowQRModal"
                         OnShowEditSession="@ShowEditSessionModal"
                         OnStartSession="@StartSession"
-                        OnEndSession="@EndSession" />
+                        OnEndSession="@ShowEndSessionModal" />
 
             <LiveSessionInfo ParticipantCount="@participantCount"
                              Activities="@activities" />
@@ -82,6 +82,26 @@
             <LiveTimerModal TimerDuration="@timerDurationInput"
                             OnTimerDurationChanged="@((value) => timerDurationInput = value)"
                             OnSetTimer="@SetActivityTimer" />
+
+            <div class="modal fade" id="endSessionModal" tabindex="-1" aria-labelledby="endSessionModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="endSessionModalLabel">End session?</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" disabled="@isPerformingAction"></button>
+                        </div>
+                        <div class="modal-body">
+                            This will end the session for all participants and it cannot be restarted.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@isPerformingAction">Cancel</button>
+                            <button type="button" class="btn btn-danger" @onclick="ConfirmEndSession" disabled="@isPerformingAction">
+                                @(isPerformingAction ? "Ending..." : "Yes, End Session")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             @if (currentActivity != null)
             {

@@ -21,4 +21,25 @@ public interface IHubNotificationService
     /// Broadcast activity deleted event to all session participants
     /// </summary>
     Task PublishActivityDeletedAsync(string sessionCode, Guid activityId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcast response received event to all session participants
+    /// </summary>
+    Task PublishResponseReceivedAsync(
+        string sessionCode,
+        Guid activityId,
+        Guid responseId,
+        Guid participantId,
+        DateTimeOffset createdAt,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcast dashboard updated event to all session participants
+    /// </summary>
+    Task PublishDashboardUpdatedAsync(
+        string sessionCode,
+        Guid? activityId,
+        string aggregateType,
+        object payload,
+        CancellationToken cancellationToken = default);
 }

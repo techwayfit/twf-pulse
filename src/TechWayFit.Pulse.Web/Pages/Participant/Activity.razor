@@ -4,6 +4,7 @@
 @inject TechWayFit.Pulse.Application.Abstractions.Services.ISessionService SessionService
 @inject TechWayFit.Pulse.Application.Abstractions.Services.IActivityService ActivityService
 @inject TechWayFit.Pulse.Application.Abstractions.Services.IResponseService ResponseService
+@inject TechWayFit.Pulse.Web.Services.IHubNotificationService HubNotifications
 @inject TechWayFit.Pulse.Web.Api.IParticipantTokenStore ParticipantTokenStore
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Contracts.Requests
@@ -676,12 +677,25 @@
             }
 
             // Submit response
-            await ResponseService.SubmitAsync(
+            var response = await ResponseService.SubmitAsync(
                 sessionEntity.Id,
                 currentActivity.ActivityId,
                 participantId.Value,
                 payload,
                 DateTimeOffset.UtcNow);
+
+            await HubNotifications.PublishResponseReceivedAsync(
+                sessionEntity.Code,
+                currentActivity.ActivityId,
+                response.Id,
+                participantId.Value,
+                response.CreatedAt);
+
+            await HubNotifications.PublishDashboardUpdatedAsync(
+                sessionEntity.Code,
+                currentActivity.ActivityId,
+                "response_submitted",
+                new { ResponseId = response.Id, ActivityId = currentActivity.ActivityId });
 
             hasSubmittedResponse = true;
             totalResponsesSubmitted++;

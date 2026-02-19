@@ -183,6 +183,23 @@
                 .WithAutomaticReconnect()
                 .Build();
 
+            hubConnection.Reconnected += async _ =>
+            {
+                try
+                {
+                    await hubConnection.InvokeAsync("Subscribe", SessionCode);
+                    await InvokeAsync(async () =>
+                    {
+                        await LoadDashboard();
+                        StateHasChanged();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to re-subscribe quadrant dashboard after reconnect");
+                }
+            };
+
             hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
             {
                 await InvokeAsync(async () =>

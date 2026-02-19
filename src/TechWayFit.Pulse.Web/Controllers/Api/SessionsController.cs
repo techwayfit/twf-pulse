@@ -35,6 +35,7 @@ public sealed class SessionsController : ControllerBase
     private readonly TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService _sessionAI;
     private readonly ISessionGroupService _sessionGroups;
     private readonly TechWayFit.Pulse.Web.Services.IHubNotificationService _hubNotifications;
+    private readonly ILogger<SessionsController> _logger;
 
     public SessionsController(
         ISessionService sessions,
@@ -56,7 +57,8 @@ public sealed class SessionsController : ControllerBase
         TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService participantAI,
         TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService facilitatorAI,
         ISessionGroupService sessionGroups,
-        TechWayFit.Pulse.Web.Services.IHubNotificationService hubNotifications)
+        TechWayFit.Pulse.Web.Services.IHubNotificationService hubNotifications,
+        ILogger<SessionsController> logger)
     {
         _sessions = sessions;
         _authService = authService;
@@ -78,6 +80,7 @@ public sealed class SessionsController : ControllerBase
         _sessionAI = sessionAI;
         _sessionGroups = sessionGroups;
         _hubNotifications = hubNotifications;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -663,7 +666,7 @@ public sealed class SessionsController : ControllerBase
                 activityId,
                 cancellationToken);
 
-            await _hub.Clients.Group(session.Code).ActivityDeleted(activityId);
+            await _hub.Clients.Group(WorkshopGroupNames.ForSession(session.Code)).ActivityDeleted(activityId);
             return Ok(Wrap(new { message = "Activity deleted successfully" }));
         }
         catch (ArgumentException ex)
@@ -901,7 +904,7 @@ public sealed class SessionsController : ControllerBase
             var participantCount = await _participants.GetBySessionAsync(session.Id, cancellationToken);
 
             // Broadcast participant joined event
-            await _hub.Clients.Group(session.Code).ParticipantJoined(new ParticipantJoinedEvent(
+            await _hub.Clients.Group(WorkshopGroupNames.ForSession(session.Code)).ParticipantJoined(new ParticipantJoinedEvent(
         session.Code,
             participant.Id,
  participant.DisplayName,
@@ -957,8 +960,17 @@ public sealed class SessionsController : ControllerBase
        DateTimeOffset.UtcNow,
         cancellationToken);
 
+                        var sessionGroup = WorkshopGroupNames.ForSession(session.Code);
+                        _logger.LogInformation(
+                                "Response submitted: SessionCode={SessionCode}, Group={Group}, ActivityId={ActivityId}, ParticipantId={ParticipantId}, ResponseId={ResponseId}",
+                                session.Code,
+                                sessionGroup,
+                                activityId,
+                                request.ParticipantId,
+                                response.Id);
+
             // Broadcast response received event
-            await _hub.Clients.Group(session.Code).ResponseReceived(new ResponseReceivedEvent(
+                        await _hub.Clients.Group(sessionGroup).ResponseReceived(new ResponseReceivedEvent(
        session.Code,
                    activityId,
               response.Id,
@@ -967,7 +979,7 @@ public sealed class SessionsController : ControllerBase
       DateTimeOffset.UtcNow));
 
             // Broadcast dashboard updated event
-            await _hub.Clients.Group(session.Code).DashboardUpdated(new DashboardUpdatedEvent(
+                        await _hub.Clients.Group(sessionGroup).DashboardUpdated(new DashboardUpdatedEvent(
                    session.Code,
               activityId,
             "response_submitted",

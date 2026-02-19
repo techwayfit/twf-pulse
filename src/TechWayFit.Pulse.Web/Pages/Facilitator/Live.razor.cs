@@ -419,6 +419,32 @@ public partial class Live : IAsyncDisposable
 
     #region Session Management
 
+    private async Task ShowEndSessionModal()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("eval", "bootstrap.Modal.getOrCreateInstance(document.getElementById('endSessionModal')).show()");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to show end session confirmation modal");
+        }
+    }
+
+    private async Task ConfirmEndSession()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("eval", "bootstrap.Modal.getOrCreateInstance(document.getElementById('endSessionModal')).hide()");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to close end session confirmation modal before ending session");
+        }
+
+        await EndSession();
+    }
+
     private async Task EndSession()
     {
         try
@@ -455,7 +481,7 @@ public partial class Live : IAsyncDisposable
             }
 
             // Session ended successfully - redirect to facilitator dashboard
-            Navigation.NavigateTo("/facilitator/dashboard");
+            Navigation.NavigateTo("/facilitator/dashboard", forceLoad: true);
         }
         catch (Exception ex)
         {

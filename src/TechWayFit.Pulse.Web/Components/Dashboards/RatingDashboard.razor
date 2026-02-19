@@ -151,6 +151,13 @@
             </div>
         }
     }
+    else
+    {
+        <div class="alert alert-warning mb-0">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            Rating dashboard data is unavailable right now.
+        </div>
+    }
 </div>
 
 @code {
@@ -216,9 +223,26 @@
         try
         {
             hubConnection = new HubConnectionBuilder()
-                .WithUrl(Navigation.ToAbsoluteUri("/workshophub"))
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
                 .WithAutomaticReconnect()
                 .Build();
+
+            hubConnection.Reconnected += async _ =>
+            {
+                try
+                {
+                    await hubConnection.InvokeAsync("Subscribe", SessionCode);
+                    await InvokeAsync(async () =>
+                    {
+                        await LoadDashboard();
+                        StateHasChanged();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to re-subscribe rating dashboard after reconnect");
+                }
+            };
 
             hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
             {

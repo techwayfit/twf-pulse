@@ -385,6 +385,24 @@
                 .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
                 .Build();
 
+            hubConnection.Reconnected += async _ =>
+            {
+                try
+                {
+                    await hubConnection.InvokeAsync("Subscribe", SessionCode);
+                    await InvokeAsync(async () =>
+                    {
+                        await LoadDashboard();
+                        StateHasChanged();
+                        await RenderChart();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to re-subscribe poll dashboard after reconnect");
+                }
+            };
+
             // Handle new responses
             hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (responseEvent) =>
             {

@@ -12,12 +12,8 @@ public sealed class WorkshopHub : Hub<IWorkshopClient>
     /// </summary>
     public async Task Subscribe(string sessionCode)
     {
-        if (string.IsNullOrWhiteSpace(sessionCode))
-        {
-       throw new ArgumentException("Session code is required", nameof(sessionCode));
-        }
-
-        await Groups.AddToGroupAsync(Context.ConnectionId, sessionCode);
+        var groupName = WorkshopGroupNames.ForSession(sessionCode);
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
     }
 
     /// <summary>
@@ -25,12 +21,8 @@ public sealed class WorkshopHub : Hub<IWorkshopClient>
     /// </summary>
     public async Task Unsubscribe(string sessionCode)
     {
-        if (string.IsNullOrWhiteSpace(sessionCode))
-        {
-      throw new ArgumentException("Session code is required", nameof(sessionCode));
-        }
-
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, sessionCode);
+        var groupName = WorkshopGroupNames.ForSession(sessionCode);
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)

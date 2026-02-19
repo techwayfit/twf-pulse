@@ -25,6 +25,7 @@ public sealed class HubNotificationService : IHubNotificationService
     public async Task PublishSessionStateChangedAsync(Session session, CancellationToken cancellationToken = default)
     {
         var participants = await _participantService.GetBySessionAsync(session.Id, cancellationToken);
+        var groupName = WorkshopGroupNames.ForSession(session.Code);
 
         var sessionStateEvent = new SessionStateChangedEvent(
             session.Code,
@@ -33,11 +34,12 @@ public sealed class HubNotificationService : IHubNotificationService
             participants.Count,
             DateTimeOffset.UtcNow);
 
-        await _hub.Clients.Group(session.Code).SessionStateChanged(sessionStateEvent);
+        await _hub.Clients.Group(groupName).SessionStateChanged(sessionStateEvent);
     }
 
     public async Task PublishActivityStateChangedAsync(string sessionCode, Activity activity, CancellationToken cancellationToken = default)
     {
+        var groupName = WorkshopGroupNames.ForSession(sessionCode);
         var activityStateEvent = new ActivityStateChangedEvent(
             sessionCode,
             activity.Id,
@@ -48,11 +50,46 @@ public sealed class HubNotificationService : IHubNotificationService
             activity.ClosedAt,
             DateTimeOffset.UtcNow);
 
-        await _hub.Clients.Group(sessionCode).ActivityStateChanged(activityStateEvent);
+        await _hub.Clients.Group(groupName).ActivityStateChanged(activityStateEvent);
     }
 
     public async Task PublishActivityDeletedAsync(string sessionCode, Guid activityId, CancellationToken cancellationToken = default)
     {
-        await _hub.Clients.Group(sessionCode).ActivityDeleted(activityId);
+        var groupName = WorkshopGroupNames.ForSession(sessionCode);
+        await _hub.Clients.Group(groupName).ActivityDeleted(activityId);
+    }
+
+    public async Task PublishResponseReceivedAsync(
+        string sessionCode,
+        Guid activityId,
+        Guid responseId,
+        Guid participantId,
+        DateTimeOffset createdAt,
+        CancellationToken cancellationToken = default)
+    {
+        var groupName = WorkshopGroupNames.ForSession(sessionCode);
+        await _hub.Clients.Group(groupName).ResponseReceived(new ResponseReceivedEvent(
+            sessionCode,
+            activityId,
+            responseId,
+            participantId,
+            createdAt,
+            DateTimeOffset.UtcNow));
+    }
+
+    public async Task PublishDashboardUpdatedAsync(
+        string sessionCode,
+        Guid? activityId,
+        string aggregateType,
+        object payload,
+        CancellationToken cancellationToken = default)
+    {
+        var groupName = WorkshopGroupNames.ForSession(sessionCode);
+        await _hub.Clients.Group(groupName).DashboardUpdated(new DashboardUpdatedEvent(
+            sessionCode,
+            activityId,
+            aggregateType,
+            payload,
+            DateTimeOffset.UtcNow));
     }
 }
