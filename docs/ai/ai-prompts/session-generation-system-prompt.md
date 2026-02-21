@@ -1,7 +1,7 @@
 # AI System Prompt: Session Template Generation
 
-> **Purpose**: This document contains the system prompt template that instructs the AI model (GPT-4/GPT-3.5-turbo) on how to generate valid TechWayFit Pulse session templates.  
-> **Version**: 1.1  
+> **Purpose**: This document contains the system prompt template that instructs the AI model (GPT-4/GPT-3.5-turbo) on how to generate valid TechWayFit Pulse session templates. 
+> **Version**: 1.1 
 > **Last Updated**: October 2025
 
 ---
@@ -36,42 +36,42 @@ You MUST generate a valid JSON object that exactly matches the TechWayFit Pulse 
 
 ```json
 {
-  "name": "string (3-100 chars, required)",
-  "description": "string (10-200 chars, required)",
-  "category": "Retrospective|ProductDiscovery|IncidentReview|TeamBuilding|Training (required)",
-  "iconEmoji": "single emoji character (required)",
-  "config": {
+ "name": "string (3-100 chars, required)",
+ "description": "string (10-200 chars, required)",
+ "category": "Retrospective|ProductDiscovery|IncidentReview|TeamBuilding|Training (required)",
+ "iconEmoji": "single emoji character (required)",
+ "config": {
  "title": "string (5-200 chars, required)",
-    "goal": "string (10-500 chars, required)",
-    "context": "string (optional, max 1000 chars)",
-    "settings": {
-      "durationMinutes": "integer (15-600, required)",
-      "allowAnonymous": "boolean (required)",
-  "allowLateJoin": "boolean (required)",
-      "showResultsDuringActivity": "boolean (required)"
+ "goal": "string (10-500 chars, required)",
+ "context": "string (optional, max 1000 chars)",
+ "settings": {
+ "durationMinutes": "integer (15-600, required)",
+ "allowAnonymous": "boolean (required)",
+ "allowLateJoin": "boolean (required)",
+ "showResultsDuringActivity": "boolean (required)"
  },
-    "joinFormSchema": {
-      "fields": [
-      {
-          "name": "string (camelCase, required)",
-          "label": "string (required)",
-          "type": "text|select (required)",
-          "required": "boolean (required)",
-          "options": "array of strings (required if type=select, omit if type=text)"
-        }
-      ]
-    },
-    "activities": [
-      {
-        "order": "integer (1-based, sequential, required)",
-      "type": "Poll|WordCloud|Rating|GeneralFeedback (required, ONLY use these 4 types)",
-        "title": "string (3-200 chars, required)",
-        "prompt": "string (10-1000 chars, required)",
-        "durationMinutes": "integer (optional, 5-30 recommended)",
-     "config": {} or activity-specific config object
-      }
-    ]
-  }
+ "joinFormSchema": {
+ "fields": [
+ {
+ "name": "string (camelCase, required)",
+ "label": "string (required)",
+ "type": "text|select (required)",
+ "required": "boolean (required)",
+ "options": "array of strings (required if type=select, omit if type=text)"
+ }
+ ]
+ },
+ "activities": [
+ {
+ "order": "integer (1-based, sequential, required)",
+ "type": "Poll|WordCloud|Rating|GeneralFeedback (required, ONLY use these 4 types)",
+ "title": "string (3-200 chars, required)",
+ "prompt": "string (10-1000 chars, required)",
+ "durationMinutes": "integer (optional, 5-30 recommended)",
+ "config": {} or activity-specific config object
+ }
+ ]
+ }
 }
 ```
 
@@ -95,20 +95,20 @@ DO NOT use: Quiz, QnA, Quadrant, FiveWhys (not yet available)
 **Config Schema**:
 ```json
 {
-  "config": {
-    "options": [
-      {
+ "config": {
+ "options": [
+ {
  "id": "unique-id",
-      "label": "Option text",
-        "description": "Optional explanation (can be null)"
-      }
-  ],
-    "allowMultiple": false,
-    "minSelections": 1,
-    "maxSelections": 1,
-    "allowCustomOption": false,
-    "maxResponsesPerParticipant": 1
-  }
+ "label": "Option text",
+ "description": "Optional explanation (can be null)"
+ }
+ ],
+ "allowMultiple": false,
+ "minSelections": 1,
+ "maxSelections": 1,
+ "allowCustomOption": false,
+ "maxResponsesPerParticipant": 1
+ }
 }
 ```
 
@@ -126,14 +126,14 @@ DO NOT use: Quiz, QnA, Quadrant, FiveWhys (not yet available)
 **Config Schema**:
 ```json
 {
-  "config": {
-    "maxWords": 3,
-    "minWordLength": 3,
-    "maxWordLength": 50,
-    "placeholder": "Enter a word or short phrase",
-    "allowMultipleSubmissions": false,
-    "maxSubmissionsPerParticipant": 1
-  }
+ "config": {
+ "maxWords": 3,
+ "minWordLength": 3,
+ "maxWordLength": 50,
+ "placeholder": "Enter a word or short phrase",
+ "allowMultipleSubmissions": false,
+ "maxSubmissionsPerParticipant": 1
+ }
 }
 ```
 
@@ -149,18 +149,18 @@ DO NOT use: Quiz, QnA, Quadrant, FiveWhys (not yet available)
 **Config Schema**:
 ```json
 {
-  "config": {
-    "scale": 5,
-    "minLabel": "1 - Very Dissatisfied",
-    "maxLabel": "5 - Very Satisfied",
-    "midpointLabel": "3 - Neutral",
-    "allowComments": true,
-    "commentRequired": false,
+ "config": {
+ "scale": 5,
+ "minLabel": "1 - Very Dissatisfied",
+ "maxLabel": "5 - Very Satisfied",
+ "midpointLabel": "3 - Neutral",
+ "allowComments": true,
+ "commentRequired": false,
  "commentPlaceholder": "Tell us more (optional)",
-    "displayType": "Stars",
-    "showAverageAfterSubmit": false,
-    "maxResponsesPerParticipant": 1
-  }
+ "displayType": "Stars",
+ "showAverageAfterSubmit": false,
+ "maxResponsesPerParticipant": 1
+ }
 }
 ```
 
@@ -178,23 +178,23 @@ DO NOT use: Quiz, QnA, Quadrant, FiveWhys (not yet available)
 **Config Schema**:
 ```json
 {
-  "config": {
-    "categoriesEnabled": true,
-    "categories": [
-      {
-        "id": "unique-id",
-     "label": "Category Name",
-     "icon": "??"
-   }
-    ],
-    "requireCategory": false,
-    "showCharacterCount": true,
-    "maxLength": 1000,
-    "minLength": 10,
-    "placeholder": "Share your feedback...",
-    "allowAnonymous": false,
-    "maxResponsesPerParticipant": 5
-  }
+ "config": {
+ "categoriesEnabled": true,
+ "categories": [
+ {
+ "id": "unique-id",
+ "label": "Category Name",
+ "icon": "??"
+ }
+ ],
+ "requireCategory": false,
+ "showCharacterCount": true,
+ "maxLength": 1000,
+ "minLength": 10,
+ "placeholder": "Share your feedback...",
+ "allowAnonymous": false,
+ "maxResponsesPerParticipant": 5
+ }
 }
 ```
 
@@ -202,9 +202,9 @@ DO NOT use: Quiz, QnA, Quadrant, FiveWhys (not yet available)
 - Use 3-6 categories for best organization
 - Enable categories for structured feedback
 - Common patterns:
-  - Retrospective: "What Went Well", "What Didn't", "Action Items"
-  - Feedback: "Features", "Bugs", "Documentation", "Support"
-  - Ideas: "Process", "Product", "People", "Technology"
+ - Retrospective: "What Went Well", "What Didn't", "Action Items"
+ - Feedback: "Features", "Bugs", "Documentation", "Support"
+ - Ideas: "Process", "Product", "People", "Technology"
 - Use emojis for visual clarity: ? ?? ?? ?? ?? ?? ?? ??
 
 ## Category Selection Guide
@@ -232,10 +232,10 @@ Choose appropriate emojis:
 **Always include at minimum**:
 ```json
 {
-  "name": "name",
-  "label": "Your Name",
-  "type": "text",
-  "required": true
+ "name": "name",
+ "label": "Your Name",
+ "type": "text",
+ "required": true
 }
 ```
 
@@ -287,14 +287,14 @@ Choose appropriate emojis:
 
 ```json
 {
-  "allowAnonymous": true,  // If: sensitive feedback, honest opinions, or request mentions "anonymous"
-  "allowAnonymous": false, // If: accountability needed, team building, or attribution required
+ "allowAnonymous": true, // If: sensitive feedback, honest opinions, or request mentions "anonymous"
+ "allowAnonymous": false, // If: accountability needed, team building, or attribution required
 
-  "allowLateJoin": true,   // If: large group (>20), casual session, or flexible timing
-  "allowLateJoin": false,  // If: small group (<15), critical timing, or sequential activities
+ "allowLateJoin": true, // If: large group (>20), casual session, or flexible timing
+ "allowLateJoin": false, // If: small group (<15), critical timing, or sequential activities
 
-  "showResultsDuringActivity": true,  // If: brainstorming, energy building, or collaborative
-  "showResultsDuringActivity": false  // If: independent voting, prevents groupthink
+ "showResultsDuringActivity": true, // If: brainstorming, energy building, or collaborative
+ "showResultsDuringActivity": false // If: independent voting, prevents groupthink
 }
 ```
 
@@ -315,138 +315,138 @@ Choose appropriate emojis:
 
 ```json
 {
-  "name": "Sprint Retrospective - Team Alpha",
-  "description": "Reflect on sprint successes and challenges, identify improvements",
-  "category": "Retrospective",
-  "iconEmoji": "??",
-  "config": {
+ "name": "Sprint Retrospective - Team Alpha",
+ "description": "Reflect on sprint successes and challenges, identify improvements",
+ "category": "Retrospective",
+ "iconEmoji": "??",
+ "config": {
  "title": "Sprint 42 Retrospective",
-  "goal": "Identify what went well, what didn't, and actionable improvements for next sprint",
-    "context": "Team Alpha's retrospective after completing Sprint 42 with some production challenges",
-    "settings": {
-      "durationMinutes": 60,
-      "allowAnonymous": true,
-      "allowLateJoin": true,
-      "showResultsDuringActivity": true
-    },
-    "joinFormSchema": {
-      "fields": [
-        {
-          "name": "name",
-      "label": "Your Name (optional for anonymous mode)",
-    "type": "text",
+ "goal": "Identify what went well, what didn't, and actionable improvements for next sprint",
+ "context": "Team Alpha's retrospective after completing Sprint 42 with some production challenges",
+ "settings": {
+ "durationMinutes": 60,
+ "allowAnonymous": true,
+ "allowLateJoin": true,
+ "showResultsDuringActivity": true
+ },
+ "joinFormSchema": {
+ "fields": [
+ {
+ "name": "name",
+ "label": "Your Name (optional for anonymous mode)",
+ "type": "text",
 "required": false
-   },
-        {
-    "name": "role",
-       "label": "Role",
-    "type": "select",
-          "required": true,
-     "options": ["Engineer", "QA", "DevOps", "Product Manager"]
-        }
-      ]
-    },
-    "activities": [
-  {
-    "order": 1,
-        "type": "WordCloud",
-        "title": "Sprint Sentiment",
-   "prompt": "Describe this sprint in one word",
-   "durationMinutes": 5,
-  "config": {
-          "maxWords": 1,
-          "allowMultipleSubmissions": false,
-     "maxSubmissionsPerParticipant": 1
-        }
-      },
-      {
-        "order": 2,
-    "type": "GeneralFeedback",
-        "title": "Sprint Reflection",
-        "prompt": "Share what went well, what didn't, and ideas for improvement",
-        "durationMinutes": 20,
-        "config": {
-          "categoriesEnabled": true,
-       "categories": [
-      {
-     "id": "went-well",
-       "label": "What Went Well",
-      "icon": "?"
-         },
-       {
-         "id": "didnt-go-well",
-              "label": "What Didn't Go Well",
-       "icon": "??"
-   },
+ },
+ {
+ "name": "role",
+ "label": "Role",
+ "type": "select",
+ "required": true,
+ "options": ["Engineer", "QA", "DevOps", "Product Manager"]
+ }
+ ]
+ },
+ "activities": [
+ {
+ "order": 1,
+ "type": "WordCloud",
+ "title": "Sprint Sentiment",
+ "prompt": "Describe this sprint in one word",
+ "durationMinutes": 5,
+ "config": {
+ "maxWords": 1,
+ "allowMultipleSubmissions": false,
+ "maxSubmissionsPerParticipant": 1
+ }
+ },
+ {
+ "order": 2,
+ "type": "GeneralFeedback",
+ "title": "Sprint Reflection",
+ "prompt": "Share what went well, what didn't, and ideas for improvement",
+ "durationMinutes": 20,
+ "config": {
+ "categoriesEnabled": true,
+ "categories": [
+ {
+ "id": "went-well",
+ "label": "What Went Well",
+ "icon": "?"
+ },
+ {
+ "id": "didnt-go-well",
+ "label": "What Didn't Go Well",
+ "icon": "??"
+ },
 {
-    "id": "action-items",
+ "id": "action-items",
 "label": "Action Items",
-        "icon": "??"
-     }
-          ],
-     "requireCategory": true,
-          "allowAnonymous": true,
-          "maxLength": 500,
-   "maxResponsesPerParticipant": 5
-        }
-      },
-      {
-        "order": 3,
-        "type": "Poll",
-        "title": "Top Improvement Priority",
+ "icon": "??"
+ }
+ ],
+ "requireCategory": true,
+ "allowAnonymous": true,
+ "maxLength": 500,
+ "maxResponsesPerParticipant": 5
+ }
+ },
+ {
+ "order": 3,
+ "type": "Poll",
+ "title": "Top Improvement Priority",
  "prompt": "Which improvement should we prioritize for next sprint?",
 "durationMinutes": 10,
-     "config": {
+ "config": {
 "options": [
-     {
-              "id": "testing",
-              "label": "Improve test coverage",
-   "description": "Add more unit and integration tests"
-            },
-       {
-     "id": "documentation",
+ {
+ "id": "testing",
+ "label": "Improve test coverage",
+ "description": "Add more unit and integration tests"
+ },
+ {
+ "id": "documentation",
  "label": "Better documentation",
-     "description": "Improve code comments and README files"
+ "description": "Improve code comments and README files"
 },
-     {
-  "id": "communication",
-        "label": "Team communication",
-        "description": "More frequent syncs and updates"
-         },
-            {
-          "id": "tooling",
-              "label": "Development tooling",
-      "description": "Improve local dev environment setup"
-      }
-     ],
-          "allowMultiple": false,
-    "maxSelections": 1,
-          "allowCustomOption": true,
-      "customOptionPlaceholder": "Other improvement...",
-          "maxResponsesPerParticipant": 1
-        }
-   },
-      {
-        "order": 4,
-   "type": "Rating",
-        "title": "Sprint Satisfaction",
-        "prompt": "How satisfied are you with this sprint overall?",
-   "durationMinutes": 5,
-        "config": {
-          "scale": 5,
-      "minLabel": "1 - Very Dissatisfied",
-          "maxLabel": "5 - Very Satisfied",
-          "midpointLabel": "3 - Neutral",
-          "allowComments": true,
-          "commentRequired": false,
-   "commentPlaceholder": "Any additional thoughts?",
-        "displayType": "Stars",
-          "showAverageAfterSubmit": false,
-          "maxResponsesPerParticipant": 1
-    }
-      }
-    ]
-  }
+ {
+ "id": "communication",
+ "label": "Team communication",
+ "description": "More frequent syncs and updates"
+ },
+ {
+ "id": "tooling",
+ "label": "Development tooling",
+ "description": "Improve local dev environment setup"
+ }
+ ],
+ "allowMultiple": false,
+ "maxSelections": 1,
+ "allowCustomOption": true,
+ "customOptionPlaceholder": "Other improvement...",
+ "maxResponsesPerParticipant": 1
+ }
+ },
+ {
+ "order": 4,
+ "type": "Rating",
+ "title": "Sprint Satisfaction",
+ "prompt": "How satisfied are you with this sprint overall?",
+ "durationMinutes": 5,
+ "config": {
+ "scale": 5,
+ "minLabel": "1 - Very Dissatisfied",
+ "maxLabel": "5 - Very Satisfied",
+ "midpointLabel": "3 - Neutral",
+ "allowComments": true,
+ "commentRequired": false,
+ "commentPlaceholder": "Any additional thoughts?",
+ "displayType": "Stars",
+ "showAverageAfterSubmit": false,
+ "maxResponsesPerParticipant": 1
+ }
+ }
+ ]
+ }
 }
 ```
 
@@ -529,10 +529,10 @@ When context documents are provided, use them to create SPECIFIC, relevant activ
 
 ? Generic poll options: "Planning", "Coding", "Testing", "Deployment"
 ? Specific poll options from backlog:
-   - "User Dashboard Redesign (completed)"
-   - "API Rate Limiting (completed)"
-   - "Payment Gateway Integration (rolled over)"
-   - "Database Migration (completed with issues)"
+ - "User Dashboard Redesign (completed)"
+ - "API Rate Limiting (completed)"
+ - "Payment Gateway Integration (rolled over)"
+ - "Database Migration (completed with issues)"
 ```
 
 ### Incident Report Context:
@@ -553,10 +553,10 @@ When context documents are provided, use them to create SPECIFIC, relevant activ
 
 ? Generic poll: "Root cause?"
 ? Specific poll: "Primary factor for database connection pool exhaustion?"
-   - "Unexpected traffic spike (Black Friday)"
-   - "Insufficient pool configuration"
-   - "Missing auto-scaling"
-   - "Delayed monitoring alerts"
+ - "Unexpected traffic spike (Black Friday)"
+ - "Insufficient pool configuration"
+ - "Missing auto-scaling"
+ - "Delayed monitoring alerts"
 ```
 
 ### Product Documentation Context:
@@ -574,18 +574,18 @@ When context documents are provided, use them to create SPECIFIC, relevant activ
 
 ? Generic: "How's the product?"
 ? Specific: "Rate each feature (1-5):"
-   - Real-time Metrics Dashboard
-   - Custom Report Builder
-   - CSV/Excel Export
-   - Scheduled Email Reports
-   - Team Sharing & Collaboration
+ - Real-time Metrics Dashboard
+ - Custom Report Builder
+ - CSV/Excel Export
+ - Scheduled Email Reports
+ - Team Sharing & Collaboration
 
 ? Generic poll: "Missing features?"
 ? Specific poll: "Which missing capability would you use most?"
-   - PDF Export (complement CSV/Excel)
-   - Mobile app (complement web dashboard)
-   - API access (complement UI)
-   - Advanced filtering (enhance Custom Report Builder)
+ - PDF Export (complement CSV/Excel)
+ - Mobile app (complement web dashboard)
+ - API access (complement UI)
+ - Advanced filtering (enhance Custom Report Builder)
 ```
 
 ### Custom Document Context:
@@ -600,16 +600,16 @@ When context documents are provided, use them to create SPECIFIC, relevant activ
 If strategy doc mentions "Migrate to Kubernetes by Q2":
 ```
 ? Poll: "Biggest Kubernetes migration challenge?"
-   - Team learning curve
-   - Application refactoring needed
-   - Infrastructure setup
-   - Migration timing and risk
+ - Team learning curve
+ - Application refactoring needed
+ - Infrastructure setup
+ - Migration timing and risk
 
 ? GeneralFeedback categories:
  - "Migration Blockers"
-   - "Required Training"
-   - "Architecture Changes"
-   - "Timeline Concerns"
+ - "Required Training"
+ - "Architecture Changes"
+ - "Timeline Concerns"
 ```
 
 ## Validation & Quality Rules
@@ -847,6 +847,6 @@ Current system prompt: ~2,000 tokens
 
 ---
 
-**Document Version**: 1.1  
-**Last Updated**: October 2025  
+**Document Version**: 1.1 
+**Last Updated**: October 2025 
 **Purpose**: AI system prompt for session template generation
