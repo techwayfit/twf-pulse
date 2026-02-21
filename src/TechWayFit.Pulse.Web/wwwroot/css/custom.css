@@ -247,6 +247,11 @@ main.flex-grow-1 {
   font-size: 0.65rem;
 }
 
+/* Min-height utilities */
+.min-h-350 {
+  min-height: 350px;
+}
+
 /* Icon Spacer - Tree Component */
 .icon-spacer {
   width: 24px;

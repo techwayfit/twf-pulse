@@ -54,11 +54,10 @@
             
      <div class="mb-4">
     <label class="form-label fw-semibold">Your feedback</label>
-      <textarea class="form-control form-control-lg" 
+      <textarea class="form-control form-control-lg textarea-resizable-lg" 
    value="@feedbackText" 
           @oninput="OnTextChanged"
           rows="6"
-            style="resize: vertical; min-height: 120px;"
        placeholder="@(config?.Placeholder ?? "Share your thoughts, problems, or suggestions...")"
        maxlength="@(config?.MaxLength ?? 1000)"
           disabled="@Parameters.HasSubmitted"></textarea>

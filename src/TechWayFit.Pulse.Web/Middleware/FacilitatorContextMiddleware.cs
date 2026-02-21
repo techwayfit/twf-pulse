@@ -23,7 +23,8 @@ public sealed class FacilitatorContextMiddleware
         HttpContext context,
         IAuthenticationService authService,
         IFacilitatorTokenService tokenService,
-        IFacilitatorUserDataRepository userDataRepository)
+        IFacilitatorUserDataRepository userDataRepository,
+        IApiKeyProtectionService apiKeyProtection)
     {
         try
         {
@@ -44,7 +45,7 @@ public sealed class FacilitatorContextMiddleware
                             FacilitatorUserId = facilitator.Id,
                             Email = facilitator.Email,
                             DisplayName = facilitator.DisplayName,
-                            OpenAiApiKey = userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiApiKey),
+                            OpenAiApiKey = apiKeyProtection.TryUnprotect(userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiApiKey)),
                             OpenAiBaseUrl = userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiBaseUrl)
                         };
                     }
@@ -73,7 +74,7 @@ public sealed class FacilitatorContextMiddleware
                                 FacilitatorUserId = facilitator.Id,
                                 Email = facilitator.Email,
                                 DisplayName = facilitator.DisplayName,
-                                OpenAiApiKey = userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiApiKey),
+                                OpenAiApiKey = apiKeyProtection.TryUnprotect(userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiApiKey)),
                                 OpenAiBaseUrl = userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiBaseUrl)
                             };
                         }

@@ -27,31 +27,28 @@
                     var isSelected = selectedOptionIds.Contains(optionId);
                     <div class="form-check poll-option mb-3 p-3 border rounded-3 position-relative
           @(isSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-2")
-                 poll-option-interactive"
-                         style="cursor: @(Parameters.HasSubmitted ? "not-allowed" : "pointer"); transition: all 0.2s ease-in-out;"
+                 poll-option-interactive @(Parameters.HasSubmitted ? "cursor-not-allowed" : "cursor-pointer")"
                          @onclick="@(async () => await HandleOptionClick(optionId))">
                         @if (pollConfig.AllowMultiple)
                         {
-                            <input class="form-check-input position-absolute"
+                            <input class="form-check-input position-absolute poll-input-position"
                                    type="checkbox"
                                    id="poll-@optionId"
                                    checked="@isSelected"
-                                   style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
                                    disabled="@Parameters.HasSubmitted"
                                    @onchange="@((e) => ToggleOption(optionId))" />
                         }
                         else
                         {
-                            <input class="form-check-input position-absolute"
+                            <input class="form-check-input position-absolute poll-input-position"
                                    type="radio"
                                    name="pollChoice"
                                    id="poll-@optionId"
                                    checked="@isSelected"
-                                   style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
                                    disabled="@Parameters.HasSubmitted"
                                    @onchange="@((e) => SelectOption(optionId))" />
                         }
-                        <label class="form-check-label w-100 ps-4 ms-1" for="poll-@optionId" style="cursor: pointer;">
+                        <label class="form-check-label w-100 ps-4 ms-1 cursor-pointer" for="poll-@optionId">
                             <strong class="d-block mb-1 fs-6">@option.Label</strong>
                             @if (!string.IsNullOrEmpty(option.Description))
                             {
@@ -66,31 +63,28 @@
                     var isCustomSelected = selectedOptionIds.Contains("custom");
                     <div class="form-check poll-option mb-3 p-3 border rounded-3 position-relative
            @(isCustomSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-2")
-                    poll-option-interactive"
-                        style="cursor: @(Parameters.HasSubmitted ? "not-allowed" : "pointer"); transition: all 0.2s ease-in-out;"
+                    poll-option-interactive @(Parameters.HasSubmitted ? "cursor-not-allowed" : "cursor-pointer")"
                          @onclick="@(async () => await HandleOptionClick("custom"))">
                         @if (pollConfig.AllowMultiple)
                         {
-                            <input class="form-check-input position-absolute"
+                            <input class="form-check-input position-absolute poll-input-position"
                                    type="checkbox"
                                    id="poll-custom"
                                    checked="@isCustomSelected"
-                                   style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
                                    disabled="@Parameters.HasSubmitted"
                                    @onchange="@((e) => ToggleOption("custom"))" />
                         }
                         else
                         {
-                            <input class="form-check-input position-absolute"
+                            <input class="form-check-input position-absolute poll-input-position"
                                    type="radio"
                                    name="pollChoice"
                                    id="poll-custom"
                                    checked="@isCustomSelected"
-                                   style="top: 1rem; left: 1rem; width: 1.25rem; height: 1.25rem;"
                                    disabled="@Parameters.HasSubmitted"
                                    @onchange="@((e) => SelectOption("custom"))" />
                         }
-                        <label class="form-check-label w-100 ps-4 ms-1" for="poll-custom" style="cursor: pointer;">
+                        <label class="form-check-label w-100 ps-4 ms-1 cursor-pointer" for="poll-custom">
                             <strong class="d-block mb-2 fs-6">Other</strong>
                             @if (isCustomSelected)
                             {

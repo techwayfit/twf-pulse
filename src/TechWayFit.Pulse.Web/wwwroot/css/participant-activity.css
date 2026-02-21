@@ -13,6 +13,34 @@
     transform: translateY(-1px);
 }
 
+/* Cursor utilities */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.cursor-not-allowed {
+    cursor: not-allowed;
+}
+
+/* Poll checkbox/radio absolute positioning inside option card */
+.poll-input-position {
+    top: 1rem;
+    left: 1rem;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* Textarea resize utilities */
+.textarea-resizable {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.textarea-resizable-lg {
+    resize: vertical;
+    min-height: 120px;
+}
+
 /* Rating Star Interaction */
 .rating-star {
     cursor: pointer;

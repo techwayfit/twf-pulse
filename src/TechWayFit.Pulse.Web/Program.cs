@@ -233,6 +233,9 @@ try
     builder.Services.AddSingleton<IFacilitatorTokenService, FacilitatorTokenService>();
     builder.Services.AddScoped<IClientTokenService, ClientTokenService>();
 
+    // API key encryption service (wraps Data Protection for BYOK API key storage)
+    builder.Services.AddScoped<IApiKeyProtectionService, ApiKeyProtectionService>();
+
     // Hub Notification Service for real-time events
     builder.Services.AddScoped<IHubNotificationService, HubNotificationService>();
 

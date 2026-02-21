@@ -15,17 +15,20 @@ public class AccountController : Controller
     private readonly Application.Abstractions.Services.IAuthenticationService _authService;
     private readonly IFacilitatorUserDataRepository _userDataRepository;
     private readonly IAiQuotaService? _quotaService;
+    private readonly IApiKeyProtectionService _apiKeyProtection;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         Application.Abstractions.Services.IAuthenticationService authService,
         IFacilitatorUserDataRepository userDataRepository,
         ILogger<AccountController> logger,
+        IApiKeyProtectionService apiKeyProtection,
         IAiQuotaService? quotaService = null)
     {
         _authService = authService;
         _userDataRepository = userDataRepository;
         _logger = logger;
+        _apiKeyProtection = apiKeyProtection;
         _quotaService = quotaService;
     }
 
@@ -161,6 +164,9 @@ public class AccountController : Controller
         // Load user data
         var userData = await _userDataRepository.GetAllAsDictAsync(userId.Value, cancellationToken);
         ViewBag.UserData = userData;
+        // Expose only whether a key is saved — never expose the encrypted token to the view
+        ViewBag.HasApiKey = _apiKeyProtection.HasKey(userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiApiKey));
+        ViewBag.HasBaseUrl = !string.IsNullOrEmpty(userData.GetValueOrDefault(FacilitatorUserDataKeys.OpenAiBaseUrl));
         
         // Load quota status if service is available
         if (_quotaService != null)
@@ -194,11 +200,11 @@ public class AccountController : Controller
             // Update OpenAI API Key if provided
             if (!string.IsNullOrWhiteSpace(openAiApiKey))
             {
-                // TODO: Encrypt the API key before storing
+                var encrypted = _apiKeyProtection.Protect(openAiApiKey.Trim());
                 await _userDataRepository.SetValueAsync(
                     userId.Value,
                     FacilitatorUserDataKeys.OpenAiApiKey,
-                    openAiApiKey.Trim(),
+                    encrypted,
                     cancellationToken);
             }
             else

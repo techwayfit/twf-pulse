@@ -59,7 +59,7 @@ TechWayFit Pulse has successfully completed **Phases 1, 2, and 3** and is a full
 
 | ID | Priority | Item | Status | Target |
 |----|----------|------|--------|--------|
-| ENG-01 | P0 | Encrypt stored OpenAI API key | Not Started | — |
+| ENG-01 | P0 | Encrypt stored OpenAI API key | Done | 21 Feb 2026 |
 | ENG-02 | P0 | Enforce facilitator auth on live controls | Done | 18 Feb 2026 |
 | ENG-03 | P1 | Replace placeholder response count with real API count | Done | 18 Feb 2026 |
 | ENG-04 | P1 | Validate existing participant session with server before auto-rejoin | Done | 18 Feb 2026 |
@@ -72,25 +72,16 @@ TechWayFit Pulse has successfully completed **Phases 1, 2, and 3** and is a full
 | TECH-01 | P1 | Resolve nullability warnings in token stores / view models / views | Done | 18 Feb 2026 |
 | TECH-02 | P1 | Add focused tests for activity workflows and dashboard services | Done | 18 Feb 2026 |
 | TECH-03 | P2 | Sync outdated docs with actual implementation | Done | 21 Feb 2026 |
-| TECH-04 | P2 | Remove/replace inline styles in activity components | Not Started | — |
+| TECH-04 | P2 | Remove/replace inline styles in activity components | Done | 21 Feb 2026 |
 
 ---
 
 ## 4. Immediate Next Actions (P0 First)
 
-1. **ENG-01 — Encrypt stored OpenAI API key** (P0, security)
-   - Sensitive credential currently stored without encryption in the database
-   - Options: use `IDataProtectionProvider`, ASP.NET Core Data Protection, or environment variable
-   - Blocks: none — straightforward addition to `FacilitatorUserService`
-
-2. **FEAT-03 / FEAT-04 — QnA and Quiz activities** (P2, feature)
+1. **FEAT-03 / FEAT-04 — QnA and Quiz activities** (P2, feature)
    - QnA requires voting architecture (separate response records for upvotes), moderation UI
    - Quiz requires answer validation, scoring, per-question timing
    - Use Poll as reference implementation — estimated 1–2 days each
-
-3. **TECH-04 — Remove inline styles from activity components** (P2, debt)
-   - Audit `Participant/Activities/` and `Dashboards/` for inline `style=` attributes
-   - Replace with Bootstrap utilities or custom CSS classes in `pulse.css`
 
 ---
 
@@ -103,8 +94,7 @@ TechWayFit Pulse has successfully completed **Phases 1, 2, and 3** and is a full
 | QnA activity | High | Medium–High | Voting system, moderation UI |
 | Quiz activity | Medium | Medium | Scoring, randomization |
 | FiveWhys activity | Very High | Very High | Multi-step wizard, optional AI |
-| Encrypt API key (ENG-01) | P0 | Low | Data Protection API |
-| Remove inline styles (TECH-04) | Medium | Low | Audit + replace |
+| ~~Encrypt API key (ENG-01)~~ | ~~P0~~ | ~~Low~~ | Done — Data Protection API |
 
 ### Medium-Term
 
@@ -144,7 +134,7 @@ TechWayFit Pulse has successfully completed **Phases 1, 2, and 3** and is a full
 | Deployment guide | `publish/DEPLOYMENT-GUIDE.md` |
 | Environment-specific config separation | Done |
 | AI provider fallback (Mock) | Done — no hard dependency on API key |
-| OpenAI API key encryption | Not Started (ENG-01) |
+| OpenAI API key encryption | Done (ENG-01, 21 Feb 2026) |
 
 ---
 

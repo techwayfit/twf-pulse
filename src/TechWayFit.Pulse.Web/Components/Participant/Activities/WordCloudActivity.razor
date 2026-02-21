@@ -19,11 +19,10 @@
  <div class="mb-4">
       <h3 class="h5 fw-semibold text-secondary mb-3">Share your thoughts:</h3>
     <label class="form-label fw-semibold">Your words</label>
-       <textarea class="form-control form-control-lg" 
+       <textarea class="form-control form-control-lg textarea-resizable" 
         value="@inputText" 
          @oninput="OnTextChanged"
      rows="4"
-   style="resize: vertical; min-height: 100px;"
   placeholder="@(config?.Placeholder ?? "Enter your words here...")"
        maxlength="@(config?.MaxWordLength * config?.MaxWords ?? 150)"
            disabled="@Parameters.HasSubmitted"></textarea>
