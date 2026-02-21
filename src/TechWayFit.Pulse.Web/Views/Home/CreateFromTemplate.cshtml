@@ -1,0 +1,324 @@
+@{
+    ViewData["Title"] = "Create from Template — TechWayFit Pulse";
+}
+
+<main class="py-5">
+    <div class="container container-medium">
+        <!-- Header -->
+        <div class="mb-5">
+            <a href="/home/support" class="text-muted small text-decoration-none d-inline-flex align-items-center gap-1 mb-3">
+                <i class="fas fa-arrow-left"></i> Back to Support
+            </a>
+            <h1 class="display-5 fw-bold mb-3">Create from Template</h1>
+            <p class="lead text-muted">Reuse and clone existing session templates for faster workshop setup</p>
+        </div>
+
+        <!-- At a glance stats -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3 h-100">
+                    <div class="display-6 fw-bold text-primary mb-1">22</div>
+                    <div class="small text-muted">System Templates</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3 h-100">
+                    <div class="display-6 fw-bold text-success mb-1">5</div>
+                    <div class="small text-muted">Categories</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3 h-100">
+                    <div class="display-6 fw-bold text-info mb-1">4–7</div>
+                    <div class="small text-muted">Activities per Template</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center p-3 h-100">
+                    <div class="display-6 fw-bold text-warning mb-1">+</div>
+                    <div class="small text-muted">Your Saved Templates</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- What Are Templates -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-info bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-copy ic-md text-info"></i>
+                    </div>
+                    <h2 class="h4 mb-0">What Are Templates?</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    A template is a pre-configured session blueprint — it contains the session title, goal, join form fields,
+                    and a full sequenced list of activities with their settings. When you use a template, all of this is imported
+                    into a brand-new session with a fresh session code. The original template is never modified.
+                </p>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-semibold mb-2"><i class="ics ics-list ic-sm ic-mr text-primary"></i>System Templates</h6>
+                            <p class="text-muted small mb-0">
+                                22 ready-made templates built by TechWayFit across 5 categories. Available to all facilitators.
+                                Filtered and browsed on the Add Activities page.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-semibold mb-2"><i class="ics ics-bookmark ic-sm ic-mr text-muted"></i>My Templates <span class="badge bg-secondary bg-opacity-10 text-secondary fw-normal ms-1" style="font-size:.65rem">Coming Soon</span></h6>
+                            <p class="text-muted small mb-0">
+                                Saving your own sessions as personal reusable templates is planned for a future release. For now, only the 22 system templates are available.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Where templates live in the flow -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-rocket ic-md text-primary"></i>
+                    </div>
+                    <h2 class="h4 mb-0">How to Use a Template</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    Templates are applied on the <strong>Add Activities</strong> page (the step after creating a session), under the <strong>Template</strong> tab — not on the Create Session page itself.
+                </p>
+
+                <div class="bg-light p-4 rounded mb-3">
+                    <h6 class="fw-semibold mb-2">Steps:</h6>
+                    <ol class="mb-0 text-muted">
+                        <li>Create a session (title, description, join form)</li>
+                        <li>On the <strong>Add Activities</strong> page, click the <strong>Template</strong> tab</li>
+                        <li>Filter by category or browse all 22 templates</li>
+                        <li>Click a template card to preview the activities it contains</li>
+                        <li>Click <strong>Add Activities</strong> — they are appended to your activity list</li>
+                        <li>Edit, reorder, or delete individual activities, then <strong>Save Session</strong></li>
+                    </ol>
+                </div>
+
+                <div class="alert alert-success border-0 mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <small><strong>Tip:</strong> Template activities are <em>added</em> to whatever you already have — they don't replace existing activities. You can combine multiple templates or mix with manual activities.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Templates by Category -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-list ic-md text-success"></i>
+                    </div>
+                    <h2 class="h4 mb-0">System Templates by Category</h2>
+                </div>
+
+                <!-- Retrospective -->
+                <h6 class="fw-semibold text-uppercase text-muted small mb-2 mt-0">
+                    <i class="ics ics-memo ic-xs ic-mr"></i>Retrospective · 3 templates
+                </h6>
+                <div class="row g-2 mb-4">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Retro Sprint Review</div>
+                            <div class="text-muted" style="font-size:.75rem">Quick pulse + themes + actions</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">4 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Change Management Workshop</div>
+                            <div class="text-muted" style="font-size:.75rem">Alignment and impact assessment</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">5 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Agile Estimation &amp; Planning</div>
+                            <div class="text-muted" style="font-size:.75rem">Story-point calibration and sprint goals</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">5 activities</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Incident Review -->
+                <h6 class="fw-semibold text-uppercase text-muted small mb-2">
+                    <i class="ics ics-warning ic-xs ic-mr"></i>Incident Review · 2 templates
+                </h6>
+                <div class="row g-2 mb-4">
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Incident Review</div>
+                            <div class="text-muted" style="font-size:.75rem">Post-mortem with root cause and action tracking</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">6 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Ops Pain Points</div>
+                            <div class="text-muted" style="font-size:.75rem">Surface and prioritise operational friction</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">4 activities</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Discovery -->
+                <h6 class="fw-semibold text-uppercase text-muted small mb-2">
+                    <i class="ics ics-lightbulb ic-xs ic-mr"></i>Product Discovery · 8 templates
+                </h6>
+                <div class="row g-2 mb-4">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Product Discovery</div>
+                            <div class="text-muted" style="font-size:.75rem">Opportunity framing and priority mapping</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">5 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Innovation Brainstorm</div>
+                            <div class="text-muted" style="font-size:.75rem">Idea generation and feasibility ranking</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">5 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Strategic Planning</div>
+                            <div class="text-muted" style="font-size:.75rem">Goals, priorities and initiative alignment</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">5 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">UX Research Workshop</div>
+                            <div class="text-muted" style="font-size:.75rem">User needs, pain points and design priorities</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">5 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Sales Kickoff Planning</div>
+                            <div class="text-muted" style="font-size:.75rem">Team alignment on targets and go-to-market</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">5 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Technology &amp; Vendor Evaluation</div>
+                            <div class="text-muted" style="font-size:.75rem">Scoring and consensus on tool/vendor choices</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">6 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Budget &amp; Resource Allocation</div>
+                            <div class="text-muted" style="font-size:.75rem">Investment priorities and trade-off analysis</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">6 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Customer Feedback Session</div>
+                            <div class="text-muted" style="font-size:.75rem">Structured collection of customer insights</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">6 activities</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Building -->
+                <h6 class="fw-semibold text-uppercase text-muted small mb-2">
+                    <i class="ics ics-handshake ic-xs ic-mr"></i>Team Building · 6 templates
+                </h6>
+                <div class="row g-2 mb-4">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Team Building Activity</div>
+                            <div class="text-muted" style="font-size:.75rem">Icebreakers and collaboration exercises</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">6 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Employee Onboarding</div>
+                            <div class="text-muted" style="font-size:.75rem">First-impression check-in and priority setting</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">4 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Performance Review Calibration</div>
+                            <div class="text-muted" style="font-size:.75rem">Manager calibration session for ratings</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">6 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Town Hall Meeting</div>
+                            <div class="text-muted" style="font-size:.75rem">Company-wide engagement with structured Q&amp;A</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">6 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Town Hall / All-Hands</div>
+                            <div class="text-muted" style="font-size:.75rem">All-hands with live questions and sentiment</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">6 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Patient Support Group</div>
+                            <div class="text-muted" style="font-size:.75rem">Empathetic group facilitation for healthcare</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">5 activities</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Training -->
+                <h6 class="fw-semibold text-uppercase text-muted small mb-2">
+                    <i class="ics ics-books ic-xs ic-mr"></i>Training · 3 templates
+                </h6>
+                <div class="row g-2 mb-0">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">Hackathon Coordination</div>
+                            <div class="text-muted" style="font-size:.75rem">Theme voting, team formation and retrospective</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">5 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">University Lecture Engagement</div>
+                            <div class="text-muted" style="font-size:.75rem">Comprehension checks and student Q&amp;A</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">6 activities</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold small mb-1">API Design &amp; Technical Standards</div>
+                            <div class="text-muted" style="font-size:.75rem">Engineering alignment on API conventions</div>
+                            <div class="mt-2"><span class="badge bg-light text-muted border fw-normal" style="font-size:.7rem">7 activities</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Support -->
+        <div class="text-center mt-4">
+            <a href="/home/support" class="btn btn-lg btn-primary d-inline-flex align-items-center gap-2">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Support</span>
+            </a>
+        </div>
+    </div>
+</main>

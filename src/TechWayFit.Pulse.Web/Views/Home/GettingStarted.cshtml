@@ -53,22 +53,23 @@
                 </div>
 
                 <p class="text-muted mb-3">
-                    Sessions are workshops where participants join using a 6-character code. Each session can have multiple activities.
+                    Sessions are workshops where participants join using a unique code in <strong>XXX-XXX-XXX</strong> format (e.g., <code>ABC-DEF-GHJ</code>). Each session can have multiple activities.
                 </p>
 
                 <div class="bg-light p-4 rounded mb-3">
                     <h6 class="fw-semibold mb-2">Session Creation Process:</h6>
                     <ol class="mb-0 text-muted">
-                        <li><strong>Session Context:</strong> Add title, description, and optional group organization</li>
-                        <li><strong>Join Form:</strong> Configure custom fields for participants (name, department, role, etc.)</li>
-                        <li><strong>Add Activities:</strong> Choose from polls, word clouds, quadrant matrices, 5-Whys, etc.</li>
+                        <li><strong>Session Context:</strong> Add title, goal, context, and optional group organization and schedule</li>
+                        <li><strong>Join Form:</strong> Configure up to 5 custom fields for participants (name is always collected by default)</li>
+                        <li><strong>Submit:</strong> The session is created and you're taken to the <strong>Add Activities</strong> page</li>
+                        <li><strong>Add Activities:</strong> Add activities manually, from a template, or using AI generation</li>
                         <li><strong>Launch:</strong> Go live and share the session code with participants</li>
                     </ol>
                 </div>
 
                 <div class="alert alert-success border-0 mb-3">
                     <i class="fas fa-lightbulb me-2"></i>
-                    <small><strong>Tip:</strong> Use AI-powered session generation to create entire workshops from a simple description!</small>
+                    <small><strong>Tip:</strong> On the Add Activities page, use the <strong>AI Create</strong> tab to generate a full set of activities from a simple description of your workshop!</small>
                 </div>
 
                 <!-- Placeholder for screenshot -->
@@ -79,19 +80,42 @@
             </div>
         </div>
 
-        <!-- Step 3: Configure Activities -->
+        <!-- Step 3: Add Activities -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-center mb-4">
                     <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3 icon-circle icon-circle-50">
                         <span class="fw-bold text-primary fs-4">3</span>
                     </div>
-                    <h2 class="h4 mb-0">Configure Activities</h2>
+                    <h2 class="h4 mb-0">Add Activities</h2>
                 </div>
 
                 <p class="text-muted mb-3">
-                    Add interactive activities that participants will complete during your workshop.
+                    After creating your session you land on the <strong>Add Activities</strong> page. Choose one of three ways to build your activity list:
                 </p>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-semibold mb-2"><i class="ics ics-pencil ic-sm me-2 text-primary"></i>Manual</h6>
+                            <p class="text-muted small mb-0">Pick an activity type and configure it from scratch — full control over every setting</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-semibold mb-2"><i class="ics ics-clipboard ic-sm me-2 text-success"></i>Template</h6>
+                            <p class="text-muted small mb-0">Apply one of 22 pre-built system templates spanning 5 workshop categories</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-semibold mb-2"><i class="ics ics-robot ic-sm me-2 text-warning"></i>AI Create</h6>
+                            <p class="text-muted small mb-0">Describe your workshop and let AI generate a suggested set of activities instantly</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-muted mb-3">Activities you can add include:</p>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
@@ -123,7 +147,7 @@
                 <!-- Placeholder for screenshot -->
                 <div class="alert alert-info border-0 mb-0">
                     <i class="fas fa-image me-2"></i>
-                    <small><strong>Screenshot:</strong> Activity selection and configuration modals (to be added)</small>
+                    <small><strong>Screenshot:</strong> Add Activities page showing the three tabs (to be added)</small>
                 </div>
             </div>
         </div>
@@ -145,9 +169,9 @@
                 <div class="bg-light p-4 rounded mb-3">
                     <h6 class="fw-semibold mb-2">Ways to Share:</h6>
                     <ul class="mb-0 text-muted">
-                        <li><strong>Session Code:</strong> A unique 6-character code (e.g., ABC123)</li>
+                        <li><strong>Session Code:</strong> A unique code in <strong>XXX-XXX-XXX</strong> format (e.g., <code>ABC-DEF-GHJ</code>)</li>
                         <li><strong>QR Code:</strong> Display the QR code for quick mobile scanning</li>
-                        <li><strong>Direct Link:</strong> Share the full URL to join page</li>
+                        <li><strong>Direct Link:</strong> Share the full URL to the join page</li>
                     </ul>
                 </div>
 

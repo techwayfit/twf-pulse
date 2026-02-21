@@ -1,0 +1,185 @@
+@{
+    ViewData["Title"] = "Managing Sessions — TechWayFit Pulse";
+}
+
+<main class="py-5">
+    <div class="container container-medium">
+        <!-- Header -->
+        <div class="mb-5">
+            <a href="/home/support" class="text-muted small text-decoration-none d-inline-flex align-items-center gap-1 mb-3">
+                <i class="fas fa-arrow-left"></i> Back to Support
+            </a>
+            <h1 class="display-5 fw-bold mb-3">Managing Sessions</h1>
+            <p class="lead text-muted">Organize and control your workshop sessions effectively</p>
+        </div>
+
+        <!-- Session Groups -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-folder ic-md text-success"></i>
+                    </div>
+                    <h2 class="h4 mb-0">Session Groups</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    Session groups let you organize multiple sessions under a shared label — for example, grouping all sessions for
+                    a quarterly review or a specific team. Groups appear in the facilitator dashboard for easy filtering.
+                </p>
+
+                <div class="bg-light p-4 rounded mb-3">
+                    <h6 class="fw-semibold mb-2">How to use groups:</h6>
+                    <ol class="mb-0 text-muted">
+                        <li>Open the <strong>Create Session</strong> form</li>
+                        <li>Enter a group name in the <strong>Session Group</strong> field (optional)</li>
+                        <li>Sessions with the same group name are listed together in your dashboard</li>
+                        <li>Filter the dashboard by group to focus on a subset of sessions</li>
+                    </ol>
+                </div>
+
+                <div class="alert alert-info border-0 mb-0">
+                    <i class="fas fa-image me-2"></i>
+                    <small><strong>Screenshot:</strong> Dashboard filtered by session group (to be added)</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controlling Activity Visibility -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-eye ic-md text-primary"></i>
+                    </div>
+                    <h2 class="h4 mb-0">Controlling Activity Visibility and Timing</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    During a live session, the facilitator controls which activity is visible to participants at any given time.
+                    Activities do not run on a timer — they open and close on facilitator command.
+                </p>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Open an Activity</strong>
+                                <small class="text-muted">Click <em>Open</em> on the facilitator console to make an activity visible to participants</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Close an Activity</strong>
+                                <small class="text-muted">Click <em>Close</em> to stop accepting responses and hide the activity</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Switch Activities</strong>
+                                <small class="text-muted">Open a different activity to seamlessly transition participants</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Show Results</strong>
+                                <small class="text-muted">Toggle result visibility independently from activity open/close state</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success border-0 mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <small><strong>Tip:</strong> Only one activity can be open at a time. Opening a second activity automatically closes the current one.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exporting Data -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-info bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-download ic-md text-info"></i>
+                    </div>
+                    <h2 class="h4 mb-0">Exporting Session Data and Reports</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    After a session concludes, you can download participant responses and activity results for further analysis or reporting.
+                </p>
+
+                <div class="bg-light p-4 rounded mb-3">
+                    <h6 class="fw-semibold mb-2">Export steps:</h6>
+                    <ol class="mb-0 text-muted">
+                        <li>Navigate to the facilitator dashboard and select the session</li>
+                        <li>Click the <strong>Export</strong> button for the session or for an individual activity</li>
+                        <li>Choose <strong>CSV</strong> (spreadsheet-compatible) or <strong>JSON</strong> (developer-friendly)</li>
+                        <li>The file downloads immediately to your device</li>
+                    </ol>
+                </div>
+
+                <div class="alert alert-warning border-0 mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <small><strong>Note:</strong> Sessions are automatically deleted after their TTL (default 6 hours). Export data before the session expires if you need to keep the results.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cloning Sessions -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-copy ic-md text-warning"></i>
+                    </div>
+                    <h2 class="h4 mb-0">Cloning Sessions from Templates</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    Save time by starting from an existing session. Built-in system templates and any sessions you have saved as templates
+                    can be cloned with a single click — all activities, settings, and join-form fields are copied into a brand-new session.
+                </p>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="border rounded p-3">
+                            <h6 class="fw-semibold mb-2"><i class="fas fa-layer-group me-2 text-primary"></i>System Templates</h6>
+                            <p class="text-muted small mb-0">Pre-built templates for common workshop scenarios (retrospectives, planning, team health checks)</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3">
+                            <h6 class="fw-semibold mb-2"><i class="fas fa-bookmark me-2 text-success"></i>Saved Templates</h6>
+                            <p class="text-muted small mb-0">Sessions you have saved as reusable templates, available only to you</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info border-0 mb-0">
+                    <i class="fas fa-image me-2"></i>
+                    <small><strong>Screenshot:</strong> Template selection grid on the Create Session page (to be added)</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Support -->
+        <div class="text-center mt-4">
+            <a href="/home/support" class="btn btn-lg btn-primary d-inline-flex align-items-center gap-2">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Support</span>
+            </a>
+        </div>
+    </div>
+</main>

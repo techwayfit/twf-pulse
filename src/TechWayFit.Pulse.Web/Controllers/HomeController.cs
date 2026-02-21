@@ -61,6 +61,30 @@ public class HomeController : Controller
     }
 
     /// <summary>
+    /// Managing Sessions documentation
+    /// </summary>
+    public IActionResult ManagingSessions()
+    {
+        return View();
+    }
+
+    /// <summary>
+    /// AI-Powered Sessions documentation
+    /// </summary>
+    public IActionResult AiFeatures()
+    {
+        return View();
+    }
+
+    /// <summary>
+    /// Create from Template documentation
+    /// </summary>
+    public IActionResult CreateFromTemplate()
+    {
+        return View();
+    }
+
+    /// <summary>
     /// View Components showcase
     /// </summary>
     public IActionResult Components()

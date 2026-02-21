@@ -1,0 +1,226 @@
+@{
+    ViewData["Title"] = "AI-Powered Sessions — TechWayFit Pulse";
+}
+
+<main class="py-5">
+    <div class="container container-medium">
+        <!-- Header -->
+        <div class="mb-5">
+            <a href="/home/support" class="text-muted small text-decoration-none d-inline-flex align-items-center gap-1 mb-3">
+                <i class="fas fa-arrow-left"></i> Back to Support
+            </a>
+            <h1 class="display-5 fw-bold mb-3">AI-Powered Sessions</h1>
+            <p class="lead text-muted">Let AI help you design effective workshops in seconds</p>
+        </div>
+
+        <!-- Two-step overview -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-robot ic-md text-warning"></i>
+                    </div>
+                    <h2 class="h4 mb-0">How AI Activity Generation Works</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    AI lives on the <strong>Add Activities</strong> page, not on the Create Session page.
+                    You first create the session (giving it a title and context), then on the next step you choose how you
+                    want to populate it with activities — manually, from a template, or with AI.
+                </p>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100 text-center">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2 icon-circle icon-circle-50">
+                                <span class="fw-bold text-primary">1</span>
+                            </div>
+                            <h6 class="fw-semibold mb-1">Create Session</h6>
+                            <p class="text-muted small mb-0">Set session title, description, join form, and group — no AI here</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border border-warning rounded p-3 h-100 text-center">
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2 icon-circle icon-circle-50">
+                                <span class="fw-bold text-warning">2</span>
+                            </div>
+                            <h6 class="fw-semibold mb-1">AI Create tab</h6>
+                            <p class="text-muted small mb-0">On the Add Activities page, switch to <strong>AI Create</strong> and configure your generation options</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100 text-center">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2 icon-circle icon-circle-50">
+                                <span class="fw-bold text-success">3</span>
+                            </div>
+                            <h6 class="fw-semibold mb-1">Save Session</h6>
+                            <p class="text-muted small mb-0">Review and edit the generated activities, then save and go live</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info border-0 mb-0">
+                    <i class="fas fa-image me-2"></i>
+                    <small><strong>Screenshot:</strong> Add Activities page with Manual / Template / AI Create tabs (to be added)</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Activities page - three modes -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-list ic-md text-primary"></i>
+                    </div>
+                    <h2 class="h4 mb-0">Three Ways to Add Activities</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    After creating a session you land on the <strong>Add Activities</strong> page. Three tabs let you choose your approach — and you can combine them freely on the same session.
+                </p>
+
+                <div class="row g-3 mb-0">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-semibold mb-2"><i class="ics ics-pencil ic-sm ic-mr text-secondary"></i>Manual</h6>
+                            <p class="text-muted small mb-0">Add activities one by one — Poll, Word Cloud, Quadrant, Rating, or General Feedback — filling in each form yourself</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-semibold mb-2"><i class="ics ics-clipboard ic-sm ic-mr text-primary"></i>Template</h6>
+                            <p class="text-muted small mb-0">Pick a system or saved template and import its full activity set into your session in one click</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border border-warning rounded p-3 h-100">
+                            <h6 class="fw-semibold mb-2"><i class="ics ics-robot ic-sm ic-mr text-warning"></i>AI Create</h6>
+                            <p class="text-muted small mb-0">AI reads your session title and any extra context you provide, then generates a sequenced set of activities automatically</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success border-0 mt-3 mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <small><strong>Tip:</strong> You can run AI Create, then switch to Manual to tweak or add extra activities. All three modes accumulate onto the same activity list.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Create inputs -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-settings ic-md text-warning"></i>
+                    </div>
+                    <h2 class="h4 mb-0">AI Create — Generation Options</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    The AI Create tab reads your session title automatically. You then provide a few optional hints to tighten the output:
+                </p>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Workshop Type</strong>
+                                <small class="text-muted">Retrospective, Ops/Process Improvement, Discovery, Incident Review, Feedback, Planning, Brainstorming — or leave on <em>Auto-detect</em></small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Session Duration</strong>
+                                <small class="text-muted">15 min (2–3 activities) up to 75 min (10–15 activities). Max 15 per AI call; you can generate multiple times</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Number of Participants</strong>
+                                <small class="text-muted">Small team (3–5), Medium (6–10), Large (11–20), or Large group (20+)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Participant Types</strong>
+                                <small class="text-muted">Filter by industry, then search and select multiple participant types to tailor activity language</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Additional Context</strong>
+                                <small class="text-muted">Free-text field for extra hints — specific challenges, recent events, constraints, etc.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-light p-4 rounded mb-0">
+                    <h6 class="fw-semibold mb-2">What the AI generates:</h6>
+                    <ul class="text-muted mb-0">
+                        <li>A sequenced list of activities (Poll, Word Cloud, Rating, General Feedback, Quadrant)</li>
+                        <li>Each activity comes with a question, description, and pre-filled options where applicable</li>
+                        <li>Activities are ordered for a natural workshop flow</li>
+                        <li>You can edit, reorder, or delete any activity before saving</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quota and API Key -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-danger bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-key ic-md text-danger"></i>
+                    </div>
+                    <h2 class="h4 mb-0">Quota and Bring Your Own Key (BYOK)</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    Every facilitator account includes <strong>5 free AI-generated sessions per month</strong>.
+                    Once the free quota is used, you can continue generating sessions by supplying your own OpenAI API key
+                    (BYOK — Bring Your Own Key).
+                </p>
+
+                <div class="bg-light p-4 rounded mb-3">
+                    <h6 class="fw-semibold mb-2">How to add your own API key:</h6>
+                    <ol class="mb-0 text-muted">
+                        <li>Sign in to your facilitator account</li>
+                        <li>Go to <strong>Account Settings</strong></li>
+                        <li>Paste your OpenAI API key into the <strong>AI API Key</strong> field</li>
+                        <li>Save — your key is stored encrypted and used only for your sessions</li>
+                    </ol>
+                </div>
+
+                <div class="alert alert-warning border-0 mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <small><strong>Privacy:</strong> Your API key is stored encrypted and is never shared or used for other accounts.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back to Support -->
+        <div class="text-center mt-4">
+            <a href="/home/support" class="btn btn-lg btn-primary d-inline-flex align-items-center gap-2">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Support</span>
+            </a>
+        </div>
+    </div>
+</main>
