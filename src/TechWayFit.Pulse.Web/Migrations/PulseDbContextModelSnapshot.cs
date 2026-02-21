@@ -3,13 +3,13 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TechWayFit.Pulse.Infrastructure.Persistence;
+using TechWayFit.Pulse.Infrastructure.Persistence.Sqlite;
 
 #nullable disable
 
 namespace TechWayFit.Pulse.Web.Migrations
 {
-    [DbContext(typeof(PulseDbContext))]
+    [DbContext(typeof(PulseSqlLiteDbContext))]
     partial class PulseDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

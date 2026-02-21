@@ -1,0 +1,15 @@
+{
+  "ConnectionStrings": {
+    "PulseDb": "Server=localhost;Database=TechWayFitPulse;Integrated Security=true;TrustServerCertificate=true;"
+  },
+  "Pulse": {
+    "UseInMemory": false,
+    "DatabaseProvider": "SqlServer"
+  },
+  "Email": {
+    "Provider": "Console"
+  },
+  "AI": {
+    "Enabled": false
+  }
+}

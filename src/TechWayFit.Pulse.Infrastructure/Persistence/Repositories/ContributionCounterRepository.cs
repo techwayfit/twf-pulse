@@ -1,16 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Domain.Entities;
+using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Entities;
 using TechWayFit.Pulse.Infrastructure.Persistence.Mapping;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 
-public sealed class ContributionCounterRepository : IContributionCounterRepository
+/// <summary>
+/// Shared ContributionCounterRepository implementation.
+/// </summary>
+public class ContributionCounterRepository : IContributionCounterRepository
 {
-    private readonly PulseDbContext _dbContext;
+    protected readonly IPulseDbContext _dbContext;
 
-    public ContributionCounterRepository(PulseDbContext dbContext)
+    public ContributionCounterRepository(IPulseDbContext dbContext)
     {
         _dbContext = dbContext;
     }
@@ -29,20 +33,17 @@ public sealed class ContributionCounterRepository : IContributionCounterReposito
 
     public async Task UpsertAsync(ContributionCounter counter, CancellationToken cancellationToken = default)
     {
-        // Try to find the existing tracked entity using the primary key
         var existingRecord = await _dbContext.ContributionCounters
             .FindAsync(new object[] { counter.ParticipantId }, cancellationToken);
 
         if (existingRecord != null)
         {
-            // Update the existing tracked entity's properties
             existingRecord.SessionId = counter.SessionId;
             existingRecord.TotalContributions = counter.TotalContributions;
             existingRecord.UpdatedAt = counter.UpdatedAt;
         }
         else
         {
-            // Add a new record
             _dbContext.ContributionCounters.Add(counter.ToRecord());
         }
 

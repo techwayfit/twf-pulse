@@ -1,15 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Domain.Entities;
+using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Entities;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 
-public sealed class SessionGroupRepository : ISessionGroupRepository
+/// <summary>
+/// Shared SessionGroupRepository implementation.
+/// </summary>
+public class SessionGroupRepository : ISessionGroupRepository
 {
-    private readonly PulseDbContext _context;
+    protected readonly IPulseDbContext _context;
 
-    public SessionGroupRepository(PulseDbContext context)
+    public SessionGroupRepository(IPulseDbContext context)
     {
         _context = context;
     }

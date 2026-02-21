@@ -1,15 +1,19 @@
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Domain.Entities;
+using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Entities;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 
-public sealed class FacilitatorUserDataRepository : IFacilitatorUserDataRepository
+/// <summary>
+/// Shared FacilitatorUserDataRepository implementation.
+/// </summary>
+public class FacilitatorUserDataRepository : IFacilitatorUserDataRepository
 {
-    private readonly PulseDbContext _context;
+    protected readonly IPulseDbContext _context;
 
-    public FacilitatorUserDataRepository(PulseDbContext context)
+    public FacilitatorUserDataRepository(IPulseDbContext context)
     {
         _context = context;
     }
@@ -95,7 +99,7 @@ public sealed class FacilitatorUserDataRepository : IFacilitatorUserDataReposito
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    private static FacilitatorUserData MapToDomain(FacilitatorUserDataRecord record)
+    protected static FacilitatorUserData MapToDomain(FacilitatorUserDataRecord record)
     {
         return new FacilitatorUserData(
             record.Id,
@@ -106,7 +110,7 @@ public sealed class FacilitatorUserDataRepository : IFacilitatorUserDataReposito
             record.UpdatedAt);
     }
 
-    private static FacilitatorUserDataRecord MapToRecord(FacilitatorUserData data)
+    protected static FacilitatorUserDataRecord MapToRecord(FacilitatorUserData data)
     {
         return new FacilitatorUserDataRecord
         {

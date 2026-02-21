@@ -73,7 +73,7 @@ public sealed class SmtpEmailService : IEmailService
 
         // Get dashboard URL from configuration or use default
         var dashboardUrl = _configuration["App:DashboardUrl"] 
-            ?? "https://pulse.techway.fit/facilitator/dashboard";
+            ?? "https://pulse.techwayfit.com/facilitator/dashboard";
 
         // Replace placeholders
         var replacements = new Dictionary<string, string>

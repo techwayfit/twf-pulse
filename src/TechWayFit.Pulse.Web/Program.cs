@@ -6,11 +6,10 @@ using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
-using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Application.Services;
+using TechWayFit.Pulse.Infrastructure.Extensions;
 using TechWayFit.Pulse.Infrastructure.Persistence;
-using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Services;
 using TechWayFit.Pulse.Web.Configuration;
@@ -208,30 +207,10 @@ try
     // Add HttpContextAccessor for dynamic URL resolution
     builder.Services.AddHttpContextAccessor();
 
-    var useInMemory = builder.Configuration.GetValue<bool>("Pulse:UseInMemory");
-    var connectionString = builder.Configuration.GetConnectionString("PulseDb");
-    builder.Services.AddDbContext<PulseDbContext>(options =>
-    {
-        if (useInMemory || string.IsNullOrWhiteSpace(connectionString))
-        {
-            options.UseInMemoryDatabase("Pulse");
-            return;
-        }
+    // Register database and repositories using provider-specific extension method
+    builder.Services.AddPulseDatabase(builder.Configuration);
 
-        options.UseSqlite(connectionString, b => b.MigrationsAssembly("TechWayFit.Pulse.Web"));
-    });
-
-    builder.Services.AddScoped<ISessionRepository, SessionRepository>();
-    builder.Services.AddScoped<IActivityRepository, ActivityRepository>();
-    builder.Services.AddScoped<IParticipantRepository, ParticipantRepository>();
-    builder.Services.AddScoped<IResponseRepository, ResponseRepository>();
-    builder.Services.AddScoped<IContributionCounterRepository, ContributionCounterRepository>();
-    builder.Services.AddScoped<IFacilitatorUserRepository, FacilitatorUserRepository>();
-    builder.Services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository>();
-    builder.Services.AddScoped<ILoginOtpRepository, LoginOtpRepository>();
-    builder.Services.AddScoped<ISessionGroupRepository, SessionGroupRepository>();
-    builder.Services.AddScoped<ISessionTemplateRepository, TechWayFit.Pulse.Infrastructure.Repositories.SessionTemplateRepository>();
-
+    // Application services
     builder.Services.AddScoped<ISessionService, SessionService>();
     builder.Services.AddScoped<IActivityService, ActivityService>();
     builder.Services.AddScoped<IParticipantService, ParticipantService>();
@@ -285,15 +264,8 @@ try
 
     var app = builder.Build();
 
-    // Ensure database is created for SQLite
-    if (!useInMemory)
-    {
-        using (var scope = app.Services.CreateScope())
-        {
-            var dbContext = scope.ServiceProvider.GetRequiredService<PulseDbContext>();
-            dbContext.Database.EnsureCreated();
-        }
-    }
+    // Ensure database is created using provider-specific method
+    app.Services.EnsurePulseDatabase(builder.Configuration);
 
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsDevelopment())

@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TechWayFit.Pulse.Infrastructure.Persistence;
+using TechWayFit.Pulse.Infrastructure.Persistence.Sqlite;
 
 #nullable disable
 
 namespace TechWayFit.Pulse.Web.Migrations
 {
-    [DbContext(typeof(PulseDbContext))]
+    [DbContext(typeof(PulseSqlLiteDbContext))]
     [Migration("20260207153833_AddIsDefaultToSessionGroups")]
     partial class AddIsDefaultToSessionGroups
     {

@@ -21,7 +21,7 @@ public sealed class AuthenticationService : IAuthenticationService
     public AuthenticationService(
       IFacilitatorUserRepository userRepository,
         ILoginOtpRepository otpRepository,
-    IEmailService emailService,
+        IEmailService emailService,
         ISessionGroupService sessionGroupService,
         ILogger<AuthenticationService> logger)
     {

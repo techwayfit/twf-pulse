@@ -50,7 +50,7 @@ Configure the dashboard URL in `appsettings.json`:
 ```json
 {
   "App": {
-    "DashboardUrl": "https://pulse.techway.fit/facilitator/dashboard"
+    "DashboardUrl": "https://pulse.techwayfit.com/facilitator/dashboard"
   }
 }
 ```

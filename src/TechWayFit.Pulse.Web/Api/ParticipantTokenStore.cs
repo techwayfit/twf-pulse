@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.EntityFrameworkCore;
-using TechWayFit.Pulse.Infrastructure.Persistence;
+using TechWayFit.Pulse.Infrastructure.Persistence.Sqlite;
 
 namespace TechWayFit.Pulse.Web.Api;
 
@@ -52,7 +52,7 @@ public sealed class ParticipantTokenStore : IParticipantTokenStore
         try
         {
             using var scope = _scopeFactory.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<PulseDbContext>();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PulseSqlLiteDbContext>();
             
             var participant = dbContext.Participants
                 .AsNoTracking()

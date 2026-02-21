@@ -2,16 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Domain.Enums;
-using TechWayFit.Pulse.Infrastructure.Persistence;
+using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Entities;
 
-namespace TechWayFit.Pulse.Infrastructure.Repositories;
+namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 
-public sealed class SessionTemplateRepository : ISessionTemplateRepository
+/// <summary>
+/// Shared SessionTemplateRepository implementation.
+/// </summary>
+public class SessionTemplateRepository : ISessionTemplateRepository
 {
-    private readonly PulseDbContext _dbContext;
+    protected readonly IPulseDbContext _dbContext;
 
-    public SessionTemplateRepository(PulseDbContext dbContext)
+    public SessionTemplateRepository(IPulseDbContext dbContext)
     {
         _dbContext = dbContext;
     }
@@ -94,7 +97,7 @@ public sealed class SessionTemplateRepository : ISessionTemplateRepository
         }
     }
 
-    private static SessionTemplate MapToDomain(SessionTemplateRecord record)
+    protected static SessionTemplate MapToDomain(SessionTemplateRecord record)
     {
         return new SessionTemplate(
             record.Id,
@@ -109,7 +112,7 @@ public sealed class SessionTemplateRepository : ISessionTemplateRepository
             record.UpdatedAt);
     }
 
-    private static SessionTemplateRecord MapToRecord(SessionTemplate template)
+    protected static SessionTemplateRecord MapToRecord(SessionTemplate template)
     {
         return new SessionTemplateRecord
         {

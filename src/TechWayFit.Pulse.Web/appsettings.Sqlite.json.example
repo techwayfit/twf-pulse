@@ -1,0 +1,16 @@
+{
+  "ConnectionStrings": {
+    "PulseDb": "Data Source=pulse.db"
+  },
+  "Pulse": {
+    "UseInMemory": false,
+    "DatabaseProvider": "Sqlite"
+  },
+  "Email": {
+  "Provider": "Console"
+  },
+  "AI": {
+    "Enabled": false,
+    "Provider": "Intelligent"
+  }
+}
