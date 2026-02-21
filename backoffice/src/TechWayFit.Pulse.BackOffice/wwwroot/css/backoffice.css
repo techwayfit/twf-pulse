@@ -1,0 +1,59 @@
+/* ─────────────────────────────────────────────────────────
+   TechWayFit Pulse — BackOffice styles
+   Minimal custom CSS; Bootstrap 5.3 handles everything else.
+   ───────────────────────────────────────────────────────── */
+
+/* ── Navigation ─────────────────────────────────────────── */
+.bo-navbar {
+    background-color: #1a1a2e;
+    border-bottom: 2px solid #e63946;
+}
+
+.bo-brand {
+    color: #e63946 !important;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.bo-navbar .nav-link {
+    color: rgba(255, 255, 255, 0.75) !important;
+    transition: color .15s;
+}
+
+.bo-navbar .nav-link:hover {
+    color: #fff !important;
+}
+
+.bo-operator-badge {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: .85rem;
+}
+
+/* ── Login page ──────────────────────────────────────────── */
+.bo-login-page {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    min-height: 100vh;
+}
+
+/* ── Stats grid ──────────────────────────────────────────── */
+.bo-stat-icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Tables ──────────────────────────────────────────────── */
+.table th {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #6c757d;
+}
+
+/* ── Override sections always gated by subtle warning ────── */
+.bo-override-gate {
+    border-left: 4px solid #ffc107;
+    padding-left: .75rem;
+}

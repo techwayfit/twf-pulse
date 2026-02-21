@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>a1b2c3d4-e5f6-7890-abcd-backoffice0001</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../TechWayFit.Pulse.BackOffice.Core/TechWayFit.Pulse.BackOffice.Core.csproj" />
+    <!-- Shared domain / infrastructure from the main application -->
+    <ProjectReference Include="../../../src/TechWayFit.Pulse.Domain/TechWayFit.Pulse.Domain.csproj" />
+    <ProjectReference Include="../../../src/TechWayFit.Pulse.Infrastructure/TechWayFit.Pulse.Infrastructure.csproj" />
+    <ProjectReference Include="../../../src/TechWayFit.Pulse.Application/TechWayFit.Pulse.Application.csproj" />
+    <ProjectReference Include="../../../src/TechWayFit.Pulse.Contracts/TechWayFit.Pulse.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

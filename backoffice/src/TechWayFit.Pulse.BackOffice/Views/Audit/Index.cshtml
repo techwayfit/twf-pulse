@@ -1,0 +1,103 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Audit.AuditSearchResult
+@{
+    ViewBag.Title = "Audit Log";
+    var query = ViewBag.Query as TechWayFit.Pulse.BackOffice.Core.Models.Audit.AuditSearchQuery;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0 fw-semibold">
+        <i class="fa-solid fa-scroll me-2 text-warning"></i>Audit Log
+    </h1>
+    <span class="text-muted small">@Model.TotalCount record(s)</span>
+</div>
+
+<form method="get" class="card border-0 shadow-sm mb-4 p-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-2">
+            <label class="form-label small mb-1">Operator</label>
+            <input type="text" name="operatorId" class="form-control form-control-sm" value="@query?.OperatorId" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small mb-1">Entity Type</label>
+            <input type="text" name="entityType" class="form-control form-control-sm" value="@query?.EntityType"
+                   placeholder="e.g. Session" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small mb-1">Entity ID</label>
+            <input type="text" name="entityId" class="form-control form-control-sm" value="@query?.EntityId" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small mb-1">Action</label>
+            <input type="text" name="action" class="form-control form-control-sm" value="@query?.Action" />
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-warning btn-sm w-100">Search</button>
+        </div>
+        <div class="col-md-2">
+            <a asp-action="Export"
+               asp-route-operatorId="@query?.OperatorId"
+               asp-route-entityType="@query?.EntityType"
+               asp-route-entityId="@query?.EntityId"
+               asp-route-action="@query?.Action"
+               class="btn btn-outline-secondary btn-sm w-100">
+                <i class="fa-solid fa-download me-1"></i>Export CSV
+            </a>
+        </div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 table-sm">
+            <thead class="table-light">
+                <tr>
+                    <th>When (UTC)</th>
+                    <th>Operator</th>
+                    <th>Role</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>Field</th>
+                    <th>Reason</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model.Items)
+                {
+                    <tr>
+                        <td><small class="text-nowrap">@e.OccurredAt.ToString("dd MMM HH:mm")</small></td>
+                        <td><small><code>@e.OperatorId</code></small></td>
+                        <td><small>@e.OperatorRole</small></td>
+                        <td><small class="fw-semibold">@e.Action</small></td>
+                        <td><small class="text-muted">@e.EntityType / <code>@e.EntityId[..Math.Min(8, e.EntityId.Length)]…</code></small></td>
+                        <td><small>@(e.FieldName ?? "—")</small></td>
+                        <td><small class="text-muted">@(e.Reason?.Length > 40 ? e.Reason[..40] + "…" : e.Reason ?? "—")</small></td>
+                        <td>
+                            <a asp-action="Detail" asp-route-id="@e.Id" class="btn btn-xs btn-sm btn-outline-secondary py-0">
+                                Detail
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.TotalCount > Model.PageSize)
+{
+    <nav class="mt-3">
+        <ul class="pagination pagination-sm justify-content-center">
+            @for (var p = 1; p <= (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize); p++)
+            {
+                <li class="page-item @(p == Model.Page ? "active" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-operatorId="@query?.OperatorId"
+                       asp-route-entityType="@query?.EntityType"
+                       asp-route-page="@p">@p</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

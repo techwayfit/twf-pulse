@@ -1,0 +1,40 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Auth.CreateBackOfficeUserRequest
+@{
+    ViewBag.Title = "New Operator";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0 fw-semibold">
+        <i class="fa-solid fa-user-plus me-2 text-primary"></i>Create Operator Account
+    </h1>
+    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm" style="max-width:480px">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input asp-for="Username" class="form-control" required autocomplete="off" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input asp-for="Password" type="password" class="form-control" required autocomplete="new-password" />
+                <div class="form-text">Minimum 12 characters recommended.</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select asp-for="Role" class="form-select">
+                    <option value="Operator">Operator</option>
+                    <option value="SuperAdmin">SuperAdmin</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fa-solid fa-check me-1"></i>Create Account
+            </button>
+        </form>
+    </div>
+</div>

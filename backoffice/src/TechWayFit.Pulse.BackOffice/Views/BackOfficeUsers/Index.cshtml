@@ -1,0 +1,83 @@
+@model IReadOnlyList<TechWayFit.Pulse.BackOffice.Core.Models.Auth.BackOfficeUserSummary>
+@{
+    ViewBag.Title = "Operator Accounts";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0 fw-semibold">
+        <i class="fa-solid fa-user-shield me-2 text-primary"></i>Operator Accounts
+    </h1>
+    <a asp-action="Create" class="btn btn-sm btn-primary">
+        <i class="fa-solid fa-plus me-1"></i>New Operator
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Last Login</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var op in Model)
+                {
+                    <tr>
+                        <td><code>@op.Username</code></td>
+                        <td>
+                            <span class="badge @(op.Role == "SuperAdmin" ? "bg-danger" : "bg-primary")">
+                                @op.Role
+                            </span>
+                        </td>
+                        <td>
+                            @if (op.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactive</span>
+                            }
+                        </td>
+                        <td><small>@op.CreatedAt.ToString("dd MMM yyyy")</small></td>
+                        <td><small class="text-muted">@(op.LastLoginAt?.ToString("dd MMM yyyy") ?? "Never")</small></td>
+                        <td class="d-flex gap-1 flex-wrap">
+                            @if (op.Username != User.Identity!.Name)
+                            {
+                                <form asp-action="UpdateRole" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="UserId" value="@op.Id" />
+                                    <input type="hidden" name="NewRole" value="@(op.Role == "SuperAdmin" ? "Operator" : "SuperAdmin")" />
+                                    <input type="hidden" name="Reason" value="Role toggled by SuperAdmin" />
+                                    <button type="submit" class="btn btn-xs btn-sm btn-outline-warning py-0">
+                                        → @(op.Role == "SuperAdmin" ? "Operator" : "SuperAdmin")
+                                    </button>
+                                </form>
+                                <form asp-action="ToggleActive" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="UserId" value="@op.Id" />
+                                    <input type="hidden" name="IsActive" value="@(!op.IsActive)" />
+                                    <input type="hidden" name="Reason" value="Toggled by SuperAdmin" />
+                                    <button type="submit"
+                                            class="btn btn-xs btn-sm py-0 @(op.IsActive ? "btn-outline-danger" : "btn-outline-success")">
+                                        @(op.IsActive ? "Deactivate" : "Activate")
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">Current user</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

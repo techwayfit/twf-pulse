@@ -1,0 +1,95 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Sessions.SessionSearchResult
+@using TechWayFit.Pulse.Domain.Enums
+@{
+    ViewBag.Title = "Sessions";
+    var query = ViewBag.Query as TechWayFit.Pulse.BackOffice.Core.Models.Sessions.SessionSearchQuery;
+    var statusList = ViewBag.StatusList as SessionStatus[];
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0 fw-semibold">
+        <i class="fa-solid fa-calendar me-2 text-success"></i>Sessions
+    </h1>
+    <span class="text-muted small">@Model.TotalCount result(s)</span>
+</div>
+
+<form method="get" class="card border-0 shadow-sm mb-4 p-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small mb-1">Code</label>
+            <input type="text" name="code" class="form-control form-control-sm" value="@query?.CodeContains" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small mb-1">Title</label>
+            <input type="text" name="title" class="form-control form-control-sm" value="@query?.TitleContains" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small mb-1">Status</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="">All</option>
+                @foreach (var s in statusList!)
+                {
+                    <option value="@((int)s)" selected="@(query?.Status == s)">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary btn-sm w-100">
+                <i class="fa-solid fa-magnifying-glass me-1"></i>Search
+            </button>
+        </div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Code</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Owner</th>
+                    <th>Participants</th>
+                    <th>Expires</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Items)
+                {
+                    var badgeClass = s.Status switch
+                    {
+                        SessionStatus.Live => "bg-success",
+                        SessionStatus.Draft => "bg-secondary",
+                        SessionStatus.Ended => "bg-dark",
+                        SessionStatus.Expired => "bg-danger",
+                        _ => "bg-secondary"
+                    };
+                    <tr>
+                        <td><code>@s.Code</code></td>
+                        <td>@s.Title</td>
+                        <td><span class="badge @badgeClass">@s.Status</span></td>
+                        <td><small>@s.OwnerEmail</small></td>
+                        <td>@s.ParticipantCount</td>
+                        <td>
+                            @if (s.ExpiresAt < DateTimeOffset.UtcNow)
+                            {
+                                <span class="text-danger small">@s.ExpiresAt.ToString("dd MMM yyyy")</span>
+                            }
+                            else
+                            {
+                                <small class="text-muted">@s.ExpiresAt.ToString("dd MMM yyyy")</small>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Detail" asp-route-id="@s.Id" class="btn btn-sm btn-outline-secondary">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
