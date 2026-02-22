@@ -176,6 +176,14 @@
                                 {
                                     <QuadrantActivity Parameters="@CreateActivityParameters()" />
                                 }
+                                else if (currentActivity.Type == ActivityType.AiSummary)
+                                {
+                                    <AiSummaryActivity Parameters="@CreateActivityParameters()" />
+                                }
+                                else if (currentActivity.Type == ActivityType.Break)
+                                {
+                                    <BreakActivity Parameters="@CreateActivityParameters()" />
+                                }
                                 else
                                 {
                                     <GenericActivity Parameters="@CreateActivityParameters()" ActivityType="@currentActivity.Type.ToString()" />

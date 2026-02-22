@@ -781,6 +781,114 @@ public sealed class SessionsController : ControllerBase
         }
     }
 
+    [HttpPost("{code}/activities/{activityId:guid}/generate-summary")]
+    public async Task<ActionResult<ApiResponse<string>>> GenerateAiSummary(
+        string code,
+        Guid activityId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+                return NotFound(Error<string>("not_found", "Session not found."));
+
+            var authError = RequireFacilitatorToken<string>(session);
+            if (authError is not null)
+                return authError;
+
+            // Load the activity and verify it is an AiSummary type
+            var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+            var activity = agenda.FirstOrDefault(a => a.Id == activityId);
+            if (activity is null)
+                return NotFound(Error<string>("not_found", "Activity not found."));
+
+            if (activity.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary)
+                return BadRequest(Error<string>("invalid_type", "Only AiSummary activities can generate a summary."));
+
+            // Get completed activities (closed, excluding AiSummary and Break types)
+            var completedActivities = agenda
+                .Where(a => a.Status == TechWayFit.Pulse.Domain.Enums.ActivityStatus.Closed
+                         && a.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary
+                         && a.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.Break)
+                .OrderBy(a => a.Order)
+                .Select(ApiMapper.ToAgenda)
+                .ToList();
+
+            // Parse optional custom prompt addition from the activity's current config
+            string? customPromptAddition = null;
+            if (!string.IsNullOrEmpty(activity.Config))
+            {
+                try
+                {
+                    using var configDoc = System.Text.Json.JsonDocument.Parse(activity.Config);
+                    if (configDoc.RootElement.TryGetProperty("customPromptAddition", out var cpa))
+                        customPromptAddition = cpa.GetString();
+                }
+                catch { /* ignore config parse errors */ }
+            }
+
+            // Mark activity as generating (update config)
+            var generatingConfig = System.Text.Json.JsonSerializer.Serialize(
+                new TechWayFit.Pulse.Domain.Models.ActivityConfigs.AiSummaryConfig
+                {
+                    CustomPromptAddition = customPromptAddition ?? string.Empty,
+                    IsGenerating = true,
+                    GeneratedSummary = string.Empty
+                },
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
+
+            await _activities.UpdateActivityAsync(session.Id, activityId, activity.Title, activity.Prompt, generatingConfig, activity.DurationMinutes, cancellationToken);
+            var updatedAgenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+            var updatingActivity = updatedAgenda.FirstOrDefault(a => a.Id == activityId);
+            if (updatingActivity != null)
+                await _hubNotifications.PublishActivityStateChangedAsync(session.Code, updatingActivity, cancellationToken);
+
+            // Generate the summary
+            string summaryText;
+            try
+            {
+                summaryText = await _sessionAI.GenerateSessionSummaryAsync(
+                    session.Title,
+                    session.Goal,
+                    completedActivities,
+                    customPromptAddition,
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to generate AI summary for activity {ActivityId}", activityId);
+                summaryText = $"## Session Summary\n\nAI summary generation encountered an error. Please try again.\n\n*Error: {ex.Message}*";
+            }
+
+            // Store the generated summary in the activity config
+            var finalConfig = System.Text.Json.JsonSerializer.Serialize(
+                new TechWayFit.Pulse.Domain.Models.ActivityConfigs.AiSummaryConfig
+                {
+                    CustomPromptAddition = customPromptAddition ?? string.Empty,
+                    IsGenerating = false,
+                    GeneratedSummary = summaryText,
+                    GeneratedAt = DateTimeOffset.UtcNow
+                },
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
+
+            await _activities.UpdateActivityAsync(session.Id, activityId, activity.Title, activity.Prompt, finalConfig, activity.DurationMinutes, cancellationToken);
+
+            // Broadcast updated activity state so all clients reload
+            var finalAgenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+            var finalActivity = finalAgenda.FirstOrDefault(a => a.Id == activityId);
+            if (finalActivity != null)
+                await _hubNotifications.PublishActivityStateChangedAsync(session.Code, finalActivity, cancellationToken);
+
+            return Ok(Wrap(summaryText));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GenerateAiSummary failed for session {Code} activity {ActivityId}", code, activityId);
+            return StatusCode(500, Error<string>("summary_failed", "Failed to generate summary."));
+        }
+    }
+
     [HttpPost("{code}/activities/{activityId:guid}/reopen")]
     public async Task<ActionResult<ApiResponse<ActivityResponse>>> ReopenActivity(
         string code,

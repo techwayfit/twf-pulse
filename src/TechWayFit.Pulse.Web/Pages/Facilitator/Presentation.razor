@@ -161,6 +161,60 @@ else
                         DurationMinutes="@activity.DurationMinutes"
                         OpenedAt="@activity.OpenedAt" />
                 }
+                else if (activity.Type == ActivityType.AiSummary)
+                {
+                    <div class="activity-display">
+                        @{
+                            var summaryConfig = TryParseAiSummaryConfig(activity.Config);
+                        }
+                        @if (summaryConfig?.IsGenerating == true)
+                        {
+                            <div class="waiting-state">
+                                <div class="spinner-border text-light mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                                <h3>Generating AI Summary...</h3>
+                                <p>Please wait while the session summary is being generated.</p>
+                            </div>
+                        }
+                        else if (!string.IsNullOrEmpty(summaryConfig?.GeneratedSummary))
+                        {
+                            <div class="summary-presentation-content p-4 text-start overflow-auto" style="max-height: 70vh;">
+                                @((MarkupString)RenderSummaryMarkdown(summaryConfig.GeneratedSummary))
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="waiting-state">
+                                <i class="ics ics-sparkles waiting-icon"></i>
+                                <h3>@activity.Title</h3>
+                                <p>@(activity.Prompt ?? "AI-generated session summary")</p>
+                            </div>
+                        }
+                    </div>
+                }
+                else if (activity.Type == ActivityType.Break)
+                {
+                    <div class="activity-display">
+                        @{
+                            var breakConfig = TryParseBreakConfig(activity.Config);
+                        }
+                        <div class="waiting-state">
+                            <i class="fas fa-coffee waiting-icon" style="font-size: 5rem; margin-bottom: 1.5rem;"></i>
+                            <h3>@activity.Title</h3>
+                            @if (!string.IsNullOrWhiteSpace(breakConfig?.Message))
+                            {
+                                <p>@breakConfig.Message</p>
+                            }
+                            @if (breakConfig?.ShowCountdown == true && breakConfig.DurationMinutes > 0)
+                            {
+                                <div id="presentation-break-countdown-@activity.ActivityId" class="mt-3"
+                                     style="font-size: 4rem; font-weight: 700; letter-spacing: 0.1em; color: #f59e0b;">
+                                    @FormatBreakDuration(breakConfig.DurationMinutes)
+                                </div>
+                                <p class="mt-2 opacity-75">remaining</p>
+                            }
+                        </div>
+                    </div>
+                }
                 else
                 {
                     <div class="activity-display">

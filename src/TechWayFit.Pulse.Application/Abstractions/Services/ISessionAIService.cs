@@ -26,5 +26,17 @@ namespace TechWayFit.Pulse.Application.Abstractions.Services
             int? durationMinutes = null,
             string? existingActivities = null,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Generate a text summary of all completed activities in a session.
+        /// Used by the AiSummary activity type. AiSummary and Break activities are excluded from context.
+        /// Returns the summary markdown text, or a fallback message if AI is unavailable.
+        /// </summary>
+        Task<string> GenerateSessionSummaryAsync(
+            string sessionTitle,
+            string? sessionGoal,
+            IReadOnlyList<AgendaActivityResponse> completedActivities,
+            string? customPromptAddition = null,
+            CancellationToken cancellationToken = default);
     }
 }

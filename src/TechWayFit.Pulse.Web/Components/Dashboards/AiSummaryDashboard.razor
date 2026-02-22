@@ -1,0 +1,380 @@
+@using TechWayFit.Pulse.Application.Abstractions.Services
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Web.Hubs
+@using TechWayFit.Pulse.Web.Services
+@using System.Text.Json
+@using Markdig
+@namespace TechWayFit.Pulse.Web.Components.Dashboards
+@inject ISessionService SessionService
+@inject IActivityService ActivityService
+@inject ISessionAIService SessionAIService
+@inject IHubNotificationService HubNotifications
+@inject NavigationManager Navigation
+@inject ILogger<AiSummaryDashboard> Logger
+@implements IAsyncDisposable
+
+<div class="ai-summary-dashboard">
+    @if (isLoading)
+    {
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mt-2 text-muted">Loading summary data...</div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mb-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>@errorMessage
+        </div>
+    }
+    else if (config?.IsGenerating == true)
+    {
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Generating...</span>
+            </div>
+            <p class="fw-medium mb-1">AI is generating the session summary...</p>
+            <p class="text-muted small">Participants can see this message. The summary will appear automatically when ready.</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(config?.GeneratedSummary))
+    {
+        <!-- Summary display -->
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+                <h6 class="mb-0 fw-semibold">
+                    <i class="ics ics-sparkles ic-sm ic-mr"></i>Generated Summary
+                </h6>
+                @if (config.GeneratedAt.HasValue)
+                {
+                    <div class="text-muted small">
+                        Generated at @config.GeneratedAt.Value.ToLocalTime().ToString("HH:mm")
+                    </div>
+                }
+            </div>
+            <button class="btn btn-sm btn-outline-primary" @onclick="TriggerGenerationAsync" disabled="@isGenerating">
+                @if (isGenerating)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    <text>Regenerating...</text>
+                }
+                else
+                {
+                    <i class="fas fa-rotate-right me-1"></i>
+                    <text>Regenerate</text>
+                }
+            </button>
+        </div>
+
+        <div class="summary-preview p-3 border rounded bg-light">
+            <div class="prose summary-prose">
+                @((MarkupString)RenderMarkdown(config.GeneratedSummary))
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- No summary yet - auto-generation trigger or manual -->
+        <div class="text-center py-4">
+            <i class="ics ics-sparkles ic-xl text-muted mb-3 d-block"></i>
+            <p class="fw-medium mb-1">No summary generated yet</p>
+            <p class="text-muted small mb-3">Click the button below to generate an AI summary of all completed activities.</p>
+            <button class="btn btn-primary" @onclick="TriggerGenerationAsync" disabled="@isGenerating">
+                @if (isGenerating)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    <text>Generating...</text>
+                }
+                else
+                {
+                    <i class="ics ics-sparkles ic-sm ic-mr"></i>
+                    <text>Generate AI Summary</text>
+                }
+            </button>
+        </div>
+    }
+</div>
+
+<style>
+    .ai-summary-dashboard .summary-prose h1,
+    .ai-summary-dashboard .summary-prose h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-top: 1.1rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .ai-summary-dashboard .summary-prose h3 {
+        font-size: 0.98rem;
+        font-weight: 600;
+        margin-top: 0.9rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .ai-summary-dashboard .summary-prose ul,
+    .ai-summary-dashboard .summary-prose ol {
+        padding-left: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .ai-summary-dashboard .summary-prose li {
+        margin-bottom: 0.2rem;
+        line-height: 1.5;
+    }
+
+    .ai-summary-dashboard .summary-prose p {
+        margin-bottom: 0.5rem;
+        line-height: 1.65;
+    }
+
+    .ai-summary-dashboard .summary-prose strong {
+        font-weight: 600;
+    }
+
+    .ai-summary-dashboard .summary-prose blockquote {
+        border-left: 3px solid var(--pulse-primary, #6366f1);
+        padding-left: 0.75rem;
+        color: #6b7280;
+        font-style: italic;
+        margin: 0.75rem 0;
+    }
+</style>
+
+@code {
+    [Parameter] public string SessionCode { get; set; } = string.Empty;
+    [Parameter] public Guid ActivityId { get; set; }
+
+    private AiSummaryConfig? config;
+    private bool isLoading = true;
+    private bool isGenerating = false;
+    private string errorMessage = string.Empty;
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadConfigAsync();
+        await SetupSignalRAsync();
+
+        // Auto-generate if activity is open with no summary and not already generating
+        if (!isLoading && config is not null && string.IsNullOrEmpty(config.GeneratedSummary) && !config.IsGenerating)
+        {
+            await TriggerGenerationAsync();
+        }
+    }
+
+    private async Task LoadConfigAsync()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session is null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+
+            var agenda = await ActivityService.GetAgendaAsync(session.Id);
+            var activity = agenda.FirstOrDefault(a => a.Id == ActivityId);
+            if (activity is null)
+            {
+                errorMessage = "Activity not found.";
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(activity.Config))
+            {
+                try
+                {
+                    config = JsonSerializer.Deserialize<AiSummaryConfig>(activity.Config,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                }
+                catch
+                {
+                    config = new AiSummaryConfig();
+                }
+            }
+            else
+            {
+                config = new AiSummaryConfig();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load activity: {ex.Message}";
+            Logger.LogError(ex, "Failed to load AiSummary dashboard for {SessionCode}/{ActivityId}", SessionCode, ActivityId);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TriggerGenerationAsync()
+    {
+        if (isGenerating) return;
+        isGenerating = true;
+        errorMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session is null) { errorMessage = "Session not found."; return; }
+
+            var agenda = await ActivityService.GetAgendaAsync(session.Id);
+            var activity = agenda.FirstOrDefault(a => a.Id == ActivityId);
+            if (activity is null) { errorMessage = "Activity not found."; return; }
+
+            // Get completed non-AiSummary/non-Break activities
+            var completedActivities = agenda
+                .Where(a => a.Status == TechWayFit.Pulse.Domain.Enums.ActivityStatus.Closed
+                         && a.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary
+                         && a.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.Break)
+                .OrderBy(a => a.Order)
+                .Select(TechWayFit.Pulse.Web.Api.ApiMapper.ToAgenda)
+                .ToList();
+
+            string? customPromptAddition = config?.CustomPromptAddition;
+
+            // Mark as generating
+            var generatingConfig = JsonSerializer.Serialize(
+                new AiSummaryConfig
+                {
+                    CustomPromptAddition = customPromptAddition ?? string.Empty,
+                    ShowActivityBreakdown = config?.ShowActivityBreakdown ?? true,
+                    IsGenerating = true,
+                    GeneratedSummary = string.Empty
+                },
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+            await ActivityService.UpdateActivityAsync(session.Id, ActivityId, activity.Title, activity.Prompt, generatingConfig, activity.DurationMinutes);
+            var updatedAgenda = await ActivityService.GetAgendaAsync(session.Id);
+            var updatingActivity = updatedAgenda.FirstOrDefault(a => a.Id == ActivityId);
+            if (updatingActivity != null)
+                await HubNotifications.PublishActivityStateChangedAsync(session.Code, updatingActivity);
+
+            // Update local state to show spinner
+            config = new AiSummaryConfig { IsGenerating = true, GeneratedSummary = string.Empty };
+            StateHasChanged();
+
+            // Generate the summary
+            string summaryText;
+            try
+            {
+                summaryText = await SessionAIService.GenerateSessionSummaryAsync(
+                    session.Title,
+                    session.Goal,
+                    completedActivities,
+                    customPromptAddition);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to generate AI summary for activity {ActivityId}", ActivityId);
+                summaryText = $"## Session Summary\n\nAI summary generation encountered an error. Please try again.\n\n*Error: {ex.Message}*";
+            }
+
+            // Store the generated summary
+            var finalConfig = JsonSerializer.Serialize(
+                new AiSummaryConfig
+                {
+                    CustomPromptAddition = customPromptAddition ?? string.Empty,
+                    ShowActivityBreakdown = config?.ShowActivityBreakdown ?? true,
+                    IsGenerating = false,
+                    GeneratedSummary = summaryText,
+                    GeneratedAt = DateTimeOffset.UtcNow
+                },
+                new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+            await ActivityService.UpdateActivityAsync(session.Id, ActivityId, activity.Title, activity.Prompt, finalConfig, activity.DurationMinutes);
+
+            // Reload and broadcast
+            var finalAgenda = await ActivityService.GetAgendaAsync(session.Id);
+            var finalActivity = finalAgenda.FirstOrDefault(a => a.Id == ActivityId);
+            if (finalActivity != null)
+                await HubNotifications.PublishActivityStateChangedAsync(session.Code, finalActivity);
+
+            // Refresh local config
+            await LoadConfigAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to generate summary: {ex.Message}";
+            Logger.LogError(ex, "TriggerGenerationAsync failed for {SessionCode}/{ActivityId}", SessionCode, ActivityId);
+        }
+        finally
+        {
+            isGenerating = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SetupSignalRAsync()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.Reconnected += async _ =>
+            {
+                try
+                {
+                    await hubConnection.InvokeAsync("Subscribe", SessionCode);
+                    await InvokeAsync(async () =>
+                    {
+                        await LoadConfigAsync();
+                        StateHasChanged();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to re-subscribe AiSummaryDashboard after reconnect");
+                }
+            };
+
+            hubConnection.On<ActivityStateChangedEvent>("ActivityStateChanged", async (e) =>
+            {
+                if (e.SessionCode == SessionCode && e.ActivityId == ActivityId)
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        await LoadConfigAsync();
+                        StateHasChanged();
+                    });
+                }
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to setup SignalR for AiSummaryDashboard");
+        }
+    }
+
+    private static string RenderMarkdown(string markdown)
+    {
+        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+        return Markdown.ToHtml(markdown, pipeline);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            try { await hubConnection.DisposeAsync(); }
+            catch { }
+        }
+    }
+}

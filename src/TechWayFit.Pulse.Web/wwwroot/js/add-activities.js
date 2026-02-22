@@ -1018,6 +1018,7 @@ class AddActivitiesManager {
         });
         
         this.updateActivityList();
+        this.persistOrder();
         console.log(`Moved activity from index ${index} to ${index - 1}`);
     }
     
@@ -1035,7 +1036,34 @@ class AddActivitiesManager {
         });
         
         this.updateActivityList();
+        this.persistOrder();
         console.log(`Moved activity from index ${index} to ${index + 1}`);
+    }
+
+    async persistOrder() {
+        // Only persist activities that already exist on the server (have a real UUID id)
+        const ids = this.activities
+            .filter(a => a.id && /^[0-9a-f-]{36}$/i.test(a.id))
+            .map(a => a.id);
+
+        if (ids.length < 2) return; // Nothing meaningful to reorder
+
+        try {
+            const response = await fetch(`/api/sessions/${this.sessionCode}/activities/reorder`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ activityIds: ids })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Failed to persist activity order:', errorData);
+            } else {
+                console.log('Activity order persisted successfully');
+            }
+        } catch (error) {
+            console.error('Error persisting activity order:', error);
+        }
     }
 
     initializeAIForm() {

@@ -560,6 +560,127 @@ class FeedbackActivity extends Activity {
     }
 }
 
+// AI Summary Activity
+class AiSummaryActivity extends Activity {
+    constructor(data = {}) {
+        super(data);
+        this.customPromptAddition = this.config.customPromptAddition || '';
+        this.showActivityBreakdown = this.config.showActivityBreakdown !== false;
+    }
+
+    getModalId() {
+        return 'aisummaryModal';
+    }
+
+    getFieldPrefix() {
+        return 'aisummary';
+    }
+
+    getEmoji() {
+        return '<i class="ics ics-sparkles ic-sm"></i>';
+    }
+
+    populateSpecificFields(prefix) {
+        this.setFieldValue(`${prefix}CustomPrompt`, this.customPromptAddition);
+        this.setFieldValue(`${prefix}ShowBreakdown`, this.showActivityBreakdown);
+    }
+
+    collectData() {
+        const prefix = this.getFieldPrefix();
+        const commonData = this.collectCommonData(prefix);
+        return {
+            ...commonData,
+            type: 'AiSummary',
+            config: {
+                customPromptAddition: this.getFieldValue(`${prefix}CustomPrompt`) || '',
+                showActivityBreakdown: this.getFieldValue(`${prefix}ShowBreakdown`) !== false,
+                generatedSummary: '',
+                isGenerating: false
+            }
+        };
+    }
+
+    renderCardDetails() {
+        return '<i class="fas fa-brain me-1"></i>AI-generated session summary';
+    }
+
+    toJSON() {
+        return {
+            ...super.toJSON(),
+            config: {
+                customPromptAddition: this.customPromptAddition,
+                showActivityBreakdown: this.showActivityBreakdown,
+                generatedSummary: '',
+                isGenerating: false
+            }
+        };
+    }
+}
+
+// Break Activity
+class BreakActivity extends Activity {
+    constructor(data = {}) {
+        super(data);
+        this.message = this.config.message || 'Take a short break. We\'ll resume shortly!';
+        this.breakDuration = this.config.durationMinutes || 15;
+        this.showCountdown = this.config.showCountdown !== false;
+        this.allowReadySignal = this.config.allowReadySignal !== false;
+    }
+
+    getModalId() {
+        return 'breakModal';
+    }
+
+    getFieldPrefix() {
+        return 'break';
+    }
+
+    getEmoji() {
+        return '<i class="fas fa-coffee"></i>';
+    }
+
+    populateSpecificFields(prefix) {
+        this.setFieldValue(`${prefix}Message`, this.message);
+        this.setFieldValue(`${prefix}Duration`, this.breakDuration);
+        this.setFieldValue(`${prefix}ShowCountdown`, this.showCountdown);
+        this.setFieldValue(`${prefix}AllowReady`, this.allowReadySignal);
+    }
+
+    collectData() {
+        const prefix = this.getFieldPrefix();
+        const commonData = this.collectCommonData(prefix);
+        const breakDurationValue = parseInt(this.getFieldValue(`${prefix}Duration`)) || 15;
+        return {
+            ...commonData,
+            // Override durationMinutes to match the break duration for the timer
+            durationMinutes: breakDurationValue,
+            type: 'Break',
+            config: {
+                message: this.getFieldValue(`${prefix}Message`) || 'Take a short break. We\'ll resume shortly!',
+                durationMinutes: breakDurationValue,
+                showCountdown: this.getFieldValue(`${prefix}ShowCountdown`) !== false,
+                allowReadySignal: this.getFieldValue(`${prefix}AllowReady`) !== false
+            }
+        };
+    }
+
+    renderCardDetails() {
+        return `<i class="fas fa-coffee me-1"></i>${this.breakDuration} min break`;
+    }
+
+    toJSON() {
+        return {
+            ...super.toJSON(),
+            config: {
+                message: this.message,
+                durationMinutes: this.breakDuration,
+                showCountdown: this.showCountdown,
+                allowReadySignal: this.allowReadySignal
+            }
+        };
+    }
+}
+
 // Activity Factory - creates appropriate activity instance based on type
 class ActivityFactory {
     static create(data) {
@@ -578,6 +699,10 @@ class ActivityFactory {
                 return new RatingActivity(data);
             case 'feedback':
                 return new FeedbackActivity(data);
+            case 'aisummary':
+                return new AiSummaryActivity(data);
+            case 'break':
+                return new BreakActivity(data);
             default:
                 console.warn(`Unknown activity type: ${type}`);
                 return new Activity(data);
@@ -591,7 +716,9 @@ class ActivityFactory {
             { type: 'Quadrant', class: QuadrantActivity, emoji: '<i class="ics ics-chart-increasing ic-sm"></i>', description: '2x2 matrix for categorization' },
             { type: 'FiveWhys', class: FiveWhysActivity, emoji: '<i class="ics ics-question ic-sm"></i>', description: 'Root cause analysis' },
             { type: 'Rating', class: RatingActivity, emoji: '<i class="ics ics-star ic-sm"></i>', description: 'Star or numeric ratings' },
-            { type: 'Feedback', class: FeedbackActivity, emoji: '<i class="ics ics-chat ic-sm"></i>', description: 'Open-ended feedback' }
+            { type: 'Feedback', class: FeedbackActivity, emoji: '<i class="ics ics-chat ic-sm"></i>', description: 'Open-ended feedback' },
+            { type: 'AiSummary', class: AiSummaryActivity, emoji: '<i class="ics ics-sparkles ic-sm"></i>', description: 'AI-generated session summary' },
+            { type: 'Break', class: BreakActivity, emoji: '<i class="fas fa-coffee"></i>', description: 'Timed break with ready signal' }
         ];
     }
 }
@@ -604,4 +731,6 @@ window.QuadrantActivity = QuadrantActivity;
 window.FiveWhysActivity = FiveWhysActivity;
 window.RatingActivity = RatingActivity;
 window.FeedbackActivity = FeedbackActivity;
+window.AiSummaryActivity = AiSummaryActivity;
+window.BreakActivity = BreakActivity;
 window.ActivityFactory = ActivityFactory;

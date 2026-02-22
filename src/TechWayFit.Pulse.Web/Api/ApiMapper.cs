@@ -85,6 +85,8 @@ internal static class ApiMapper
             ActivityType.Quadrant => TechWayFit.Pulse.Domain.Enums.ActivityType.Quadrant,
             ActivityType.FiveWhys => TechWayFit.Pulse.Domain.Enums.ActivityType.FiveWhys,
             ActivityType.GeneralFeedback => TechWayFit.Pulse.Domain.Enums.ActivityType.GeneralFeedback,
+            ActivityType.AiSummary => TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary,
+            ActivityType.Break => TechWayFit.Pulse.Domain.Enums.ActivityType.Break,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported activity type.")
         };
     }
@@ -101,6 +103,8 @@ internal static class ApiMapper
             TechWayFit.Pulse.Domain.Enums.ActivityType.Quadrant => ActivityType.Quadrant,
             TechWayFit.Pulse.Domain.Enums.ActivityType.FiveWhys => ActivityType.FiveWhys,
             TechWayFit.Pulse.Domain.Enums.ActivityType.GeneralFeedback => ActivityType.GeneralFeedback,
+            TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary => ActivityType.AiSummary,
+            TechWayFit.Pulse.Domain.Enums.ActivityType.Break => ActivityType.Break,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported activity type.")
         };
     }

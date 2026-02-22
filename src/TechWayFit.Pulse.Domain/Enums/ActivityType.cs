@@ -9,5 +9,7 @@ public enum ActivityType
     Rating = 4,
     Quadrant = 5,
     FiveWhys = 6,
-    GeneralFeedback = 7
+    GeneralFeedback = 7,
+    AiSummary = 8,
+    Break = 9
 }

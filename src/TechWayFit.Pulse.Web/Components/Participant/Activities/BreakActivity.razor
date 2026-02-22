@@ -1,0 +1,154 @@
+@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using TechWayFit.Pulse.Domain.Models.ResponsePayloads
+@using System.Text.Json
+@inject IJSRuntime JS
+
+<div class="break-activity">
+    <div class="text-center mb-4">
+        <i class="fas fa-coffee break-icon mb-3"></i>
+        <h3 class="fw-bold mb-2">Time for a Break!</h3>
+
+        @if (!string.IsNullOrWhiteSpace(config?.Message))
+        {
+            <p class="text-muted break-message">@config.Message</p>
+        }
+    </div>
+
+    @if (config?.ShowCountdown == true && config.DurationMinutes > 0)
+    {
+        <div class="break-timer-wrapper text-center mb-4">
+            <div class="break-timer" id="break-countdown-@Parameters.ActivityId">
+                <span class="timer-value">@FormatDuration(config.DurationMinutes)</span>
+            </div>
+            <p class="text-muted small mt-2">Break ends in</p>
+        </div>
+    }
+
+    @if (config?.AllowReadySignal == true)
+    {
+        @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
+        {
+            <div class="alert alert-success d-flex align-items-center" role="alert">
+                <i class="fas fa-check-circle me-3 fs-4" aria-hidden="true"></i>
+                <div>
+                    <strong>You're marked as ready!</strong>
+                    <div class="small">The facilitator can see you're back. Waiting for the session to resume...</div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <button class="btn btn-success btn-lg w-100 py-3"
+                    @onclick="HandleReady"
+                    disabled="@(Parameters.IsSubmitting || Parameters.HasSubmitted)">
+                @if (Parameters.IsSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    <text>Signaling...</text>
+                }
+                else
+                {
+                    <i class="fas fa-hand-wave me-2" aria-hidden="true"></i>
+                    <text>I'm Back / Ready to Continue</text>
+                }
+            </button>
+        }
+
+        @if (!string.IsNullOrEmpty(Parameters.SubmitMessage) && !Parameters.SubmitSuccess)
+        {
+            <div class="alert alert-danger mt-3 mb-0">
+                @Parameters.SubmitMessage
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center text-muted py-3">
+            <p class="small">The session will resume shortly. Please wait for the facilitator.</p>
+        </div>
+    }
+</div>
+
+<style>
+    .break-activity .break-icon {
+        font-size: 3rem;
+        color: var(--pulse-warning, #f59e0b);
+        display: block;
+    }
+
+    .break-activity .break-message {
+        font-size: 1.05rem;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .break-activity .break-timer-wrapper {
+        background: rgba(245, 158, 11, 0.08);
+        border-radius: 1rem;
+        padding: 1.5rem;
+    }
+
+    .break-activity .break-timer {
+        font-size: 3rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: var(--pulse-warning, #f59e0b);
+        letter-spacing: 0.05em;
+        line-height: 1;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ParticipantActivityParameters Parameters { get; set; }
+
+    private BreakConfig? config;
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(Parameters.Config))
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                config = JsonSerializer.Deserialize<BreakConfig>(Parameters.Config, options);
+            }
+            catch
+            {
+                config = null;
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && config?.ShowCountdown == true && config.DurationMinutes > 0)
+        {
+            try
+            {
+                // Initialize the countdown via JS
+                await JS.InvokeVoidAsync("window.startBreakCountdown",
+                    $"break-countdown-{Parameters.ActivityId}",
+                    config.DurationMinutes);
+            }
+            catch
+            {
+                // JS interop unavailable in prerender - ignore
+            }
+        }
+    }
+
+    private static string FormatDuration(int minutes)
+    {
+        var ts = TimeSpan.FromMinutes(minutes);
+        return ts.TotalHours >= 1
+            ? $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}"
+            : $"{ts.Minutes:D2}:00";
+    }
+
+    private async Task HandleReady()
+    {
+        var payload = JsonSerializer.Serialize(new BreakResponse { Ready = true });
+        await Parameters.OnSubmit(payload);
+    }
+}

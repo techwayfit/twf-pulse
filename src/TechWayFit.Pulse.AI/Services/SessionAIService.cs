@@ -680,6 +680,141 @@ Return ONLY a valid JSON array. No markdown, no explanation.";
 
             return generatedActivities;
         }
+
+        public async Task<string> GenerateSessionSummaryAsync(
+            string sessionTitle,
+            string? sessionGoal,
+            IReadOnlyList<AgendaActivityResponse> completedActivities,
+            string? customPromptAddition = null,
+            CancellationToken cancellationToken = default)
+        {
+            // Filter out AiSummary and Break activities — they don't provide context
+            var relevantActivities = completedActivities
+                .Where(a => a.Type != ActivityType.AiSummary && a.Type != ActivityType.Break)
+                .OrderBy(a => a.Order)
+                .ToList();
+
+            if (relevantActivities.Count == 0)
+            {
+                return "No activities with participant responses have been completed yet. Run the session activities first, then re-open this summary.";
+            }
+
+            var facilitatorContext = FacilitatorContextAccessor.Current;
+            var apiKey = facilitatorContext?.OpenAiApiKey ?? _configuration["AI:OpenAI:ApiKey"];
+            var model = _configuration["AI:OpenAI:Model"] ?? "gpt-4o-mini";
+            var baseUrl = facilitatorContext?.OpenAiBaseUrl ?? _configuration["AI:OpenAI:BaseUrl"];
+
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                _logger.LogWarning("OpenAI API key not configured – returning fallback summary");
+                return BuildFallbackSummary(sessionTitle, relevantActivities);
+            }
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient("openai");
+                if (!string.IsNullOrWhiteSpace(baseUrl))
+                {
+                    if (!baseUrl.EndsWith("/")) baseUrl += "/";
+                    client.BaseAddress = new Uri(baseUrl);
+                }
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+                var systemPrompt = @"You are an expert workshop facilitator producing a concise, insightful summary of a completed workshop session. 
+Write in clear, professional language. Structure the summary with markdown headings. 
+Highlight key themes, decisions, and patterns that emerged from participant responses.
+Keep it actionable – end with 2-3 key takeaways or next steps.";
+
+                var userPrompt = BuildSummaryUserPrompt(sessionTitle, sessionGoal, relevantActivities, customPromptAddition);
+
+                var payload = new
+                {
+                    model,
+                    messages = new[]
+                    {
+                        new { role = "system", content = systemPrompt },
+                        new { role = "user", content = userPrompt }
+                    },
+                    temperature = 0.5,
+                    max_tokens = 1200
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+                var resp = await client.PostAsync("chat/completions", content, cancellationToken);
+                resp.EnsureSuccessStatusCode();
+
+                var body = await resp.Content.ReadAsStringAsync(cancellationToken);
+                using var doc = JsonDocument.Parse(body);
+                if (doc.RootElement.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
+                {
+                    var first = choices[0];
+                    if (first.TryGetProperty("message", out var message) && message.TryGetProperty("content", out var contentEl))
+                    {
+                        return contentEl.GetString() ?? BuildFallbackSummary(sessionTitle, relevantActivities);
+                    }
+                }
+
+                return BuildFallbackSummary(sessionTitle, relevantActivities);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to generate session summary via AI, using fallback");
+                return BuildFallbackSummary(sessionTitle, relevantActivities);
+            }
+        }
+
+        private static string BuildSummaryUserPrompt(
+            string sessionTitle,
+            string? sessionGoal,
+            IReadOnlyList<AgendaActivityResponse> activities,
+            string? customAddition)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"Please summarise this workshop session.");
+            sb.AppendLine($"Session title: {sessionTitle}");
+            if (!string.IsNullOrEmpty(sessionGoal))
+                sb.AppendLine($"Session goal: {sessionGoal}");
+            sb.AppendLine($"\nCompleted activities ({activities.Count} total):\n");
+
+            foreach (var a in activities)
+            {
+                sb.AppendLine($"### Activity {a.Order}: {a.Title} ({a.Type})");
+                if (!string.IsNullOrEmpty(a.Prompt))
+                    sb.AppendLine($"Question/Prompt: {a.Prompt}");
+                if (!string.IsNullOrEmpty(a.Config))
+                {
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(a.Config);
+                        sb.AppendLine($"Config summary: {a.Config.Substring(0, Math.Min(200, a.Config.Length))}");
+                    }
+                    catch { /* ignore malformed config */ }
+                }
+                sb.AppendLine();
+            }
+
+            if (!string.IsNullOrEmpty(customAddition))
+            {
+                sb.AppendLine($"\nAdditional instructions: {customAddition}");
+            }
+
+            sb.AppendLine("\nGenerate a comprehensive session summary in markdown format.");
+            return sb.ToString();
+        }
+
+        private static string BuildFallbackSummary(string sessionTitle, IReadOnlyList<AgendaActivityResponse> activities)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"## Session Summary: {sessionTitle}");
+            sb.AppendLine($"\n*{activities.Count} activit{(activities.Count == 1 ? "y" : "ies")} completed.*");
+            sb.AppendLine("\n### Activities Covered\n");
+            foreach (var a in activities)
+            {
+                sb.AppendLine($"- **{a.Title}** ({a.Type}): {a.Prompt}");
+            }
+            sb.AppendLine("\n> AI summary generation is unavailable. Please configure an AI API key to enable rich summaries.");
+            return sb.ToString();
+        }
     }
 }
 

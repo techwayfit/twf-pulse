@@ -223,6 +223,14 @@
                     data-bs-target="#feedbackModal" @onclick='() => OnAddActivity.InvokeAsync("Feedback")'>
                 <i class="fas fa-comment me-1"></i>Feedback
             </button>
+            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
+                    data-bs-target="#aisummaryModal" @onclick='() => OnAddActivity.InvokeAsync("AiSummary")'>
+                <i class="ics ics-sparkles ic-sm me-1"></i>AI Summary
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
+                    data-bs-target="#breakModal" @onclick='() => OnAddActivity.InvokeAsync("Break")'>
+                <i class="fas fa-coffee me-1"></i>Break
+            </button>
         </div>
     </div>
 </div>
@@ -262,6 +270,8 @@
         ActivityType.GeneralFeedback => (MarkupString)"<i class='fas fa-comment'></i>",
         ActivityType.Quiz => (MarkupString)"<i class='fas fa-circle-question'></i>",
         ActivityType.QnA => (MarkupString)"<i class='fas fa-lightbulb'></i>",
+        ActivityType.AiSummary => (MarkupString)"<i class='ics ics-sparkles'></i>",
+        ActivityType.Break => (MarkupString)"<i class='fas fa-coffee'></i>",
         _ => (MarkupString)"<i class='fas fa-clipboard-list'></i>"
     };
 
@@ -275,6 +285,8 @@
         ActivityType.GeneralFeedback => "background: var(--pulse-success); color: white; padding: 0.4rem 0.7rem; border-radius: var(--pulse-radius-md); font-size: 0.85rem; font-weight: 600;",
         ActivityType.Quiz => "background: var(--pulse-danger); color: white; padding: 0.4rem 0.7rem; border-radius: var(--pulse-radius-md); font-size: 0.85rem; font-weight: 600;",
         ActivityType.QnA => "background: var(--pulse-info); color: white; padding: 0.4rem 0.7rem; border-radius: var(--pulse-radius-md); font-size: 0.85rem; font-weight: 600;",
+        ActivityType.AiSummary => "background: #7c3aed; color: white; padding: 0.4rem 0.7rem; border-radius: var(--pulse-radius-md); font-size: 0.85rem; font-weight: 600;",
+        ActivityType.Break => "background: var(--pulse-warning); color: white; padding: 0.4rem 0.7rem; border-radius: var(--pulse-radius-md); font-size: 0.85rem; font-weight: 600;",
         _ => "background: var(--pulse-gray-400); color: white; padding: 0.4rem 0.7rem; border-radius: var(--pulse-radius-md); font-size: 0.85rem; font-weight: 600;"
     };
 }

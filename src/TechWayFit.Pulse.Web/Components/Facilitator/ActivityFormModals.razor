@@ -188,6 +188,105 @@
     </div>
 </div>
 
+<!-- AI Summary Activity Modal -->
+<div class="modal fade" id="aisummaryModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-brain me-1"></i>Create AI Summary Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info d-flex align-items-start gap-2 mb-3">
+                    <i class="fas fa-info-circle mt-1 flex-shrink-0"></i>
+                    <div class="small">When this activity is opened, AI will read all completed activities and responses to generate a summary. Participants only read the summary — no input required. This activity is excluded from AI agenda generation.</div>
+                </div>
+                <form id="aisummaryForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Activity Title *</label>
+                        <input type="text" class="form-control" id="aisummaryTitle" value="Session Summary" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Subtitle / Prompt (shown to participants)</label>
+                        <textarea class="form-control" id="aisummaryPrompt" rows="2" placeholder="Here's what we covered so far..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Additional AI Instructions <span class="text-muted">(optional)</span></label>
+                        <textarea class="form-control" id="aisummaryCustomPrompt" rows="2"
+                            placeholder="e.g. Focus on action items, use bullet points, highlight consensus..."></textarea>
+                        <div class="form-text">This text is sent to the AI to refine the summary.</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="aisummaryShowBreakdown" checked />
+                            <label class="form-check-label" for="aisummaryShowBreakdown">Show activity-by-activity breakdown below the summary</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-medium">Display Duration (minutes)</label>
+                        <input type="number" class="form-control" id="aisummaryDuration" value="5" min="1" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveAiSummaryActivity()">Create Activity</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Break Activity Modal -->
+<div class="modal fade" id="breakModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-coffee me-1"></i>Create Break Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning d-flex align-items-start gap-2 mb-3">
+                    <i class="fas fa-clock mt-1 flex-shrink-0"></i>
+                    <div class="small">This activity pauses the session for a break. Participants see a countdown timer and can signal when they are back. This activity is excluded from AI agenda generation.</div>
+                </div>
+                <form id="breakForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Activity Title *</label>
+                        <input type="text" class="form-control" id="breakTitle" value="Break Time" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Break Message</label>
+                        <textarea class="form-control" id="breakMessage" rows="2"
+                            placeholder="Take a short break. We'll resume shortly!"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">Break Duration (minutes)</label>
+                            <input type="number" class="form-control" id="breakDuration" value="15" min="1" max="120" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="breakShowCountdown" checked />
+                            <label class="form-check-label" for="breakShowCountdown">Show countdown timer to participants</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="breakAllowReady" checked />
+                            <label class="form-check-label" for="breakAllowReady">Allow participants to signal they are back</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveBreakActivity()">Create Activity</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @code {
     [Parameter]
     public string SessionCode { get; set; } = string.Empty;

@@ -286,3 +286,89 @@
         </div>
     </div>
 </div>
+<!-- AI Summary Activity Modal -->
+<div class="modal fade" id="aisummaryModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ics ics-sparkles ic-sm ic-mr"></i>Create AI Summary Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body modal-body-scroll">
+                <form id="aisummaryForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Activity Title *</label>
+                        <input type="text" class="form-control" id="aisummaryTitle" required placeholder="e.g., Session Summary" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Subtitle / Instructions</label>
+                        <input type="text" class="form-control" id="aisummarySubtitle" placeholder="e.g., Here is a summary of what we covered..." />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Custom AI Instructions (optional)</label>
+                        <textarea class="form-control" id="aisummaryCustomPromptAddition" rows="3" placeholder="e.g., Focus on action items and decisions made..."></textarea>
+                        <div class="form-text">Additional guidance for the AI when generating the summary.</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="aisummaryShowActivityBreakdown" checked />
+                            <label class="form-check-label" for="aisummaryShowActivityBreakdown">Show activity-by-activity breakdown in summary</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Duration (minutes)</label>
+                        <input type="number" class="form-control" id="aisummaryDuration" value="5" min="1" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="window.saveAiSummaryActivity()">Create Activity</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Break Activity Modal -->
+<div class="modal fade" id="breakModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-coffee ic-sm ic-mr"></i>Create Break Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body modal-body-scroll">
+                <form id="breakForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Activity Title *</label>
+                        <input type="text" class="form-control" id="breakTitle" required placeholder="e.g., Break Time" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Break Message</label>
+                        <textarea class="form-control" id="breakMessage" rows="2" placeholder="e.g., Take a short break. Grab a coffee and relax!"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Break Duration (minutes)</label>
+                        <input type="number" class="form-control" id="breakDurationMinutes" value="15" min="1" />
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="breakShowCountdown" checked />
+                            <label class="form-check-label" for="breakShowCountdown">Show countdown timer to participants</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="breakAllowReadySignal" checked />
+                            <label class="form-check-label" for="breakAllowReadySignal">Allow participants to signal when they are back</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="window.saveBreakActivity()">Create Activity</button>
+            </div>
+        </div>
+    </div>
+</div>

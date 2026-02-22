@@ -359,5 +359,31 @@ namespace TechWayFit.Pulse.AI.Services
             // Use existing generation logic
             return GenerateSessionActivitiesAsync(request, cancellationToken);
         }
+
+        public Task<string> GenerateSessionSummaryAsync(
+            string sessionTitle,
+            string? sessionGoal,
+            IReadOnlyList<AgendaActivityResponse> completedActivities,
+            string? customPromptAddition = null,
+            CancellationToken cancellationToken = default)
+        {
+            // Fallback – no AI API available; return structured text summary
+            var relevant = completedActivities
+                .Where(a => a.Type != TechWayFit.Pulse.Contracts.Enums.ActivityType.AiSummary
+                         && a.Type != TechWayFit.Pulse.Contracts.Enums.ActivityType.Break)
+                .OrderBy(a => a.Order)
+                .ToList();
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"## Session Summary: {sessionTitle}");
+            if (!string.IsNullOrEmpty(sessionGoal))
+                sb.AppendLine($"**Goal:** {sessionGoal}");
+            sb.AppendLine($"\n*{relevant.Count} activit{(relevant.Count == 1 ? "y" : "ies")} completed.*");
+            sb.AppendLine("\n### Activities Covered\n");
+            foreach (var a in relevant)
+                sb.AppendLine($"- **{a.Title}** ({a.Type}): {a.Prompt}");
+            sb.AppendLine("\n> AI summary generation requires an AI API key. Configure one in session settings for rich summaries.");
+            return Task.FromResult(sb.ToString());
+        }
     }
 }

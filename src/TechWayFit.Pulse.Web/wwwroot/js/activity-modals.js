@@ -315,6 +315,87 @@ window.saveFiveWhysActivity = async function() {
     alert('5 Whys creation is temporarily disabled until the full participant and facilitator experience is implemented.');
 };
 
+window.saveAiSummaryActivity = async function() {
+    const title = document.getElementById('aisummaryTitle').value;
+    if (!title) {
+        alert('Please enter an activity title');
+        return;
+    }
+
+    const config = {
+        customPromptAddition: document.getElementById('aisummaryCustomPromptAddition').value || '',
+        showActivityBreakdown: document.getElementById('aisummaryShowActivityBreakdown').checked,
+        generatedSummary: '',
+        isGenerating: false
+    };
+
+    const activity = {
+        type: 'AiSummary',
+        title: title,
+        prompt: document.getElementById('aisummarySubtitle').value || null,
+        durationMinutes: parseInt(document.getElementById('aisummaryDuration').value) || 5,
+        config: JSON.stringify(config)
+    };
+
+    if (!window.addActivitiesManager) {
+        console.error('addActivitiesManager not found!');
+        alert('Activity manager not initialized. Please refresh the page.');
+        return;
+    }
+
+    try {
+        await window.addActivitiesManager.createActivityFromData(activity);
+    } catch (error) {
+        console.error('Error creating AI Summary activity:', error);
+        alert('Failed to create activity: ' + error.message);
+    } finally {
+        document.getElementById('aisummaryForm').reset();
+        document.getElementById('aisummaryShowActivityBreakdown').checked = true;
+    }
+};
+
+window.saveBreakActivity = async function() {
+    const title = document.getElementById('breakTitle').value;
+    if (!title) {
+        alert('Please enter an activity title');
+        return;
+    }
+
+    const breakDuration = parseInt(document.getElementById('breakDurationMinutes').value) || 15;
+    const config = {
+        message: document.getElementById('breakMessage').value || 'Take a short break. We\'ll resume shortly!',
+        durationMinutes: breakDuration,
+        showCountdown: document.getElementById('breakShowCountdown').checked,
+        allowReadySignal: document.getElementById('breakAllowReadySignal').checked
+    };
+
+    const activity = {
+        type: 'Break',
+        title: title,
+        prompt: config.message,
+        durationMinutes: breakDuration,
+        config: JSON.stringify(config)
+    };
+
+    if (!window.addActivitiesManager) {
+        console.error('addActivitiesManager not found!');
+        alert('Activity manager not initialized. Please refresh the page.');
+        return;
+    }
+
+    try {
+        await window.addActivitiesManager.createActivityFromData(activity);
+    } catch (error) {
+        console.error('Error creating Break activity:', error);
+        alert('Failed to create activity: ' + error.message);
+    } finally {
+        document.getElementById('breakForm').reset();
+        document.getElementById('breakDurationMinutes').value = '15';
+        document.getElementById('breakShowCountdown').checked = true;
+        document.getElementById('breakAllowReadySignal').checked = true;
+    }
+};
+
 // Reset functions
 function resetPollForm() {
     document.getElementById('pollForm').reset();

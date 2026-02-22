@@ -1,18 +1,34 @@
+using Microsoft.EntityFrameworkCore;
+using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
+using TechWayFit.Pulse.Infrastructure.Persistence.Mapping;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.Sqlite.Repositories;
 
 /// <summary>
 /// SQLite-specific ParticipantRepository.
-/// Inherits all implementation from ParticipantRepositoryBase with server-side sorting.
+/// SQLite does not support DateTimeOffset in ORDER BY clauses, so sorted
+/// queries materialize results first and then apply client-side ordering.
 /// </summary>
 public sealed class ParticipantRepository : ParticipantRepositoryBase
 {
- public ParticipantRepository(IPulseDbContext dbContext) : base(dbContext)
+    public ParticipantRepository(IPulseDbContext dbContext) : base(dbContext)
     {
     }
 
-    // ? Uses base implementation with default server-side sorting
-    // No overrides needed - base class provides optimal behavior
+    public override async Task<IReadOnlyList<Participant>> GetBySessionAsync(
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        var records = await _dbContext.Participants
+            .AsNoTracking()
+            .Where(x => x.SessionId == sessionId)
+            .ToListAsync(cancellationToken);
+
+        return records
+            .OrderBy(x => x.JoinedAt)
+            .Select(r => r.ToDomain())
+            .ToList();
+    }
 }

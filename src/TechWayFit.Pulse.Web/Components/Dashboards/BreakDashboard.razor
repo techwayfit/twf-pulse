@@ -1,0 +1,309 @@
+@using TechWayFit.Pulse.Application.Abstractions.Services
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Web.Hubs
+@using System.Text.Json
+@namespace TechWayFit.Pulse.Web.Components.Dashboards
+@inject ISessionService SessionService
+@inject IActivityService ActivityService
+@inject IResponseService ResponseService
+@inject IParticipantService ParticipantService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ILogger<BreakDashboard> Logger
+@implements IAsyncDisposable
+
+<div class="break-dashboard">
+    @if (isLoading)
+    {
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mb-0">
+            <i class="fas fa-exclamation-triangle me-2"></i>@errorMessage
+        </div>
+    }
+    else
+    {
+        <!-- Header row: break message + timer -->
+        <div class="row g-3 mb-3">
+            <div class="col-md-7">
+                <div class="card border-0 bg-warning-subtle h-100">
+                    <div class="card-body">
+                        <h6 class="fw-semibold mb-1">
+                            <i class="fas fa-coffee me-2"></i>Break Details
+                        </h6>
+                        @if (!string.IsNullOrWhiteSpace(config?.Message))
+                        {
+                            <p class="mb-1">@config.Message</p>
+                        }
+                        @if (config != null)
+                        {
+                            <div class="text-muted small">
+                                Duration: @config.DurationMinutes minutes
+                                @if (config.AllowReadySignal)
+                                {
+                                    <span class="ms-2"><i class="fas fa-hand-wave me-1"></i>Ready signal enabled</span>
+                                }
+                                @if (config.ShowCountdown)
+                                {
+                                    <span class="ms-2"><i class="fas fa-clock me-1"></i>Countdown visible to participants</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @if (config?.ShowCountdown == true && config.DurationMinutes > 0)
+            {
+                <div class="col-md-5">
+                    <div class="card border-0 bg-light h-100 text-center">
+                        <div class="card-body d-flex flex-column justify-content-center">
+                            <div class="fw-medium text-muted small mb-1">Break Timer</div>
+                            <div class="break-facilitator-timer" id="break-facilitator-countdown-@ActivityId">
+                                @FormatDuration(config.DurationMinutes)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Ready count -->
+        @if (config?.AllowReadySignal == true)
+        {
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-users me-2 text-success"></i>Participants Ready
+                        </h6>
+                        <span class="badge bg-success fs-6 px-3">@readyCount / @totalParticipants</span>
+                    </div>
+
+                    @if (totalParticipants > 0)
+                    {
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar bg-success"
+                                 role="progressbar"
+                                 style="width: @ReadyPercent%;"
+                                 aria-valuenow="@readyCount"
+                                 aria-valuemin="0"
+                                 aria-valuemax="@totalParticipants">
+                            </div>
+                        </div>
+                        <div class="text-muted small">@ReadyPercent% back from break</div>
+                    }
+
+                    @if (readyCount == 0)
+                    {
+                        <div class="text-muted small mt-2">
+                            <i class="fas fa-hourglass-half me-1"></i>Waiting for participants to signal they're back...
+                        </div>
+                    }
+                    else if (readyCount >= totalParticipants && totalParticipants > 0)
+                    {
+                        <div class="alert alert-success mb-0 mt-2 py-2">
+                            <i class="fas fa-check-circle me-2"></i>All participants are back! You can resume the session.
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle me-2"></i>Ready signal is disabled for this break. Proceed when you're ready.
+            </div>
+        }
+    }
+</div>
+
+<style>
+    .break-dashboard .break-facilitator-timer {
+        font-size: 2.5rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: var(--pulse-warning, #f59e0b);
+        letter-spacing: 0.05em;
+        line-height: 1;
+    }
+</style>
+
+@code {
+    [Parameter] public string SessionCode { get; set; } = string.Empty;
+    [Parameter] public Guid ActivityId { get; set; }
+
+    private BreakConfig? config;
+    private int readyCount = 0;
+    private int totalParticipants = 0;
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private HubConnection? hubConnection;
+
+    private double ReadyPercent => totalParticipants > 0
+        ? Math.Round(readyCount * 100.0 / totalParticipants, 0)
+        : 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+        await SetupSignalRAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && config?.ShowCountdown == true && config.DurationMinutes > 0)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("window.startBreakCountdown",
+                    $"break-facilitator-countdown-{ActivityId}",
+                    config.DurationMinutes);
+            }
+            catch
+            {
+                // Ignore JS interop errors during prerender
+            }
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session is null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+
+            // Load config
+            var agenda = await ActivityService.GetAgendaAsync(session.Id);
+            var activity = agenda.FirstOrDefault(a => a.Id == ActivityId);
+            if (activity is not null && !string.IsNullOrEmpty(activity.Config))
+            {
+                try
+                {
+                    config = JsonSerializer.Deserialize<BreakConfig>(activity.Config,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                }
+                catch
+                {
+                    config = new BreakConfig();
+                }
+            }
+            else
+            {
+                config = new BreakConfig();
+            }
+
+            // Load ready count
+            var responses = await ResponseService.GetByActivityAsync(ActivityId);
+            readyCount = responses.Count;
+
+            // Load total participant count
+            var participants = await ParticipantService.GetBySessionAsync(session.Id);
+            totalParticipants = participants.Count;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load break data: {ex.Message}";
+            Logger.LogError(ex, "Failed to load BreakDashboard for {SessionCode}/{ActivityId}", SessionCode, ActivityId);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SetupSignalRAsync()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.Reconnected += async _ =>
+            {
+                try
+                {
+                    await hubConnection.InvokeAsync("Subscribe", SessionCode);
+                    await InvokeAsync(async () =>
+                    {
+                        await LoadDataAsync();
+                        StateHasChanged();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to re-subscribe BreakDashboard after reconnect");
+                }
+            };
+
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (e) =>
+            {
+                if (e.SessionCode == SessionCode && e.ActivityId == ActivityId)
+                {
+                    await InvokeAsync(() =>
+                    {
+                        readyCount++;
+                        StateHasChanged();
+                        return Task.CompletedTask;
+                    });
+                }
+            });
+
+            hubConnection.On<ParticipantJoinedEvent>("ParticipantJoined", async (e) =>
+            {
+                if (e.SessionCode == SessionCode)
+                {
+                    await InvokeAsync(() =>
+                    {
+                        totalParticipants = e.TotalParticipantCount;
+                        StateHasChanged();
+                        return Task.CompletedTask;
+                    });
+                }
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to setup SignalR for BreakDashboard");
+        }
+    }
+
+    private static string FormatDuration(int minutes)
+    {
+        var ts = TimeSpan.FromMinutes(minutes);
+        return ts.TotalHours >= 1
+            ? $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:00"
+            : $"{ts.Minutes:D2}:00";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            try { await hubConnection.DisposeAsync(); }
+            catch { }
+        }
+    }
+}

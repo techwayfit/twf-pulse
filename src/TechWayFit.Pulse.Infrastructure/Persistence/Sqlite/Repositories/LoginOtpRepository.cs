@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 
@@ -5,7 +7,8 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.Sqlite.Repositories;
 
 /// <summary>
 /// SQLite-specific LoginOtpRepository.
-/// Inherits all implementation from LoginOtpRepositoryBase with server-side sorting.
+/// SQLite does not support DateTimeOffset in ORDER BY clauses, so sorted
+/// queries materialize results first and then apply client-side ordering.
 /// </summary>
 public sealed class LoginOtpRepository : LoginOtpRepositoryBase
 {
@@ -13,6 +16,22 @@ public sealed class LoginOtpRepository : LoginOtpRepositoryBase
     {
     }
 
-  // ? Uses base implementation with default server-side sorting and standard delete
-    // No overrides needed - base class provides optimal behavior
+    public override async Task<IReadOnlyList<LoginOtp>> GetRecentOtpsForEmailAsync(
+        string email,
+        int count,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+
+        var records = await _context.LoginOtps
+            .AsNoTracking()
+            .Where(o => o.Email == normalizedEmail)
+            .ToListAsync(cancellationToken);
+
+        return records
+            .OrderByDescending(o => o.CreatedAt)
+            .Take(count)
+            .Select(MapToDomain)
+            .ToList();
+    }
 }

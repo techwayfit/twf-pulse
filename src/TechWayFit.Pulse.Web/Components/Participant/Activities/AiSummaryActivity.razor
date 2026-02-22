@@ -1,0 +1,117 @@
+@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using System.Text.Json
+@using Markdig
+
+<div class="ai-summary-activity">
+    @if (config?.IsGenerating == true)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Generating summary...</span>
+            </div>
+            <p class="fw-medium mb-1">AI is generating the session summary...</p>
+            <p class="text-muted small">This may take a few moments. The page will update automatically.</p>
+        </div>
+    }
+    else if (string.IsNullOrEmpty(config?.GeneratedSummary))
+    {
+        <div class="text-center py-5">
+            <i class="ics ics-sparkles ic-xl text-muted mb-3 d-block"></i>
+            <p class="fw-medium mb-1">Summary not yet generated</p>
+            <p class="text-muted small">Waiting for the facilitator to generate the session summary...</p>
+        </div>
+    }
+    else
+    {
+        <div class="summary-content prose">
+            @((MarkupString)RenderMarkdown(config.GeneratedSummary))
+        </div>
+
+        @if (config.GeneratedAt.HasValue)
+        {
+            <div class="text-muted small mt-4 border-top pt-3">
+                <i class="fas fa-robot me-1"></i> AI-generated summary &middot;
+                <i class="fas fa-clock ms-2 me-1"></i> @config.GeneratedAt.Value.ToLocalTime().ToString("HH:mm")
+            </div>
+        }
+    }
+</div>
+
+<style>
+    .ai-summary-activity .prose h1,
+    .ai-summary-activity .prose h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-top: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .ai-summary-activity .prose h3 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-top: 1rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .ai-summary-activity .prose ul,
+    .ai-summary-activity .prose ol {
+        padding-left: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .ai-summary-activity .prose li {
+        margin-bottom: 0.3rem;
+        line-height: 1.6;
+    }
+
+    .ai-summary-activity .prose p {
+        margin-bottom: 0.75rem;
+        line-height: 1.7;
+    }
+
+    .ai-summary-activity .prose strong {
+        font-weight: 600;
+    }
+
+    .ai-summary-activity .prose blockquote {
+        border-left: 4px solid var(--pulse-primary, #6366f1);
+        padding-left: 1rem;
+        color: #6b7280;
+        font-style: italic;
+        margin: 1rem 0;
+    }
+
+    .ai-summary-activity .prose hr {
+        border-color: #e5e7eb;
+        margin: 1.25rem 0;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ParticipantActivityParameters Parameters { get; set; }
+
+    private AiSummaryConfig? config;
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(Parameters.Config))
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                config = JsonSerializer.Deserialize<AiSummaryConfig>(Parameters.Config, options);
+            }
+            catch
+            {
+                config = null;
+            }
+        }
+    }
+
+    private static string RenderMarkdown(string markdown)
+    {
+        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+        return Markdown.ToHtml(markdown, pipeline);
+    }
+}

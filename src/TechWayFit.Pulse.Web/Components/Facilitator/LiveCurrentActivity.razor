@@ -70,6 +70,14 @@
             {
                 <QuadrantDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
             }
+            else if (Activity.Type == ActivityType.AiSummary)
+            {
+                <AiSummaryDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
+            }
+            else if (Activity.Type == ActivityType.Break)
+            {
+                <BreakDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
+            }
             else
             {
                 <div class="text-center">

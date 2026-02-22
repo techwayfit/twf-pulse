@@ -4,9 +4,11 @@ using Microsoft.JSInterop;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Contracts.Responses;
 using TechWayFit.Pulse.Domain.Entities;
+using TechWayFit.Pulse.Domain.Models.ActivityConfigs;
 using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Hubs;
 using TechWayFit.Pulse.Web.Services;
+using Markdig;
 
 namespace TechWayFit.Pulse.Web.Pages.Facilitator;
 
@@ -629,5 +631,45 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
                 // Ignore cleanup errors
             }
         }
+    }
+
+    // ── Presentation helpers for AiSummary and Break ──────────────────────────
+
+    private static AiSummaryConfig? TryParseAiSummaryConfig(string? configJson)
+    {
+        if (string.IsNullOrEmpty(configJson)) return null;
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<AiSummaryConfig>(
+                configJson,
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+        catch { return null; }
+    }
+
+    private static BreakConfig? TryParseBreakConfig(string? configJson)
+    {
+        if (string.IsNullOrEmpty(configJson)) return null;
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<BreakConfig>(
+                configJson,
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+        catch { return null; }
+    }
+
+    private static string RenderSummaryMarkdown(string markdown)
+    {
+        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+        return Markdown.ToHtml(markdown, pipeline);
+    }
+
+    private static string FormatBreakDuration(int minutes)
+    {
+        var ts = TimeSpan.FromMinutes(minutes);
+        return ts.TotalHours >= 1
+            ? $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:00"
+            : $"{ts.Minutes:D2}:00";
     }
 }
