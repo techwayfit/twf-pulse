@@ -1,40 +1,44 @@
 @model TechWayFit.Pulse.BackOffice.Core.Models.Auth.CreateBackOfficeUserRequest
 @{
     ViewBag.Title = "New Operator";
+    ViewBag.ActiveNav = "operators";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0 fw-semibold">
-        <i class="fa-solid fa-user-plus me-2 text-primary"></i>Create Operator Account
-    </h1>
-    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
-        <i class="fa-solid fa-arrow-left me-1"></i>Back
-    </a>
+<div class="bo-breadcrumb"><a asp-action="Index">Operators</a> / New</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon purple"><i class="boi boi-lg boi-settings"></i></div>
+        <div>
+            <div class="bo-page-title">Create Operator Account</div>
+            <div class="bo-page-sub">Add a new back-office operator</div>
+        </div>
+    </div>
+    <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
 </div>
 
-<div class="card border-0 shadow-sm" style="max-width:480px">
-    <div class="card-body">
+<div class="bo-card" style="max-width:480px">
+    <div class="bo-card-header">Account Details</div>
+    <div class="bo-card-body">
         <form asp-action="Create" method="post">
             @Html.AntiForgeryToken()
-            <div class="mb-3">
-                <label class="form-label">Username</label>
-                <input asp-for="Username" class="form-control" required autocomplete="off" />
+            <div style="margin-bottom:14px">
+                <label class="bo-field-label">Username</label>
+                <input asp-for="Username" class="bo-input" required autocomplete="off" />
             </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input asp-for="Password" type="password" class="form-control" required autocomplete="new-password" />
-                <div class="form-text">Minimum 12 characters recommended.</div>
+            <div style="margin-bottom:14px">
+                <label class="bo-field-label">Password</label>
+                <input asp-for="Password" type="password" class="bo-input" required autocomplete="new-password" />
+                <div class="bo-info-note" style="margin-top:4px">Minimum 12 characters recommended.</div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Role</label>
-                <select asp-for="Role" class="form-select">
+            <div style="margin-bottom:18px">
+                <label class="bo-field-label">Role</label>
+                <select asp-for="Role" class="bo-select">
                     <option value="Operator">Operator</option>
                     <option value="SuperAdmin">SuperAdmin</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary w-100">
-                <i class="fa-solid fa-check me-1"></i>Create Account
-            </button>
+            <button type="submit" class="bo-btn bo-btn-primary bo-btn-block"><i class="boi boi-sm boi-check boi-mr"></i>Create Account</button>
         </form>
     </div>
 </div>

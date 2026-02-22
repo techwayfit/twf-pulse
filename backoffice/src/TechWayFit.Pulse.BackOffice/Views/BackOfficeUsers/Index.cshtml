@@ -1,21 +1,48 @@
 @model IReadOnlyList<TechWayFit.Pulse.BackOffice.Core.Models.Auth.BackOfficeUserSummary>
 @{
     ViewBag.Title = "Operator Accounts";
+    ViewBag.ActiveNav = "operators";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0 fw-semibold">
-        <i class="fa-solid fa-user-shield me-2 text-primary"></i>Operator Accounts
-    </h1>
-    <a asp-action="Create" class="btn btn-sm btn-primary">
-        <i class="fa-solid fa-plus me-1"></i>New Operator
-    </a>
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon purple"><i class="boi boi-lg boi-settings"></i></div>
+        <div>
+            <div class="bo-page-title">Operator Accounts</div>
+            <div class="bo-page-sub">Back-office operators &amp; admins</div>
+        </div>
+    </div>
+    <a asp-action="Create" class="bo-btn bo-btn-primary bo-btn-sm">+ New Operator</a>
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+<div class="bo-search-bar">
+    <div class="bo-search-field">
+        <label>Username</label>
+        <input type="text" id="filter-username" class="bo-input" placeholder="Search by username…" oninput="boFilterOperators()" />
+    </div>
+    <div class="bo-search-field" style="max-width:150px">
+        <label>Role</label>
+        <select id="filter-role" class="bo-select" onchange="boFilterOperators()">
+            <option value="">All</option>
+            <option value="SuperAdmin">SuperAdmin</option>
+            <option value="Operator">Operator</option>
+        </select>
+    </div>
+    <div class="bo-search-field" style="max-width:140px">
+        <label>Status</label>
+        <select id="filter-status" class="bo-select" onchange="boFilterOperators()">
+            <option value="">All</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+        </select>
+    </div>
+    <button type="button" class="bo-btn bo-btn-ghost bo-btn-sm" onclick="boResetOperatorFilters()">Clear</button>
+</div>
+
+<div class="bo-card">
+    <div class="bo-table-wrap">
+        <table class="bo-table">
+            <thead>
                 <tr>
                     <th>Username</th>
                     <th>Role</th>
@@ -28,51 +55,38 @@
             <tbody>
                 @foreach (var op in Model)
                 {
-                    <tr>
-                        <td><code>@op.Username</code></td>
-                        <td>
-                            <span class="badge @(op.Role == "SuperAdmin" ? "bg-danger" : "bg-primary")">
-                                @op.Role
-                            </span>
-                        </td>
-                        <td>
-                            @if (op.IsActive)
-                            {
-                                <span class="badge bg-success">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Inactive</span>
-                            }
-                        </td>
-                        <td><small>@op.CreatedAt.ToString("dd MMM yyyy")</small></td>
-                        <td><small class="text-muted">@(op.LastLoginAt?.ToString("dd MMM yyyy") ?? "Never")</small></td>
-                        <td class="d-flex gap-1 flex-wrap">
+                    var rolePill = op.Role == "SuperAdmin" ? "superadmin" : "operator";
+                    <tr data-username="@op.Username.ToLower()" data-role="@op.Role" data-status="@(op.IsActive ? "Active" : "Inactive")">
+                        <td class="bo-td-mono">@op.Username</td>
+                        <td><span class="bo-pill @rolePill">@op.Role</span></td>
+                        <td><span class="bo-pill @(op.IsActive ? "active" : "inactive")">@(op.IsActive ? "Active" : "Inactive")</span></td>
+                        <td class="bo-td-muted">@op.CreatedAt.ToString("dd MMM yyyy")</td>
+                        <td class="bo-td-muted">@(op.LastLoginAt?.ToString("dd MMM yyyy") ?? "Never")</td>
+                        <td style="display:flex;gap:6px;flex-wrap:wrap">
                             @if (op.Username != User.Identity!.Name)
                             {
-                                <form asp-action="UpdateRole" method="post" class="d-inline">
+                                <form asp-action="UpdateRole" method="post" style="display:inline">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="UserId" value="@op.Id" />
                                     <input type="hidden" name="NewRole" value="@(op.Role == "SuperAdmin" ? "Operator" : "SuperAdmin")" />
                                     <input type="hidden" name="Reason" value="Role toggled by SuperAdmin" />
-                                    <button type="submit" class="btn btn-xs btn-sm btn-outline-warning py-0">
-                                        → @(op.Role == "SuperAdmin" ? "Operator" : "SuperAdmin")
+                                    <button type="submit" class="bo-btn bo-btn-ghost bo-btn-sm">
+                                        &#8594; @(op.Role == "SuperAdmin" ? "Operator" : "SuperAdmin")
                                     </button>
                                 </form>
-                                <form asp-action="ToggleActive" method="post" class="d-inline">
+                                <form asp-action="ToggleActive" method="post" style="display:inline">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="UserId" value="@op.Id" />
                                     <input type="hidden" name="IsActive" value="@(!op.IsActive)" />
                                     <input type="hidden" name="Reason" value="Toggled by SuperAdmin" />
-                                    <button type="submit"
-                                            class="btn btn-xs btn-sm py-0 @(op.IsActive ? "btn-outline-danger" : "btn-outline-success")">
+                                    <button type="submit" class="bo-btn @(op.IsActive ? "bo-btn-danger" : "bo-btn-success") bo-btn-sm">
                                         @(op.IsActive ? "Deactivate" : "Activate")
                                     </button>
                                 </form>
                             }
                             else
                             {
-                                <span class="text-muted small">Current user</span>
+                                <span class="bo-td-muted" style="font-size:12px">Current user</span>
                             }
                         </td>
                     </tr>
@@ -81,3 +95,23 @@
         </table>
     </div>
 </div>
+
+<script>
+function boFilterOperators() {
+    var username = document.getElementById('filter-username').value.toLowerCase().trim();
+    var role     = document.getElementById('filter-role').value;
+    var status   = document.getElementById('filter-status').value;
+    document.querySelectorAll('.bo-table tbody tr').forEach(function(row) {
+        var match = (!username || row.dataset.username.includes(username))
+                 && (!role     || row.dataset.role   === role)
+                 && (!status   || row.dataset.status === status);
+        row.style.display = match ? '' : 'none';
+    });
+}
+function boResetOperatorFilters() {
+    document.getElementById('filter-username').value = '';
+    document.getElementById('filter-role').value     = '';
+    document.getElementById('filter-status').value   = '';
+    boFilterOperators();
+}
+</script>

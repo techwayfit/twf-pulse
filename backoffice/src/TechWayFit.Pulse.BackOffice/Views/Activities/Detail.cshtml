@@ -1,137 +1,131 @@
 @model TechWayFit.Pulse.BackOffice.Core.Models.Sessions.ActivityDetailViewModel
+@using System.Text.Json
 @{
     ViewBag.Title = $"Activity — {Model.Title}";
+    ViewBag.ActiveNav = "sessions";
     bool isSuperAdmin = User.IsInRole("SuperAdmin");
+    string prettyJson = "(empty)";
+    if (!string.IsNullOrWhiteSpace(Model.ConfigJson))
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(Model.ConfigJson);
+            prettyJson = JsonSerializer.Serialize(doc, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            prettyJson = Model.ConfigJson; // fallback to raw if invalid
+        }
+    }
+    var statusPill = Model.Status switch {
+        "Open"   => "open",
+        "Closed" => "closed",
+        _        => "pending"
+    };
+    var typeCls = Model.Type.ToLower().Replace("generalfeedback", "feedback").Replace("fivewhys", "fivewhys");
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0 fw-semibold">
-        <i class="fa-solid fa-bolt me-2 text-warning"></i>@Model.Title
-        <span class="badge bg-secondary fw-normal ms-1 fs-6">@Model.Type</span>
-    </h1>
+<div class="bo-breadcrumb">
+    <a asp-controller="Sessions" asp-action="Index">Sessions</a> /
+    <a asp-controller="Sessions" asp-action="Detail" asp-route-id="@Model.SessionId">@Model.SessionCode</a> /
+    @Model.Title
+</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon green"><i class="boi boi-lg boi-bolt"></i></div>
+        <div>
+            <div class="bo-page-title">@Model.Title</div>
+            <div class="bo-page-sub">
+                <span class="bo-type-badge @typeCls">@Model.Type</span>
+                <span class="bo-pill @statusPill" style="margin-left:6px">@Model.Status</span>
+            </div>
+        </div>
+    </div>
     <a asp-controller="Sessions" asp-action="Detail" asp-route-id="@Model.SessionId"
-       class="btn btn-sm btn-outline-secondary">
-        <i class="fa-solid fa-arrow-left me-1"></i>Back to Session
-    </a>
+       class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back to Session</a>
 </div>
 
-@if (TempData["Success"] is string ok)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fa-solid fa-circle-check me-2"></i>@ok
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
-@if (TempData["Error"] is string err)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fa-solid fa-triangle-exclamation me-2"></i>@err
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-}
+<div class="bo-stats-row">
+    <div class="bo-mini-stat"><div class="val">@Model.ResponseCount</div><div class="lbl">Responses</div></div>
+    <div class="bo-mini-stat"><div class="val">#@Model.Order</div><div class="lbl">Order</div></div>
+    @if (Model.DurationMinutes.HasValue)
+    {
+        <div class="bo-mini-stat"><div class="val">@Model.DurationMinutes</div><div class="lbl">Min Duration</div></div>
+    }
+    <div class="bo-mini-stat"><div class="val">@(Model.OpenedAt?.ToString("HH:mm") ?? "—")</div><div class="lbl">Opened</div></div>
+    <div class="bo-mini-stat"><div class="val">@(Model.ClosedAt?.ToString("HH:mm") ?? "—")</div><div class="lbl">Closed</div></div>
+</div>
 
-@* ── Activity details ─────────────────────────────────────────────────────── *@
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-transparent border-bottom fw-semibold">Activity Details</div>
-    <div class="card-body">
-        <dl class="row mb-0">
-            <dt class="col-sm-3">ID</dt>
-            <dd class="col-sm-9"><code class="small">@Model.Id</code></dd>
-            <dt class="col-sm-3">Session</dt>
-            <dd class="col-sm-9">
-                <a asp-controller="Sessions" asp-action="Detail" asp-route-id="@Model.SessionId">
-                    <code>@Model.SessionCode</code>
-                </a>
-            </dd>
-            <dt class="col-sm-3">Order</dt>
-            <dd class="col-sm-9">#@Model.Order</dd>
-            <dt class="col-sm-3">Type</dt>
-            <dd class="col-sm-9">@Model.Type</dd>
-            <dt class="col-sm-3">Status</dt>
-            <dd class="col-sm-9">
-                @{
-                    var badge = Model.Status switch {
-                        "Open"   => "bg-success",
-                        "Closed" => "bg-secondary",
-                        _        => "bg-light text-dark border"
-                    };
+<div class="bo-two-col">
+    <div class="bo-card">
+        <div class="bo-card-header">Activity Details</div>
+        <div class="bo-card-body">
+            <div class="bo-info-grid cols2">
+                <div class="bo-info-item"><div class="lbl">Type</div><div class="val"><span class="bo-type-badge @typeCls">@Model.Type</span></div></div>
+                <div class="bo-info-item"><div class="lbl">Status</div><div class="val"><span class="bo-pill @statusPill">@Model.Status</span></div></div>
+                <div class="bo-info-item"><div class="lbl">Session</div><div class="val"><a asp-controller="Sessions" asp-action="Detail" asp-route-id="@Model.SessionId" class="bo-link-btn"><span class="bo-td-code">@Model.SessionCode</span></a></div></div>
+                <div class="bo-info-item"><div class="lbl">Responses</div><div class="val bo-td-mono">@Model.ResponseCount</div></div>
+                <div class="bo-info-item"><div class="lbl">Opened</div><div class="val bo-td-muted">@(Model.OpenedAt?.ToString("dd MMM yyyy HH:mm") ?? "—")</div></div>
+                <div class="bo-info-item"><div class="lbl">Closed</div><div class="val bo-td-muted">@(Model.ClosedAt?.ToString("dd MMM yyyy HH:mm") ?? "—")</div></div>
+                @if (!string.IsNullOrWhiteSpace(Model.Prompt))
+                {
+                    <div class="bo-info-item" style="grid-column:1/-1"><div class="lbl">Prompt</div><div class="val">@Model.Prompt</div></div>
                 }
-                <span class="badge @badge">@Model.Status</span>
-            </dd>
-            <dt class="col-sm-3">Responses</dt>
-            <dd class="col-sm-9"><span class="badge bg-primary">@Model.ResponseCount</span></dd>
-            @if (Model.DurationMinutes.HasValue)
-            {
-                <dt class="col-sm-3">Duration</dt>
-                <dd class="col-sm-9">@Model.DurationMinutes min</dd>
-            }
-            <dt class="col-sm-3">Opened</dt>
-            <dd class="col-sm-9">@(Model.OpenedAt?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
-            <dt class="col-sm-3">Closed</dt>
-            <dd class="col-sm-9">@(Model.ClosedAt?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
-            @if (!string.IsNullOrWhiteSpace(Model.Prompt))
-            {
-                <dt class="col-sm-3">Prompt</dt>
-                <dd class="col-sm-9">@Model.Prompt</dd>
-            }
-        </dl>
+                <div class="bo-info-item" style="grid-column:1/-1"><div class="lbl">ID</div><div class="val bo-td-mono" style="font-size:11px">@Model.Id</div></div>
+            </div>
+        </div>
     </div>
-</div>
 
-@* ── Config JSON ──────────────────────────────────────────────────────────── *@
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-transparent border-bottom fw-semibold d-flex justify-content-between align-items-center">
-        <span><i class="fa-solid fa-code me-2 text-muted"></i>Config JSON</span>
-        @if (isSuperAdmin)
-        {
-            <small class="text-muted fw-normal">SuperAdmin — editable</small>
-        }
-        else
-        {
-            <small class="text-muted fw-normal">Read-only</small>
-        }
-    </div>
-    <div class="card-body p-0">
-
-        @if (isSuperAdmin)
-        {
-            <form asp-action="UpdateConfig" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@Model.Id" />
-                <textarea name="configJson" id="configJson" rows="20"
-                          class="form-control border-0 rounded-0 font-monospace"
-                          style="font-size:.82rem;resize:vertical"
-                          spellcheck="false">@Model.ConfigJson</textarea>
-                <div class="d-flex gap-2 align-items-center p-3 border-top">
-                    <input type="text" name="reason" class="form-control form-control-sm"
-                           placeholder="Reason for change (required)" required style="max-width:360px" />
-                    <button type="submit" class="btn btn-sm btn-warning"
-                            onclick="return confirm('Save changes to ConfigJson? This is audited.')">
-                        <i class="fa-solid fa-floppy-disk me-1"></i>Save Config
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="formatBtn">
-                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Format JSON
-                    </button>
-                </div>
-            </form>
-        }
-        else
-        {
-            <pre class="m-0 p-3 bg-dark text-light" style="font-size:.82rem;white-space:pre-wrap;word-break:break-all;min-height:200px">@(string.IsNullOrWhiteSpace(Model.ConfigJson) ? "(empty)" : Model.ConfigJson)</pre>
-        }
+    <div class="bo-card">
+        <div class="bo-card-header">
+            Config JSON
+            @if (isSuperAdmin)
+            {
+                <span style="color:var(--text-muted);font-weight:400;font-size:12px;margin-left:auto">SuperAdmin &mdash; editable</span>
+            }
+        </div>
+        <div class="bo-card-body" style="padding:0">
+            @if (isSuperAdmin)
+            {
+                <form asp-action="UpdateConfig" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <textarea name="configJson" id="configJson" rows="12"
+                              class="bo-code-editor"
+                              spellcheck="false">@prettyJson</textarea>
+                    <div style="display:flex;gap:8px;align-items:center;padding:12px;border-top:1px solid var(--border)">
+                        <input type="text" name="reason" class="bo-input"
+                               placeholder="Reason for change (required)" required style="flex:1" />
+                        <button type="submit" class="bo-btn bo-btn-warning bo-btn-sm"
+                                onclick="return boConfirmAction('Save changes to ConfigJson? This is audited.')">
+                            <i class="boi boi-sm boi-save boi-mr"></i>Save Config
+                        </button>
+                        <button type="button" class="bo-btn bo-btn-ghost bo-btn-sm" onclick="boFormatJson('configJson')">
+                            <i class="boi boi-sm boi-settings boi-mr"></i>Format JSON
+                        </button>
+                    </div>
+                </form>
+            }
+            else
+            {
+                <pre class="bo-code-editor" style="height:auto;min-height:200px;padding:16px">@prettyJson</pre>
+            }
+        </div>
     </div>
 </div>
 
 @if (isSuperAdmin)
 {
     <script>
-        document.getElementById('formatBtn')?.addEventListener('click', () => {
-            const ta = document.getElementById('configJson');
+        function boFormatJson(id) {
+            const ta = document.getElementById(id);
+            if (!ta) return;
             try {
                 ta.value = JSON.stringify(JSON.parse(ta.value), null, 2);
             } catch {
-                alert('Invalid JSON — fix syntax errors before formatting.');
+                alert('Invalid JSON \u2014 fix syntax errors before formatting.');
             }
-        });
+        }
     </script>
 }

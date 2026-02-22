@@ -1,44 +1,58 @@
 @model TechWayFit.Pulse.BackOffice.Core.Models.Audit.AuditLogEntry
 @{
     ViewBag.Title = "Audit Record";
+    ViewBag.ActiveNav = "audit";
+    var actCls = Model.Action?.ToLower() switch {
+        var a when a?.Contains("create")  == true => "create",
+        var a when a?.Contains("update")  == true => "update",
+        var a when a?.Contains("delete")  == true => "delete",
+        var a when a?.Contains("disable") == true => "disable",
+        _ => ""
+    };
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0 fw-semibold">
-        <i class="fa-solid fa-scroll me-2 text-warning"></i>Audit Record
-    </h1>
-    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
-        <i class="fa-solid fa-arrow-left me-1"></i>Back
-    </a>
+<div class="bo-breadcrumb"><a asp-action="Index">Audit Log</a> / Record</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon orange"><i class="boi boi-lg boi-audit"></i></div>
+        <div>
+            <div class="bo-page-title">Audit Record</div>
+            <div class="bo-page-sub"><span class="bo-action-tag @actCls">@Model.Action</span></div>
+        </div>
+    </div>
+    <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
 </div>
 
-<div class="card border-0 shadow-sm">
-    <div class="card-body">
-        <dl class="row mb-0">
-            <dt class="col-sm-3">ID</dt>
-            <dd class="col-sm-9"><code>@Model.Id</code></dd>
-            <dt class="col-sm-3">Occurred</dt>
-            <dd class="col-sm-9">@Model.OccurredAt.ToString("dd MMM yyyy HH:mm:ss") UTC</dd>
-            <dt class="col-sm-3">Operator</dt>
-            <dd class="col-sm-9"><code>@Model.OperatorId</code></dd>
-            <dt class="col-sm-3">Role</dt>
-            <dd class="col-sm-9">@Model.OperatorRole</dd>
-            <dt class="col-sm-3">Action</dt>
-            <dd class="col-sm-9"><strong>@Model.Action</strong></dd>
-            <dt class="col-sm-3">Entity Type</dt>
-            <dd class="col-sm-9">@Model.EntityType</dd>
-            <dt class="col-sm-3">Entity ID</dt>
-            <dd class="col-sm-9"><code>@Model.EntityId</code></dd>
-            <dt class="col-sm-3">Field</dt>
-            <dd class="col-sm-9">@(Model.FieldName ?? "—")</dd>
-            <dt class="col-sm-3">Old Value</dt>
-            <dd class="col-sm-9"><pre class="bg-light p-2 rounded small mb-0">@(Model.OldValue ?? "—")</pre></dd>
-            <dt class="col-sm-3">New Value</dt>
-            <dd class="col-sm-9"><pre class="bg-light p-2 rounded small mb-0">@(Model.NewValue ?? "—")</pre></dd>
-            <dt class="col-sm-3">Reason</dt>
-            <dd class="col-sm-9">@(Model.Reason ?? "—")</dd>
-            <dt class="col-sm-3">IP Address</dt>
-            <dd class="col-sm-9"><code>@Model.IpAddress</code></dd>
-        </dl>
+<div class="bo-card">
+    <div class="bo-card-header">Event Details</div>
+    <div class="bo-card-body">
+        <div class="bo-info-grid cols3">
+            <div class="bo-info-item"><div class="lbl">Occurred</div><div class="val bo-td-mono">@Model.OccurredAt.ToString("dd MMM yyyy HH:mm:ss") UTC</div></div>
+            <div class="bo-info-item"><div class="lbl">Operator</div><div class="val bo-td-mono">@Model.OperatorId</div></div>
+            <div class="bo-info-item"><div class="lbl">Role</div><div class="val"><span class="bo-pill @(Model.OperatorRole == "SuperAdmin" ? "superadmin" : "operator")">@Model.OperatorRole</span></div></div>
+            <div class="bo-info-item"><div class="lbl">Action</div><div class="val"><span class="bo-action-tag @actCls">@Model.Action</span></div></div>
+            <div class="bo-info-item"><div class="lbl">Entity Type</div><div class="val bo-td-muted">@Model.EntityType</div></div>
+            <div class="bo-info-item"><div class="lbl">Entity ID</div><div class="val bo-td-mono" style="font-size:11px">@Model.EntityId</div></div>
+            <div class="bo-info-item"><div class="lbl">Field</div><div class="val bo-td-muted">@(Model.FieldName ?? "—")</div></div>
+            <div class="bo-info-item"><div class="lbl">Reason</div><div class="val">@(Model.Reason ?? "—")</div></div>
+            <div class="bo-info-item"><div class="lbl">IP Address</div><div class="val bo-td-mono">@Model.IpAddress</div></div>
+            <div class="bo-info-item" style="grid-column:1/-1"><div class="lbl">Record ID</div><div class="val bo-td-mono" style="font-size:11px">@Model.Id</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="bo-two-col" style="margin-top:16px">
+    <div class="bo-card">
+        <div class="bo-card-header">Old Value</div>
+        <div class="bo-card-body">
+            <pre class="bo-code-editor" style="height:auto;min-height:80px;padding:12px">@(Model.OldValue ?? "—")</pre>
+        </div>
+    </div>
+    <div class="bo-card">
+        <div class="bo-card-header">New Value</div>
+        <div class="bo-card-body">
+            <pre class="bo-code-editor" style="height:auto;min-height:80px;padding:12px">@(Model.NewValue ?? "—")</pre>
+        </div>
     </div>
 </div>

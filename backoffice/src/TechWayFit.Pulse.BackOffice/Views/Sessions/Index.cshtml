@@ -2,49 +2,55 @@
 @using TechWayFit.Pulse.Domain.Enums
 @{
     ViewBag.Title = "Sessions";
+    ViewBag.ActiveNav = "sessions";
     var query = ViewBag.Query as TechWayFit.Pulse.BackOffice.Core.Models.Sessions.SessionSearchQuery;
     var statusList = ViewBag.StatusList as SessionStatus[];
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0 fw-semibold">
-        <i class="fa-solid fa-calendar me-2 text-success"></i>Sessions
-    </h1>
-    <span class="text-muted small">@Model.TotalCount result(s)</span>
-</div>
-
-<form method="get" class="card border-0 shadow-sm mb-4 p-3">
-    <div class="row g-2 align-items-end">
-        <div class="col-md-3">
-            <label class="form-label small mb-1">Code</label>
-            <input type="text" name="code" class="form-control form-control-sm" value="@query?.CodeContains" />
-        </div>
-        <div class="col-md-3">
-            <label class="form-label small mb-1">Title</label>
-            <input type="text" name="title" class="form-control form-control-sm" value="@query?.TitleContains" />
-        </div>
-        <div class="col-md-2">
-            <label class="form-label small mb-1">Status</label>
-            <select name="status" class="form-select form-select-sm">
-                <option value="">All</option>
-                @foreach (var s in statusList!)
-                {
-                    <option value="@((int)s)" selected="@(query?.Status == s)">@s</option>
-                }
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary btn-sm w-100">
-                <i class="fa-solid fa-magnifying-glass me-1"></i>Search
-            </button>
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon green"><i class="boi boi-lg boi-sessions"></i></div>
+        <div>
+            <div class="bo-page-title">Sessions</div>
+            <div class="bo-page-sub">All facilitator sessions</div>
         </div>
     </div>
+    <span style="font-size:12px;color:var(--text-muted);font-family:var(--mono);align-self:flex-end">@Model.TotalCount result(s)</span>
+</div>
+
+<form method="get" class="bo-search-bar">
+    <div class="bo-search-field" style="max-width:160px">
+        <label>Code</label>
+        <input type="text" name="code" class="bo-input" value="@query?.CodeContains" placeholder="e.g. ABC-123" />
+    </div>
+    <div class="bo-search-field">
+        <label>Title</label>
+        <input type="text" name="title" class="bo-input" value="@query?.TitleContains" placeholder="Search by title…" />
+    </div>
+    <div class="bo-search-field" style="max-width:150px">
+        <label>Status</label>
+        <select name="status" class="bo-select">
+            <option value="">All</option>
+            @foreach (var s in statusList!)
+            {
+                @if (query?.Status == s)
+                {
+                    <option value="@((int)s)" selected="selected">@s</option>
+                }
+                else
+                {
+                    <option value="@((int)s)">@s</option>
+                }
+            }
+        </select>
+    </div>
+    <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm"><i class="boi boi-sm boi-search boi-mr"></i>Search</button>
 </form>
 
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
+<div class="bo-card">
+    <div class="bo-table-wrap">
+        <table class="bo-table">
+            <thead>
                 <tr>
                     <th>Code</th>
                     <th>Title</th>
@@ -58,38 +64,46 @@
             <tbody>
                 @foreach (var s in Model.Items)
                 {
-                    var badgeClass = s.Status switch
+                    var pillClass = s.Status switch
                     {
-                        SessionStatus.Live => "bg-success",
-                        SessionStatus.Draft => "bg-secondary",
-                        SessionStatus.Ended => "bg-dark",
-                        SessionStatus.Expired => "bg-danger",
-                        _ => "bg-secondary"
+                        SessionStatus.Live    => "live",
+                        SessionStatus.Draft   => "draft",
+                        SessionStatus.Ended   => "closed",
+                        SessionStatus.Expired => "inactive",
+                        _                     => "pending"
                     };
-                    <tr>
-                        <td><code>@s.Code</code></td>
-                        <td>@s.Title</td>
-                        <td><span class="badge @badgeClass">@s.Status</span></td>
-                        <td><small>@s.OwnerEmail</small></td>
-                        <td>@s.ParticipantCount</td>
-                        <td>
-                            @if (s.ExpiresAt < DateTimeOffset.UtcNow)
-                            {
-                                <span class="text-danger small">@s.ExpiresAt.ToString("dd MMM yyyy")</span>
-                            }
-                            else
-                            {
-                                <small class="text-muted">@s.ExpiresAt.ToString("dd MMM yyyy")</small>
-                            }
-                        </td>
-                        <td>
-                            <a asp-action="Detail" asp-route-id="@s.Id" class="btn btn-sm btn-outline-secondary">
-                                View
-                            </a>
-                        </td>
+                    var expired = s.ExpiresAt < DateTimeOffset.UtcNow;
+                    <tr class="clickable" onclick="location.href='@Url.Action("Detail", "Sessions", new { id = s.Id })'">
+                        <td class="bo-td-code">@s.Code</td>
+                        <td class="bo-td-primary">@s.Title</td>
+                        <td><span class="bo-pill @pillClass">@s.Status</span></td>
+                        <td class="bo-td-mono">@s.OwnerEmail</td>
+                        <td class="bo-td-mono">@s.ParticipantCount</td>
+                        <td class="bo-td-muted" style="@(expired ? "color:var(--accent)!important" : "")">@s.ExpiresAt.ToString("dd MMM yyyy")</td>
+                        <td><a class="bo-link-btn" asp-action="Detail" asp-route-id="@s.Id">View →</a></td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 </div>
+
+@if (Model.TotalCount > Model.PageSize)
+{
+    var totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:8px">
+        <span style="font-size:12px;color:var(--text-muted);font-family:var(--mono)">Page @Model.Page of @totalPages &mdash; @Model.TotalCount result(s)</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+            @for (var p = 1; p <= totalPages; p++)
+            {
+                <a class="bo-btn @(p == Model.Page ? "bo-btn-primary" : "bo-btn-ghost") bo-btn-sm"
+                   asp-action="Index"
+                   asp-route-code="@query?.CodeContains"
+                   asp-route-title="@query?.TitleContains"
+                   asp-route-status="@((int?)query?.Status)"
+                   asp-route-ownerId="@query?.FacilitatorUserId"
+                   asp-route-page="@p">@p</a>
+            }
+        </div>
+    </div>
+}

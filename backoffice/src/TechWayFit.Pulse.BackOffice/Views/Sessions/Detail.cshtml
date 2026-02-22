@@ -2,210 +2,212 @@
 @using TechWayFit.Pulse.Domain.Enums
 @{
     ViewBag.Title = $"Session — {Model.Code}";
+    ViewBag.ActiveNav = "sessions";
     bool isSuperAdmin = User.IsInRole("SuperAdmin");
+    var statusPill = Model.Status switch {
+        SessionStatus.Live    => "live",
+        SessionStatus.Draft   => "draft",
+        SessionStatus.Ended   => "closed",
+        SessionStatus.Expired => "inactive",
+        _                     => "pending"
+    };
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0 fw-semibold">
-        <i class="fa-solid fa-calendar-check me-2 text-success"></i>@Model.Code — @Model.Title
-    </h1>
-    <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
-        <i class="fa-solid fa-arrow-left me-1"></i>Back
-    </a>
+<div class="bo-breadcrumb"><a asp-action="Index">Sessions</a> / @Model.Code</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon green"><i class="boi boi-lg boi-sessions"></i></div>
+        <div>
+            <div class="bo-page-title">@Model.Code <span style="color:var(--text-muted);font-weight:400">— @Model.Title</span></div>
+            <div class="bo-page-sub">
+                <span class="bo-pill @statusPill">@Model.Status</span>
+                @if (Model.IsAdminLocked) { <span class="bo-pill inactive" style="margin-left:6px">Admin Locked</span> }
+            </div>
+        </div>
+    </div>
+    <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
 </div>
 
-@* ── Session details ───────────────────────────────────────────────────────── *@
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-transparent border-bottom fw-semibold">Session Details</div>
-    <div class="card-body">
-        <dl class="row mb-0">
-            <dt class="col-sm-3">ID</dt>
-            <dd class="col-sm-9"><code class="small">@Model.Id</code></dd>
-            <dt class="col-sm-3">Code</dt>
-            <dd class="col-sm-9"><code>@Model.Code</code></dd>
-            <dt class="col-sm-3">Status</dt>
-            <dd class="col-sm-9"><span class="badge bg-primary">@Model.Status</span>
-                @if (Model.IsAdminLocked) { <span class="badge bg-danger ms-1">Admin Locked</span> }
-            </dd>
-            <dt class="col-sm-3">Owner</dt>
-            <dd class="col-sm-9">@Model.OwnerEmail</dd>
-            <dt class="col-sm-3">Participants</dt>
-            <dd class="col-sm-9">@Model.ParticipantCount</dd>
-            <dt class="col-sm-3">Created</dt>
-            <dd class="col-sm-9">@Model.CreatedAt.ToString("dd MMM yyyy HH:mm") UTC</dd>
-            <dt class="col-sm-3">Expires</dt>
-            <dd class="col-sm-9">@Model.ExpiresAt.ToString("dd MMM yyyy HH:mm") UTC</dd>
-            <dt class="col-sm-3">Goal</dt>
-            <dd class="col-sm-9">@(Model.Goal ?? "—")</dd>
-        </dl>
-    </div>
+<div class="bo-stats-row">
+    <div class="bo-mini-stat"><div class="val">@Model.ParticipantCount</div><div class="lbl">Participants</div></div>
+    <div class="bo-mini-stat"><div class="val">@Model.Activities.Count</div><div class="lbl">Activities</div></div>
+    <div class="bo-mini-stat"><div class="val">@Model.Activities.Count(a => a.Status == "Open")</div><div class="lbl">Open</div></div>
+    <div class="bo-mini-stat"><div class="val">@Model.ExpiresAt.ToString("dd MMM")</div><div class="lbl">Expires</div></div>
+    <div class="bo-mini-stat"><div class="val">@Model.CreatedAt.ToString("dd MMM")</div><div class="lbl">Created</div></div>
 </div>
 
-@* ── Override panel ────────────────────────────────────────────────────────── *@
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-transparent border-bottom fw-semibold">
-        <i class="fa-solid fa-pen-to-square me-2 text-warning"></i>Override Actions
-        <small class="text-muted fw-normal ms-2">All changes are audited</small>
-    </div>
-    <div class="card-body">
-        <div class="row g-3">
+<div class="bo-tab-bar" id="session-tabs">
+    <button class="bo-tab active" onclick="boSwitchTab('tab-overview', this)">Overview</button>
+    <button class="bo-tab" onclick="boSwitchTab('tab-activities', this)">Activities (@Model.Activities.Count)</button>
+    <button class="bo-tab" onclick="boSwitchTab('tab-admin', this)">Admin Actions</button>
+</div>
 
-            @if (Model.Status == SessionStatus.Live)
-            {
-                <div class="col-md-4">
-                    <form asp-action="ForceEnd" method="post" class="border rounded p-3"
-                          onsubmit="return confirm('Force-end this live session?')">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Id" />
-                        <label class="form-label small fw-semibold">Force End Session</label>
-                        <input type="text" name="reason" class="form-control form-control-sm mb-2"
-                               placeholder="Reason (required)" required />
-                        <button type="submit" class="btn btn-sm btn-warning w-100">Force End</button>
-                    </form>
+@* ── Overview tab ───────────────────────────────────────────────────────── *@
+<div class="bo-tab-pane" id="tab-overview">
+    <div class="bo-two-col">
+        <div class="bo-card">
+            <div class="bo-card-header">Session Details</div>
+            <div class="bo-card-body">
+                <div class="bo-info-grid cols2">
+                    <div class="bo-info-item"><div class="lbl">Code</div><div class="val bo-td-code">@Model.Code</div></div>
+                    <div class="bo-info-item"><div class="lbl">Status</div><div class="val"><span class="bo-pill @statusPill">@Model.Status</span></div></div>
+                    <div class="bo-info-item"><div class="lbl">Owner</div><div class="val bo-td-mono">@Model.OwnerEmail</div></div>
+                    <div class="bo-info-item"><div class="lbl">Goal</div><div class="val">@(Model.Goal ?? "—")</div></div>
+                    <div class="bo-info-item"><div class="lbl">Created</div><div class="val bo-td-muted">@Model.CreatedAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+                    <div class="bo-info-item"><div class="lbl">Expires</div><div class="val bo-td-muted">@Model.ExpiresAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+                    <div class="bo-info-item" style="grid-column:1/-1"><div class="lbl">Internal ID</div><div class="val bo-td-mono" style="font-size:11px">@Model.Id</div></div>
                 </div>
-            }
-
-            <div class="col-md-4">
-                <form asp-action="ExtendExpiry" method="post" class="border rounded p-3">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.Id" />
-                    <label class="form-label small fw-semibold">Extend Expiry</label>
-                    <div class="input-group input-group-sm mb-2">
-                        <input type="number" name="additionalDays" class="form-control"
-                               min="1" max="@(isSuperAdmin ? 365 : 30)" value="7" required />
-                        <span class="input-group-text">days</span>
-                    </div>
-                    <input type="text" name="reason" class="form-control form-control-sm mb-2"
-                           placeholder="Reason (required)" required />
-                    <button type="submit" class="btn btn-sm btn-primary w-100">Extend</button>
-                </form>
             </div>
+        </div>
 
-            <div class="col-md-4">
-                <form asp-action="SetLock" method="post" class="border rounded p-3">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="id" value="@Model.Id" />
-                    <input type="hidden" name="locked" value="@(!Model.IsAdminLocked)" />
-                    <label class="form-label small fw-semibold">
-                        @(Model.IsAdminLocked ? "Unlock Session" : "Lock Session (prevent facilitator edits)")
-                    </label>
-                    <input type="text" name="reason" class="form-control form-control-sm mb-2"
-                           placeholder="Reason (required)" required />
-                    <button type="submit"
-                            class="btn btn-sm w-100 @(Model.IsAdminLocked ? "btn-success" : "btn-secondary")">
-                        @(Model.IsAdminLocked ? "Unlock" : "Lock")
-                    </button>
-                </form>
+        <div class="bo-card">
+            <div class="bo-card-header">Activity Composition</div>
+            <div class="bo-card-body">
+                @if (!Model.Activities.Any())
+                {
+                    <p class="bo-td-muted" style="margin:0">No activities.</p>
+                }
+                else
+                {
+                    @foreach (var grp in Model.Activities.GroupBy(a => a.Type))
+                    {
+                        var typeCls = grp.Key.ToLower().Replace("generalfeedback", "feedback").Replace("fivewhys", "fivewhys");
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                            <span class="bo-type-badge @typeCls">@grp.Key</span>
+                            <span class="bo-td-muted">&#215;@grp.Count()</span>
+                        </div>
+                    }
+                }
             </div>
-
-            @if (isSuperAdmin)
-            {
-                <div class="col-md-4">
-                    <form asp-action="Delete" method="post" class="border border-danger rounded p-3"
-                          onsubmit="return confirm('PERMANENTLY delete this session and all its data?')">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Id" />
-                        <label class="form-label small fw-semibold text-danger">
-                            Delete Session <span class="badge bg-danger">SuperAdmin</span>
-                        </label>
-                        <input type="text" name="confirmationCode" class="form-control form-control-sm mb-2"
-                               placeholder="Type session code: @Model.Code" required />
-                        <input type="text" name="reason" class="form-control form-control-sm mb-2"
-                               placeholder="Reason (required)" required />
-                        <button type="submit" class="btn btn-sm btn-danger w-100">
-                            <i class="fa-solid fa-trash me-1"></i>Delete
-                        </button>
-                    </form>
-                </div>
-            }
         </div>
     </div>
 </div>
 
-@* ── Activities ────────────────────────────────────────────────────────────── *@
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-transparent border-bottom fw-semibold">Activities (@Model.Activities.Count)</div>
-    <table class="table table-sm align-middle mb-0">
-        <thead class="table-light">
-            <tr><th>#</th><th>Name</th><th>Type</th><th>Status</th><th>Opened</th><th>Closed</th><th></th></tr>
-        </thead>
-        <tbody>
-            @foreach (var a in Model.Activities)
-            {
-                var typeIcon = a.Type switch {
-                    "Poll"            => "fa-chart-bar",
-                    "Quiz"            => "fa-circle-question",
-                    "WordCloud"       => "fa-cloud",
-                    "QnA"             => "fa-comments",
-                    "Rating"          => "fa-star",
-                    "Quadrant"        => "fa-table-cells",
-                    "FiveWhys"        => "fa-magnifying-glass",
-                    "GeneralFeedback" => "fa-comment-dots",
-                    _                 => "fa-circle"
-                };
-                var statusBadge = a.Status switch {
-                    "Open"    => "bg-success",
-                    "Closed"  => "bg-secondary",
-                    _         => "bg-light text-dark border"
-                };
-                var modalId = $"cfg-{a.Id:N}";
-                <tr>
-                    <td>@a.Order</td>
-                    <td>
-                        <a asp-controller="Activities" asp-action="Detail" asp-route-id="@a.Id" class="text-decoration-none fw-medium">@a.Title</a>
-                        @if (!string.IsNullOrWhiteSpace(a.ConfigJson))
-                        {
-                            <button type="button" class="btn btn-xs btn-sm btn-outline-secondary ms-2 py-0 px-1"
-                                    data-bs-toggle="modal" data-bs-target="#@modalId"
-                                    title="View Config JSON">
-                                <i class="fa-solid fa-code fa-xs"></i>
-                            </button>
-                        }
-                    </td>
-                    <td><i class="fa-solid @typeIcon me-1 text-muted"></i>@a.Type</td>
-                    <td><span class="badge @statusBadge">@a.Status</span></td>
-                    <td><small class="text-muted">@(a.OpenedAt?.ToString("HH:mm") ?? "—")</small></td>
-                    <td><small class="text-muted">@(a.ClosedAt?.ToString("HH:mm") ?? "—")</small></td>
-                    <td>
-                        @if (a.Status == "Open")
-                        {
-                            <form asp-action="ForceCloseActivity" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="activityId" value="@a.Id" />
-                                <input type="hidden" name="sessionId" value="@Model.Id" />
-                                <input type="text" name="reason" class="form-control form-control-sm d-inline w-auto me-1"
-                                       placeholder="Reason" required style="width:120px!important" />
-                                <button type="submit" class="btn btn-xs btn-sm btn-warning">Force Close</button>
-                            </form>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-@* ── Config JSON modals ────────────────────────────────────────────────────── *@
-@foreach (var a in Model.Activities.Where(x => !string.IsNullOrWhiteSpace(x.ConfigJson)))
-{
-    var modalId = $"cfg-{a.Id:N}";
-    <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@(modalId)-label" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title fw-semibold" id="@(modalId)-label">
-                        <i class="fa-solid fa-code me-2 text-muted"></i>Config — @a.Title
-                        <span class="badge bg-light text-dark border ms-2 fw-normal">@a.Type</span>
-                    </h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <pre class="m-0 p-3 bg-dark text-light rounded-bottom" style="font-size:.8rem;white-space:pre-wrap;word-break:break-all">@a.ConfigJson</pre>
-                </div>
-                <div class="modal-footer py-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
+@* ── Activities tab ─────────────────────────────────────────────────────── *@
+<div class="bo-tab-pane" id="tab-activities" style="display:none">
+    <div class="bo-card">
+        <div class="bo-table-wrap">
+            <table class="bo-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px">#</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Opened</th>
+                        <th>Closed</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model.Activities)
+                    {
+                        var actStatusPill = a.Status switch {
+                            "Open"   => "open",
+                            "Closed" => "closed",
+                            _        => "pending"
+                        };
+                        var typeCls = a.Type.ToLower().Replace("generalfeedback", "feedback").Replace("fivewhys", "fivewhys");
+                        <tr>
+                            <td class="bo-td-muted">@a.Order</td>
+                            <td class="bo-td-primary">
+                                <a asp-controller="Activities" asp-action="Detail" asp-route-id="@a.Id" class="bo-link-btn">@a.Title</a>
+                            </td>
+                            <td><span class="bo-type-badge @typeCls">@a.Type</span></td>
+                            <td><span class="bo-pill @actStatusPill">@a.Status</span></td>
+                            <td class="bo-td-muted">@(a.OpenedAt?.ToString("HH:mm") ?? "—")</td>
+                            <td class="bo-td-muted">@(a.ClosedAt?.ToString("HH:mm") ?? "—")</td>
+                            <td>
+                                @if (a.Status == "Open")
+                                {
+                                    <form asp-action="ForceCloseActivity" method="post" style="display:flex;gap:6px;align-items:center">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="activityId" value="@a.Id" />
+                                        <input type="hidden" name="sessionId" value="@Model.Id" />
+                                        <input type="text" name="reason" class="bo-input" placeholder="Reason" required style="width:120px;padding:4px 8px;font-size:12px" />
+                                        <button type="submit" class="bo-btn bo-btn-warning bo-btn-sm">Force Close</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
-}
+</div>
+
+@* ── Admin Actions tab ───────────────────────────────────────────────────── *@
+<div class="bo-tab-pane" id="tab-admin" style="display:none">
+    <div class="bo-section-header">Override Actions &mdash; <span style="color:var(--text-muted);font-weight:400">All changes are audited</span></div>
+    <div class="bo-actions-grid cols3">
+
+        @* Extend Expiry *@
+        <div class="bo-action-card">
+            <div class="bo-action-title"><i class="boi boi-sm boi-sessions boi-mr"></i>Extend Expiry</div>
+            <div class="bo-action-desc">Add days to the session expiry date.</div>
+            <form asp-action="ExtendExpiry" method="post" style="margin-top:12px">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <label class="bo-field-label">Additional days</label>
+                <input type="number" name="additionalDays" class="bo-input" min="1" max="@(isSuperAdmin ? 365 : 30)" value="7" required style="margin-bottom:8px" />
+                <label class="bo-field-label">Reason</label>
+                <input type="text" name="reason" class="bo-input" placeholder="Required" required style="margin-bottom:10px" />
+                <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm">Extend</button>
+            </form>
+        </div>
+
+        @* Lock / Unlock *@
+        <div class="bo-action-card">
+            @{ var lockIconCls = Model.IsAdminLocked ? "boi-unlock" : "boi-lock"; }
+            <div class="bo-action-title"><i class="boi boi-sm boi-mr @lockIconCls"></i>@(Model.IsAdminLocked ? "Unlock Session" : "Lock Session")</div>
+            <div class="bo-action-desc">@(Model.IsAdminLocked ? "Remove admin lock and allow facilitator edits." : "Prevent facilitator from making edits.")</div>
+            <form asp-action="SetLock" method="post" style="margin-top:12px">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="locked" value="@(!Model.IsAdminLocked)" />
+                <label class="bo-field-label">Reason</label>
+                <input type="text" name="reason" class="bo-input" placeholder="Required" required style="margin-bottom:10px" />
+                <button type="submit" class="bo-btn @(Model.IsAdminLocked ? "bo-btn-success" : "bo-btn-warning") bo-btn-sm">
+                    @(Model.IsAdminLocked ? "Unlock" : "Lock")
+                </button>
+            </form>
+        </div>
+
+        @* Force End *@
+        @if (Model.Status == SessionStatus.Live)
+        {
+            <div class="bo-action-card">
+                <div class="bo-action-title"><i class="boi boi-sm boi-bolt boi-mr"></i>Force End Session</div>
+                <div class="bo-action-desc">Immediately end this live session.</div>
+                <form asp-action="ForceEnd" method="post" style="margin-top:12px"
+                      onsubmit="return boConfirmAction('Force-end this live session?')">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <label class="bo-field-label">Reason</label>
+                    <input type="text" name="reason" class="bo-input" placeholder="Required" required style="margin-bottom:10px" />
+                    <button type="submit" class="bo-btn bo-btn-warning bo-btn-sm">Force End</button>
+                </form>
+            </div>
+        }
+
+        @* Delete (SuperAdmin only) *@
+        @if (isSuperAdmin)
+        {
+            <div class="bo-action-card danger">
+                <div class="bo-action-title"><i class="boi boi-sm boi-trash boi-mr"></i>Delete Session <span class="bo-pill locked" style="font-size:10px;padding:2px 7px;vertical-align:middle">SuperAdmin</span></div>
+                <div class="bo-action-desc">Permanently delete this session and all its data. This cannot be undone.</div>
+                <form asp-action="Delete" method="post" style="margin-top:12px"
+                      onsubmit="return boConfirmAction('PERMANENTLY delete this session and all its data?')">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <label class="bo-field-label">Type session code to confirm</label>
+                    <input type="text" name="confirmationCode" class="bo-input" placeholder="@Model.Code" required style="margin-bottom:8px" />
+                    <label class="bo-field-label">Reason</label>
+                    <input type="text" name="reason" class="bo-input" placeholder="Required" required style="margin-bottom:10px" />
+                    <button type="submit" class="bo-btn bo-btn-danger bo-btn-sm">Delete Permanently</button>
+                </form>
+            </div>
+        }
+    </div>

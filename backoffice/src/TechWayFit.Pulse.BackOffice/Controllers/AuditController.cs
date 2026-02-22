@@ -18,10 +18,10 @@ public sealed class AuditController : Controller
 
     [HttpGet]
     public async Task<IActionResult> Index(
-        string? operatorId, string? entityType, string? entityId, string? action,
+        string? operatorId, string? entityType, string? entityId, string? actionFilter,
         DateTimeOffset? from, DateTimeOffset? to, int page = 1)
     {
-        var query  = new AuditSearchQuery(operatorId, entityType, entityId, action, from, to, page, 50);
+        var query  = new AuditSearchQuery(operatorId, entityType, entityId, actionFilter, from, to, page, 50);
         var result = await _auditService.SearchAsync(query);
         ViewBag.Query = query;
         return View(result);
@@ -37,12 +37,12 @@ public sealed class AuditController : Controller
 
     [HttpGet]
     public async Task<IActionResult> Export(
-        string? operatorId, string? entityType, string? entityId, string? action,
+        string? operatorId, string? entityType, string? entityId, string? actionFilter,
         DateTimeOffset? from, DateTimeOffset? to)
     {
         // Fetch up to 10 000 rows for export
         var result = await _auditService.SearchAsync(
-            new AuditSearchQuery(operatorId, entityType, entityId, action, from, to, 1, 10_000));
+            new AuditSearchQuery(operatorId, entityType, entityId, actionFilter, from, to, 1, 10_000));
 
         var csv = BuildCsv(result.Items);
         return File(

@@ -1,0 +1,44 @@
+/* =====================================================================
+   BackOffice Icon System — CSS background-image icons
+   Usage: <i class="boi boi-{size} boi-{name}"></i>
+   ===================================================================== */
+
+/* ── Base ── */
+.boi {
+  display: inline-block;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* ── Sizes ── */
+.boi-xs  { width: 14px; height: 14px; }
+.boi-sm  { width: 18px; height: 18px; }
+.boi-md  { width: 24px; height: 24px; }
+.boi-lg  { width: 32px; height: 32px; }
+.boi-xl  { width: 40px; height: 40px; }
+
+/* ── Spacing ── */
+.boi-mr  { margin-right: 6px; }
+.boi-ml  { margin-left: 6px; }
+
+/* ── Icons ── */
+.boi-dashboard    { background-image: url('/images/icons/bar-chart.svg'); }
+.boi-users        { background-image: url('/images/icons/bust-in-silhouette.svg'); }
+.boi-participants { background-image: url('/images/icons/busts-in-silhouette.svg'); }
+.boi-sessions     { background-image: url('/images/icons/calendar.svg'); }
+.boi-audit        { background-image: url('/images/icons/clipboard.svg'); }
+.boi-settings     { background-image: url('/images/icons/gear.svg'); }
+.boi-logout       { background-image: url('/images/icons/leftwards-arrow-with-hook.svg'); }
+.boi-warning      { background-image: url('/images/icons/warning-sign.svg'); }
+.boi-search       { background-image: url('/images/icons/right-pointing-magnifying-glass.svg'); }
+.boi-lock         { background-image: url('/images/icons/lock.svg'); }
+.boi-unlock       { background-image: url('/images/icons/open-lock.svg'); }
+.boi-bolt         { background-image: url('/images/icons/high-voltage-sign.svg'); }
+.boi-trash        { background-image: url('/images/icons/wastebasket.svg'); }
+.boi-save         { background-image: url('/images/icons/floppy-disk.svg'); }
+.boi-export       { background-image: url('/images/icons/downwards-black-arrow.svg'); }
+.boi-pen          { background-image: url('/images/icons/pencil.svg'); }
+.boi-check        { background-image: url('/images/icons/heavy-check-mark.svg'); }

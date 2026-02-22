@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manas — Pulse BackOffice</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="dashboard.html"><div class="dot"></div>Pulse BackOffice</a>
+  <div class="nav-links">
+    <a class="nav-link" id="nav-dashboard"  href="dashboard.html">⊞ Dashboard</a>
+    <a class="nav-link" id="nav-users"      href="users.html">👥 Users</a>
+    <a class="nav-link" id="nav-sessions"   href="sessions.html">◫ Sessions</a>
+    <a class="nav-link" id="nav-audit"      href="audit.html">◈ Audit Log</a>
+    <a class="nav-link" id="nav-operators"  href="operators.html">⚙ Operators</a>
+  </div>
+  <div class="nav-right">
+    <span class="admin-name">admin</span>
+    <span class="role-badge">SuperAdmin</span>
+    <a class="btn-logout" href="#">↪ Logout</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">Main</div>
+    <a class="sidebar-item" id="sb-dashboard"  href="dashboard.html"><span class="sicon">⊞</span> Dashboard</a>
+    <a class="sidebar-item" id="sb-users"       href="users.html"><span class="sicon">👤</span> Users <span class="badge-count">1</span></a>
+    <a class="sidebar-item" id="sb-sessions"    href="sessions.html"><span class="sicon">◫</span> Sessions <span class="badge-count">1</span></a>
+    <div class="sidebar-section">Admin</div>
+    <a class="sidebar-item" id="sb-audit"       href="audit.html"><span class="sicon">◈</span> Audit Log</a>
+    <a class="sidebar-item" id="sb-operators"   href="operators.html"><span class="sicon">⚙</span> Operators <span class="badge-count">2</span></a>
+  </aside>
+
+  <main>
+    <div class="breadcrumb">
+      <a href="users.html">Users</a>
+      <span>›</span>
+      <span>manas.nayak@outlook.com</span>
+    </div>
+
+    <div class="page-header">
+      <div class="page-title-row">
+        <div class="avatar lg">M</div>
+        <div>
+          <h1>Manas &nbsp;<span class="pill active" style="font-size:12px;vertical-align:middle">Active</span></h1>
+          <div class="page-sub">manas.nayak@outlook.com · 1 session · Joined 21 Feb 2026</div>
+        </div>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="users.html">← Back</a>
+    </div>
+
+    <div class="info-grid cols3">
+      <div class="info-item">
+        <div class="info-label">User ID</div>
+        <div class="info-value mono">7aa4b3a8-81f6-4245…</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Last Login</div>
+        <div class="info-value">21 Feb 2026, 03:57</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Active Sessions</div>
+        <div class="info-value">1</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Display Name</div>
+        <div class="info-value">Manas</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Account Created</div>
+        <div class="info-value">21 Feb 2026, 03:57 UTC</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Total Participants</div>
+        <div class="info-value">14</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <h2>⚡ Override Actions</h2>
+      <span class="audit-tag">✓ All changes are audited</span>
+    </div>
+
+    <div class="section-label">Safe Actions</div>
+    <div class="actions-grid cols2">
+      <div class="action-card">
+        <div class="action-title">✏️ Update Display Name</div>
+        <div class="form-group">
+          <input type="text" value="Manas">
+          <input type="text" placeholder="Reason for change (required)">
+          <button class="btn btn-primary btn-block" onclick="showToast('Display name updated','success')">Update Name</button>
+        </div>
+      </div>
+      <div class="action-card">
+        <div class="action-title">✉️ Update Email <span class="super-tag">SuperAdmin</span></div>
+        <div class="form-group">
+          <input type="text" value="manas.nayak@outlook.com">
+          <input type="text" placeholder="Reason for change (required)">
+          <button class="btn btn-primary btn-block" onclick="showToast('Email updated','success')">Update Email</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top:16px">Restrictive Actions</div>
+    <div class="actions-grid cols2">
+      <div class="action-card">
+        <div class="action-title">🔒 Disable Account</div>
+        <div class="form-group">
+          <input type="text" placeholder="Reason (required)">
+          <button class="btn btn-warning btn-block" onclick="showToast('Account disabled','success')">Disable Account</button>
+        </div>
+      </div>
+      <div class="action-card danger">
+        <div class="action-title danger">🗑 Delete Account <span class="super-tag">SuperAdmin</span></div>
+        <div class="form-group">
+          <input type="text" placeholder="Type user email to confirm">
+          <input type="text" placeholder="Reason (required)">
+          <button class="btn btn-danger btn-block" onclick="openModal('modal-delete-user')">Delete Permanently</button>
+        </div>
+        <div class="risk-warning">⚠ This action is irreversible. The account and all associated data will be permanently removed.</div>
+      </div>
+    </div>
+
+    <!-- Sessions owned -->
+    <div class="card" style="margin-top:24px">
+      <div class="card-header">
+        <div class="card-title">Sessions owned by this user</div>
+        <a class="link-btn" href="sessions.html">View all →</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Code</th><th>Title</th><th>Status</th><th>Participants</th><th>Activities</th><th>Expires</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr onclick="location.href='session-detail.html'" style="cursor:pointer">
+              <td class="td-code">DAR-2ZW-QBZ</td>
+              <td class="td-primary">API Design &amp; Technical Standards</td>
+              <td><span class="pill draft">Draft</span></td>
+              <td class="td-mono">14</td>
+              <td class="td-mono">7</td>
+              <td class="td-muted">23 Mar 2026</td>
+              <td><a class="link-btn" href="session-detail.html">View →</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL: Delete user -->
+<div class="modal-overlay" id="modal-delete-user">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--danger)">🗑 Confirm Account Deletion</div>
+      <button class="modal-close" onclick="closeModal('modal-delete-user')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="risk-warning" style="margin:0">⚠ This is irreversible. The account, all sessions, and all activity data will be permanently deleted.</div>
+      <div style="font-size:13px;color:var(--text-secondary)">You are about to delete: <strong style="color:var(--text-primary)">manas.nayak@outlook.com</strong></div>
+      <input type="text" placeholder="Type email to confirm">
+      <input type="text" placeholder="Final reason (required)">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-delete-user')">Cancel</button>
+      <button class="btn btn-danger" onclick="closeModal('modal-delete-user');showToast('Account deleted permanently','error')">Delete Permanently</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="shared.js"></script>
+</body>
+</html>

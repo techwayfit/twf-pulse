@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DAR-2ZW-QBZ — Pulse BackOffice</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* Activity expand */
+.activity-row { cursor: pointer; }
+.activity-row:hover td { background: rgba(74,140,247,.03) !important; }
+.expand-row { display: none; background: var(--surface-2); }
+.expand-row.open { display: table-row; }
+.expand-inner { padding: 16px 20px 20px 56px; }
+
+/* Word cloud */
+.word-cloud { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0; }
+.word-tag { padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+
+/* Poll bars */
+.poll-option { margin-bottom: 10px; }
+.poll-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.poll-pct { font-family: var(--mono); color: var(--text-primary); font-weight: 600; }
+
+/* Quadrant */
+.quadrant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; max-width: 400px; }
+.quad-cell { background: var(--surface-3); padding: 12px; min-height: 80px; }
+.quad-label { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; margin-bottom: 8px; }
+.quad-item { font-size: 11px; color: var(--text-secondary); padding: 3px 7px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; margin-bottom: 4px; display: inline-block; margin-right: 4px; }
+
+/* Rating */
+.star-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.star-count { font-size: 11px; color: var(--text-muted); font-family: var(--mono); }
+
+/* Feedback */
+.feedback-card { background: var(--surface-3); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+.feedback-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.feedback-meta { font-size: 10px; color: var(--text-muted); font-family: var(--mono); margin-top: 6px; }
+
+/* Stats row */
+.stats-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; margin-bottom: 20px; }
+.mini-stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; }
+.ms-val { font-size: 26px; font-weight: 600; color: var(--text-primary); line-height: 1; margin-bottom: 3px; }
+.ms-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+.ms-sub { font-size: 11px; margin-top: 5px; font-family: var(--mono); }
+
+/* Timeline */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.tl-item { display: flex; gap: 14px; align-items: flex-start; padding-bottom: 18px; }
+.tl-dot-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.tl-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.tl-line { width: 1px; flex: 1; background: var(--border); margin-top: 4px; min-height: 18px; }
+.tl-content { padding-top: 4px; }
+.tl-title { font-size: 13px; font-weight: 500; }
+.tl-sub { font-size: 11px; color: var(--text-muted); font-family: var(--mono); margin-top: 2px; }
+
+/* Response count badge */
+.resp-badge { background: var(--blue-dim); color: var(--blue); font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(74,140,247,.2); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="dashboard.html"><div class="dot"></div>Pulse BackOffice</a>
+  <div class="nav-links">
+    <a class="nav-link" id="nav-dashboard"  href="dashboard.html">⊞ Dashboard</a>
+    <a class="nav-link" id="nav-users"      href="users.html">👥 Users</a>
+    <a class="nav-link" id="nav-sessions"   href="sessions.html">◫ Sessions</a>
+    <a class="nav-link" id="nav-audit"      href="audit.html">◈ Audit Log</a>
+    <a class="nav-link" id="nav-operators"  href="operators.html">⚙ Operators</a>
+  </div>
+  <div class="nav-right">
+    <span class="admin-name">admin</span>
+    <span class="role-badge">SuperAdmin</span>
+    <a class="btn-logout" href="#">↪ Logout</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">Main</div>
+    <a class="sidebar-item" id="sb-dashboard"  href="dashboard.html"><span class="sicon">⊞</span> Dashboard</a>
+    <a class="sidebar-item" id="sb-users"       href="users.html"><span class="sicon">👤</span> Users <span class="badge-count">1</span></a>
+    <a class="sidebar-item" id="sb-sessions"    href="sessions.html"><span class="sicon">◫</span> Sessions <span class="badge-count">1</span></a>
+    <div class="sidebar-section">Admin</div>
+    <a class="sidebar-item" id="sb-audit"       href="audit.html"><span class="sicon">◈</span> Audit Log</a>
+    <a class="sidebar-item" id="sb-operators"   href="operators.html"><span class="sicon">⚙</span> Operators <span class="badge-count">2</span></a>
+  </aside>
+
+  <main>
+    <div class="breadcrumb">
+      <a href="sessions.html">Sessions</a>
+      <span>›</span>
+      <span>DAR-2ZW-QBZ</span>
+    </div>
+
+    <div class="page-header">
+      <div class="page-title-row">
+        <div class="page-icon green">◫</div>
+        <div>
+          <h1>API Design &amp; Technical Standards</h1>
+          <div class="page-sub">DAR-2ZW-QBZ · manas.nayak@outlook.com · Created 21 Feb 2026</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="pill draft">Draft</span>
+        <a class="btn btn-primary btn-sm" href="report.html">⬇ Download Report</a>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
+      <button class="tab" onclick="switchTab('activities',this)">Activities (7)</button>
+      <button class="tab" onclick="switchTab('participants',this)">Participants (14)</button>
+      <button class="tab" onclick="switchTab('admin',this)">Admin Actions</button>
+    </div>
+
+    <!-- ======= TAB: OVERVIEW ======= -->
+    <div id="tab-overview">
+      <div class="stats-row">
+        <div class="mini-stat">
+          <div class="ms-val" style="color:var(--text-primary)">7</div>
+          <div class="ms-label">Total Activities</div>
+          <div class="ms-sub" style="color:var(--green)">0 completed</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-val" style="color:var(--blue)">14</div>
+          <div class="ms-label">Participants</div>
+          <div class="ms-sub" style="color:var(--text-muted)">0 active now</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-val" style="color:var(--yellow)">108</div>
+          <div class="ms-label">Total Responses</div>
+          <div class="ms-sub" style="color:var(--text-muted)">15.4 avg / activity</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-val" style="color:var(--purple)">29<span style="font-size:14px;color:var(--text-muted)">d</span></div>
+          <div class="ms-label">Until Expiry</div>
+          <div class="ms-sub" style="color:var(--text-muted)">23 Mar 2026</div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-val" style="color:var(--orange)">35<span style="font-size:14px;color:var(--text-muted)">m</span></div>
+          <div class="ms-label">Est. Duration</div>
+          <div class="ms-sub" style="color:var(--text-muted)">all activities</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="info-grid cols2" style="margin-bottom:12px">
+            <div class="info-item">
+              <div class="info-label">Session ID</div>
+              <div class="info-value mono">432858ad-a37b…</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Expires</div>
+              <div class="info-value">23 Mar 2026, 04:00 UTC</div>
+            </div>
+            <div class="info-item" style="grid-column:span 2">
+              <div class="info-label">Goal</div>
+              <div class="info-value">API design review with complexity assessment</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title">Activity Composition</div></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px"><span style="color:var(--text-secondary)">☁ WordCloud</span><span style="font-family:var(--mono);color:var(--blue)">1 activity · 42 resp</span></div>
+                <div class="prog-wrap"><div class="prog-bar" style="width:14%;background:var(--blue)"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px"><span style="color:var(--text-secondary)">≡ Poll</span><span style="font-family:var(--mono);color:var(--green)">2 activities · 28 resp</span></div>
+                <div class="prog-wrap"><div class="prog-bar" style="width:28%;background:var(--green)"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px"><span style="color:var(--text-secondary)">💬 GeneralFeedback</span><span style="font-family:var(--mono);color:var(--purple)">2 activities · 27 resp</span></div>
+                <div class="prog-wrap"><div class="prog-bar" style="width:28%;background:var(--purple)"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px"><span style="color:var(--text-secondary)">⊞ Quadrant</span><span style="font-family:var(--mono);color:var(--yellow)">1 activity · 11 resp</span></div>
+                <div class="prog-wrap"><div class="prog-bar" style="width:14%;background:var(--yellow)"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px"><span style="color:var(--text-secondary)">★ Rating</span><span style="font-family:var(--mono);color:var(--orange)">1 activity · 14 resp</span></div>
+                <div class="prog-wrap"><div class="prog-bar" style="width:14%;background:var(--orange)"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Session Timeline</div></div>
+          <div class="card-body">
+            <div class="timeline">
+              <div class="tl-item">
+                <div class="tl-dot-col">
+                  <div class="tl-dot" style="background:var(--green-dim);border:1px solid rgba(62,207,142,.3);color:var(--green)">✓</div>
+                  <div class="tl-line"></div>
+                </div>
+                <div class="tl-content">
+                  <div class="tl-title" style="color:var(--text-primary)">Session Created</div>
+                  <div class="tl-sub">21 Feb 2026, 04:00 UTC</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot-col">
+                  <div class="tl-dot" style="background:var(--blue-dim);border:1px solid rgba(74,140,247,.3);color:var(--blue);font-weight:600">7</div>
+                  <div class="tl-line"></div>
+                </div>
+                <div class="tl-content">
+                  <div class="tl-title" style="color:var(--text-primary)">Activities Configured</div>
+                  <div class="tl-sub">7 activities · est. 35 min total</div>
+                </div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-dot-col">
+                  <div class="tl-dot" style="background:var(--surface-3);border:1px solid var(--border);color:var(--text-muted)">◷</div>
+                  <div class="tl-line"></div>
+                </div>
+                <div class="tl-content">
+                  <div class="tl-title" style="color:var(--text-muted)">Session Started</div>
+                  <div class="tl-sub">Not yet started</div>
+                </div>
+              </div>
+              <div class="tl-item" style="padding-bottom:0">
+                <div class="tl-dot-col">
+                  <div class="tl-dot" style="background:var(--danger-dim);border:1px dashed rgba(224,61,90,.3);color:rgba(224,61,90,.5)">✕</div>
+                </div>
+                <div class="tl-content">
+                  <div class="tl-title" style="color:var(--text-muted)">Expiry</div>
+                  <div class="tl-sub">23 Mar 2026, 04:00 UTC</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= TAB: ACTIVITIES ======= -->
+    <div id="tab-activities" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Activities</div>
+          <span style="font-size:11px;color:var(--text-muted)">Click a row to preview responses</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px">#</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Duration</th>
+                <th>Responses</th>
+                <th>Opened</th>
+                <th>Closed</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+
+              <!-- 1 WordCloud -->
+              <tr class="activity-row" onclick="toggleExpand('exp-1','arr-1')">
+                <td class="td-muted td-mono" style="text-align:center">1</td>
+                <td class="td-primary">API Design Principles</td>
+                <td><span class="type-badge type-wordcloud">☁ WordCloud</span></td>
+                <td><span class="pill pending">Pending</span></td>
+                <td class="td-muted td-mono">5 min</td>
+                <td><span class="resp-badge">42</span></td>
+                <td class="td-muted">—</td><td class="td-muted">—</td>
+                <td><span id="arr-1" style="color:var(--text-muted);font-size:11px">▸ expand</span></td>
+              </tr>
+              <tr class="expand-row" id="exp-1">
+                <td colspan="9">
+                  <div class="expand-inner">
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;font-style:italic">"What principles should guide our API design?"</div>
+                    <div class="word-cloud">
+                      <span class="word-tag" style="background:rgba(74,140,247,.2);color:var(--blue);font-size:17px">Consistency</span>
+                      <span class="word-tag" style="background:rgba(62,207,142,.15);color:var(--green);font-size:15px">Simplicity</span>
+                      <span class="word-tag" style="background:rgba(155,115,245,.15);color:var(--purple);font-size:14px">Versioning</span>
+                      <span class="word-tag" style="background:rgba(245,166,35,.12);color:var(--yellow);font-size:13px">Documentation</span>
+                      <span class="word-tag" style="background:rgba(74,140,247,.12);color:var(--blue);font-size:13px">REST</span>
+                      <span class="word-tag" style="background:rgba(240,112,64,.12);color:var(--orange);font-size:12px">Security</span>
+                      <span class="word-tag" style="background:rgba(62,207,142,.1);color:var(--green);font-size:12px">Backward compatibility</span>
+                      <span class="word-tag" style="background:rgba(155,115,245,.1);color:var(--purple);font-size:11px">Idempotency</span>
+                      <span class="word-tag" style="background:rgba(74,140,247,.1);color:var(--blue);font-size:11px">Rate limiting</span>
+                      <span class="word-tag" style="background:rgba(245,166,35,.1);color:var(--yellow);font-size:11px">Naming</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 2 Feedback -->
+              <tr class="activity-row" onclick="toggleExpand('exp-2','arr-2')">
+                <td class="td-muted td-mono" style="text-align:center">2</td>
+                <td class="td-primary">Endpoint Proposals</td>
+                <td><span class="type-badge type-feedback">💬 GeneralFeedback</span></td>
+                <td><span class="pill pending">Pending</span></td>
+                <td class="td-muted td-mono">5 min</td>
+                <td><span class="resp-badge">18</span></td>
+                <td class="td-muted">—</td><td class="td-muted">—</td>
+                <td><span id="arr-2" style="color:var(--text-muted);font-size:11px">▸ expand</span></td>
+              </tr>
+              <tr class="expand-row" id="exp-2">
+                <td colspan="9">
+                  <div class="expand-inner">
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;font-style:italic">"What endpoints should be prioritized in the new API version?"</div>
+                    <div class="feedback-card"><div class="feedback-text">We should start with authentication endpoints — OAuth2 support is long overdue and blocking several integrations.</div><div class="feedback-meta">Participant #3 · 22 Feb 2026</div></div>
+                    <div class="feedback-card"><div class="feedback-text">The search API needs a complete overhaul. Current pagination is inconsistent with the rest of the surface area.</div><div class="feedback-meta">Participant #7 · 22 Feb 2026</div></div>
+                    <div class="feedback-card"><div class="feedback-text">Batch operations should be standardized. Right now each resource has different conventions.</div><div class="feedback-meta">Participant #11 · 22 Feb 2026</div></div>
+                    <div style="font-size:11px;color:var(--text-muted);padding:4px 0">+ 15 more responses</div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 3 Poll -->
+              <tr class="activity-row" onclick="toggleExpand('exp-3','arr-3')">
+                <td class="td-muted td-mono" style="text-align:center">3</td>
+                <td class="td-primary">Naming Convention</td>
+                <td><span class="type-badge type-poll">≡ Poll</span></td>
+                <td><span class="pill pending">Pending</span></td>
+                <td class="td-muted td-mono">3 min</td>
+                <td><span class="resp-badge">14</span></td>
+                <td class="td-muted">—</td><td class="td-muted">—</td>
+                <td><span id="arr-3" style="color:var(--text-muted);font-size:11px">▸ expand</span></td>
+              </tr>
+              <tr class="expand-row" id="exp-3">
+                <td colspan="9">
+                  <div class="expand-inner">
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;font-style:italic">"Which naming convention should we standardize on?"</div>
+                    <div style="max-width:340px">
+                      <div class="poll-option"><div class="poll-label"><span style="color:var(--text-secondary)">snake_case</span><span class="poll-pct">57%</span></div><div class="prog-wrap" style="height:8px"><div class="prog-bar" style="width:57%;background:var(--blue)"></div></div></div>
+                      <div class="poll-option"><div class="poll-label"><span style="color:var(--text-secondary)">camelCase</span><span class="poll-pct">29%</span></div><div class="prog-wrap" style="height:8px"><div class="prog-bar" style="width:29%;background:var(--purple)"></div></div></div>
+                      <div class="poll-option"><div class="poll-label"><span style="color:var(--text-secondary)">kebab-case</span><span class="poll-pct">14%</span></div><div class="prog-wrap" style="height:8px"><div class="prog-bar" style="width:14%;background:var(--green)"></div></div></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 4 Poll -->
+              <tr class="activity-row" onclick="toggleExpand('exp-4','arr-4')">
+                <td class="td-muted td-mono" style="text-align:center">4</td>
+                <td class="td-primary">API Versioning Strategy</td>
+                <td><span class="type-badge type-poll">≡ Poll</span></td>
+                <td><span class="pill pending">Pending</span></td>
+                <td class="td-muted td-mono">3 min</td>
+                <td><span class="resp-badge">14</span></td>
+                <td class="td-muted">—</td><td class="td-muted">—</td>
+                <td><span id="arr-4" style="color:var(--text-muted);font-size:11px">▸ expand</span></td>
+              </tr>
+              <tr class="expand-row" id="exp-4">
+                <td colspan="9">
+                  <div class="expand-inner">
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;font-style:italic">"How should we handle API versioning?"</div>
+                    <div style="max-width:340px">
+                      <div class="poll-option"><div class="poll-label"><span style="color:var(--text-secondary)">URL path (/v1/resource)</span><span class="poll-pct">50%</span></div><div class="prog-wrap" style="height:8px"><div class="prog-bar" style="width:50%;background:var(--blue)"></div></div></div>
+                      <div class="poll-option"><div class="poll-label"><span style="color:var(--text-secondary)">Header versioning</span><span class="poll-pct">36%</span></div><div class="prog-wrap" style="height:8px"><div class="prog-bar" style="width:36%;background:var(--yellow)"></div></div></div>
+                      <div class="poll-option"><div class="poll-label"><span style="color:var(--text-secondary)">Query param (?v=1)</span><span class="poll-pct">14%</span></div><div class="prog-wrap" style="height:8px"><div class="prog-bar" style="width:14%;background:var(--purple)"></div></div></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 5 Quadrant -->
+              <tr class="activity-row" onclick="toggleExpand('exp-5','arr-5')">
+                <td class="td-muted td-mono" style="text-align:center">5</td>
+                <td class="td-primary">Endpoint Complexity Assessment</td>
+                <td><span class="type-badge type-quadrant">⊞ Quadrant</span></td>
+                <td><span class="pill pending">Pending</span></td>
+                <td class="td-muted td-mono">8 min</td>
+                <td><span class="resp-badge">11</span></td>
+                <td class="td-muted">—</td><td class="td-muted">—</td>
+                <td><span id="arr-5" style="color:var(--text-muted);font-size:11px">▸ expand</span></td>
+              </tr>
+              <tr class="expand-row" id="exp-5">
+                <td colspan="9">
+                  <div class="expand-inner">
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;font-style:italic">"Place endpoints by effort vs impact"</div>
+                    <div class="quadrant-grid">
+                      <div class="quad-cell"><div class="quad-label" style="color:var(--green)">High Impact / Low Effort</div><span class="quad-item">Auth refresh</span><span class="quad-item">List pagination</span><span class="quad-item">Error codes</span></div>
+                      <div class="quad-cell"><div class="quad-label" style="color:var(--yellow)">High Impact / High Effort</div><span class="quad-item">Batch endpoints</span><span class="quad-item">Webhooks v2</span></div>
+                      <div class="quad-cell"><div class="quad-label" style="color:var(--blue)">Low Impact / Low Effort</div><span class="quad-item">Rate limit headers</span><span class="quad-item">CORS config</span></div>
+                      <div class="quad-cell"><div class="quad-label" style="color:var(--danger)">Low Impact / High Effort</div><span class="quad-item">GraphQL port</span></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 6 Feedback -->
+              <tr class="activity-row" onclick="toggleExpand('exp-6','arr-6')">
+                <td class="td-muted td-mono" style="text-align:center">6</td>
+                <td class="td-primary">Standards &amp; Best Practices</td>
+                <td><span class="type-badge type-feedback">💬 GeneralFeedback</span></td>
+                <td><span class="pill pending">Pending</span></td>
+                <td class="td-muted td-mono">5 min</td>
+                <td><span class="resp-badge">9</span></td>
+                <td class="td-muted">—</td><td class="td-muted">—</td>
+                <td><span id="arr-6" style="color:var(--text-muted);font-size:11px">▸ expand</span></td>
+              </tr>
+              <tr class="expand-row" id="exp-6">
+                <td colspan="9">
+                  <div class="expand-inner">
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;font-style:italic">"What standards should we adopt?"</div>
+                    <div class="feedback-card"><div class="feedback-text">OpenAPI 3.1 spec for all endpoints — mandatory before any new endpoint ships.</div><div class="feedback-meta">Participant #2</div></div>
+                    <div class="feedback-card"><div class="feedback-text">RFC 7807 Problem Details for error responses across the board.</div><div class="feedback-meta">Participant #5</div></div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- 7 Rating -->
+              <tr class="activity-row" onclick="toggleExpand('exp-7','arr-7')">
+                <td class="td-muted td-mono" style="text-align:center">7</td>
+                <td class="td-primary">Developer Experience Rating</td>
+                <td><span class="type-badge type-rating">★ Rating</span></td>
+                <td><span class="pill pending">Pending</span></td>
+                <td class="td-muted td-mono">2 min</td>
+                <td><span class="resp-badge">14</span></td>
+                <td class="td-muted">—</td><td class="td-muted">—</td>
+                <td><span id="arr-7" style="color:var(--text-muted);font-size:11px">▸ expand</span></td>
+              </tr>
+              <tr class="expand-row" id="exp-7">
+                <td colspan="9">
+                  <div class="expand-inner">
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;font-style:italic">"How would you rate the current developer experience?"</div>
+                    <div style="display:flex;gap:32px;align-items:flex-start">
+                      <div>
+                        <div style="font-size:36px;font-weight:600;color:var(--text-primary);line-height:1">3.6</div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">avg out of 5</div>
+                        <div style="color:var(--yellow);font-size:18px;margin-top:6px">★★★★☆</div>
+                      </div>
+                      <div style="flex:1;max-width:260px">
+                        <div class="star-bar"><span style="font-size:11px;color:var(--text-muted);width:20px;text-align:right">5★</span><div class="prog-wrap" style="flex:1"><div class="prog-bar" style="width:21%;background:var(--yellow)"></div></div><span class="star-count">3</span></div>
+                        <div class="star-bar"><span style="font-size:11px;color:var(--text-muted);width:20px;text-align:right">4★</span><div class="prog-wrap" style="flex:1"><div class="prog-bar" style="width:43%;background:var(--yellow)"></div></div><span class="star-count">6</span></div>
+                        <div class="star-bar"><span style="font-size:11px;color:var(--text-muted);width:20px;text-align:right">3★</span><div class="prog-wrap" style="flex:1"><div class="prog-bar" style="width:21%;background:var(--yellow)"></div></div><span class="star-count">3</span></div>
+                        <div class="star-bar"><span style="font-size:11px;color:var(--text-muted);width:20px;text-align:right">2★</span><div class="prog-wrap" style="flex:1"><div class="prog-bar" style="width:14%;background:var(--orange)"></div></div><span class="star-count">2</span></div>
+                        <div class="star-bar"><span style="font-size:11px;color:var(--text-muted);width:20px;text-align:right">1★</span><div class="prog-wrap" style="flex:1"><div class="prog-bar" style="width:0%;background:var(--danger)"></div></div><span class="star-count">0</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= TAB: PARTICIPANTS ======= -->
+    <div id="tab-participants" style="display:none">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:500px;margin-bottom:20px">
+        <div class="mini-stat"><div class="ms-val" style="color:var(--blue)">14</div><div class="ms-label">Total Joined</div></div>
+        <div class="mini-stat"><div class="ms-val" style="color:var(--green)">0</div><div class="ms-label">Currently Active</div></div>
+        <div class="mini-stat"><div class="ms-val" style="color:var(--yellow)">108</div><div class="ms-label">Total Responses</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Participants</div>
+          <span style="font-size:11px;color:var(--text-muted)">Anonymised — no PII stored</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Joined</th><th>Responses</th><th>Last Active</th><th>Status</th></tr></thead>
+            <tbody id="participants-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= TAB: ADMIN ======= -->
+    <div id="tab-admin" style="display:none">
+      <div class="section-header">
+        <h2>⚡ Override Actions</h2>
+        <span class="audit-tag">✓ All changes are audited</span>
+      </div>
+      <div class="actions-grid cols3">
+        <div class="action-card">
+          <div class="action-title">📅 Extend Expiry</div>
+          <div class="form-group">
+            <div style="display:flex;gap:8px">
+              <input type="number" value="7" style="width:80px;flex-shrink:0">
+              <select><option>days</option><option>weeks</option></select>
+            </div>
+            <input type="text" placeholder="Reason (required)">
+            <button class="btn btn-primary btn-block" onclick="showToast('Expiry extended by 7 days','success')">Extend Expiry</button>
+          </div>
+        </div>
+        <div class="action-card">
+          <div class="action-title">🔒 Lock Session</div>
+          <div class="form-group">
+            <p style="font-size:12px;color:var(--text-muted);line-height:1.5;margin-bottom:4px">Prevents the facilitator from making further edits to this session.</p>
+            <input type="text" placeholder="Reason (required)">
+            <button class="btn btn-warning btn-block" onclick="showToast('Session locked','success')">Lock Session</button>
+          </div>
+        </div>
+        <div class="action-card danger">
+          <div class="action-title danger">🗑 Delete Session <span class="super-tag">SuperAdmin</span></div>
+          <div class="form-group">
+            <input type="text" placeholder="Type: DAR-2ZW-QBZ">
+            <input type="text" placeholder="Reason (required)">
+            <button class="btn btn-danger btn-block" onclick="openModal('modal-delete-session')">Delete Permanently</button>
+          </div>
+          <div class="risk-warning">⚠ Permanently deletes this session, all 7 activities and all 108 responses.</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL: Delete session -->
+<div class="modal-overlay" id="modal-delete-session">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--danger)">🗑 Confirm Session Deletion</div>
+      <button class="modal-close" onclick="closeModal('modal-delete-session')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="risk-warning" style="margin:0">⚠ This will permanently delete session DAR-2ZW-QBZ, all 7 activities, and all 108 responses.</div>
+      <input type="text" placeholder="Type session code: DAR-2ZW-QBZ">
+      <input type="text" placeholder="Final reason (required)">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-delete-session')">Cancel</button>
+      <button class="btn btn-danger" onclick="closeModal('modal-delete-session');showToast('Session deleted','error')">Delete Session</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="shared.js"></script>
+<script>
+// Tabs
+function switchTab(id, el) {
+  ['overview','activities','participants','admin'].forEach(t => {
+    document.getElementById('tab-'+t).style.display = 'none';
+  });
+  document.getElementById('tab-'+id).style.display = 'block';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (id === 'participants') buildParticipants();
+}
+
+// Expand rows
+function toggleExpand(rowId, arrId) {
+  const row = document.getElementById(rowId);
+  const arr = document.getElementById(arrId);
+  const isOpen = row.classList.contains('open');
+  document.querySelectorAll('.expand-row.open').forEach(r => r.classList.remove('open'));
+  document.querySelectorAll('[id^="arr-"]').forEach(a => a.textContent = '▸ expand');
+  if (!isOpen) {
+    row.classList.add('open');
+    arr.textContent = '▾ collapse';
+  }
+}
+
+// Participants
+const pData = [
+  {id:'P-001',joined:'21 Feb 03:12',resp:9,last:'21 Feb 03:47'},
+  {id:'P-002',joined:'21 Feb 03:13',resp:8,last:'21 Feb 03:52'},
+  {id:'P-003',joined:'21 Feb 03:15',resp:7,last:'21 Feb 03:44'},
+  {id:'P-004',joined:'21 Feb 03:16',resp:9,last:'21 Feb 03:51'},
+  {id:'P-005',joined:'21 Feb 03:18',resp:6,last:'21 Feb 03:39'},
+  {id:'P-006',joined:'21 Feb 03:19',resp:8,last:'21 Feb 03:50'},
+  {id:'P-007',joined:'21 Feb 03:20',resp:9,last:'21 Feb 03:55'},
+  {id:'P-008',joined:'21 Feb 03:21',resp:5,last:'21 Feb 03:38'},
+  {id:'P-009',joined:'21 Feb 03:22',resp:9,last:'21 Feb 03:53'},
+  {id:'P-010',joined:'21 Feb 03:23',resp:8,last:'21 Feb 03:48'},
+  {id:'P-011',joined:'21 Feb 03:24',resp:9,last:'21 Feb 03:56'},
+  {id:'P-012',joined:'21 Feb 03:25',resp:7,last:'21 Feb 03:43'},
+  {id:'P-013',joined:'21 Feb 03:26',resp:6,last:'21 Feb 03:41'},
+  {id:'P-014',joined:'21 Feb 03:27',resp:8,last:'21 Feb 03:49'},
+];
+function buildParticipants() {
+  const tbody = document.getElementById('participants-body');
+  if (tbody.children.length > 0) return;
+  pData.forEach(p => {
+    tbody.innerHTML += `<tr>
+      <td class="td-mono" style="color:var(--blue)">${p.id}</td>
+      <td class="td-muted">${p.joined}</td>
+      <td><span class="resp-badge">${p.resp}</span></td>
+      <td class="td-muted">${p.last}</td>
+      <td><span class="pill closed" style="font-size:10px">Left</span></td>
+    </tr>`;
+  });
+}
+</script>
+</body>
+</html>

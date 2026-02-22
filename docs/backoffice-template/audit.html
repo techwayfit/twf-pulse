@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Log — Pulse BackOffice</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="dashboard.html"><div class="dot"></div>Pulse BackOffice</a>
+  <div class="nav-links">
+    <a class="nav-link" id="nav-dashboard"  href="dashboard.html">⊞ Dashboard</a>
+    <a class="nav-link" id="nav-users"      href="users.html">👥 Users</a>
+    <a class="nav-link" id="nav-sessions"   href="sessions.html">◫ Sessions</a>
+    <a class="nav-link" id="nav-audit"      href="audit.html">◈ Audit Log</a>
+    <a class="nav-link" id="nav-operators"  href="operators.html">⚙ Operators</a>
+  </div>
+  <div class="nav-right">
+    <span class="admin-name">admin</span>
+    <span class="role-badge">SuperAdmin</span>
+    <a class="btn-logout" href="#">↪ Logout</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">Main</div>
+    <a class="sidebar-item" id="sb-dashboard"  href="dashboard.html"><span class="sicon">⊞</span> Dashboard</a>
+    <a class="sidebar-item" id="sb-users"       href="users.html"><span class="sicon">👤</span> Users <span class="badge-count">1</span></a>
+    <a class="sidebar-item" id="sb-sessions"    href="sessions.html"><span class="sicon">◫</span> Sessions <span class="badge-count">1</span></a>
+    <div class="sidebar-section">Admin</div>
+    <a class="sidebar-item" id="sb-audit"       href="audit.html"><span class="sicon">◈</span> Audit Log</a>
+    <a class="sidebar-item" id="sb-operators"   href="operators.html"><span class="sicon">⚙</span> Operators <span class="badge-count">2</span></a>
+  </aside>
+
+  <main>
+    <div class="page-header">
+      <div class="page-title-row">
+        <div class="page-icon yellow">◈</div>
+        <div>
+          <h1>Audit Log</h1>
+          <div class="page-sub">Immutable record of all operator actions</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="showToast('Exported audit-log.csv','success')">⬇ Export CSV</button>
+    </div>
+
+    <div class="search-bar">
+      <div class="search-field" style="max-width:160px">
+        <label>Operator</label>
+        <input type="text" placeholder="Filter by operator…">
+      </div>
+      <div class="search-field" style="max-width:160px">
+        <label>Entity Type</label>
+        <input type="text" placeholder="e.g. Session">
+      </div>
+      <div class="search-field" style="max-width:200px">
+        <label>Entity ID</label>
+        <input type="text" placeholder="UUID or code">
+      </div>
+      <div class="search-field" style="max-width:140px">
+        <label>Action</label>
+        <select>
+          <option>All</option>
+          <option>Index</option>
+          <option>Create</option>
+          <option>Update</option>
+          <option>Delete</option>
+          <option>Disable</option>
+        </select>
+      </div>
+      <div class="search-field" style="max-width:170px">
+        <label>Date From</label>
+        <input type="text" placeholder="YYYY-MM-DD">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="showToast('Search applied','success')">🔍 Search</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Records</div>
+        <span style="font-size:12px;color:var(--text-muted);font-family:var(--mono)">1 record(s)</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>When (UTC)</th>
+              <th>Operator</th>
+              <th>Role</th>
+              <th>Action</th>
+              <th>Entity</th>
+              <th>Field</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-mono td-muted" style="white-space:nowrap">22 Feb 2026, 12:31</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="avatar xs green">A</div>
+                  <span class="td-primary">admin</span>
+                </div>
+              </td>
+              <td><span class="pill superadmin">SuperAdmin</span></td>
+              <td><span class="action-tag action-index">Index</span></td>
+              <td class="td-muted td-mono">AuditLog</td>
+              <td class="td-muted">—</td>
+              <td class="td-muted">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:flex-start;gap:10px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)">
+      <span style="font-size:16px;opacity:.4;flex-shrink:0">ℹ</span>
+      <span style="font-size:12px;color:var(--text-muted);line-height:1.5">All operator actions are recorded permanently and cannot be modified or deleted. Records include the operator's username, IP address, timestamp, affected entity, and reason provided.</span>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="shared.js"></script>
+</body>
+</html>
