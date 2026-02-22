@@ -127,15 +127,43 @@
     <div class="card-header bg-transparent border-bottom fw-semibold">Activities (@Model.Activities.Count)</div>
     <table class="table table-sm align-middle mb-0">
         <thead class="table-light">
-            <tr><th>#</th><th>Type</th><th>Status</th><th>Opened</th><th>Closed</th><th></th></tr>
+            <tr><th>#</th><th>Name</th><th>Type</th><th>Status</th><th>Opened</th><th>Closed</th><th></th></tr>
         </thead>
         <tbody>
             @foreach (var a in Model.Activities)
             {
+                var typeIcon = a.Type switch {
+                    "Poll"            => "fa-chart-bar",
+                    "Quiz"            => "fa-circle-question",
+                    "WordCloud"       => "fa-cloud",
+                    "QnA"             => "fa-comments",
+                    "Rating"          => "fa-star",
+                    "Quadrant"        => "fa-table-cells",
+                    "FiveWhys"        => "fa-magnifying-glass",
+                    "GeneralFeedback" => "fa-comment-dots",
+                    _                 => "fa-circle"
+                };
+                var statusBadge = a.Status switch {
+                    "Open"    => "bg-success",
+                    "Closed"  => "bg-secondary",
+                    _         => "bg-light text-dark border"
+                };
+                var modalId = $"cfg-{a.Id:N}";
                 <tr>
                     <td>@a.Order</td>
-                    <td>@a.Type</td>
-                    <td>@a.Status</td>
+                    <td>
+                        <a asp-controller="Activities" asp-action="Detail" asp-route-id="@a.Id" class="text-decoration-none fw-medium">@a.Title</a>
+                        @if (!string.IsNullOrWhiteSpace(a.ConfigJson))
+                        {
+                            <button type="button" class="btn btn-xs btn-sm btn-outline-secondary ms-2 py-0 px-1"
+                                    data-bs-toggle="modal" data-bs-target="#@modalId"
+                                    title="View Config JSON">
+                                <i class="fa-solid fa-code fa-xs"></i>
+                            </button>
+                        }
+                    </td>
+                    <td><i class="fa-solid @typeIcon me-1 text-muted"></i>@a.Type</td>
+                    <td><span class="badge @statusBadge">@a.Status</span></td>
                     <td><small class="text-muted">@(a.OpenedAt?.ToString("HH:mm") ?? "—")</small></td>
                     <td><small class="text-muted">@(a.ClosedAt?.ToString("HH:mm") ?? "—")</small></td>
                     <td>
@@ -156,3 +184,28 @@
         </tbody>
     </table>
 </div>
+
+@* ── Config JSON modals ────────────────────────────────────────────────────── *@
+@foreach (var a in Model.Activities.Where(x => !string.IsNullOrWhiteSpace(x.ConfigJson)))
+{
+    var modalId = $"cfg-{a.Id:N}";
+    <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@(modalId)-label" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title fw-semibold" id="@(modalId)-label">
+                        <i class="fa-solid fa-code me-2 text-muted"></i>Config — @a.Title
+                        <span class="badge bg-light text-dark border ms-2 fw-normal">@a.Type</span>
+                    </h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <pre class="m-0 p-3 bg-dark text-light rounded-bottom" style="font-size:.8rem;white-space:pre-wrap;word-break:break-all">@a.ConfigJson</pre>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}

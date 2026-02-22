@@ -28,4 +28,10 @@ public interface IBackOfficeSessionService
 
     /// <summary>Remove a participant (soft-delete). SuperAdmin only.</summary>
     Task RemoveParticipantAsync(Guid participantId, string reason, string operatorId, string operatorRole, string ipAddress, CancellationToken ct = default);
+
+    /// <summary>Get full activity detail including response count.</summary>
+    Task<ActivityDetailViewModel?> GetActivityDetailAsync(Guid activityId, CancellationToken ct = default);
+
+    /// <summary>Update the ConfigJson of an activity. SuperAdmin only.</summary>
+    Task UpdateActivityConfigAsync(UpdateActivityConfigRequest request, string operatorId, string operatorRole, string ipAddress, CancellationToken ct = default);
 }

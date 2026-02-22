@@ -1,5 +1,6 @@
 using BCrypt.Net;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using TechWayFit.Pulse.BackOffice.Core.Abstractions;
 using TechWayFit.Pulse.BackOffice.Core.Entities;
 using TechWayFit.Pulse.BackOffice.Core.Models.Auth;
@@ -13,24 +14,50 @@ public sealed class BackOfficeAuthService : IBackOfficeAuthService
 {
     private readonly BackOfficeDbContext _db;
     private readonly IAuditLogService _audit;
+    private readonly IConfiguration _configuration;
 
-    public BackOfficeAuthService(BackOfficeDbContext db, IAuditLogService audit)
+    public BackOfficeAuthService(BackOfficeDbContext db, IAuditLogService audit, IConfiguration configuration)
     {
         _db = db;
         _audit = audit;
+        _configuration = configuration;
     }
 
     public async Task<BackOfficeUser?> ValidateCredentialsAsync(
         string username, string password, CancellationToken ct = default)
     {
+        var normalised = username.Trim().ToLowerInvariant();
+
         var record = await _db.BackOfficeUsers
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Username == username.Trim().ToLowerInvariant() && u.IsActive, ct);
+            .FirstOrDefaultAsync(u => u.Username == normalised && u.IsActive, ct);
 
-        if (record is null) return null;
-        if (!BCrypt.Net.BCrypt.Verify(password, record.PasswordHash)) return null;
+        if (record is not null)
+        {
+            if (!BCrypt.Net.BCrypt.Verify(password, record.PasswordHash)) return null;
+            return ToDomain(record);
+        }
 
-        return ToDomain(record);
+        // ── Fallback: check config credentials (no DB write) ───────────────────────
+        var fallbackUsername = _configuration["BackOffice:SeedAdminUsername"];
+        var fallbackPassword = _configuration["BackOffice:SeedAdminPassword"];
+
+        if (!string.IsNullOrWhiteSpace(fallbackUsername)
+            && !string.IsNullOrWhiteSpace(fallbackPassword)
+            && normalised == fallbackUsername.Trim().ToLowerInvariant()
+            && password == fallbackPassword)
+        {
+            // Return a transient SuperAdmin that exists only in memory—not persisted.
+            return new BackOfficeUser(
+                Guid.Empty,
+                normalised,
+                string.Empty,
+                "SuperAdmin",
+                isActive: true,
+                createdAt: DateTimeOffset.UtcNow);
+        }
+
+        return null;
     }
 
     public async Task<IReadOnlyList<BackOfficeUserSummary>> ListOperatorsAsync(CancellationToken ct = default)

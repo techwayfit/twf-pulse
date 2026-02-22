@@ -93,8 +93,19 @@ public sealed class BackOfficeSessionService : IBackOfficeSessionService
         var activities = await _db.Activities.AsNoTracking()
             .Where(a => a.SessionId == sessionId)
             .OrderBy(a => a.Order)
-            .Select(a => new ActivitySummary(a.Id, a.Type, a.Status.ToString(), a.Order, a.OpenedAt, a.ClosedAt))
+            .Select(a => new { a.Id, a.Title, a.Type, a.Status, a.Order, a.ConfigJson, a.OpenedAt, a.ClosedAt })
             .ToListAsync(ct);
+
+        var activitySummaries = activities
+            .Select(a => new ActivitySummary(
+                a.Id,
+                a.Title,
+                ((TechWayFit.Pulse.Domain.Enums.ActivityType)a.Type).ToString(),
+                ((TechWayFit.Pulse.Domain.Enums.ActivityStatus)a.Status).ToString(),
+                a.Order,
+                a.ConfigJson,
+                a.OpenedAt, a.ClosedAt))
+            .ToList();
 
         var participantCount = await _db.Participants.AsNoTracking()
             .CountAsync(p => p.SessionId == sessionId, ct);
@@ -107,7 +118,7 @@ public sealed class BackOfficeSessionService : IBackOfficeSessionService
             session.CreatedAt, session.UpdatedAt, session.ExpiresAt,
             session.SettingsJson, session.JoinFormSchemaJson,
             IsAdminLocked: false,   // TODO: map once field is added
-            activities, participantCount);
+            activitySummaries, participantCount);
     }
 
     public async Task ForceEndAsync(ForceEndSessionRequest request, string operatorId, string operatorRole, string ipAddress, CancellationToken ct = default)
@@ -211,8 +222,53 @@ public sealed class BackOfficeSessionService : IBackOfficeSessionService
         await _audit.RecordAsync(new AuditLogEntry(
             Guid.NewGuid(), operatorId, operatorRole,
             "RemoveParticipant", "Participant", participantId.ToString(),
-            null, participant.Name, null,
+            null, participant.DisplayName, null,
             reason, ipAddress, DateTimeOffset.UtcNow), ct);
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task<ActivityDetailViewModel?> GetActivityDetailAsync(Guid activityId, CancellationToken ct = default)
+    {
+        var a = await _db.Activities.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == activityId, ct);
+        if (a is null) return null;
+
+        var session = await _db.Sessions.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == a.SessionId, ct);
+
+        var responseCount = await _db.Responses.AsNoTracking()
+            .CountAsync(r => r.ActivityId == activityId, ct);
+
+        return new ActivityDetailViewModel(
+            a.Id,
+            a.SessionId,
+            session?.Code ?? "-",
+            a.Title,
+            a.Prompt,
+            ((TechWayFit.Pulse.Domain.Enums.ActivityType)a.Type).ToString(),
+            ((TechWayFit.Pulse.Domain.Enums.ActivityStatus)a.Status).ToString(),
+            a.Order,
+            a.ConfigJson,
+            a.DurationMinutes,
+            a.OpenedAt,
+            a.ClosedAt,
+            responseCount);
+    }
+
+    public async Task UpdateActivityConfigAsync(UpdateActivityConfigRequest request, string operatorId, string operatorRole, string ipAddress, CancellationToken ct = default)
+    {
+        var activity = await _db.Activities.FindAsync([request.ActivityId], ct)
+                       ?? throw new KeyNotFoundException($"Activity {request.ActivityId} not found.");
+
+        var oldConfig = activity.ConfigJson;
+        activity.ConfigJson = request.ConfigJson;
+
+        await _audit.RecordAsync(new AuditLogEntry(
+            Guid.NewGuid(), operatorId, operatorRole,
+            "UpdateActivityConfig", "Activity", request.ActivityId.ToString(),
+            "ConfigJson", oldConfig, request.ConfigJson,
+            request.Reason, ipAddress, DateTimeOffset.UtcNow), ct);
 
         await _db.SaveChangesAsync(ct);
     }

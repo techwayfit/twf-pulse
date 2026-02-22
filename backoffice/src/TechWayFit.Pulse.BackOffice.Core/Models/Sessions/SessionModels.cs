@@ -41,9 +41,11 @@ public record SessionDetailViewModel(
 
 public record ActivitySummary(
     Guid Id,
+    string Title,
     string Type,
     string Status,
     int Order,
+    string? ConfigJson,
     DateTimeOffset? OpenedAt,
     DateTimeOffset? ClosedAt);
 
@@ -51,6 +53,22 @@ public record ForceEndSessionRequest(Guid SessionId, string Reason);
 public record ExtendSessionExpiryRequest(Guid SessionId, int AdditionalDays, string Reason);
 public record DeleteSessionRequest(Guid SessionId, string ConfirmationCode, string Reason);
 public record LockSessionRequest(Guid SessionId, bool Lock, string Reason);
+public record UpdateActivityConfigRequest(Guid ActivityId, string ConfigJson, string Reason);
+
+public record ActivityDetailViewModel(
+    Guid Id,
+    Guid SessionId,
+    string SessionCode,
+    string Title,
+    string? Prompt,
+    string Type,
+    string Status,
+    int Order,
+    string? ConfigJson,
+    int? DurationMinutes,
+    DateTimeOffset? OpenedAt,
+    DateTimeOffset? ClosedAt,
+    int ResponseCount);
 
 public record SessionSearchResult(
     IReadOnlyList<SessionSummary> Items,

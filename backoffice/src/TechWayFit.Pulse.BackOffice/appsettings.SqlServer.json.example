@@ -1,9 +1,9 @@
 {
   "ConnectionStrings": {
-    "PulseDb": "Data Source=../data/pulse.db"
+    "PulseDb": "Server=localhost,1433;Database=pulse;User Id=sa;Password=YourStrong@Password;TrustServerCertificate=True;MultipleActiveResultSets=True"
   },
   "Pulse": {
-    "DatabaseProvider": "Sqlite"
+    "DatabaseProvider": "SqlServer"
   },
   "Serilog": {
     "MinimumLevel": {
@@ -16,8 +16,8 @@
     }
   },
   "BackOffice": {
-    "SeedAdminUsername": "",
-    "SeedAdminPassword": ""
+    "SeedAdminUsername": "admin",
+    "SeedAdminPassword": "ChangeMe!123"
   },
   "Kestrel": {
     "Endpoints": {
