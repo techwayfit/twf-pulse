@@ -1,0 +1,16 @@
+{
+  "Pulse": {
+    "UseInMemory": false,
+    "DatabaseProvider": "MariaDB"
+  },
+  "ConnectionStrings": {
+    "PulseDb": "Server=localhost;Port=3306;Database=pulse;Uid=pulseuser;Pwd=yourpassword;SslMode=Preferred;"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.EntityFrameworkCore": "Information"
+ }
+  }
+}

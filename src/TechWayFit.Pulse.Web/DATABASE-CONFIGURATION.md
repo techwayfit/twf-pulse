@@ -11,7 +11,7 @@ Create `appsettings.local.json` (already in .gitignore):
 ```json
 {
   "Pulse": {
-    "UseInMemory": false,
+  "UseInMemory": false,
     "DatabaseProvider": "Sqlite"
   },
   "ConnectionStrings": {
@@ -30,6 +30,9 @@ cp appsettings.Sqlite.json.example appsettings.Development.json
 
 # For SQL Server
 cp appsettings.SqlServer.json.example appsettings.Production.json
+
+# For MariaDB/MySQL
+cp appsettings.MariaDB.json.example appsettings.Production.json
 
 # For InMemory (testing)
 cp appsettings.InMemory.json.example appsettings.Testing.json
@@ -109,17 +112,78 @@ Server=tcp:yourserver.database.windows.net,1433;Database=TechWayFitPulse;User Id
 - ? Enterprise security features
 - ? Backup and high availability
 - ? Requires SQL Server installation
-- ? Manual schema setup required
+- ?? Manual schema setup required
 
 **Setup Steps**:
 1. Install SQL Server (Express, Standard, or Enterprise)
 2. Create database: `CREATE DATABASE TechWayFitPulse`
-3. Run schema scripts from `src/TechWayFit.Pulse.Infrastructure/Scripts/SqlServer/`
+3. Run schema scripts from `src/TechWayFit.Pulse.Infrastructure/Scripts/MSQL/V1.0/`
 4. Update connection string
 
 ---
 
-### 3. InMemory (Testing)
+### 3. MariaDB/MySQL (Production)
+
+**File**: `appsettings.MariaDB.json.example`
+
+**Use Case**: Production deployments, cloud hosting, cross-platform scenarios
+
+**Configuration**:
+```json
+{
+  "Pulse": {
+    "UseInMemory": false,
+    "DatabaseProvider": "MariaDB"
+  },
+  "ConnectionStrings": {
+    "PulseDb": "Server=localhost;Port=3306;Database=pulse;Uid=pulseuser;Pwd=yourpassword;SslMode=Preferred;"
+  }
+}
+```
+
+**Connection String Options**:
+
+**Local Development**:
+```
+Server=localhost;Port=3306;Database=pulse;Uid=root;Pwd=yourpassword;
+```
+
+**With SSL** (recommended for production):
+```
+Server=localhost;Port=3306;Database=pulse;Uid=pulseuser;Pwd=yourpassword;SslMode=Required;
+```
+
+**Azure Database for MySQL**:
+```
+Server=yourserver.mysql.database.azure.com;Port=3306;Database=pulse;Uid=pulseuser@yourserver;Pwd=yourpassword;SslMode=Required;
+```
+
+**AWS RDS for MariaDB/MySQL**:
+```
+Server=yourinstance.region.rds.amazonaws.com;Port=3306;Database=pulse;Uid=pulseuser;Pwd=yourpassword;SslMode=Required;
+```
+
+**Features**:
+- ? Scales to 1000+ concurrent users
+- ? Open source and free
+- ? Cross-platform support
+- ? Cloud-friendly (AWS, Azure, GCP)
+- ? Strong community support
+- ?? Manual schema setup required
+
+**Setup Steps**:
+1. Install MariaDB 10.3+ or MySQL 8.0+
+2. Create database: `CREATE DATABASE pulse CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
+3. Run schema scripts from `src/TechWayFit.Pulse.Infrastructure/Scripts/MariaDB/V1.0/`
+4. Update connection string
+
+**Compatibility**:
+- MariaDB 10.3 or later (recommended 10.5+)
+- MySQL 8.0 or later
+
+---
+
+### 4. InMemory (Testing)
 
 **File**: `appsettings.InMemory.json.example`
 
@@ -200,6 +264,20 @@ ASP.NET Core loads configuration in this order (later sources override earlier):
 - Parallel query execution
 - Advanced indexing strategies
 
+### MariaDB/MySQL
+
+**Repositories**: Located in `Persistence/MariaDb/Repositories/`
+- Optimized pagination (LIMIT/OFFSET)
+- Bulk delete operations (ExecuteDeleteAsync)
+- Server-side sorting and filtering
+
+**Performance**:
+- Scales to 1000+ concurrent users
+- InnoDB engine with ACID compliance
+- Excellent for cloud deployments
+- Row-level locking
+- Advanced indexing strategies
+
 ---
 
 ## Environment Variables (Alternative)
@@ -218,6 +296,13 @@ export ConnectionStrings__PulseDb="Data Source=pulse.db"
 export Pulse__UseInMemory=false
 export Pulse__DatabaseProvider=SqlServer
 export ConnectionStrings__PulseDb="Server=localhost;Database=TechWayFitPulse;Integrated Security=true;TrustServerCertificate=true;"
+```
+
+### MariaDB/MySQL
+```bash
+export Pulse__UseInMemory=false
+export Pulse__DatabaseProvider=MariaDB
+export ConnectionStrings__PulseDb="Server=localhost;Port=3306;Database=pulse;Uid=pulseuser;Pwd=yourpassword;"
 ```
 
 ### InMemory
@@ -239,7 +324,7 @@ export Pulse__DatabaseProvider=Sqlite
    {
      "Pulse": {
        "DatabaseProvider": "SqlServer"
-     },
+},
      "ConnectionStrings": {
        "PulseDb": "Server=localhost;..."
      }
@@ -249,11 +334,36 @@ export Pulse__DatabaseProvider=Sqlite
 2. **Create SQL Server database**:
  ```sql
    CREATE DATABASE TechWayFitPulse;
+ ```
+
+3. **Run schema scripts**:
+   - Located in: `src/TechWayFit.Pulse.Infrastructure/Scripts/MSQL/V1.0/`
+ - Run: `00_MasterSetup.sql`
+
+4. **Restart application**
+
+### From SQLite to MariaDB
+
+1. **Update configuration**:
+   ```json
+   {
+     "Pulse": {
+       "DatabaseProvider": "MariaDB"
+     },
+   "ConnectionStrings": {
+   "PulseDb": "Server=localhost;Port=3306;Database=pulse;Uid=pulseuser;Pwd=yourpassword;"
+     }
+   }
+   ```
+
+2. **Create MariaDB database**:
+   ```sql
+   CREATE DATABASE pulse CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
 
 3. **Run schema scripts**:
-   - Located in: `src/TechWayFit.Pulse.Infrastructure/Scripts/SqlServer/`
-   - Run in order: `001_CreateTables.sql`, `002_CreateIndexes.sql`, etc.
+   - Located in: `src/TechWayFit.Pulse.Infrastructure/Scripts/MariaDB/V1.0/`
+   - Run: `00_MasterSetup.sql`
 
 4. **Restart application**
 
@@ -262,11 +372,11 @@ export Pulse__DatabaseProvider=Sqlite
 1. **Update configuration**:
    ```json
    {
- "Pulse": {
+     "Pulse": {
        "UseInMemory": false,
-       "DatabaseProvider": "Sqlite"
+ "DatabaseProvider": "Sqlite"
      }
- }
+   }
    ```
 
 2. **Restart application** - database file will be created automatically
@@ -279,7 +389,7 @@ export Pulse__DatabaseProvider=Sqlite
 
 **Problem**: "Database is locked"
 - **Cause**: Multiple processes accessing the same file
-- **Solution**: Close other instances or use SQL Server for multi-process scenarios
+- **Solution**: Close other instances or use SQL Server/MariaDB for multi-process scenarios
 
 **Problem**: "Unable to open database file"
 - **Cause**: Permission issues
@@ -299,11 +409,29 @@ export Pulse__DatabaseProvider=Sqlite
 - **Cause**: SQL Server not running or incorrect server name
 - **Solution**: Verify SQL Server is running and connection string is correct
 
+### MariaDB/MySQL Issues
+
+**Problem**: "Access denied for user"
+- **Cause**: Authentication failure
+- **Solution**: Verify username/password and user permissions
+
+**Problem**: "Unknown database 'pulse'"
+- **Cause**: Database doesn't exist
+- **Solution**: Create database: `CREATE DATABASE pulse CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
+
+**Problem**: "Can't connect to MySQL server"
+- **Cause**: Server not running or incorrect host/port
+- **Solution**: Verify MariaDB/MySQL is running: `sudo systemctl status mariadb`
+
+**Problem**: "SSL connection error"
+- **Cause**: SSL mode misconfiguration
+- **Solution**: Try `SslMode=Preferred` or `SslMode=None` for local development
+
 ### InMemory Issues
 
 **Problem**: "Data disappears after restart"
 - **Cause**: Expected behavior - InMemory is ephemeral
-- **Solution**: Switch to SQLite or SQL Server for persistence
+- **Solution**: Switch to SQLite, SQL Server, or MariaDB for persistence
 
 ---
 
@@ -314,24 +442,28 @@ export Pulse__DatabaseProvider=Sqlite
 - Use `appsettings.local.json` for local development
 - Store production credentials in Azure Key Vault / AWS Secrets Manager
 - Use environment variables in deployment pipelines
-- Enable SSL/TLS for SQL Server connections
-- Use Windows Authentication when possible
+- Enable SSL/TLS for SQL Server and MariaDB connections
+- Use Windows Authentication when possible (SQL Server)
+- Create dedicated database users with minimal permissions
 - Add `.local.json` files to `.gitignore`
+- Use strong passwords
 
 ### ? DON'T
 
 - Commit connection strings with credentials to source control
-- Use `sa` account in production
+- Use `sa` or `root` accounts in production
 - Store passwords in plain text config files
-- Use SQL Authentication without encryption
+- Use authentication without encryption
 - Share production connection strings in chat/email
+- Grant excessive database permissions
 
 ---
 
 ## Additional Resources
 
 - **Architecture Documentation**: `/docs/repository-reorganization-complete.md`
-- **SQL Server Scripts**: `/src/TechWayFit.Pulse.Infrastructure/Scripts/SqlServer/`
+- **SQL Server Scripts**: `/src/TechWayFit.Pulse.Infrastructure/Scripts/MSQL/V1.0/`
+- **MariaDB Scripts**: `/src/TechWayFit.Pulse.Infrastructure/Scripts/MariaDB/V1.0/`
 - **Provider Registration**: `/src/TechWayFit.Pulse.Infrastructure/Extensions/DatabaseServiceExtensions.cs`
 
 ---
@@ -340,9 +472,10 @@ export Pulse__DatabaseProvider=Sqlite
 
 | Provider | UseInMemory | DatabaseProvider | Connection String Required | Auto-Migration |
 |----------|-------------|------------------|----------------------------|----------------|
-| SQLite   | false       | Sqlite     | Yes (file path)    | ? Yes         |
-| SQL Server | false     | SqlServer        | Yes (full connection)      | ? Manual   |
-| InMemory | true    | Sqlite     | No     | ? Yes    |
+| SQLite   | false       | Sqlite           | Yes (file path)   | ? Yes      |
+| SQL Server | false     | SqlServer  | Yes (full connection)      | ? Manual      |
+| MariaDB  | false       | MariaDB or MySQL | Yes (full connection)      | ? Manual      |
+| InMemory | true        | Sqlite           | No| ? Yes       |
 
 ---
 
