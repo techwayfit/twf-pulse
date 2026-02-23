@@ -6,15 +6,15 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
 :root {
-  --bg: #0f1117;
-  --surface: #16181f;
-  --surface-2: #1c1f2a;
-  --surface-3: #232635;
-  --border: #2a2d3e;
-  --border-light: #343849;
-  --text-primary: #e8eaf0;
-  --text-secondary: #8b90a8;
-  --text-muted: #545870;
+  --bg: #0d0e14;
+  --surface: #1d2029;
+  --surface-2: #282c39;
+  --surface-3: #343847;
+  --border: #434857;
+  --border-light: #545969;
+  --text-primary: #f8f9fc;
+  --text-secondary: #b8bdd0;
+  --text-muted: #8a8fa5;
   --accent: #e03d5a;
   --accent-dim: rgba(224,61,90,0.12);
   --blue: #4a8cf7;
