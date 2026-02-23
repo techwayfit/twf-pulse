@@ -1,0 +1,32 @@
+{
+  "ConnectionStrings": {
+    "PulseDb": "Server=localhost;Port=3306;Database=pulse;Uid=pulseuser;Pwd=yourpassword;SslMode=Preferred;"
+  },
+  "Pulse": {
+    "DatabaseProvider": "MariaDB"
+  },
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "Microsoft.Hosting.Lifetime": "Information",
+        "Microsoft.EntityFrameworkCore": "Warning"
+      }
+    }
+  },
+  "BackOffice": {
+    "SeedAdminUsername": "admin",
+    "SeedAdminPassword": "ChangeMe!123"
+  },
+  "Kestrel": {
+    "Endpoints": {
+      "Http": {
+        "Url": "http://localhost:5100"
+      },
+      "Https": {
+        "Url": "https://localhost:5101"
+      }
+    }
+  }
+}

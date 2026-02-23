@@ -35,33 +35,53 @@ public sealed class BackOfficeSessionService : IBackOfficeSessionService
             q = q.Where(s => s.FacilitatorUserId == query.FacilitatorUserId.Value);
 
         var totalCount = await q.CountAsync(ct);
-        var sessions = await q
+
+        var pagedSessions = q
             .OrderByDescending(s => s.CreatedAt)
             .Skip((query.Page - 1) * query.PageSize)
-            .Take(query.PageSize)
-            .ToListAsync(ct);
+            .Take(query.PageSize);
 
-        var sessionIds = sessions.Select(s => s.Id).ToList();
+        // Materialize the page for building response items
+        var sessions = await pagedSessions.ToListAsync(ct);
+
+        // MariaDB versions before 10.3 reject LIMIT inside an IN subquery.
+        // Keep all lookups as JOINs to the paged derived table instead of Contains(...).
+        var pagedSessionIds = pagedSessions.Select(s => s.Id);
 
         var participantCounts = await _db.Participants.AsNoTracking()
-            .Where(p => sessionIds.Contains(p.SessionId))
+            .Join(
+                pagedSessionIds,
+                p => p.SessionId,
+                sId => sId,
+                (p, _) => p)
             .GroupBy(p => p.SessionId)
             .Select(g => new { g.Key, Count = g.Count() })
             .ToListAsync(ct);
         var pMap = participantCounts.ToDictionary(x => x.Key, x => x.Count);
 
         var activityCounts = await _db.Activities.AsNoTracking()
-            .Where(a => sessionIds.Contains(a.SessionId))
+            .Join(
+                pagedSessionIds,
+                a => a.SessionId,
+                sId => sId,
+                (a, _) => a)
             .GroupBy(a => a.SessionId)
             .Select(g => new { g.Key, Count = g.Count() })
             .ToListAsync(ct);
         var aMap = activityCounts.ToDictionary(x => x.Key, x => x.Count);
 
-        var ownerIds = sessions.Where(s => s.FacilitatorUserId.HasValue)
-            .Select(s => s.FacilitatorUserId!.Value).Distinct().ToList();
+        var ownerIdsQuery = pagedSessions
+            .Where(s => s.FacilitatorUserId.HasValue)
+            .Select(s => s.FacilitatorUserId!.Value)
+            .Distinct();
+
         var ownerEmails = await _db.FacilitatorUsers.AsNoTracking()
-            .Where(u => ownerIds.Contains(u.Id))
-            .Select(u => new { u.Id, u.Email })
+            .Join(
+                ownerIdsQuery,
+                u => u.Id,
+                ownerId => ownerId,
+                (u, _) => new { u.Id, u.Email })
+            .Distinct()
             .ToListAsync(ct);
         var emailMap = ownerEmails.ToDictionary(x => x.Id, x => x.Email);
 

@@ -31,26 +31,31 @@ public sealed class BackOfficeUserService : IBackOfficeUserService
         // Will apply once the field migration is added.
 
         var totalCount = await q.CountAsync(ct);
-        var userIds = await q
+
+        var pagedUsers = q
             .OrderBy(u => u.Email)
             .Skip((query.Page - 1) * query.PageSize)
-            .Take(query.PageSize)
-            .Select(u => u.Id)
-            .ToListAsync(ct);
+            .Take(query.PageSize);
+
+        // MariaDB versions before 10.3 reject LIMIT inside an IN subquery.
+        // Keep lookup as a JOIN to the paged derived table instead of Contains(...).
+        var pagedUserIds = pagedUsers.Select(u => u.Id);
 
         var sessionCounts = await _db.Sessions
             .AsNoTracking()
-            .Where(s => s.FacilitatorUserId.HasValue && userIds.Contains(s.FacilitatorUserId!.Value))
+            .Where(s => s.FacilitatorUserId.HasValue)
+            .Join(
+                pagedUserIds,
+                s => s.FacilitatorUserId!.Value,
+                userId => userId,
+                (s, _) => s)
             .GroupBy(s => s.FacilitatorUserId)
             .Select(g => new { UserId = g.Key!.Value, Count = g.Count() })
             .ToListAsync(ct);
 
         var countMap = sessionCounts.ToDictionary(x => x.UserId, x => x.Count);
 
-        var users = await _db.FacilitatorUsers
-            .AsNoTracking()
-            .Where(u => userIds.Contains(u.Id))
-            .ToListAsync(ct);
+        var users = await pagedUsers.ToListAsync(ct);
 
         var items = users
             .OrderBy(u => u.Email)

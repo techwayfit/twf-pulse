@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TechWayFit.Pulse.BackOffice.Core.Abstractions;
 using TechWayFit.Pulse.BackOffice.Core.Persistence;
+using TechWayFit.Pulse.BackOffice.Core.Persistence.MariaDb;
 using TechWayFit.Pulse.BackOffice.Core.Persistence.Sqlite;
 using TechWayFit.Pulse.BackOffice.Core.Persistence.SqlServer;
 using TechWayFit.Pulse.BackOffice.Core.Services;
@@ -14,7 +15,7 @@ public static class BackOfficeCoreServiceExtensions
     /// <summary>
     /// Registers all BackOffice.Core services including the shared DbContext.
     /// Selects the database provider based on <c>Pulse:DatabaseProvider</c> config
-    /// ("SqlServer" or "Sqlite" — defaults to "Sqlite").
+    /// ("SqlServer", "MariaDB", "MySQL", or "Sqlite" — defaults to "Sqlite").
     /// Call from <c>Program.cs</c> in TechWayFit.Pulse.BackOffice.
     /// </summary>
     public static IServiceCollection AddBackOfficeCore(
@@ -34,6 +35,14 @@ public static class BackOfficeCoreServiceExtensions
 
             // Register the abstract base so services can inject BackOfficeDbContext
             services.AddScoped<BackOfficeDbContext>(sp => sp.GetRequiredService<BackOfficeSqlServerDbContext>());
+        }
+        else if (provider.Equals("MariaDB", StringComparison.OrdinalIgnoreCase) ||
+                 provider.Equals("MySQL", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddDbContext<BackOfficeMariaDbContext>(options =>
+                options.UseMySQL(connectionString));
+
+            services.AddScoped<BackOfficeDbContext>(sp => sp.GetRequiredService<BackOfficeMariaDbContext>());
         }
         else
         {
