@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Domain.Entities;
-using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
+using TechWayFit.Pulse.Infrastructure.Persistence.Sqlite;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.Sqlite.Repositories;
 
@@ -10,9 +10,9 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.Sqlite.Repositories;
 /// SQLite does not support DateTimeOffset in ORDER BY clauses, so sorted
 /// queries materialize results first and then apply client-side ordering.
 /// </summary>
-public sealed class LoginOtpRepository : LoginOtpRepositoryBase
+public sealed class LoginOtpRepository : LoginOtpRepositoryBase<PulseSqlLiteDbContext>
 {
-    public LoginOtpRepository(IPulseDbContext context) : base(context)
+    public LoginOtpRepository(IDbContextFactory<PulseSqlLiteDbContext> dbContextFactory) : base(dbContextFactory)
     {
     }
 
@@ -23,7 +23,8 @@ public sealed class LoginOtpRepository : LoginOtpRepositoryBase
     {
         var normalizedEmail = email.Trim().ToLowerInvariant();
 
-        var records = await _context.LoginOtps
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var records = await dbContext.LoginOtps
             .AsNoTracking()
             .Where(o => o.Email == normalizedEmail)
             .ToListAsync(cancellationToken);

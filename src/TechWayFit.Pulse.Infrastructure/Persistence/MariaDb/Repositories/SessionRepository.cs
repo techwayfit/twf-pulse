@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Domain.Entities;
-using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Mapping;
+using TechWayFit.Pulse.Infrastructure.Persistence.MariaDb;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.MariaDb.Repositories;
@@ -9,9 +9,9 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.MariaDb.Repositories;
 /// <summary>
 /// MariaDB-optimized SessionRepository with server-side sorting and pagination.
 /// </summary>
-public sealed class SessionRepository : SessionRepositoryBase
+public sealed class SessionRepository : SessionRepositoryBase<PulseMariaDbContext>
 {
-    public SessionRepository(IPulseDbContext dbContext) : base(dbContext)
+    public SessionRepository(IDbContextFactory<PulseMariaDbContext> dbContextFactory) : base(dbContextFactory)
     {
     }
 
@@ -22,16 +22,17 @@ public sealed class SessionRepository : SessionRepositoryBase
         int pageSize,
       CancellationToken cancellationToken = default)
     {
-  var query = _dbContext.Sessions
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var query = dbContext.Sessions
             .AsNoTracking()
-     .Where(x => x.FacilitatorUserId == facilitatorUserId);
+            .Where(x => x.FacilitatorUserId == facilitatorUserId);
 
-  var totalCount = await query.CountAsync(cancellationToken);
+        var totalCount = await query.CountAsync(cancellationToken);
 
         var records = await ApplySorting(query, descending: true)
-         .Skip((page - 1) * pageSize)
+            .Skip((page - 1) * pageSize)
             .Take(pageSize)
-   .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
 
         return (records.Select(r => r.ToDomain()).ToList(), totalCount);
     }

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Domain.Entities;
-using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Mapping;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
+using TechWayFit.Pulse.Infrastructure.Persistence.SqlServer;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.SqlServer.Repositories;
 
@@ -10,9 +10,9 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.SqlServer.Repositories;
 /// SQL Server-optimized SessionRepository with server-side sorting and true database pagination.
 /// Overrides base class methods for SQL Server-specific optimizations.
 /// </summary>
-public sealed class SessionRepository : SessionRepositoryBase
+public sealed class SessionRepository : SessionRepositoryBase<PulseSqlServerDbContext>
 {
-    public SessionRepository(IPulseDbContext dbContext) : base(dbContext)
+    public SessionRepository(IDbContextFactory<PulseSqlServerDbContext> dbContextFactory) : base(dbContextFactory)
     {
     }
 
@@ -24,17 +24,18 @@ Guid facilitatorUserId,
         CancellationToken cancellationToken = default)
     {
 // SQL Server optimization: True database pagination with OFFSET/FETCH
-   var query = _dbContext.Sessions
-  .AsNoTracking()
-          .Where(x => x.FacilitatorUserId == facilitatorUserId);
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var query = dbContext.Sessions
+            .AsNoTracking()
+            .Where(x => x.FacilitatorUserId == facilitatorUserId);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-   // Server-side sorting and pagination - only loads requested page
-  var records = await ApplySorting(query, descending: true)
-  .Skip((page - 1) * pageSize)  // ? Database skip
-        .Take(pageSize)  // ? Database limit
-     .ToListAsync(cancellationToken);
+        // Server-side sorting and pagination - only loads requested page
+        var records = await ApplySorting(query, descending: true)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
 
         return (records.Select(r => r.ToDomain()).ToList(), totalCount);
     }

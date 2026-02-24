@@ -9,89 +9,87 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// Base repository for Response with shared implementation and virtual methods for provider-specific behavior.
 /// </summary>
-public abstract class ResponseRepositoryBase : IResponseRepository
+public abstract class ResponseRepositoryBase<TContext> : IResponseRepository
+    where TContext : DbContext, IPulseDbContext
 {
-    protected readonly IPulseDbContext _dbContext;
+    private readonly IDbContextFactory<TContext> _dbContextFactory;
 
-    protected ResponseRepositoryBase(IPulseDbContext dbContext)
+    protected ResponseRepositoryBase(IDbContextFactory<TContext> dbContextFactory)
     {
-        _dbContext = dbContext;
+        _dbContextFactory = dbContextFactory;
     }
 
-    // ? Shared implementation - no duplication
+    protected async Task<TContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+    }
+
     public async Task AddAsync(Response response, CancellationToken cancellationToken = default)
     {
-        _dbContext.Responses.Add(response.ToRecord());
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        dbContext.Responses.Add(response.ToRecord());
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-  // ? Template method - uses virtual ApplySorting
     public virtual async Task<IReadOnlyList<Response>> GetByActivityAsync(Guid activityId, CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.Responses
-.AsNoTracking()
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var query = dbContext.Responses
+            .AsNoTracking()
             .Where(x => x.ActivityId == activityId);
 
-        // Apply provider-specific sorting
-    query = ApplySorting(query);
+        query = ApplySorting(query);
 
         var records = await query.ToListAsync(cancellationToken);
         return records.Select(record => record.ToDomain()).ToList();
     }
 
-    // ? Shared implementation - no duplication
-    public Task<int> CountByActivityAndParticipantAsync(
-    Guid activityId,
-  Guid participantId,
-        CancellationToken cancellationToken = default)
-{
-        return _dbContext.Responses
-.AsNoTracking()
-  .Where(x => x.ActivityId == activityId && x.ParticipantId == participantId)
-        .CountAsync(cancellationToken);
-    }
-
-    // ? Template method - uses virtual ApplySorting
-    public virtual async Task<IReadOnlyList<Response>> GetByParticipantAsync(
-      Guid sessionId,
+    public async Task<int> CountByActivityAndParticipantAsync(
+        Guid activityId,
         Guid participantId,
-     CancellationToken cancellationToken = default)
-  {
-      var query = _dbContext.Responses
-            .AsNoTracking()
-     .Where(x => x.SessionId == sessionId && x.ParticipantId == participantId);
-
-        // Apply provider-specific sorting
-      query = ApplySorting(query);
-
-        var records = await query.ToListAsync(cancellationToken);
-      return records.Select(record => record.ToDomain()).ToList();
-    }
-
-    // ? Template method - uses virtual ApplySorting
-    public virtual async Task<IReadOnlyList<Response>> GetBySessionAsync(
-  Guid sessionId,
         CancellationToken cancellationToken = default)
     {
-      var query = _dbContext.Responses
-     .AsNoTracking()
-    .Where(x => x.SessionId == sessionId);
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        return await dbContext.Responses
+            .AsNoTracking()
+            .Where(x => x.ActivityId == activityId && x.ParticipantId == participantId)
+            .CountAsync(cancellationToken);
+    }
 
-        // Apply provider-specific sorting
+    public virtual async Task<IReadOnlyList<Response>> GetByParticipantAsync(
+        Guid sessionId,
+        Guid participantId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var query = dbContext.Responses
+            .AsNoTracking()
+            .Where(x => x.SessionId == sessionId && x.ParticipantId == participantId);
+
         query = ApplySorting(query);
 
         var records = await query.ToListAsync(cancellationToken);
-      return records.Select(record => record.ToDomain()).ToList();
+        return records.Select(record => record.ToDomain()).ToList();
     }
 
-    /// <summary>
-    /// Virtual method for provider-specific sorting implementation.
-    /// Override in derived classes for optimal performance.
-    /// </summary>
+    public virtual async Task<IReadOnlyList<Response>> GetBySessionAsync(
+        Guid sessionId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var query = dbContext.Responses
+            .AsNoTracking()
+            .Where(x => x.SessionId == sessionId);
+
+        query = ApplySorting(query);
+
+        var records = await query.ToListAsync(cancellationToken);
+        return records.Select(record => record.ToDomain()).ToList();
+    }
+
     protected virtual IQueryable<Entities.ResponseRecord> ApplySorting(
         IQueryable<Entities.ResponseRecord> query)
     {
-        // Default: Server-side sorting (works for most providers)
-  return query.OrderBy(x => x.CreatedAt);
+        return query.OrderBy(x => x.CreatedAt);
     }
 }

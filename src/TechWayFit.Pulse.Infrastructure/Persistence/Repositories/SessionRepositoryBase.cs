@@ -9,111 +9,113 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// Base repository for Session with shared implementation and virtual methods for provider-specific behavior.
 /// </summary>
-public abstract class SessionRepositoryBase : ISessionRepository
+public abstract class SessionRepositoryBase<TContext> : ISessionRepository
+    where TContext : DbContext, IPulseDbContext
 {
-    protected readonly IPulseDbContext _dbContext;
+    private readonly IDbContextFactory<TContext> _dbContextFactory;
 
-protected SessionRepositoryBase(IPulseDbContext dbContext)
+    protected SessionRepositoryBase(IDbContextFactory<TContext> dbContextFactory)
     {
-  _dbContext = dbContext;
+        _dbContextFactory = dbContextFactory;
     }
 
-    // ? Shared implementation - no duplication
+    protected async Task<TContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+    }
+
     public async Task<Session?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var record = await _dbContext.Sessions
-  .AsNoTracking()
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = await dbContext.Sessions
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         return record?.ToDomain();
     }
 
-    // ? Shared implementation - no duplication
- public async Task<Session?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
+    public async Task<Session?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
-        var record = await _dbContext.Sessions
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = await dbContext.Sessions
             .AsNoTracking()
-        .FirstOrDefaultAsync(x => x.Code == code, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Code == code, cancellationToken);
 
-  return record?.ToDomain();
+        return record?.ToDomain();
     }
 
-    // ? Shared implementation - no duplication
     public async Task AddAsync(Session session, CancellationToken cancellationToken = default)
     {
-        _dbContext.Sessions.Add(session.ToRecord());
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        dbContext.Sessions.Add(session.ToRecord());
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    // ? Shared implementation - no duplication
     public async Task UpdateAsync(Session session, CancellationToken cancellationToken = default)
     {
-        var existingRecord = await _dbContext.Sessions.FindAsync(new object[] { session.Id }, cancellationToken);
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var existingRecord = await dbContext.Sessions.FindAsync(new object[] { session.Id }, cancellationToken);
 
-      if (existingRecord == null)
+        if (existingRecord == null)
         {
             throw new InvalidOperationException($"Session with ID {session.Id} not found.");
-     }
+        }
 
         var updatedRecord = session.ToRecord();
-        _dbContext.Entry(existingRecord).CurrentValues.SetValues(updatedRecord);
+        dbContext.Entry(existingRecord).CurrentValues.SetValues(updatedRecord);
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    // ? Template method - uses virtual ApplySorting
     public virtual async Task<IReadOnlyList<Session>> GetByFacilitatorUserIdAsync(
-   Guid facilitatorUserId,
-  CancellationToken cancellationToken = default)
+        Guid facilitatorUserId,
+        CancellationToken cancellationToken = default)
     {
-   var query = _dbContext.Sessions
-      .AsNoTracking()
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var query = dbContext.Sessions
+            .AsNoTracking()
             .Where(x => x.FacilitatorUserId == facilitatorUserId);
 
-        // Apply provider-specific sorting
-   query = ApplySorting(query, descending: true);
+        query = ApplySorting(query, descending: true);
 
- var records = await query.ToListAsync(cancellationToken);
-  return records.Select(r => r.ToDomain()).ToList();
+        var records = await query.ToListAsync(cancellationToken);
+        return records.Select(r => r.ToDomain()).ToList();
     }
 
-    // ? Template method - uses virtual ApplySorting (can be fully overridden for SQL Server optimization)
     public virtual async Task<(IReadOnlyList<Session> Sessions, int TotalCount)> GetByFacilitatorUserIdPaginatedAsync(
         Guid facilitatorUserId,
         int page,
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.Sessions
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var query = dbContext.Sessions
             .AsNoTracking()
-   .Where(x => x.FacilitatorUserId == facilitatorUserId);
+            .Where(x => x.FacilitatorUserId == facilitatorUserId);
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-   // Apply provider-specific sorting
         query = ApplySorting(query, descending: true);
 
-      // Apply pagination
         var records = await query
-     .Skip((page - 1) * pageSize)
-      .Take(pageSize)
-    .ToListAsync(cancellationToken);
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
 
         var sessions = records.Select(r => r.ToDomain()).ToList();
-      return (sessions, totalCount);
+        return (sessions, totalCount);
     }
 
-    // ? Template method - uses virtual ApplySorting
     public virtual async Task<IReadOnlyCollection<Session>> GetByGroupAsync(
-      Guid? groupId,
+        Guid? groupId,
         Guid facilitatorUserId,
-     CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default)
     {
-        var query = _dbContext.Sessions
-          .AsNoTracking()
-          .Where(x => x.FacilitatorUserId == facilitatorUserId && x.GroupId == groupId);
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var query = dbContext.Sessions
+            .AsNoTracking()
+            .Where(x => x.FacilitatorUserId == facilitatorUserId && x.GroupId == groupId);
 
-    // Apply provider-specific sorting
         query = ApplySorting(query, descending: true);
 
         var records = await query.ToListAsync(cancellationToken);
@@ -128,9 +130,8 @@ protected SessionRepositoryBase(IPulseDbContext dbContext)
         IQueryable<Entities.SessionRecord> query,
         bool descending = true)
     {
-  // Default: Server-side sorting (works for most providers)
         return descending
-   ? query.OrderByDescending(x => x.CreatedAt)
+            ? query.OrderByDescending(x => x.CreatedAt)
             : query.OrderBy(x => x.CreatedAt);
     }
 }

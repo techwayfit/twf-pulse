@@ -7,20 +7,27 @@ using TechWayFit.Pulse.Infrastructure.Persistence.Entities;
 namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 
 /// <summary>
-/// Shared FacilitatorUserDataRepository implementation.
+/// Shared FacilitatorUserDataRepository implementation for all providers.
 /// </summary>
-public class FacilitatorUserDataRepository : IFacilitatorUserDataRepository
+public class FacilitatorUserDataRepository<TContext> : IFacilitatorUserDataRepository
+    where TContext : DbContext, IPulseDbContext
 {
-    protected readonly IPulseDbContext _context;
+    private readonly IDbContextFactory<TContext> _dbContextFactory;
 
-    public FacilitatorUserDataRepository(IPulseDbContext context)
+    public FacilitatorUserDataRepository(IDbContextFactory<TContext> dbContextFactory)
     {
-        _context = context;
+        _dbContextFactory = dbContextFactory;
+    }
+
+    private async Task<TContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContextFactory.CreateDbContextAsync(cancellationToken);
     }
 
     public async Task<FacilitatorUserData?> GetByKeyAsync(Guid facilitatorUserId, string key, CancellationToken cancellationToken = default)
     {
-        var record = await _context.FacilitatorUserData
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = await dbContext.FacilitatorUserData
             .FirstOrDefaultAsync(d => d.FacilitatorUserId == facilitatorUserId && d.Key == key, cancellationToken);
 
         return record == null ? null : MapToDomain(record);
@@ -28,7 +35,8 @@ public class FacilitatorUserDataRepository : IFacilitatorUserDataRepository
 
     public async Task<IReadOnlyList<FacilitatorUserData>> GetAllByUserIdAsync(Guid facilitatorUserId, CancellationToken cancellationToken = default)
     {
-        var records = await _context.FacilitatorUserData
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var records = await dbContext.FacilitatorUserData
             .Where(d => d.FacilitatorUserId == facilitatorUserId)
             .OrderBy(d => d.Key)
             .ToListAsync(cancellationToken);
@@ -38,7 +46,8 @@ public class FacilitatorUserDataRepository : IFacilitatorUserDataRepository
 
     public async Task<Dictionary<string, string>> GetAllAsDictAsync(Guid facilitatorUserId, CancellationToken cancellationToken = default)
     {
-        var records = await _context.FacilitatorUserData
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var records = await dbContext.FacilitatorUserData
             .Where(d => d.FacilitatorUserId == facilitatorUserId)
             .ToListAsync(cancellationToken);
 
@@ -47,40 +56,44 @@ public class FacilitatorUserDataRepository : IFacilitatorUserDataRepository
 
     public async Task AddAsync(FacilitatorUserData data, CancellationToken cancellationToken = default)
     {
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
         var record = MapToRecord(data);
-        await _context.FacilitatorUserData.AddAsync(record, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await dbContext.FacilitatorUserData.AddAsync(record, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(FacilitatorUserData data, CancellationToken cancellationToken = default)
     {
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
         var record = MapToRecord(data);
-        _context.FacilitatorUserData.Update(record);
-        await _context.SaveChangesAsync(cancellationToken);
+        dbContext.FacilitatorUserData.Update(record);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(Guid facilitatorUserId, string key, CancellationToken cancellationToken = default)
     {
-        var record = await _context.FacilitatorUserData
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = await dbContext.FacilitatorUserData
             .FirstOrDefaultAsync(d => d.FacilitatorUserId == facilitatorUserId && d.Key == key, cancellationToken);
 
         if (record != null)
         {
-            _context.FacilitatorUserData.Remove(record);
-            await _context.SaveChangesAsync(cancellationToken);
+            dbContext.FacilitatorUserData.Remove(record);
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 
     public async Task SetValueAsync(Guid facilitatorUserId, string key, string value, CancellationToken cancellationToken = default)
     {
-        var existing = await _context.FacilitatorUserData
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var existing = await dbContext.FacilitatorUserData
             .FirstOrDefaultAsync(d => d.FacilitatorUserId == facilitatorUserId && d.Key == key, cancellationToken);
 
         if (existing != null)
         {
             existing.Value = value;
             existing.UpdatedAt = DateTimeOffset.UtcNow;
-            _context.FacilitatorUserData.Update(existing);
+            dbContext.FacilitatorUserData.Update(existing);
         }
         else
         {
@@ -93,10 +106,10 @@ public class FacilitatorUserDataRepository : IFacilitatorUserDataRepository
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow
             };
-            await _context.FacilitatorUserData.AddAsync(newRecord, cancellationToken);
+            await dbContext.FacilitatorUserData.AddAsync(newRecord, cancellationToken);
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     protected static FacilitatorUserData MapToDomain(FacilitatorUserDataRecord record)

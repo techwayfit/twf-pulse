@@ -9,130 +9,128 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// Base repository for LoginOtp with shared implementation and virtual methods for provider-specific behavior.
 /// </summary>
-public abstract class LoginOtpRepositoryBase : ILoginOtpRepository
+public abstract class LoginOtpRepositoryBase<TContext> : ILoginOtpRepository
+    where TContext : DbContext, IPulseDbContext
 {
-  protected readonly IPulseDbContext _context;
+    private readonly IDbContextFactory<TContext> _dbContextFactory;
 
-    protected LoginOtpRepositoryBase(IPulseDbContext context)
+    protected LoginOtpRepositoryBase(IDbContextFactory<TContext> dbContextFactory)
     {
-        _context = context;
+        _dbContextFactory = dbContextFactory;
     }
 
-    // ? Shared implementation - no duplication
+    protected async Task<TContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+    }
+
     public async Task<LoginOtp?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-  {
-        var record = await _context.LoginOtps
-   .AsNoTracking()
-  .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+    {
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = await dbContext.LoginOtps
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
         return record == null ? null : MapToDomain(record);
     }
 
-    // ? Shared implementation - no duplication (already optimized)
     public async Task<LoginOtp?> GetValidOtpAsync(
         string email,
         string otpCode,
-   CancellationToken cancellationToken = default)
-    {
-  var normalizedEmail = email.Trim().ToLowerInvariant();
-        var normalizedOtp = otpCode.Trim();
-  var now = DateTimeOffset.UtcNow;
-
-        // Server-side filtering for all providers
-      var record = await _context.LoginOtps
- .AsNoTracking()
-            .Where(o => o.Email == normalizedEmail
-             && o.OtpCode == normalizedOtp
-      && !o.IsUsed
-   && o.ExpiresAt > now)
-      .FirstOrDefaultAsync(cancellationToken);
-
-  return record == null ? null : MapToDomain(record);
-    }
-
-    // ? Template method - uses virtual ApplySorting
-    public virtual async Task<IReadOnlyList<LoginOtp>> GetRecentOtpsForEmailAsync(
-     string email,
-  int count,
         CancellationToken cancellationToken = default)
     {
-  var normalizedEmail = email.Trim().ToLowerInvariant();
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var normalizedOtp = otpCode.Trim();
+        var now = DateTimeOffset.UtcNow;
 
-  var query = _context.LoginOtps
-  .AsNoTracking()
-     .Where(o => o.Email == normalizedEmail);
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = await dbContext.LoginOtps
+            .AsNoTracking()
+            .Where(o => o.Email == normalizedEmail
+                && o.OtpCode == normalizedOtp
+                && !o.IsUsed
+                && o.ExpiresAt > now)
+            .FirstOrDefaultAsync(cancellationToken);
 
-     // Apply provider-specific sorting
+        return record == null ? null : MapToDomain(record);
+    }
+
+    public virtual async Task<IReadOnlyList<LoginOtp>> GetRecentOtpsForEmailAsync(
+        string email,
+        int count,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var query = dbContext.LoginOtps
+            .AsNoTracking()
+            .Where(o => o.Email == normalizedEmail);
+
         query = ApplySorting(query);
 
-   var records = await query
-     .Take(count)
-  .ToListAsync(cancellationToken);
+        var records = await query
+            .Take(count)
+            .ToListAsync(cancellationToken);
 
-      return records.Select(MapToDomain).ToList();
+        return records.Select(MapToDomain).ToList();
     }
 
-    // ? Shared implementation - no duplication
     public async Task AddAsync(LoginOtp otp, CancellationToken cancellationToken = default)
     {
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
         var record = MapToRecord(otp);
-        await _context.LoginOtps.AddAsync(record, cancellationToken);
-  await _context.SaveChangesAsync(cancellationToken);
+        await dbContext.LoginOtps.AddAsync(record, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    // ? Shared implementation - no duplication
     public async Task UpdateAsync(LoginOtp otp, CancellationToken cancellationToken = default)
     {
-var record = MapToRecord(otp);
-     _context.LoginOtps.Update(record);
-        await _context.SaveChangesAsync(cancellationToken);
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = MapToRecord(otp);
+        dbContext.LoginOtps.Update(record);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    // ? Virtual method - can be overridden for provider-specific bulk delete optimization
     public virtual async Task DeleteExpiredAsync(DateTimeOffset before, CancellationToken cancellationToken = default)
     {
-     // Default: Load into memory then delete (works for all providers)
-   var expiredOtps = await _context.LoginOtps
-      .Where(o => o.ExpiresAt < before)
-  .ToListAsync(cancellationToken);
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var expiredOtps = await dbContext.LoginOtps
+            .Where(o => o.ExpiresAt < before)
+            .ToListAsync(cancellationToken);
 
-        _context.LoginOtps.RemoveRange(expiredOtps);
-  await _context.SaveChangesAsync(cancellationToken);
+        dbContext.LoginOtps.RemoveRange(expiredOtps);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Virtual method for provider-specific sorting implementation.
-    /// Override in derived classes for optimal performance.
-    /// </summary>
     protected virtual IQueryable<LoginOtpRecord> ApplySorting(IQueryable<LoginOtpRecord> query)
-{
-        // Default: Server-side sorting (works for most providers)
-      return query.OrderByDescending(o => o.CreatedAt);
+    {
+        return query.OrderByDescending(o => o.CreatedAt);
     }
 
     protected static LoginOtp MapToDomain(LoginOtpRecord record)
     {
         return new LoginOtp(
-  record.Id,
-  record.Email,
-record.OtpCode,
-      record.CreatedAt,
-  record.ExpiresAt,
-    record.IsUsed,
- record.UsedAt);
+            record.Id,
+            record.Email,
+            record.OtpCode,
+            record.CreatedAt,
+            record.ExpiresAt,
+            record.IsUsed,
+            record.UsedAt);
     }
 
     protected static LoginOtpRecord MapToRecord(LoginOtp otp)
     {
-      return new LoginOtpRecord
-     {
-    Id = otp.Id,
-  Email = otp.Email,
-       OtpCode = otp.OtpCode,
- CreatedAt = otp.CreatedAt,
-   ExpiresAt = otp.ExpiresAt,
-     IsUsed = otp.IsUsed,
+        return new LoginOtpRecord
+        {
+            Id = otp.Id,
+            Email = otp.Email,
+            OtpCode = otp.OtpCode,
+            CreatedAt = otp.CreatedAt,
+            ExpiresAt = otp.ExpiresAt,
+            IsUsed = otp.IsUsed,
             UsedAt = otp.UsedAt
- };
+        };
     }
 }

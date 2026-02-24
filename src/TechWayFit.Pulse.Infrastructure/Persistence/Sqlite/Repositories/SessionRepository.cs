@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Domain.Entities;
-using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Mapping;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
+using TechWayFit.Pulse.Infrastructure.Persistence.Sqlite;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.Sqlite.Repositories;
 
@@ -11,9 +11,9 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.Sqlite.Repositories;
 /// SQLite does not support DateTimeOffset in ORDER BY clauses, so all sorted
 /// queries materialize results first and then apply client-side ordering.
 /// </summary>
-public sealed class SessionRepository : SessionRepositoryBase
+public sealed class SessionRepository : SessionRepositoryBase<PulseSqlLiteDbContext>
 {
-    public SessionRepository(IPulseDbContext dbContext) : base(dbContext)
+    public SessionRepository(IDbContextFactory<PulseSqlLiteDbContext> dbContextFactory) : base(dbContextFactory)
     {
     }
 
@@ -21,7 +21,8 @@ public sealed class SessionRepository : SessionRepositoryBase
         Guid facilitatorUserId,
         CancellationToken cancellationToken = default)
     {
-        var records = await _dbContext.Sessions
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var records = await dbContext.Sessions
             .AsNoTracking()
             .Where(x => x.FacilitatorUserId == facilitatorUserId)
             .ToListAsync(cancellationToken);
@@ -38,7 +39,8 @@ public sealed class SessionRepository : SessionRepositoryBase
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        var allRecords = await _dbContext.Sessions
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var allRecords = await dbContext.Sessions
             .AsNoTracking()
             .Where(x => x.FacilitatorUserId == facilitatorUserId)
             .ToListAsync(cancellationToken);
@@ -60,7 +62,8 @@ public sealed class SessionRepository : SessionRepositoryBase
         Guid facilitatorUserId,
         CancellationToken cancellationToken = default)
     {
-        var records = await _dbContext.Sessions
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var records = await dbContext.Sessions
             .AsNoTracking()
             .Where(x => x.FacilitatorUserId == facilitatorUserId && x.GroupId == groupId)
             .ToListAsync(cancellationToken);

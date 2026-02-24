@@ -8,20 +8,27 @@ using TechWayFit.Pulse.Infrastructure.Persistence.Entities;
 namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 
 /// <summary>
-/// Shared SessionTemplateRepository implementation.
+/// Shared SessionTemplateRepository implementation for all providers.
 /// </summary>
-public class SessionTemplateRepository : ISessionTemplateRepository
+public class SessionTemplateRepository<TContext> : ISessionTemplateRepository
+    where TContext : DbContext, IPulseDbContext
 {
-    protected readonly IPulseDbContext _dbContext;
+    private readonly IDbContextFactory<TContext> _dbContextFactory;
 
-    public SessionTemplateRepository(IPulseDbContext dbContext)
+    public SessionTemplateRepository(IDbContextFactory<TContext> dbContextFactory)
     {
-        _dbContext = dbContext;
+        _dbContextFactory = dbContextFactory;
+    }
+
+    private async Task<TContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContextFactory.CreateDbContextAsync(cancellationToken);
     }
 
     public async Task<SessionTemplate?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var record = await _dbContext.SessionTemplates
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = await dbContext.SessionTemplates
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
@@ -30,7 +37,8 @@ public class SessionTemplateRepository : ISessionTemplateRepository
 
     public async Task<IReadOnlyList<SessionTemplate>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var records = await _dbContext.SessionTemplates
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var records = await dbContext.SessionTemplates
             .AsNoTracking()
             .OrderBy(x => x.Category)
             .ThenBy(x => x.Name)
@@ -41,7 +49,8 @@ public class SessionTemplateRepository : ISessionTemplateRepository
 
     public async Task<IReadOnlyList<SessionTemplate>> GetByCategoryAsync(TemplateCategory category, CancellationToken cancellationToken = default)
     {
-        var records = await _dbContext.SessionTemplates
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var records = await dbContext.SessionTemplates
             .AsNoTracking()
             .Where(x => x.Category == (int)category)
             .OrderBy(x => x.Name)
@@ -52,7 +61,8 @@ public class SessionTemplateRepository : ISessionTemplateRepository
 
     public async Task<IReadOnlyList<SessionTemplate>> GetSystemTemplatesAsync(CancellationToken cancellationToken = default)
     {
-        var records = await _dbContext.SessionTemplates
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var records = await dbContext.SessionTemplates
             .AsNoTracking()
             .Where(x => x.IsSystemTemplate)
             .OrderBy(x => x.Category)
@@ -64,7 +74,8 @@ public class SessionTemplateRepository : ISessionTemplateRepository
 
     public async Task<IReadOnlyList<SessionTemplate>> GetUserTemplatesAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var records = await _dbContext.SessionTemplates
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var records = await dbContext.SessionTemplates
             .AsNoTracking()
             .Where(x => !x.IsSystemTemplate && x.CreatedByUserId == userId)
             .OrderByDescending(x => x.CreatedAt)
@@ -75,25 +86,28 @@ public class SessionTemplateRepository : ISessionTemplateRepository
 
     public async Task AddAsync(SessionTemplate template, CancellationToken cancellationToken = default)
     {
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
         var record = MapToRecord(template);
-        await _dbContext.SessionTemplates.AddAsync(record, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SessionTemplates.AddAsync(record, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(SessionTemplate template, CancellationToken cancellationToken = default)
     {
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
         var record = MapToRecord(template);
-        _dbContext.SessionTemplates.Update(record);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        dbContext.SessionTemplates.Update(record);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var record = await _dbContext.SessionTemplates.FindAsync(new object[] { id }, cancellationToken);
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = await dbContext.SessionTemplates.FindAsync(new object[] { id }, cancellationToken);
         if (record != null)
         {
-            _dbContext.SessionTemplates.Remove(record);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            dbContext.SessionTemplates.Remove(record);
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 

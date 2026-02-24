@@ -59,6 +59,10 @@ public static class DatabaseServiceExtensions
         {
           options.UseInMemoryDatabase("Pulse");
         });
+        services.AddDbContextFactory<PulseSqlLiteDbContext>(options =>
+        {
+            options.UseInMemoryDatabase("Pulse");
+        });
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseSqlLiteDbContext>());
 
@@ -81,6 +85,13 @@ public static class DatabaseServiceExtensions
       sqliteOptions.MigrationsAssembly("TechWayFit.Pulse.Web");
          });
     });
+        services.AddDbContextFactory<PulseSqlLiteDbContext>(options =>
+        {
+            options.UseSqlite(connectionString, sqliteOptions =>
+            {
+                sqliteOptions.MigrationsAssembly("TechWayFit.Pulse.Web");
+            });
+        });
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseSqlLiteDbContext>());
 
@@ -112,6 +123,20 @@ options.UseSqlServer(connectionString, sqlServerOptions =>
   sqlServerOptions.MigrationsHistoryTable("__MigrationHistory", "pulse");
       });
   });
+        services.AddDbContextFactory<PulseSqlServerDbContext>(options =>
+        {
+            options.UseSqlServer(connectionString, sqlServerOptions =>
+            {
+                sqlServerOptions.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(5),
+                    errorNumbersToAdd: null);
+
+                sqlServerOptions.CommandTimeout(30);
+
+                sqlServerOptions.MigrationsHistoryTable("__MigrationHistory", "pulse");
+            });
+        });
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseSqlServerDbContext>());
 
@@ -145,6 +170,20 @@ options.UseMySQL(connectionString, mySqlOptions =>
       mySqlOptions.MigrationsHistoryTable("__MigrationHistory", "pulse");
             });
         });
+        services.AddDbContextFactory<PulseMariaDbContext>(options =>
+        {
+            options.UseMySQL(connectionString, mySqlOptions =>
+            {
+                mySqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 3,
+                    maxRetryDelay: TimeSpan.FromSeconds(5),
+                    errorNumbersToAdd: null);
+
+                mySqlOptions.CommandTimeout(30);
+
+                mySqlOptions.MigrationsHistoryTable("__MigrationHistory", "pulse");
+            });
+        });
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseMariaDbContext>());
 
@@ -159,16 +198,16 @@ options.UseMySQL(connectionString, mySqlOptions =>
     private static IServiceCollection AddSqlServerRepositories(this IServiceCollection services)
     {
         services.AddScoped<ISessionRepository, SqlServerRepos.SessionRepository>();
-    services.AddScoped<IResponseRepository, SqlServerRepos.ResponseRepository>();
+        services.AddScoped<IResponseRepository, SqlServerRepos.ResponseRepository>();
         services.AddScoped<IParticipantRepository, SqlServerRepos.ParticipantRepository>();
-services.AddScoped<ILoginOtpRepository, SqlServerRepos.LoginOtpRepository>();
+        services.AddScoped<ILoginOtpRepository, SqlServerRepos.LoginOtpRepository>();
         services.AddScoped<IFacilitatorUserRepository, SqlServerRepos.FacilitatorUserRepository>();
 
-  services.AddScoped<IActivityRepository, ActivityRepository>();
-      services.AddScoped<IContributionCounterRepository, ContributionCounterRepository>();
-        services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository>();
- services.AddScoped<ISessionGroupRepository, SessionGroupRepository>();
-        services.AddScoped<ISessionTemplateRepository, SessionTemplateRepository>();
+        services.AddScoped<IActivityRepository, ActivityRepository<PulseSqlServerDbContext>>();
+        services.AddScoped<IContributionCounterRepository, ContributionCounterRepository<PulseSqlServerDbContext>>();
+        services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository<PulseSqlServerDbContext>>();
+        services.AddScoped<ISessionGroupRepository, SessionGroupRepository<PulseSqlServerDbContext>>();
+        services.AddScoped<ISessionTemplateRepository, SessionTemplateRepository<PulseSqlServerDbContext>>();
 
         return services;
     }
@@ -181,14 +220,14 @@ services.AddScoped<ILoginOtpRepository, SqlServerRepos.LoginOtpRepository>();
         services.AddScoped<ISessionRepository, MariaDbRepos.SessionRepository>();
         services.AddScoped<IResponseRepository, MariaDbRepos.ResponseRepository>();
         services.AddScoped<IParticipantRepository, MariaDbRepos.ParticipantRepository>();
-    services.AddScoped<ILoginOtpRepository, MariaDbRepos.LoginOtpRepository>();
-     services.AddScoped<IFacilitatorUserRepository, MariaDbRepos.FacilitatorUserRepository>();
+        services.AddScoped<ILoginOtpRepository, MariaDbRepos.LoginOtpRepository>();
+        services.AddScoped<IFacilitatorUserRepository, MariaDbRepos.FacilitatorUserRepository>();
 
-        services.AddScoped<IActivityRepository, ActivityRepository>();
-     services.AddScoped<IContributionCounterRepository, ContributionCounterRepository>();
-        services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository>();
-     services.AddScoped<ISessionGroupRepository, SessionGroupRepository>();
-        services.AddScoped<ISessionTemplateRepository, SessionTemplateRepository>();
+        services.AddScoped<IActivityRepository, ActivityRepository<PulseMariaDbContext>>();
+        services.AddScoped<IContributionCounterRepository, ContributionCounterRepository<PulseMariaDbContext>>();
+        services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository<PulseMariaDbContext>>();
+        services.AddScoped<ISessionGroupRepository, SessionGroupRepository<PulseMariaDbContext>>();
+        services.AddScoped<ISessionTemplateRepository, SessionTemplateRepository<PulseMariaDbContext>>();
 
         return services;
     }
@@ -198,17 +237,17 @@ services.AddScoped<ILoginOtpRepository, SqlServerRepos.LoginOtpRepository>();
   /// </summary>
     private static IServiceCollection AddStandardRepositories(this IServiceCollection services)
     {
-services.AddScoped<ISessionRepository, SqliteRepos.SessionRepository>();
+        services.AddScoped<ISessionRepository, SqliteRepos.SessionRepository>();
         services.AddScoped<IResponseRepository, SqliteRepos.ResponseRepository>();
         services.AddScoped<IParticipantRepository, SqliteRepos.ParticipantRepository>();
         services.AddScoped<ILoginOtpRepository, SqliteRepos.LoginOtpRepository>();
-     services.AddScoped<IFacilitatorUserRepository, SqliteRepos.FacilitatorUserRepository>();
+        services.AddScoped<IFacilitatorUserRepository, SqliteRepos.FacilitatorUserRepository>();
 
-      services.AddScoped<IActivityRepository, ActivityRepository>();
-        services.AddScoped<IContributionCounterRepository, ContributionCounterRepository>();
-        services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository>();
-        services.AddScoped<ISessionGroupRepository, SessionGroupRepository>();
-        services.AddScoped<ISessionTemplateRepository, SessionTemplateRepository>();
+        services.AddScoped<IActivityRepository, ActivityRepository<PulseSqlLiteDbContext>>();
+        services.AddScoped<IContributionCounterRepository, ContributionCounterRepository<PulseSqlLiteDbContext>>();
+        services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository<PulseSqlLiteDbContext>>();
+        services.AddScoped<ISessionGroupRepository, SessionGroupRepository<PulseSqlLiteDbContext>>();
+        services.AddScoped<ISessionTemplateRepository, SessionTemplateRepository<PulseSqlLiteDbContext>>();
 
         return services;
     }

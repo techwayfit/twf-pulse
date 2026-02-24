@@ -1,29 +1,23 @@
 using Microsoft.EntityFrameworkCore;
-using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
-using TechWayFit.Pulse.Infrastructure.Persistence.Entities;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
+using TechWayFit.Pulse.Infrastructure.Persistence.SqlServer;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.SqlServer.Repositories;
 
 /// <summary>
 /// SQL Server-optimized LoginOtpRepository with bulk delete using ExecuteDeleteAsync.
-/// Overrides DeleteExpiredAsync for SQL Server-specific bulk operation optimization.
 /// </summary>
-public sealed class LoginOtpRepository : LoginOtpRepositoryBase
+public sealed class LoginOtpRepository : LoginOtpRepositoryBase<PulseSqlServerDbContext>
 {
-    public LoginOtpRepository(IPulseDbContext context) : base(context)
+    public LoginOtpRepository(IDbContextFactory<PulseSqlServerDbContext> dbContextFactory) : base(dbContextFactory)
     {
     }
 
-    // ? Override: SQL Server bulk delete optimization using ExecuteDeleteAsync (EF Core 7+)
-  public override async Task DeleteExpiredAsync(DateTimeOffset before, CancellationToken cancellationToken = default)
+    public override async Task DeleteExpiredAsync(DateTimeOffset before, CancellationToken cancellationToken = default)
     {
-// SQL Server optimization: Single DELETE statement instead of loading into memory
-        await _context.LoginOtps
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        await dbContext.LoginOtps
             .Where(o => o.ExpiresAt < before)
-   .ExecuteDeleteAsync(cancellationToken);
+            .ExecuteDeleteAsync(cancellationToken);
     }
-
-    // ? Inherits all other methods from LoginOtpRepositoryBase (GetByIdAsync, GetValidOtpAsync, GetRecentOtpsForEmailAsync, AddAsync, UpdateAsync)
- // ? Uses base class ApplySorting (server-side sorting works great in SQL Server)
 }

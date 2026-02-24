@@ -1,19 +1,16 @@
-using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
+using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
+using TechWayFit.Pulse.Infrastructure.Persistence.SqlServer;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.SqlServer.Repositories;
 
 /// <summary>
 /// SQL Server-optimized ParticipantRepository with server-side sorting.
-/// Inherits all implementation from ParticipantRepositoryBase - no SQL Server-specific optimizations needed.
+/// Inherits all implementation from ParticipantRepositoryBase.
 /// </summary>
-public sealed class ParticipantRepository : ParticipantRepositoryBase
+public sealed class ParticipantRepository : ParticipantRepositoryBase<PulseSqlServerDbContext>
 {
-    public ParticipantRepository(IPulseDbContext dbContext) : base(dbContext)
+    public ParticipantRepository(IDbContextFactory<PulseSqlServerDbContext> dbContextFactory) : base(dbContextFactory)
     {
     }
-
-    // ? Inherits ALL methods from ParticipantRepositoryBase
-    // ? Uses base class ApplySorting (server-side sorting works great in SQL Server)
-    // No overrides needed - base class already provides optimal SQL Server behavior
 }

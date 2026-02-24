@@ -2,21 +2,26 @@ using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
-using TechWayFit.Pulse.Infrastructure.Persistence.Entities;
 using TechWayFit.Pulse.Infrastructure.Persistence.Mapping;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 
 /// <summary>
-/// Shared ContributionCounterRepository implementation.
+/// Shared ContributionCounterRepository implementation for all providers.
 /// </summary>
-public class ContributionCounterRepository : IContributionCounterRepository
+public class ContributionCounterRepository<TContext> : IContributionCounterRepository
+    where TContext : DbContext, IPulseDbContext
 {
-    protected readonly IPulseDbContext _dbContext;
+    private readonly IDbContextFactory<TContext> _dbContextFactory;
 
-    public ContributionCounterRepository(IPulseDbContext dbContext)
+    public ContributionCounterRepository(IDbContextFactory<TContext> dbContextFactory)
     {
-        _dbContext = dbContext;
+        _dbContextFactory = dbContextFactory;
+    }
+
+    private async Task<TContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContextFactory.CreateDbContextAsync(cancellationToken);
     }
 
     public async Task<ContributionCounter?> GetAsync(
@@ -24,7 +29,8 @@ public class ContributionCounterRepository : IContributionCounterRepository
         Guid sessionId,
         CancellationToken cancellationToken = default)
     {
-        var record = await _dbContext.ContributionCounters
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = await dbContext.ContributionCounters
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.ParticipantId == participantId && x.SessionId == sessionId, cancellationToken);
 
@@ -33,7 +39,8 @@ public class ContributionCounterRepository : IContributionCounterRepository
 
     public async Task UpsertAsync(ContributionCounter counter, CancellationToken cancellationToken = default)
     {
-        var existingRecord = await _dbContext.ContributionCounters
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var existingRecord = await dbContext.ContributionCounters
             .FindAsync(new object[] { counter.ParticipantId }, cancellationToken);
 
         if (existingRecord != null)
@@ -44,9 +51,9 @@ public class ContributionCounterRepository : IContributionCounterRepository
         }
         else
         {
-            _dbContext.ContributionCounters.Add(counter.ToRecord());
+            dbContext.ContributionCounters.Add(counter.ToRecord());
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }
