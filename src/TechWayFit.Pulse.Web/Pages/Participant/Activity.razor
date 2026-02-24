@@ -659,7 +659,8 @@
             }
             
             // Check if token exists in store
-            if (!ParticipantTokenStore.TryGet(sessionEntity.Id, participantId.Value, out var storedAuth))
+            var storedAuth = await ParticipantTokenStore.TryGetAsync(sessionEntity.Id, participantId.Value);
+            if (storedAuth is null)
             {
                 submitSuccess = false;
                 submitMessage = "Session state lost (server restart). Please rejoin the session by refreshing and entering your name again.";

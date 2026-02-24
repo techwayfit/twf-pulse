@@ -99,7 +99,7 @@ public sealed class SessionsController : ControllerBase
             var settings = ApiMapper.ToDomain(request.Settings);
             var joinFormSchema = ApiMapper.ToDomain(request.JoinFormSchema);
             var facilitatorUserId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
-            
+
             // If no group is specified, use the default group for this facilitator
             var groupId = request.GroupId;
             if (groupId == null && facilitatorUserId.HasValue)
@@ -107,7 +107,7 @@ public sealed class SessionsController : ControllerBase
                 var defaultGroup = await _sessionGroups.GetDefaultGroupAsync(facilitatorUserId.Value, cancellationToken);
                 groupId = defaultGroup?.Id;
             }
-            
+
             var session = await _sessions.CreateSessionAsync(
                 code,
                 request.Title,
@@ -184,7 +184,7 @@ public sealed class SessionsController : ControllerBase
             // If duration provided, calculate as duration / 7 (average of 5-10 minutes)
             // If TargetActivityCount explicitly provided, use it (for backward compatibility)
             // Otherwise default to 6 activities
-            var targetCount = request.TargetActivityCount 
+            var targetCount = request.TargetActivityCount
                 ?? (request.DurationMinutes.HasValue ? Math.Max(2, request.DurationMinutes.Value / 7) : 6);
 
             // Generate and add activities to the session
@@ -268,7 +268,7 @@ public sealed class SessionsController : ControllerBase
 
     [HttpPost("{code}/facilitators/join")]
     public async Task<ActionResult<ApiResponse<JoinFacilitatorResponse>>> JoinFacilitator(
-        string code,  [FromBody] JoinFacilitatorRequest request,        CancellationToken cancellationToken)
+        string code, [FromBody] JoinFacilitatorRequest request, CancellationToken cancellationToken)
     {
         var session = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (session is null)
@@ -394,7 +394,7 @@ public sealed class SessionsController : ControllerBase
             }
 
             await _sessions.SetSessionGroupAsync(session.Id, request.GroupId, DateTimeOffset.UtcNow, cancellationToken);
-            
+
             var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
             return Ok(Wrap(ApiMapper.ToSummary(updated ?? session)));
         }
@@ -575,7 +575,7 @@ public sealed class SessionsController : ControllerBase
                 return authError;
             }
 
-            var settings = new TechWayFit.Pulse.Domain.ValueObjects.SessionSettings( 
+            var settings = new TechWayFit.Pulse.Domain.ValueObjects.SessionSettings(
                 request.StrictCurrentActivityOnly,
                 request.AllowAnonymous,
                 request.TtlMinutes);
@@ -1003,29 +1003,29 @@ public sealed class SessionsController : ControllerBase
 
             var participant = await _participants.JoinAsync(
                 session.Id,
-        request.DisplayName,
-         request.IsAnonymous,
-          request.Dimensions ?? new Dictionary<string, string?>(),
-       DateTimeOffset.UtcNow,
-    cancellationToken);
+                request.DisplayName,
+                request.IsAnonymous,
+                request.Dimensions ?? new Dictionary<string, string?>(),
+                DateTimeOffset.UtcNow,
+                cancellationToken);
 
             var participantCount = await _participants.GetBySessionAsync(session.Id, cancellationToken);
 
             // Broadcast participant joined event
             await _hub.Clients.Group(WorkshopGroupNames.ForSession(session.Code)).ParticipantJoined(new ParticipantJoinedEvent(
-        session.Code,
-            participant.Id,
- participant.DisplayName,
-            participantCount.Count,
+                session.Code,
+                participant.Id,
+                participant.DisplayName,
+                participantCount.Count,
                 DateTimeOffset.UtcNow));
 
             // SECURITY: Return the participant's token (generated during creation and persisted to database)
             // Add to in-memory cache for performance
             if (!string.IsNullOrEmpty(participant.Token))
             {
-                _participantTokens.TryGet(session.Id, participant.Id, out _); // This will cache it from DB
+                await _participantTokens.TryGetAsync(session.Id, participant.Id); // This will cache it from DB
             }
-            
+
             return Ok(Wrap(new JoinParticipantResponse(participant.Id, participant.Token ?? throw new InvalidOperationException("Participant token not generated"))));
         }
         catch (ArgumentException ex)
@@ -1068,31 +1068,31 @@ public sealed class SessionsController : ControllerBase
        DateTimeOffset.UtcNow,
         cancellationToken);
 
-                        var sessionGroup = WorkshopGroupNames.ForSession(session.Code);
-                        _logger.LogInformation(
-                                "Response submitted: SessionCode={SessionCode}, Group={Group}, ActivityId={ActivityId}, ParticipantId={ParticipantId}, ResponseId={ResponseId}",
-                                session.Code,
-                                sessionGroup,
-                                activityId,
-                                request.ParticipantId,
-                                response.Id);
+            var sessionGroup = WorkshopGroupNames.ForSession(session.Code);
+            _logger.LogInformation(
+                    "Response submitted: SessionCode={SessionCode}, Group={Group}, ActivityId={ActivityId}, ParticipantId={ParticipantId}, ResponseId={ResponseId}",
+                    session.Code,
+                    sessionGroup,
+                    activityId,
+                    request.ParticipantId,
+                    response.Id);
 
             // Broadcast response received event
-                        await _hub.Clients.Group(sessionGroup).ResponseReceived(new ResponseReceivedEvent(
-       session.Code,
-                   activityId,
-              response.Id,
-        request.ParticipantId,
-           response.CreatedAt,
-      DateTimeOffset.UtcNow));
+            await _hub.Clients.Group(sessionGroup).ResponseReceived(new ResponseReceivedEvent(
+session.Code,
+       activityId,
+  response.Id,
+request.ParticipantId,
+response.CreatedAt,
+DateTimeOffset.UtcNow));
 
             // Broadcast dashboard updated event
-                        await _hub.Clients.Group(sessionGroup).DashboardUpdated(new DashboardUpdatedEvent(
-                   session.Code,
-              activityId,
-            "response_submitted",
-             new { ResponseId = response.Id, ActivityId = activityId },
-            DateTimeOffset.UtcNow));
+            await _hub.Clients.Group(sessionGroup).DashboardUpdated(new DashboardUpdatedEvent(
+       session.Code,
+  activityId,
+"response_submitted",
+ new { ResponseId = response.Id, ActivityId = activityId },
+DateTimeOffset.UtcNow));
 
             return Ok(Wrap(new SubmitResponseResponse(response.Id)));
         }
@@ -1430,7 +1430,7 @@ filters ?? new Dictionary<string, string?>(),
                 "sales" => "sales/customer success",
                 _ => type
             }).ToArray();
-            
+
             var audienceDescription = descriptions.Length switch
             {
                 1 => $"{descriptions[0]} team",

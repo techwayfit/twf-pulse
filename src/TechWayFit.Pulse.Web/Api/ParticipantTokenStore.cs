@@ -89,6 +89,8 @@ public sealed class ParticipantTokenStore : IParticipantTokenStore
         catch
         {
             // If database query fails, return null
+            // Log exception.
+            
         }
 
         return null;
