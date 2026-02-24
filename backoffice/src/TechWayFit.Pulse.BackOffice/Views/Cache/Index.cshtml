@@ -1,0 +1,117 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Cache.CacheKeyPageResult?
+@{
+    ViewBag.Title = "Cache";
+    ViewBag.ActiveNav = "cache";
+    var pattern     = ViewBag.Pattern as string;
+    var unavailable = (bool)(ViewBag.Unavailable ?? false);
+}
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon" style="background:var(--accent-purple,#7c3aed)"><i class="boi boi-lg boi-settings"></i></div>
+        <div>
+            <div class="bo-page-title">Application Cache</div>
+            <div class="bo-page-sub">Inspect and evict in-process cache entries</div>
+        </div>
+    </div>
+    @if (Model is not null)
+    {
+        <span style="font-size:12px;color:var(--text-muted);font-family:var(--mono);align-self:flex-end">
+            @Model.TotalCount key(s)
+        </span>
+    }
+</div>
+
+@if (unavailable)
+{
+    <div class="bo-alert bo-alert-error">
+        <i class="boi boi-sm boi-settings boi-mr"></i>
+        Unable to reach the main application cache API. Check that <code>MainApp:BaseUrl</code> and
+        <code>MainApp:BackOfficeApiToken</code> are configured correctly.
+    </div>
+}
+else
+{
+    <div class="bo-card" style="margin-bottom:1rem">
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.75rem 1rem">
+            <form method="get" style="display:flex;gap:.5rem;align-items:center;flex:1;min-width:240px">
+                <input type="text" name="pattern" class="bo-input" value="@pattern"
+                       placeholder="Filter by key pattern (e.g. session:id:)" style="flex:1" />
+                <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm">
+                    <i class="boi boi-sm boi-search boi-mr"></i>Filter
+                </button>
+                @if (!string.IsNullOrWhiteSpace(pattern))
+                {
+                    <a asp-action="Index" class="bo-btn bo-btn-sm">Clear</a>
+                }
+            </form>
+
+            <form asp-action="EvictAll" method="post"
+                  onsubmit="return confirm('Evict ALL cache entries? This cannot be undone.')">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="bo-btn bo-btn-danger bo-btn-sm">
+                    <i class="boi boi-sm boi-settings boi-mr"></i>Evict All
+                </button>
+            </form>
+        </div>
+    </div>
+
+    @if (Model is null || Model.TotalCount == 0)
+    {
+        <div class="bo-card">
+            <div style="padding:2rem;text-align:center;color:var(--text-muted)">
+                @(string.IsNullOrWhiteSpace(pattern) ? "The cache is empty." : $"No keys match \"{pattern}\".")
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bo-card">
+            <div class="bo-table-wrap">
+                <table class="bo-table">
+                    <thead>
+                        <tr>
+                            <th>Cache Key</th>
+                            <th style="width:120px;text-align:center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var key in Model.Keys)
+                        {
+                            <tr>
+                                <td style="font-family:var(--mono);font-size:13px">@key</td>
+                                <td style="text-align:center">
+                                    <form asp-action="Evict" method="post" style="display:inline"
+                                          onsubmit="return confirm('Evict key: @key?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="key" value="@key" />
+                                        <input type="hidden" name="returnPattern" value="@pattern" />
+                                        <input type="hidden" name="returnPage" value="@Model.Page" />
+                                        <button type="submit" class="bo-btn bo-btn-danger bo-btn-sm">Evict</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (Model.TotalPages > 1)
+        {
+            <div style="display:flex;gap:.5rem;align-items:center;justify-content:center;margin-top:1rem">
+                @if (Model.HasPrevious)
+                {
+                    <a asp-action="Index" asp-route-pattern="@pattern" asp-route-page="@(Model.Page - 1)"
+                       class="bo-btn bo-btn-sm">&laquo; Prev</a>
+                }
+                <span style="font-size:13px;color:var(--text-muted)">Page @Model.Page of @Model.TotalPages</span>
+                @if (Model.HasNext)
+                {
+                    <a asp-action="Index" asp-route-pattern="@pattern" asp-route-page="@(Model.Page + 1)"
+                       class="bo-btn bo-btn-sm">Next &raquo;</a>
+                }
+            </div>
+        }
+    }
+}

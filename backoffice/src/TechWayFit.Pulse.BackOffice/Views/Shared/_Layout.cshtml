@@ -58,7 +58,8 @@
             <a class="bo-sidebar-item @(activeNav=="audit"?"active":"")" asp-controller="Audit" asp-action="Index"><span class="bo-sicon"><i class="boi boi-sm boi-audit"></i></span> Audit Log</a>
             @if (isSA)
             {
-                <a class="bo-sidebar-item @(activeNav=="operators"?"active":"")" asp-controller="BackOfficeUsers" asp-action="Index"><span class="bo-sicon"><i class="boi boi-sm boi-settings"></i></span> Operators</a>
+                <a class="bo-sidebar-item @(activeNav=="operators"?"active":"")" asp-controller="BackOfficeUsers" asp-action="Index"><span class="bo-sicon"><i class="boi boi-sm boi-operators"></i></span> Operators</a>
+                <a class="bo-sidebar-item @(activeNav=="cache"?"active":"")" asp-controller="Cache" asp-action="Index"><span class="bo-sicon"><i class="boi boi-sm boi-settings"></i></span> Cache</a>
             }
         </aside>
         <main class="bo-main">

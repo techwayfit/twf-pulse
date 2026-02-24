@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
+using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Infrastructure.Caching;
 using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 using SqlServerRepos = TechWayFit.Pulse.Infrastructure.Persistence.SqlServer.Repositories;
@@ -28,6 +30,11 @@ public static class DatabaseServiceExtensions
         var useInMemory = configuration.GetValue<bool>("Pulse:UseInMemory");
       var databaseProvider = configuration.GetValue<string>("Pulse:DatabaseProvider") ?? "Sqlite";
         var connectionString = configuration.GetConnectionString("PulseDb");
+
+        // IApplicationCache is provider-agnostic — register once here.
+        // MemoryApplicationCache wraps IMemoryCache (registered via AddMemoryCache in Program.cs).
+        // To switch to a distributed cache (Redis, etc.), replace this registration only.
+        services.AddSingleton<IApplicationCache, MemoryApplicationCache>();
 
         if (useInMemory || string.IsNullOrWhiteSpace(connectionString))
         {
@@ -62,7 +69,7 @@ public static class DatabaseServiceExtensions
         services.AddDbContextFactory<PulseSqlLiteDbContext>(options =>
         {
             options.UseInMemoryDatabase("Pulse");
-        });
+        }, ServiceLifetime.Scoped);
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseSqlLiteDbContext>());
 
@@ -91,7 +98,7 @@ public static class DatabaseServiceExtensions
             {
                 sqliteOptions.MigrationsAssembly("TechWayFit.Pulse.Web");
             });
-        });
+        }, ServiceLifetime.Scoped);
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseSqlLiteDbContext>());
 
@@ -136,7 +143,7 @@ options.UseSqlServer(connectionString, sqlServerOptions =>
 
                 sqlServerOptions.MigrationsHistoryTable("__MigrationHistory", "pulse");
             });
-        });
+        }, ServiceLifetime.Scoped);
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseSqlServerDbContext>());
 
@@ -183,7 +190,7 @@ options.UseMySQL(connectionString, mySqlOptions =>
 
                 mySqlOptions.MigrationsHistoryTable("__MigrationHistory", "pulse");
             });
-        });
+        }, ServiceLifetime.Scoped);
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseMariaDbContext>());
 
@@ -197,7 +204,10 @@ options.UseMySQL(connectionString, mySqlOptions =>
     /// </summary>
     private static IServiceCollection AddSqlServerRepositories(this IServiceCollection services)
     {
-        services.AddScoped<ISessionRepository, SqlServerRepos.SessionRepository>();
+        services.AddScoped<SqlServerRepos.SessionRepository>();
+        services.AddScoped<ISessionRepository>(sp => new CachingSessionRepository(
+            sp.GetRequiredService<SqlServerRepos.SessionRepository>(),
+            sp.GetRequiredService<IApplicationCache>()));
         services.AddScoped<IResponseRepository, SqlServerRepos.ResponseRepository>();
         services.AddScoped<IParticipantRepository, SqlServerRepos.ParticipantRepository>();
         services.AddScoped<ILoginOtpRepository, SqlServerRepos.LoginOtpRepository>();
@@ -217,7 +227,10 @@ options.UseMySQL(connectionString, mySqlOptions =>
     /// </summary>
     private static IServiceCollection AddMariaDbRepositories(this IServiceCollection services)
     {
-        services.AddScoped<ISessionRepository, MariaDbRepos.SessionRepository>();
+        services.AddScoped<MariaDbRepos.SessionRepository>();
+        services.AddScoped<ISessionRepository>(sp => new CachingSessionRepository(
+            sp.GetRequiredService<MariaDbRepos.SessionRepository>(),
+            sp.GetRequiredService<IApplicationCache>()));
         services.AddScoped<IResponseRepository, MariaDbRepos.ResponseRepository>();
         services.AddScoped<IParticipantRepository, MariaDbRepos.ParticipantRepository>();
         services.AddScoped<ILoginOtpRepository, MariaDbRepos.LoginOtpRepository>();
@@ -237,7 +250,10 @@ options.UseMySQL(connectionString, mySqlOptions =>
   /// </summary>
     private static IServiceCollection AddStandardRepositories(this IServiceCollection services)
     {
-        services.AddScoped<ISessionRepository, SqliteRepos.SessionRepository>();
+        services.AddScoped<SqliteRepos.SessionRepository>();
+        services.AddScoped<ISessionRepository>(sp => new CachingSessionRepository(
+            sp.GetRequiredService<SqliteRepos.SessionRepository>(),
+            sp.GetRequiredService<IApplicationCache>()));
         services.AddScoped<IResponseRepository, SqliteRepos.ResponseRepository>();
         services.AddScoped<IParticipantRepository, SqliteRepos.ParticipantRepository>();
         services.AddScoped<ILoginOtpRepository, SqliteRepos.LoginOtpRepository>();

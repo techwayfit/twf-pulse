@@ -31,6 +31,7 @@
 .boi-sessions     { background-image: url('/images/icons/calendar.svg'); }
 .boi-audit        { background-image: url('/images/icons/clipboard.svg'); }
 .boi-settings     { background-image: url('/images/icons/gear.svg'); }
+.boi-operators    { background-image: url('/images/icons/man-in-tuxedo.svg'); }
 .boi-logout       { background-image: url('/images/icons/leftwards-arrow-with-hook.svg'); }
 .boi-warning      { background-image: url('/images/icons/warning-sign.svg'); }
 .boi-search       { background-image: url('/images/icons/right-pointing-magnifying-glass.svg'); }

@@ -57,6 +57,19 @@ public static class BackOfficeCoreServiceExtensions
         services.AddScoped<IBackOfficeSessionService, BackOfficeSessionService>();
         services.AddScoped<IBackOfficeAuthService, BackOfficeAuthService>();
 
+        // Cache management — calls main app's internal API via named HttpClient.
+        // Requires MainApp:BaseUrl and MainApp:BackOfficeApiToken in appsettings.
+        services.AddHttpClient(BackOfficeCacheService.HttpClientName, (sp, client) =>
+        {
+            var cfg     = sp.GetRequiredService<IConfiguration>();
+            var baseUrl = cfg["MainApp:BaseUrl"];
+            if (!string.IsNullOrWhiteSpace(baseUrl))
+            {
+                client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+            }
+        });
+        services.AddScoped<IBackOfficeCacheService, BackOfficeCacheService>();
+
         return services;
     }
 }
