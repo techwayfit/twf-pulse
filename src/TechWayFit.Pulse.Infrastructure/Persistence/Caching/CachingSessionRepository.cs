@@ -166,14 +166,14 @@ public sealed class CachingSessionRepository : ISessionRepository
         // GUIDs are normalised to lowercase N-format (no hyphens or braces).
         // ToLowerInvariant() is called explicitly — "N" is lowercase in current .NET
         // runtimes but is not formally guaranteed, so we enforce it here.
-        private static string N(Guid id)        => id.ToString("N").ToLowerInvariant();
-        private static string N(Guid? id)       => id?.ToString("N").ToLowerInvariant() ?? "null";
+        private static string N(Guid id) => id.ToString("N").ToLowerInvariant();
+        private static string N(Guid? id) => id?.ToString("N").ToLowerInvariant() ?? "null";
 
-        public static string ById(Guid id)                                          => $"session:id:{N(id)}";
-        public static string ByCode(string code)                                    => $"session:code:{code}";
-        public static string ByFacilitator(Guid userId)                             => $"session:facilitator:{N(userId)}";
-        public static string ByFacilitatorPaged(Guid userId, int page, int size)    => $"session:facilitator:{N(userId)}:p:{page}:{size}";
-        public static string ByGroup(Guid? groupId, Guid userId)                    => $"session:group:{N(groupId)}:{N(userId)}";
+        public static string ById(Guid id) => $"session:id:{N(id)}";
+        public static string ByCode(string code) => $"session:code:{code}";
+        public static string ByFacilitator(Guid userId) => $"session:facilitator:{N(userId)}";
+        public static string ByFacilitatorPaged(Guid userId, int page, int size) => $"session:facilitator:{N(userId)}:p:{page}:{size}";
+        public static string ByGroup(Guid? groupId, Guid userId) => $"session:group:{N(groupId)}:{N(userId)}";
     }
 
     // -------------------------------------------------------------------------
@@ -188,7 +188,7 @@ public sealed class CachingSessionRepository : ISessionRepository
 
     private sealed class CachedPage<T>(IReadOnlyList<T> items, int totalCount)
     {
-        public IReadOnlyList<T> Items      { get; } = items;
-        public int              TotalCount { get; } = totalCount;
+        public IReadOnlyList<T> Items { get; } = items;
+        public int TotalCount { get; } = totalCount;
     }
 }

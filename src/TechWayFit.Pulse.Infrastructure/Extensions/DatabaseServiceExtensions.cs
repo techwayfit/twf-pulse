@@ -213,7 +213,10 @@ options.UseMySQL(connectionString, mySqlOptions =>
         services.AddScoped<ILoginOtpRepository, SqlServerRepos.LoginOtpRepository>();
         services.AddScoped<IFacilitatorUserRepository, SqlServerRepos.FacilitatorUserRepository>();
 
-        services.AddScoped<IActivityRepository, ActivityRepository<PulseSqlServerDbContext>>();
+        services.AddScoped<ActivityRepository<PulseSqlServerDbContext>>();
+        services.AddScoped<IActivityRepository>(sp => new CachingActivityRepository(
+            sp.GetRequiredService<ActivityRepository<PulseSqlServerDbContext>>(),
+            sp.GetRequiredService<IApplicationCache>()));
         services.AddScoped<IContributionCounterRepository, ContributionCounterRepository<PulseSqlServerDbContext>>();
         services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository<PulseSqlServerDbContext>>();
         services.AddScoped<ISessionGroupRepository, SessionGroupRepository<PulseSqlServerDbContext>>();
@@ -236,7 +239,10 @@ options.UseMySQL(connectionString, mySqlOptions =>
         services.AddScoped<ILoginOtpRepository, MariaDbRepos.LoginOtpRepository>();
         services.AddScoped<IFacilitatorUserRepository, MariaDbRepos.FacilitatorUserRepository>();
 
-        services.AddScoped<IActivityRepository, ActivityRepository<PulseMariaDbContext>>();
+        services.AddScoped<ActivityRepository<PulseMariaDbContext>>();
+        services.AddScoped<IActivityRepository>(sp => new CachingActivityRepository(
+            sp.GetRequiredService<ActivityRepository<PulseMariaDbContext>>(),
+            sp.GetRequiredService<IApplicationCache>()));
         services.AddScoped<IContributionCounterRepository, ContributionCounterRepository<PulseMariaDbContext>>();
         services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository<PulseMariaDbContext>>();
         services.AddScoped<ISessionGroupRepository, SessionGroupRepository<PulseMariaDbContext>>();
@@ -259,7 +265,10 @@ options.UseMySQL(connectionString, mySqlOptions =>
         services.AddScoped<ILoginOtpRepository, SqliteRepos.LoginOtpRepository>();
         services.AddScoped<IFacilitatorUserRepository, SqliteRepos.FacilitatorUserRepository>();
 
-        services.AddScoped<IActivityRepository, ActivityRepository<PulseSqlLiteDbContext>>();
+        services.AddScoped<ActivityRepository<PulseSqlLiteDbContext>>();
+        services.AddScoped<IActivityRepository>(sp => new CachingActivityRepository(
+            sp.GetRequiredService<ActivityRepository<PulseSqlLiteDbContext>>(),
+            sp.GetRequiredService<IApplicationCache>()));
         services.AddScoped<IContributionCounterRepository, ContributionCounterRepository<PulseSqlLiteDbContext>>();
         services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository<PulseSqlLiteDbContext>>();
         services.AddScoped<ISessionGroupRepository, SessionGroupRepository<PulseSqlLiteDbContext>>();
