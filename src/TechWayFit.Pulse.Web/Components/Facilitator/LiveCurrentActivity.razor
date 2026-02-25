@@ -68,7 +68,7 @@
             }
             else if (Activity.Type == ActivityType.Quadrant)
             {
-                <QuadrantDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
+                <QuadrantDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" ActivityConfig="@Activity.Config" />
             }
             else if (Activity.Type == ActivityType.AiSummary)
             {

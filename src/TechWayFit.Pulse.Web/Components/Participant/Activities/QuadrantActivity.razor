@@ -1,4 +1,5 @@
 @using System.Text.Json
+@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
 
 <div class="quadrant-activity">
     @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
@@ -123,18 +124,18 @@
             try
             {
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var config = JsonSerializer.Deserialize<QuadrantConfigDto>(Parameters.Config, options);
+                var config = JsonSerializer.Deserialize<QuadrantConfig>(Parameters.Config, options);
                 
                 if (config != null)
                 {
-                    xAxisLabel = config.XAxisLabel ?? "X Axis";
-                    yAxisLabel = config.YAxisLabel ?? "Y Axis";
-                    topLeftLabel = config.TopLeftLabel ?? "Top Left";
-                    topRightLabel = config.TopRightLabel ?? "Top Right";
-                    bottomLeftLabel = config.BottomLeftLabel ?? "Bottom Left";
-                    bottomRightLabel = config.BottomRightLabel ?? "Bottom Right";
-                    scale = config.Scale ?? 10;
-                    maxLabelLength = config.MaxLabelLength ?? 100;
+                    xAxisLabel = config.XAxisLabel;
+                    yAxisLabel = config.YAxisLabel;
+                    topLeftLabel = config.ResolvedTopLeft;
+                    topRightLabel = config.ResolvedTopRight;
+                    bottomLeftLabel = config.ResolvedBottomLeft;
+                    bottomRightLabel = config.ResolvedBottomRight;
+                    scale = config.Scale;
+                    maxLabelLength = config.MaxLabelLength;
                     
                     // Set initial values to middle of scale
                     xScore = (scale + 1) / 2;
@@ -219,16 +220,5 @@
         return "Submit Response";
     }
 
-    private class QuadrantConfigDto
-    {
-        public string? XAxisLabel { get; set; }
-        public string? YAxisLabel { get; set; }
-        public string? TopLeftLabel { get; set; }
-        public string? TopRightLabel { get; set; }
-        public string? BottomLeftLabel { get; set; }
-        public string? BottomRightLabel { get; set; }
-        public int? Scale { get; set; }
-        public bool? AllowLabels { get; set; }
-        public int? MaxLabelLength { get; set; }
-    }
+
 }

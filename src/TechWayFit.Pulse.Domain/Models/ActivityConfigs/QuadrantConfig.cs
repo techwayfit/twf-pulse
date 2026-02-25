@@ -70,4 +70,19 @@ public sealed class QuadrantConfig
     /// Maximum number of points a participant can place
     /// </summary>
     public int MaxPointsPerParticipant { get; set; }
+
+    // Alias properties for JSON stored without the "Label" suffix (e.g. activity-types.js format)
+    public string? TopLeft { get; set; }
+    public string? TopRight { get; set; }
+    public string? BottomLeft { get; set; }
+    public string? BottomRight { get; set; }
+
+    /// <summary>Resolves top-left label from either key format.</summary>
+    public string ResolvedTopLeft => TopLeft ?? TopLeftLabel;
+    /// <summary>Resolves top-right label from either key format.</summary>
+    public string ResolvedTopRight => TopRight ?? TopRightLabel;
+    /// <summary>Resolves bottom-left label from either key format.</summary>
+    public string ResolvedBottomLeft => BottomLeft ?? BottomLeftLabel;
+    /// <summary>Resolves bottom-right label from either key format.</summary>
+    public string ResolvedBottomRight => BottomRight ?? BottomRightLabel;
 }

@@ -2,6 +2,8 @@
 @using TechWayFit.Pulse.Contracts.Responses
 @using Microsoft.AspNetCore.SignalR.Client
 @using TechWayFit.Pulse.Web.Hubs
+@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using System.Text.Json
 @namespace TechWayFit.Pulse.Web.Components.Dashboards
 @inject IDashboardService DashboardService
 @inject ISessionService SessionService
@@ -57,25 +59,25 @@
             <div class="row g-3 mb-3">
                 <div class="col-6 col-md-3">
                     <div class="border rounded p-3 h-100">
-                        <div class="fw-semibold text-muted small">Top Left</div>
+                        <div class="fw-semibold text-muted small">@topLeftLabel</div>
                         <div class="h5 mb-0">@quadrantCounts.TopLeft</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="border rounded p-3 h-100">
-                        <div class="fw-semibold text-muted small">Top Right</div>
+                        <div class="fw-semibold text-muted small">@topRightLabel</div>
                         <div class="h5 mb-0">@quadrantCounts.TopRight</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="border rounded p-3 h-100">
-                        <div class="fw-semibold text-muted small">Bottom Left</div>
+                        <div class="fw-semibold text-muted small">@bottomLeftLabel</div>
                         <div class="h5 mb-0">@quadrantCounts.BottomLeft</div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="border rounded p-3 h-100">
-                        <div class="fw-semibold text-muted small">Bottom Right</div>
+                        <div class="fw-semibold text-muted small">@bottomRightLabel</div>
                         <div class="h5 mb-0">@quadrantCounts.BottomRight</div>
                     </div>
                 </div>
@@ -117,6 +119,7 @@
 @code {
     [Parameter] public string SessionCode { get; set; } = string.Empty;
     [Parameter] public Guid ActivityId { get; set; }
+    [Parameter] public string? ActivityConfig { get; set; }
 
     private DashboardResponse? dashboard;
     private bool isLoading = true;
@@ -124,14 +127,43 @@
     private HubConnection? hubConnection;
     private (int TopLeft, int TopRight, int BottomLeft, int BottomRight) quadrantCounts;
 
+    private string topLeftLabel = "Top Left";
+    private string topRightLabel = "Top Right";
+    private string bottomLeftLabel = "Bottom Left";
+    private string bottomRightLabel = "Bottom Right";
+
     protected override async Task OnInitializedAsync()
     {
+        LoadConfig();
         await LoadDashboard();
         await SetupSignalRConnection();
     }
 
+    private void LoadConfig()
+    {
+        if (string.IsNullOrWhiteSpace(ActivityConfig)) return;
+        try
+        {
+            var config = JsonSerializer.Deserialize<QuadrantConfig>(
+                ActivityConfig,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (config is not null)
+            {
+                topLeftLabel = config.ResolvedTopLeft;
+                topRightLabel = config.ResolvedTopRight;
+                bottomLeftLabel = config.ResolvedBottomLeft;
+                bottomRightLabel = config.ResolvedBottomRight;
+            }
+        }
+        catch
+        {
+            // Use defaults if parsing fails
+        }
+    }
+
     protected override async Task OnParametersSetAsync()
     {
+        LoadConfig();
         if (!isLoading)
         {
             await LoadDashboard();
@@ -249,12 +281,12 @@
         return (topLeft, topRight, bottomLeft, bottomRight);
     }
 
-    private static string GetQuadrantName(QuadrantPoint point)
+    private string GetQuadrantName(QuadrantPoint point)
     {
-        if (point.Y >= 50 && point.X < 50) return "Top Left";
-        if (point.Y >= 50 && point.X >= 50) return "Top Right";
-        if (point.Y < 50 && point.X < 50) return "Bottom Left";
-        return "Bottom Right";
+        if (point.Y >= 50 && point.X < 50) return topLeftLabel;
+        if (point.Y >= 50 && point.X >= 50) return topRightLabel;
+        if (point.Y < 50 && point.X < 50) return bottomLeftLabel;
+        return bottomRightLabel;
     }
 
     private double GetParticipationRate()
@@ -266,6 +298,8 @@
 
         return dashboard.RespondedParticipants * 100.0 / dashboard.ParticipantCount;
     }
+
+
 
     public async ValueTask DisposeAsync()
     {

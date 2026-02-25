@@ -225,7 +225,7 @@
             </button>
             <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
                     data-bs-target="#aisummaryModal" @onclick='() => OnAddActivity.InvokeAsync("AiSummary")'>
-                <i class="ics ics-sparkles ic-sm me-1"></i>AI Summary
+                <i class="fas fa-robot me-1"></i>AI Summary
             </button>
             <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
                     data-bs-target="#breakModal" @onclick='() => OnAddActivity.InvokeAsync("Break")'>
@@ -270,7 +270,7 @@
         ActivityType.GeneralFeedback => (MarkupString)"<i class='fas fa-comment'></i>",
         ActivityType.Quiz => (MarkupString)"<i class='fas fa-circle-question'></i>",
         ActivityType.QnA => (MarkupString)"<i class='fas fa-lightbulb'></i>",
-        ActivityType.AiSummary => (MarkupString)"<i class='ics ics-sparkles'></i>",
+        ActivityType.AiSummary => (MarkupString)"<i class='fas fa-robot '></i>",
         ActivityType.Break => (MarkupString)"<i class='fas fa-coffee'></i>",
         _ => (MarkupString)"<i class='fas fa-clipboard-list'></i>"
     };

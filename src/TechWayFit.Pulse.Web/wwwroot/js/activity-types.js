@@ -577,7 +577,7 @@ class AiSummaryActivity extends Activity {
     }
 
     getEmoji() {
-        return '<i class="ics ics-sparkles ic-sm"></i>';
+        return '<i class="fas fa-robot ic-sm"></i>';
     }
 
     populateSpecificFields(prefix) {
@@ -717,7 +717,7 @@ class ActivityFactory {
             { type: 'FiveWhys', class: FiveWhysActivity, emoji: '<i class="ics ics-question ic-sm"></i>', description: 'Root cause analysis' },
             { type: 'Rating', class: RatingActivity, emoji: '<i class="ics ics-star ic-sm"></i>', description: 'Star or numeric ratings' },
             { type: 'Feedback', class: FeedbackActivity, emoji: '<i class="ics ics-chat ic-sm"></i>', description: 'Open-ended feedback' },
-            { type: 'AiSummary', class: AiSummaryActivity, emoji: '<i class="ics ics-sparkles ic-sm"></i>', description: 'AI-generated session summary' },
+            { type: 'AiSummary', class: AiSummaryActivity, emoji: '<i class="fas fa-robot ic-sm"></i>', description: 'AI-generated session summary' },
             { type: 'Break', class: BreakActivity, emoji: '<i class="fas fa-coffee"></i>', description: 'Timed break with ready signal' }
         ];
     }

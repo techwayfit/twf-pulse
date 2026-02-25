@@ -119,10 +119,10 @@
             
             if (config != null)
             {
-                topLeftLabel = config.TopLeftLabel;
-                topRightLabel = config.TopRightLabel;
-                bottomLeftLabel = config.BottomLeftLabel;
-                bottomRightLabel = config.BottomRightLabel;
+                topLeftLabel = config.ResolvedTopLeft;
+                topRightLabel = config.ResolvedTopRight;
+                bottomLeftLabel = config.ResolvedBottomLeft;
+                bottomRightLabel = config.ResolvedBottomRight;
             }
         }
         catch (Exception ex)
@@ -130,6 +130,8 @@
             Console.WriteLine($"Error loading quadrant config: {ex.Message}");
         }
     }
+
+
 
     private async Task LoadData()
     {

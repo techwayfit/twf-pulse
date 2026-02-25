@@ -47,7 +47,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <div>
                 <h6 class="mb-0 fw-semibold">
-                    <i class="ics ics-sparkles ic-sm ic-mr"></i>Generated Summary
+                    <i class="fas fa-robot"></i>Generated Summary
                 </h6>
                 @if (config.GeneratedAt.HasValue)
                 {
@@ -80,7 +80,7 @@
     {
         <!-- No summary yet - auto-generation trigger or manual -->
         <div class="text-center py-4">
-            <i class="ics ics-sparkles ic-xl text-muted mb-3 d-block"></i>
+            <i class="fas fa-robot  ic-xl text-muted mb-3 d-block"></i>
             <p class="fw-medium mb-1">No summary generated yet</p>
             <p class="text-muted small mb-3">Click the button below to generate an AI summary of all completed activities.</p>
             <button class="btn btn-primary" @onclick="TriggerGenerationAsync" disabled="@isGenerating">
@@ -91,7 +91,7 @@
                 }
                 else
                 {
-                    <i class="ics ics-sparkles ic-sm ic-mr"></i>
+                    <i class="fas fa-robot  ic-sm ic-mr"></i>
                     <text>Generate AI Summary</text>
                 }
             </button>
