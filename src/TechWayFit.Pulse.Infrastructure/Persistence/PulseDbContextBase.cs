@@ -23,6 +23,7 @@ public DbSet<SessionRecord> Sessions => Set<SessionRecord>();
     public DbSet<LoginOtpRecord> LoginOtps => Set<LoginOtpRecord>();
     public DbSet<SessionGroupRecord> SessionGroups => Set<SessionGroupRecord>();
     public DbSet<SessionTemplateRecord> SessionTemplates => Set<SessionTemplateRecord>();
+    public DbSet<SessionActivityMetadataRecord> SessionActivityMetadata => Set<SessionActivityMetadataRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -139,6 +140,16 @@ public DbSet<SessionRecord> Sessions => Set<SessionRecord>();
         entity.HasIndex(x => x.IsSystemTemplate);
             entity.HasIndex(x => x.CreatedByUserId);
       });
+
+        // SessionActivityMetadata
+        modelBuilder.Entity<SessionActivityMetadataRecord>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Key).HasMaxLength(100).IsRequired();
+            // Unique constraint: one value per (session, activity, key)
+            entity.HasIndex(x => new { x.SessionId, x.ActivityId, x.Key }).IsUnique();
+            entity.HasIndex(x => new { x.SessionId, x.ActivityId });
+        });
     }
 
  /// <summary>

@@ -36,6 +36,11 @@ public interface IWorkshopClient
     /// Activity has been deleted
     /// </summary>
     Task ActivityDeleted(Guid activityId);
+
+    /// <summary>
+    /// Facilitator has advanced (or moved back) the current item index in a Quadrant activity
+    /// </summary>
+    Task QuadrantItemAdvanced(QuadrantItemAdvancedEvent evt);
 }
 
 /// <summary>
@@ -90,4 +95,14 @@ public sealed record DashboardUpdatedEvent(
  Guid? ActivityId,
     string AggregateType,
     object Payload,
+    DateTimeOffset Timestamp);
+
+/// <summary>
+/// Event data broadcast when facilitator advances/moves to a different item
+/// in a Quadrant activity
+/// </summary>
+public sealed record QuadrantItemAdvancedEvent(
+    string SessionCode,
+    Guid ActivityId,
+    int ItemIndex,
     DateTimeOffset Timestamp);

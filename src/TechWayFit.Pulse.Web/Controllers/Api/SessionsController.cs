@@ -35,6 +35,7 @@ public sealed class SessionsController : ControllerBase
     private readonly TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService _sessionAI;
     private readonly ISessionGroupService _sessionGroups;
     private readonly TechWayFit.Pulse.Web.Services.IHubNotificationService _hubNotifications;
+    private readonly ISessionActivityMetadataService _metadataService;
     private readonly ILogger<SessionsController> _logger;
 
     public SessionsController(
@@ -58,6 +59,7 @@ public sealed class SessionsController : ControllerBase
         TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService facilitatorAI,
         ISessionGroupService sessionGroups,
         TechWayFit.Pulse.Web.Services.IHubNotificationService hubNotifications,
+        ISessionActivityMetadataService metadataService,
         ILogger<SessionsController> logger)
     {
         _sessions = sessions;
@@ -80,6 +82,7 @@ public sealed class SessionsController : ControllerBase
         _sessionAI = sessionAI;
         _sessionGroups = sessionGroups;
         _hubNotifications = hubNotifications;
+        _metadataService = metadataService;
         _logger = logger;
     }
 
@@ -778,6 +781,77 @@ public sealed class SessionsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpPost("{code}/activities/{activityId:guid}/quadrant/set-item")]
+    public async Task<ActionResult<ApiResponse<object>>> SetQuadrantItem(
+        string code,
+        Guid activityId,
+        [FromBody] SetQuadrantItemRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+                return NotFound(Error<object>("not_found", "Session not found."));
+
+            var authError = RequireFacilitatorToken<object>(session);
+            if (authError is not null)
+                return authError;
+
+            var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+            var activity = agenda.FirstOrDefault(a => a.Id == activityId);
+            if (activity is null)
+                return NotFound(Error<object>("not_found", "Activity not found."));
+
+            if (activity.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.Quadrant)
+                return BadRequest(Error<object>("invalid_type", "Only Quadrant activities support set-item."));
+
+            if (request.ItemIndex < 0)
+                return BadRequest(Error<object>("validation_error", "ItemIndex must be >= 0."));
+
+            await _hubNotifications.PublishQuadrantItemAdvancedAsync(
+                session.Code, activityId, request.ItemIndex, cancellationToken);
+
+            await _metadataService.SetValueAsync(
+                session.Id,
+                activityId,
+                TechWayFit.Pulse.Domain.Models.ActivityMetadataKeys.QuadrantCurrentItemIndex,
+                request.ItemIndex.ToString(),
+                cancellationToken);
+
+            return Ok(Wrap<object>(new { itemIndex = request.ItemIndex }));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<object>("validation_error", ex.Message));
+        }
+    }
+
+    [HttpGet("{code}/activities/{activityId:guid}/metadata/{key}")]
+    public async Task<ActionResult<ApiResponse<string?>>> GetActivityMetadata(
+        string code,
+        Guid activityId,
+        string key,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+                return NotFound(Error<string?>("not_found", "Session not found."));
+
+            var value = await _metadataService.GetValueAsync(
+                session.Id, activityId, key, cancellationToken);
+
+            return Ok(Wrap<string?>(value));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get metadata for activity {ActivityId} key {Key}", activityId, key);
+            return StatusCode(500, Error<string?>("internal_error", "Failed to retrieve metadata."));
         }
     }
 

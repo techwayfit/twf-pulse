@@ -91,5 +91,11 @@ entity.Property(x => x.Value).HasColumnType("NVARCHAR(MAX)").IsRequired();
             entity.ToTable("SessionTemplates", "pulse");
         entity.Property(x => x.ConfigJson).HasColumnType("NVARCHAR(MAX)").IsRequired();
         });
+
+        modelBuilder.Entity<SessionActivityMetadataRecord>(entity =>
+        {
+            entity.ToTable("SessionActivityMetadata", "pulse");
+            entity.Property(x => x.Value).HasColumnType("NVARCHAR(MAX)").IsRequired();
+        });
     }
 }

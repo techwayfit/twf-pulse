@@ -1,100 +1,148 @@
 @using System.Text.Json
+@using TechWayFit.Pulse.Application.Abstractions.Services
 @using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@inject ISessionService SessionService
+@inject ISessionActivityMetadataService MetadataService
+@implements IAsyncDisposable
 
 <div class="quadrant-activity">
-    @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
+    @if (config is null)
     {
-        <!-- Success confirmation -->
-        <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
-            <i class="fas fa-check-circle me-3 fs-4" aria-hidden="true"></i>
-            <div>
-                <strong>Response submitted successfully!</strong>
-                <div class="small">Your feedback has been placed on the quadrant.</div>
-            </div>
-        </div>
+        <div class="alert alert-warning">Activity configuration is missing.</div>
+    }
+    else if (config.Items.Count == 0)
+    {
+        <div class="alert alert-warning">No items configured for this activity.</div>
     }
     else
     {
-        <div class="mb-4">
-            <!-- Feedback Text Input (Required) -->
-            <div class="mb-4">
-                <label class="form-label fw-semibold">Your Feedback <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" 
-                       value="@labelText" 
-                       @oninput="OnLabelChanged"
-                       placeholder="Enter your feedback or idea..."
-                       maxlength="@maxLabelLength"
-                       disabled="@Parameters.HasSubmitted"
-                       required />
-                @if (showValidationError && string.IsNullOrWhiteSpace(labelText))
-                {
-                    <div class="text-danger small mt-1">Feedback is required</div>
-                }
+        <!-- Progress bar -->
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <small class="text-muted fw-semibold">Item @(currentItemIndex + 1) of @config.Items.Count</small>
+                <small class="text-muted">@submittedItems.Count submitted</small>
             </div>
-            
-            <p class="text-muted small mb-3">Rate your feedback from 1 to @scale on each dimension</p>
-            
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">@xAxisLabel</label>
-                    <div class="d-flex align-items-center gap-3">
-                        <input type="range" class="form-range" 
-                               min="1" max="@scale" step="1"
-                               value="@xScore" 
-                               @oninput="OnXChanged"
-                               disabled="@Parameters.HasSubmitted" />
-                        <span class="badge bg-primary fs-5" style="min-width: 50px;">@xScore</span>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted small mt-1">
-                        <span>Low</span>
-                        <span>High</span>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">@yAxisLabel</label>
-                    <div class="d-flex align-items-center gap-3">
-                        <input type="range" class="form-range" 
-                               min="1" max="@scale" step="1"
-                               value="@yScore" 
-                               @oninput="OnYChanged"
-                               disabled="@Parameters.HasSubmitted" />
-                        <span class="badge bg-primary fs-5" style="min-width: 50px;">@yScore</span>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted small mt-1">
-                        <span>Low</span>
-                        <span>High</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Quadrant preview -->
-            <div class="mt-3 p-3 bg-light border rounded">
-                <div class="small text-muted mb-2">Your point will be placed in:</div>
-                <div class="fw-semibold text-primary">@GetQuadrantLabel()</div>
+            <div class="progress" style="height: 6px;">
+                <div class="progress-bar bg-success" style="width: @(submittedItems.Count * 100 / config.Items.Count)%"></div>
             </div>
         </div>
-    }
-    
-    <button class="@(Parameters.HasSubmitted && Parameters.SubmitSuccess ? "btn-success" : "btn-primary") btn-lg w-100 py-3" 
-            tabindex="1"
-            @onclick="HandleSubmit" 
-            disabled="@(Parameters.IsSubmitting || Parameters.HasSubmitted)">
-        @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
+
+        <!-- Current item -->
+        <div class="card border-primary border-2 mb-4">
+            <div class="card-body py-3">
+                <div class="text-muted small mb-1">Current item</div>
+                <div class="fw-semibold fs-5">@currentItemName</div>
+            </div>
+        </div>
+
+        @if (submittedItems.Contains(currentItemIndex))
         {
-            <i class="fas fa-check-circle me-2" aria-hidden="true"></i>
-            <text>Response Submitted</text>
+            <div class="alert alert-success d-flex align-items-center gap-2">
+                <i class="fas fa-check-circle fs-5"></i>
+                <div>
+                    <strong>Scored!</strong>
+                    <span class="ms-2 text-muted small">
+                        @config.XAxisLabel: @submittedScores[currentItemIndex].x &nbsp;&nbsp;
+                        @config.YAxisLabel: @submittedScores[currentItemIndex].y
+                    </span>
+                </div>
+            </div>
         }
         else
         {
-            <text>@GetSubmitButtonText()</text>
+            <!-- Scoring form -->
+            <div class="row g-4 mb-3">
+                <!-- X axis -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">@config.XAxisLabel <span class="text-danger">*</span></label>
+                    <select class="form-select" @onchange="OnXChanged" value="@selectedXValue">
+                        <option value="">— select —</option>
+                        @foreach (var opt in xOptions)
+                        {
+                            <option value="@opt.Value">@opt.DisplayText</option>
+                        }
+                    </select>
+                    @if (!string.IsNullOrEmpty(selectedXDesc))
+                    {
+                        <div class="form-text text-info">@selectedXDesc</div>
+                    }
+                </div>
+
+                <!-- Y axis -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">@config.YAxisLabel <span class="text-danger">*</span></label>
+                    <select class="form-select" @onchange="OnYChanged" value="@selectedYValue">
+                        <option value="">— select —</option>
+                        @foreach (var opt in yOptions)
+                        {
+                            <option value="@opt.Value">@opt.DisplayText</option>
+                        }
+                    </select>
+                    @if (!string.IsNullOrEmpty(selectedYDesc))
+                    {
+                        <div class="form-text text-info">@selectedYDesc</div>
+                    }
+                </div>
+            </div>
+
+            @if (config.AllowNotes)
+            {
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Note <span class="text-muted fw-normal">(optional)</span></label>
+                    <input type="text" class="form-control" @bind="noteText" placeholder="Add a quick note about this item..." maxlength="200" />
+                </div>
+            }
+
+            @if (showValidationError)
+            {
+                <div class="alert alert-warning py-2 mb-3">Please select a score for both axes.</div>
+            }
         }
-    </button>
-    
-    @if (!string.IsNullOrEmpty(Parameters.SubmitMessage) && !Parameters.SubmitSuccess)
-    {
-        <div class="alert alert-danger mt-3 mb-0">
-            @Parameters.SubmitMessage
-        </div>
+
+        <button class="btn @(submittedItems.Contains(currentItemIndex) ? "btn-outline-success" : "btn-primary") btn-lg w-100 py-3"
+                @onclick="HandleSubmit"
+                disabled="@(Parameters.IsSubmitting || submittedItems.Contains(currentItemIndex))">
+            @if (Parameters.IsSubmitting)
+            {
+                <span class="spinner-border spinner-border-sm me-2"></span><text>Submitting…</text>
+            }
+            else if (submittedItems.Contains(currentItemIndex))
+            {
+                <i class="fas fa-check-circle me-2"></i><text>Scored — waiting for next item</text>
+            }
+            else
+            {
+                <text>Submit Score</text>
+            }
+        </button>
+
+        @if (!string.IsNullOrEmpty(Parameters.SubmitMessage) && !Parameters.SubmitSuccess)
+        {
+            <div class="alert alert-danger mt-3 mb-0">@Parameters.SubmitMessage</div>
+        }
+
+        <!-- Item overview chips -->
+        @if (config.Items.Count > 1)
+        {
+            <div class="mt-4">
+                <div class="small text-muted fw-semibold mb-2">All items</div>
+                <div class="d-flex flex-wrap gap-1">
+                    @for (int i = 0; i < config.Items.Count; i++)
+                    {
+                        var idx = i;
+                        var isCurrent = idx == currentItemIndex;
+                        var isDone = submittedItems.Contains(idx);
+                        <span class="badge @(isCurrent ? "bg-primary" : isDone ? "bg-success" : "bg-light text-dark border") rounded-pill"
+                              style="font-size: 0.7rem;"
+                              title="@config.Items[idx]">
+                            @(idx + 1)
+                        </span>
+                    }
+                </div>
+            </div>
+        }
     }
 </div>
 
@@ -102,123 +150,163 @@
     [Parameter, EditorRequired]
     public required ParticipantActivityParameters Parameters { get; set; }
 
-    private int scale = 10;
-    private int xScore = 5;
-    private int yScore = 5;
-    private string? labelText;
+    private QuadrantConfig? config;
+    private int currentItemIndex = 0;
+    private string currentItemName = string.Empty;
+    private string selectedXValue = string.Empty;
+    private string selectedYValue = string.Empty;
+    private string selectedXDesc = string.Empty;
+    private string selectedYDesc = string.Empty;
+    private string noteText = string.Empty;
     private bool showValidationError = false;
-    private int maxLabelLength = 100;
-    
-    private string xAxisLabel = "X Axis";
-    private string yAxisLabel = "Y Axis";
-    private string topLeftLabel = "Top Left";
-    private string topRightLabel = "Top Right";
-    private string bottomLeftLabel = "Bottom Left";
-    private string bottomRightLabel = "Bottom Right";
+    private HashSet<int> submittedItems = new();
+    private Dictionary<int, (string x, string y)> submittedScores = new();
+    private List<ScoreOption> xOptions = new();
+    private List<ScoreOption> yOptions = new();
+    private HubConnection? hubConnection;
+    private bool _indexRestored = false;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        // Parse config from activity
         if (!string.IsNullOrEmpty(Parameters.Config))
         {
             try
             {
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var config = JsonSerializer.Deserialize<QuadrantConfig>(Parameters.Config, options);
-                
-                if (config != null)
+                config = JsonSerializer.Deserialize<QuadrantConfig>(Parameters.Config,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (config is not null)
                 {
-                    xAxisLabel = config.XAxisLabel;
-                    yAxisLabel = config.YAxisLabel;
-                    topLeftLabel = config.ResolvedTopLeft;
-                    topRightLabel = config.ResolvedTopRight;
-                    bottomLeftLabel = config.ResolvedBottomLeft;
-                    bottomRightLabel = config.ResolvedBottomRight;
-                    scale = config.Scale;
-                    maxLabelLength = config.MaxLabelLength;
-                    
-                    // Set initial values to middle of scale
-                    xScore = (scale + 1) / 2;
-                    yScore = (scale + 1) / 2;
+                    xOptions = config.XScoreOptions ?? new();
+                    yOptions = config.ResolvedYScoreOptions ?? new();
+                    UpdateCurrentItem();
                 }
             }
-            catch
+            catch { /* use defaults */ }
+        }
+
+        if (!_indexRestored && !string.IsNullOrEmpty(Parameters.SessionCode))
+        {
+            try
             {
-                // Use defaults if parsing fails
+                var session = await SessionService.GetByCodeAsync(Parameters.SessionCode);
+                if (session is not null)
+                {
+                    var saved = await MetadataService.GetValueAsync(
+                        session.Id, Parameters.ActivityId,
+                        TechWayFit.Pulse.Domain.Models.ActivityMetadataKeys.QuadrantCurrentItemIndex);
+                    if (saved is not null && int.TryParse(saved, out var savedIdx))
+                    {
+                        currentItemIndex = savedIdx;
+                        UpdateCurrentItem();
+                    }
+                }
             }
+            catch { /* fail silently */ }
+            _indexRestored = true;
+        }
+
+        if (hubConnection is null)
+            await SetupSignalR();
+    }
+
+    private void UpdateCurrentItem()
+    {
+        if (config is null || config.Items.Count == 0) return;
+        var idx = Math.Clamp(currentItemIndex, 0, config.Items.Count - 1);
+        currentItemIndex = idx;
+        currentItemName = config.Items[idx];
+        // Only reset the form if this item hasn't been scored yet
+        if (!submittedItems.Contains(currentItemIndex))
+        {
+            selectedXValue = string.Empty;
+            selectedYValue = string.Empty;
+            selectedXDesc = string.Empty;
+            selectedYDesc = string.Empty;
+            noteText = string.Empty;
+            showValidationError = false;
         }
     }
 
     private void OnXChanged(ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out var value))
-        {
-            xScore = value;
-            StateHasChanged();
-        }
+        selectedXValue = e.Value?.ToString() ?? string.Empty;
+        var opt = xOptions.FirstOrDefault(o => o.Value == selectedXValue);
+        selectedXDesc = opt?.Description ?? string.Empty;
+        StateHasChanged();
     }
 
     private void OnYChanged(ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out var value))
-        {
-            yScore = value;
-            StateHasChanged();
-        }
-    }
-
-    private void OnLabelChanged(ChangeEventArgs e)
-    {
-        labelText = e.Value?.ToString();
+        selectedYValue = e.Value?.ToString() ?? string.Empty;
+        var opt = yOptions.FirstOrDefault(o => o.Value == selectedYValue);
+        selectedYDesc = opt?.Description ?? string.Empty;
         StateHasChanged();
-    }
-
-    private string GetQuadrantLabel()
-    {
-        var midpoint = (scale + 1) / 2.0;
-        var isHighX = xScore >= midpoint;
-        var isHighY = yScore >= midpoint;
-        
-        if (isHighY && !isHighX) return topLeftLabel;
-        if (isHighY && isHighX) return topRightLabel;
-        if (!isHighY && !isHighX) return bottomLeftLabel;
-        return bottomRightLabel;
     }
 
     private async Task HandleSubmit()
     {
-        // Validate required feedback text
-        if (string.IsNullOrWhiteSpace(labelText))
+        if (submittedItems.Contains(currentItemIndex)) return;
+
+        if (string.IsNullOrEmpty(selectedXValue) || string.IsNullOrEmpty(selectedYValue))
         {
             showValidationError = true;
             StateHasChanged();
             return;
         }
-        
+
         showValidationError = false;
-        
-        // Convert scores to 0-100 position coordinates
-        var xPosition = (xScore / (double)scale) * 100;
-        var yPosition = (yScore / (double)scale) * 100;
-        
-        var payload = new 
-        { 
-            x = xPosition,
-            y = yPosition,
-            label = labelText.Trim()
+
+        var payload = new
+        {
+            itemIndex = currentItemIndex,
+            xValue = selectedXValue,
+            yValue = selectedYValue,
+            note = string.IsNullOrWhiteSpace(noteText) ? null : noteText.Trim()
         };
-        
+
         await Parameters.OnSubmit(JsonSerializer.Serialize(payload));
+
+        submittedItems.Add(currentItemIndex);
+        submittedScores[currentItemIndex] = (selectedXValue, selectedYValue);
+
+        StateHasChanged();
     }
 
-    private string GetSubmitButtonText()
+    private async Task SetupSignalR()
     {
-        if (Parameters.HasSubmitted)
-            return "Response Submitted";
-        if (Parameters.IsSubmitting)
-            return "Submitting...";
-        return "Submit Response";
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.On<TechWayFit.Pulse.Web.Hubs.QuadrantItemAdvancedEvent>("QuadrantItemAdvanced", async (evt) =>
+            {
+                if (evt.ActivityId == Parameters.ActivityId)
+                {
+                    await InvokeAsync(() =>
+                    {
+                        currentItemIndex = evt.ItemIndex;
+                        UpdateCurrentItem();
+                        StateHasChanged();
+                    });
+                }
+            });
+
+            await hubConnection.StartAsync();
+            if (!string.IsNullOrEmpty(Parameters.SessionCode))
+                await hubConnection.InvokeAsync("Subscribe", Parameters.SessionCode);
+        }
+        catch { /* hub unavailable — item advancement requires facilitator SignalR */ }
     }
 
-
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            try { await hubConnection.DisposeAsync(); } catch { }
+        }
+    }
 }

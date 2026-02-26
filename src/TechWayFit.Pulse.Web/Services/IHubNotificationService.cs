@@ -42,4 +42,13 @@ public interface IHubNotificationService
         string aggregateType,
         object payload,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Broadcast the current item index change in a Quadrant activity
+    /// </summary>
+    Task PublishQuadrantItemAdvancedAsync(
+        string sessionCode,
+        Guid activityId,
+        int itemIndex,
+        CancellationToken cancellationToken = default);
 }

@@ -228,6 +228,8 @@ try
     builder.Services.AddScoped<IRatingDashboardService, RatingDashboardService>();
     builder.Services.AddScoped<IGeneralFeedbackDashboardService, GeneralFeedbackDashboardService>();
     builder.Services.AddScoped<IQnADashboardService, QnADashboardService>();
+    builder.Services.AddScoped<IQuadrantDashboardService, QuadrantDashboardService>();
+    builder.Services.AddScoped<ISessionActivityMetadataService, SessionActivityMetadataService>();
     builder.Services.AddScoped<ISessionCodeGenerator, SessionCodeGenerator>();
     builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
     builder.Services.AddScoped<ISessionGroupService, SessionGroupService>();

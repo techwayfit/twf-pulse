@@ -92,4 +92,18 @@ public sealed class HubNotificationService : IHubNotificationService
             payload,
             DateTimeOffset.UtcNow));
     }
+
+    public async Task PublishQuadrantItemAdvancedAsync(
+        string sessionCode,
+        Guid activityId,
+        int itemIndex,
+        CancellationToken cancellationToken = default)
+    {
+        var groupName = WorkshopGroupNames.ForSession(sessionCode);
+        await _hub.Clients.Group(groupName).QuadrantItemAdvanced(new QuadrantItemAdvancedEvent(
+            sessionCode,
+            activityId,
+            itemIndex,
+            DateTimeOffset.UtcNow));
+    }
 }

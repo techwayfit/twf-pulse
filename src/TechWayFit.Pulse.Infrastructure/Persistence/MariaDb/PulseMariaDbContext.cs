@@ -80,5 +80,11 @@ public sealed class PulseMariaDbContext : PulseDbContextBase
       entity.ToTable("SessionTemplates");
  entity.Property(x => x.ConfigJson).HasColumnType("TEXT").IsRequired();
         });
+
+        modelBuilder.Entity<SessionActivityMetadataRecord>(entity =>
+        {
+            entity.ToTable("SessionActivityMetadata");
+            entity.Property(x => x.Value).HasColumnType("TEXT").IsRequired();
+        });
     }
 }

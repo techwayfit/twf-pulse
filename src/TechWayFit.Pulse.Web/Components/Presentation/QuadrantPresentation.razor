@@ -2,16 +2,22 @@
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Application.Abstractions.Services
 @using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using TechWayFit.Pulse.Domain.Enums
+@using TechWayFit.Pulse.Web.Hubs
+@using TechWayFit.Pulse.Web.Services
 @using System.Text.Json
-@inject IDashboardService DashboardService
+@inject IQuadrantDashboardService QuadrantDashboardService
 @inject ISessionService SessionService
+@inject ISessionActivityMetadataService MetadataService
+@inject IHubNotificationService HubNotificationService
+@inject IJSRuntime JS
 @inject NavigationManager Navigation
 @implements IAsyncDisposable
 
 <div class="activity-display">
     <div class="activity-header">
         <div class="activity-title-section">
-            <span class="activity-badge badge-quadrant">Quadrant Feedback</span>
+            <span class="activity-badge badge-quadrant">Item Scoring</span>
             <h2>@ActivityTitle</h2>
             @if (!string.IsNullOrEmpty(ActivityPrompt))
             {
@@ -22,45 +28,71 @@
         {
             <div class="activity-timer">
                 <div class="timer-label">Time Remaining</div>
-                <div class="timer-value" id="timer-display">@TimeRemaining</div>
+                <div class="timer-value" id="timer-display">@timeRemaining</div>
             </div>
         }
     </div>
 
     <div class="activity-content">
-        <div class="quadrant-container" >
-            @if (!QuadrantPoints.Any())
-            {
-                <div class="waiting-state">
-                    <i class="ics ics-chart waiting-icon"></i>
-                    <h3>Waiting for feedback</h3>
-                    <p>Points will appear as participants place their feedback</p>
+        @if (dashboard is null && isLoading)
+        {
+            <div class="waiting-state">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <p>Loading scores…</p>
+            </div>
+        }
+        else if (dashboard is not null)
+        {
+            <!-- Current item banner + navigation -->
+            <div class="d-flex align-items-center justify-content-between mb-3 px-2 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-outline-secondary btn-sm"
+                            @onclick="PrevItem"
+                            disabled="@(currentItemIndex <= 0 || _isNavigating)">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div>
+                        <div class="text-muted small">Now scoring (@(currentItemIndex + 1) / @(config?.Items.Count ?? 0))</div>
+                        <div class="fw-bold fs-4">@currentItemName</div>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm"
+                            @onclick="NextItem"
+                            disabled="@(config == null || currentItemIndex >= config.Items.Count - 1 || _isNavigating)">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
-            }
-            else
-            {
-                <!-- Quadrant Grid -->
-                <svg viewBox="0 0 100 100" style="width: 90%; max-width: 600px; aspect-ratio: 1; position: relative;">
-                    <!-- Axes -->
-                    <line x1="0" y1="50" x2="100" y2="50" stroke="#0EA5E9" stroke-width="0.5" opacity="0.6"/>
-                    <line x1="50" y1="0" x2="50" y2="100" stroke="#0EA5E9" stroke-width="0.5" opacity="0.6"/>
-                    
-                    <!-- Data Points -->
-                    @foreach (var point in QuadrantPoints)
-                    {
-                        var xPos = point.X;
-                        var yPos = 100 - point.Y; // Invert Y for SVG coordinate system
-                        <circle cx="@xPos" cy="@yPos" r="2" fill="#10B981" opacity="0.8"/>
-                    }
-                </svg>
-                
-                <!-- Labels as HTML overlay -->
-                <div style="position: absolute; top: 15%; left: 15%; color: #6B7280; font-size: 1rem;">@topLeftLabel</div>
-                <div style="position: absolute; top: 15%; right: 15%; color: #6B7280; font-size: 1rem;">@topRightLabel</div>
-                <div style="position: absolute; bottom: 15%; left: 15%; color: #6B7280; font-size: 1rem;">@bottomLeftLabel</div>
-                <div style="position: absolute; bottom: 15%; right: 15%; color: #6B7280; font-size: 1rem;">@bottomRightLabel</div>
-            }
-        </div>
+                <div class="d-flex gap-3 text-center">
+                    <div>
+                        <div class="fw-bold fs-5 text-primary">@dashboard.TotalResponses</div>
+                        <div class="text-muted small">Responses</div>
+                    </div>
+                    <div>
+                        <div class="fw-bold fs-5 text-success">@dashboard.RespondedParticipants</div>
+                        <div class="text-muted small">Participants</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bubble chart -->
+            <div class="quadrant-container" style="position: relative; width: 100%; height: 500px;">
+                <canvas id="@canvasId"></canvas>
+                @if (!dashboard.Items.Any())
+                {
+                    <div class="position-absolute top-50 start-50 translate-middle text-center">
+                        <i class="fas fa-chart-scatter fs-1 text-muted mb-2"></i>
+                        <div class="text-muted">Waiting for scores</div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="waiting-state">
+                <i class="fas fa-chart-scatter waiting-icon"></i>
+                <h3>No data yet</h3>
+                <p>Scores will appear here as participants respond</p>
+            </div>
+        }
     </div>
 </div>
 
@@ -72,7 +104,7 @@
     public required Guid ActivityId { get; set; }
 
     [Parameter]
-    public string ActivityTitle { get; set; } = "Quadrant Feedback";
+    public string ActivityTitle { get; set; } = "Item Scoring";
 
     [Parameter]
     public string? ActivityPrompt { get; set; }
@@ -82,148 +114,231 @@
 
     [Parameter]
     public DateTimeOffset? OpenedAt { get; set; }
-    
+
     [Parameter]
     public string? ActivityConfig { get; set; }
 
+    private readonly string canvasId = $"quadrantPresChart_{Guid.NewGuid().ToString("N")[..8]}";
+    private QuadrantDashboardResponse? dashboard;
+    private QuadrantConfig? config;
     private HubConnection? hubConnection;
-    private List<QuadrantPoint> QuadrantPoints { get; set; } = new();
-    private string TimeRemaining { get; set; } = "--:--";
-    private System.Threading.Timer? timer;
-    private System.Threading.Timer? dataRefreshTimer;
-    
-    private string topLeftLabel = "Top Left";
-    private string topRightLabel = "Top Right";
-    private string bottomLeftLabel = "Bottom Left";
-    private string bottomRightLabel = "Bottom Right";
+    private string timeRemaining = "--:--";
+    private System.Threading.Timer? clockTimer;
+    private System.Threading.Timer? refreshTimer;
+    private int currentItemIndex = 0;
+    private string currentItemName = string.Empty;
+    private Guid? sessionId;
+    private bool isLoading = true;
+    private bool firstRenderComplete = false;
+    private bool _chartNeedsRender = false;
 
     protected override async Task OnInitializedAsync()
     {
         LoadConfig();
         await LoadData();
-        await InitializeSignalR();
-        StartTimer();
-        StartDataRefresh();
+        if (sessionId.HasValue)
+        {
+            try
+            {
+                var saved = await MetadataService.GetValueAsync(
+                    sessionId.Value, ActivityId,
+                    TechWayFit.Pulse.Domain.Models.ActivityMetadataKeys.QuadrantCurrentItemIndex);
+                if (saved is not null && int.TryParse(saved, out var savedIdx))
+                {
+                    currentItemIndex = savedIdx;
+                    UpdateCurrentItemName();
+                }
+            }
+            catch { /* fail silently */ }
+        }
+        await SetupSignalR();
+        StartClock();
+        refreshTimer = new System.Threading.Timer(
+            async _ => await InvokeAsync(async () => { await LoadData(); StateHasChanged(); }),
+            null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
     }
-    
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) firstRenderComplete = true;
+        if (firstRenderComplete && _chartNeedsRender && dashboard is not null)
+        {
+            _chartNeedsRender = false;
+            try { await RenderChart(); } catch { }
+        }
+    }
+
     private void LoadConfig()
     {
+        if (string.IsNullOrWhiteSpace(ActivityConfig)) return;
         try
         {
-            if (string.IsNullOrWhiteSpace(ActivityConfig)) return;
-            
-            var config = JsonSerializer.Deserialize<QuadrantConfig>(
-                ActivityConfig,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-            );
-            
-            if (config != null)
-            {
-                topLeftLabel = config.ResolvedTopLeft;
-                topRightLabel = config.ResolvedTopRight;
-                bottomLeftLabel = config.ResolvedBottomLeft;
-                bottomRightLabel = config.ResolvedBottomRight;
-            }
+            config = JsonSerializer.Deserialize<QuadrantConfig>(ActivityConfig,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (config is not null) UpdateCurrentItemName();
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading quadrant config: {ex.Message}");
-        }
+        catch { }
     }
 
+    private void UpdateCurrentItemName()
+    {
+        if (config?.Items == null || config.Items.Count == 0) { currentItemName = string.Empty; return; }
+        var idx = Math.Clamp(currentItemIndex, 0, config.Items.Count - 1);
+        currentItemIndex = idx;
+        currentItemName = config.Items[idx];
+    }
 
+    private bool _isNavigating = false;
+
+    private void PrevItem() => _ = AdvanceToItem(currentItemIndex - 1);
+    private void NextItem() => _ = AdvanceToItem(currentItemIndex + 1);
+
+    private async Task AdvanceToItem(int newIndex)
+    {
+        if (config is null || newIndex < 0 || newIndex >= config.Items.Count || _isNavigating) return;
+        _isNavigating = true;
+        try
+        {
+            await HubNotificationService.PublishQuadrantItemAdvancedAsync(SessionCode, ActivityId, newIndex);
+            currentItemIndex = newIndex;
+            UpdateCurrentItemName();
+            if (sessionId.HasValue)
+            {
+                try
+                {
+                    await MetadataService.SetValueAsync(
+                        sessionId.Value, ActivityId,
+                        TechWayFit.Pulse.Domain.Models.ActivityMetadataKeys.QuadrantCurrentItemIndex,
+                        newIndex.ToString());
+                }
+                catch { /* fail silently */ }
+            }
+        }
+        finally
+        {
+            _isNavigating = false;
+            _chartNeedsRender = true;
+            StateHasChanged();
+        }
+    }
 
     private async Task LoadData()
     {
         try
         {
-            var session = await SessionService.GetByCodeAsync(SessionCode);
-            if (session == null) return;
+            if (!sessionId.HasValue)
+            {
+                var session = await SessionService.GetByCodeAsync(SessionCode);
+                if (session is null) return;
+                sessionId = session.Id;
+            }
 
-            var dashboard = await DashboardService.GetDashboardAsync(
-                session.Id,
-                ActivityId,
-                new Dictionary<string, string?>(),
-                CancellationToken.None);
-
-            QuadrantPoints = dashboard.QuadrantPoints.ToList();
-
-            await InvokeAsync(StateHasChanged);
+            dashboard = await QuadrantDashboardService.GetQuadrantDashboardAsync(
+                sessionId.Value, ActivityId, new Dictionary<string, string?>());
+            _chartNeedsRender = true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading quadrant data: {ex.Message}");
+            Console.WriteLine($"QuadrantPresentation LoadData error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 
-    private async Task InitializeSignalR()
+    private async Task RenderChart()
     {
-        var hubUrl = Navigation.ToAbsoluteUri($"/hubs/workshop");
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(hubUrl)
-            .WithAutomaticReconnect()
-            .Build();
+        if (dashboard is null) return;
 
-        hubConnection.On<TechWayFit.Pulse.Web.Hubs.ResponseReceivedEvent>("ResponseReceived", async (e) =>
+        await Task.Delay(80);
+        var exists = await JS.InvokeAsync<bool>("eval", $"!!document.getElementById('{canvasId}')");
+        if (!exists) return;
+
+        var xOptions = config?.XScoreOptions ?? new List<ScoreOption>();
+        double xMin = xOptions.Count > 0 ? xOptions.Min(o => o.NumericValue) : 0;
+        double xMax = xOptions.Count > 0 ? xOptions.Max(o => o.NumericValue) : 10;
+
+        var chartItems = dashboard.Items.Select(i => new
         {
-            if (e.SessionCode == SessionCode && e.ActivityId == ActivityId)
-            {
-                await LoadData();
-            }
-        });
+            label = i.ItemLabel,
+            avgX = i.AverageX,
+            avgY = i.AverageY,
+            count = i.ResponseCount,
+            isCurrent = i.ItemIndex == currentItemIndex
+        }).ToList();
 
+        await JS.InvokeVoidAsync("renderQuadrantBubbleChart",
+            canvasId,
+            dashboard.XAxisLabel,
+            dashboard.YAxisLabel,
+            chartItems,
+            config?.BubbleSizeMode == QuadrantBubbleSizeMode.Uniform,
+            xMin,
+            xMax);
+    }
+
+    private async Task SetupSignalR()
+    {
         try
         {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async evt =>
+            {
+                if (evt.SessionCode == SessionCode && evt.ActivityId == ActivityId)
+                    await InvokeAsync(async () => { await LoadData(); StateHasChanged(); });
+            });
+
+            hubConnection.On<QuadrantItemAdvancedEvent>("QuadrantItemAdvanced", async evt =>
+            {
+                if (evt.ActivityId == ActivityId)
+                {
+                    await InvokeAsync(() =>
+                    {
+                        currentItemIndex = evt.ItemIndex;
+                        UpdateCurrentItemName();
+                        _chartNeedsRender = true;
+                        StateHasChanged();
+                        return Task.CompletedTask;
+                    });
+                }
+            });
+
             await hubConnection.StartAsync();
             await hubConnection.InvokeAsync("Subscribe", SessionCode);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error connecting to hub: {ex.Message}");
+            Console.WriteLine($"QuadrantPresentation SignalR error: {ex.Message}");
         }
     }
 
-    private void StartDataRefresh()
+    private void StartClock()
     {
-        dataRefreshTimer = new System.Threading.Timer(async _ => await LoadData(), null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
-    }
-
-    private void StartTimer()
-    {
-        if (DurationMinutes.HasValue && OpenedAt.HasValue)
+        if (!DurationMinutes.HasValue || !OpenedAt.HasValue) return;
+        clockTimer = new System.Threading.Timer(_ =>
         {
-            timer = new System.Threading.Timer(UpdateTimer, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
-        }
-    }
-
-    private void UpdateTimer(object? state)
-    {
-        if (DurationMinutes.HasValue && OpenedAt.HasValue)
-        {
-            var endTime = OpenedAt.Value.AddMinutes(DurationMinutes.Value);
-            var remaining = endTime - DateTimeOffset.UtcNow;
-
-            if (remaining.TotalSeconds > 0)
-            {
-                TimeRemaining = $"{remaining.Minutes}:{remaining.Seconds:D2}";
-            }
-            else
-            {
-                TimeRemaining = "0:00";
-            }
-
+            var end = OpenedAt.Value.AddMinutes(DurationMinutes.Value);
+            var rem = end - DateTimeOffset.UtcNow;
+            timeRemaining = rem.TotalSeconds > 0
+                ? $"{(int)rem.TotalMinutes}:{rem.Seconds:D2}"
+                : "0:00";
             InvokeAsync(StateHasChanged);
-        }
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
     }
 
     public async ValueTask DisposeAsync()
     {
-        timer?.Dispose();
-        dataRefreshTimer?.Dispose();
-
+        clockTimer?.Dispose();
+        refreshTimer?.Dispose();
+        try { await JS.InvokeVoidAsync("destroyQuadrantBubbleChart", canvasId); } catch { }
         if (hubConnection is not null)
         {
-            await hubConnection.DisposeAsync();
+            try { await hubConnection.DisposeAsync(); } catch { }
         }
     }
 }

@@ -9,6 +9,13 @@
     let pollModalInitialized = false;
     let wordCloudModalInitialized = false;
 
+    function hideActivityModal(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const instance = bootstrap.Modal.getInstance(el);
+        if (instance) { instance.hide(); } else { bootstrap.Modal.getOrCreateInstance(el).hide(); }
+    }
+
     // Initialize modals when they're shown (not on DOMContentLoaded, since modals are loaded by Blazor)
     document.addEventListener('DOMContentLoaded', () => {
         // Poll modal initialization
@@ -134,14 +141,11 @@ window.savePollActivity = async function() {
     
     try {
         await window.addActivitiesManager.createActivityFromData(activity);
-        // Only hide modal if creation was successful (reload will happen)
-        // bootstrap.Modal.getInstance(document.getElementById('pollModal'))?.hide();
+        hideActivityModal('pollModal');
     } catch (error) {
         console.error('Failed to save poll activity:', error);
-        // Don't hide modal on error so user can retry
+        alert('Failed to create activity: ' + error.message);
     }
-    // Note: Modal will be hidden after page reload
-    resetPollForm();
     resetPollForm();
 };
 
@@ -175,8 +179,7 @@ window.saveWordCloudActivity = async function() {
     
     try {
         await window.addActivitiesManager.createActivityFromData(activity);
-        // Don't hide modal here - page will reload anyway
-        // bootstrap.Modal.getInstance(document.getElementById('wordcloudModal')).hide();
+        hideActivityModal('wordcloudModal');
     } catch (error) {
         console.error('Error creating word cloud activity:', error);
         alert('Failed to create activity: ' + error.message);
@@ -217,8 +220,7 @@ window.saveRatingActivity = async function() {
     
     try {
         await window.addActivitiesManager.createActivityFromData(activity);
-        // Don't hide modal here - page will reload anyway
-        // bootstrap.Modal.getInstance(document.getElementById('ratingModal')).hide();
+        hideActivityModal('ratingModal');
     } catch (error) {
         console.error('Error creating rating activity:', error);
         alert('Failed to create activity: ' + error.message);
@@ -256,8 +258,7 @@ window.saveFeedbackActivity = async function() {
     
     try {
         await window.addActivitiesManager.createActivityFromData(activity);
-        // Don't hide modal here - page will reload anyway
-        // bootstrap.Modal.getInstance(document.getElementById('feedbackModal')).hide();
+        hideActivityModal('feedbackModal');
     } catch (error) {
         console.error('Error creating feedback activity:', error);
         alert('Failed to create activity: ' + error.message);
@@ -267,42 +268,39 @@ window.saveFeedbackActivity = async function() {
 };
 
 window.saveQuadrantActivity = async function() {
-    const title = document.getElementById('quadrantTitle').value;
-    if (!title) {
-        alert('Please enter an activity title');
-        return;
-    }
-    
+    const title = document.getElementById('quadrantTitle')?.value?.trim();
+    if (!title) { alert('Please enter an activity title'); return; }
+
+    const rawItems = document.getElementById('quadrantItems')?.value || '';
+    const items = rawItems.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    if (items.length === 0) { alert('Please add at least one item to score.'); return; }
+
+    const sharesY = document.getElementById('quadrantYSharesX')?.checked ?? true;
     const config = {
-        xAxisLabel: document.getElementById('quadrantXAxis').value || 'X Axis',
-        yAxisLabel: document.getElementById('quadrantYAxis').value || 'Y Axis',
-        scale: parseInt(document.getElementById('quadrantScale').value) || 10,
-        topLeftLabel: document.getElementById('quadrantTopLeft').value || 'Top Left',
-        topRightLabel: document.getElementById('quadrantTopRight').value || 'Top Right',
-        bottomLeftLabel: document.getElementById('quadrantBottomLeft').value || 'Bottom Left',
-        bottomRightLabel: document.getElementById('quadrantBottomRight').value || 'Bottom Right'
+        xAxisLabel: document.getElementById('quadrantXAxis')?.value?.trim() || 'Complexity',
+        yAxisLabel: document.getElementById('quadrantYAxis')?.value?.trim() || 'Effort',
+        xScoreOptions: window.quadrantModal_collectScoreTable('x'),
+        yScoreOptions: sharesY ? [] : window.quadrantModal_collectScoreTable('y'),
+        items,
+        bubbleSizeMode: parseInt(document.getElementById('quadrantBubbleSize')?.value ?? '0', 10),
+        allowNotes: document.getElementById('quadrantAllowNotes')?.checked ?? false
     };
-    
+
+    if (config.xScoreOptions.length === 0) { alert('Please add at least one X-axis score option.'); return; }
+
     const activity = {
         type: 'Quadrant',
-        title: title,
-        prompt: document.getElementById('quadrantPrompt').value || null,
-        durationMinutes: parseInt(document.getElementById('quadrantDuration').value) || 10,
+        title,
+        prompt: document.getElementById('quadrantPrompt')?.value || null,
+        durationMinutes: parseInt(document.getElementById('quadrantDuration')?.value) || 10,
         config: JSON.stringify(config)
     };
-    
-    console.log('Saving quadrant activity:', activity);
-    
-    if (!window.addActivitiesManager) {
-        console.error('addActivitiesManager not found!');
-        alert('Activity manager not initialized. Please refresh the page.');
-        return;
-    }
-    
+
+    if (!window.addActivitiesManager) { alert('Activity manager not initialized. Please refresh the page.'); return; }
+
     try {
         await window.addActivitiesManager.createActivityFromData(activity);
-        // Don't hide modal here - page will reload anyway
-        // bootstrap.Modal.getInstance(document.getElementById('quadrantModal')).hide();
+        hideActivityModal('quadrantModal');
     } catch (error) {
         console.error('Error creating quadrant activity:', error);
         alert('Failed to create activity: ' + error.message);
@@ -310,6 +308,66 @@ window.saveQuadrantActivity = async function() {
         resetQuadrantForm();
     }
 };
+
+// ── Score table helpers ──────────────────────────────────────────────────────
+
+window.quadrantModal_renderScoreTable = function(axis, options) {
+    const tbody = document.getElementById(`quadrant${axis.toUpperCase()}ScoreBody`);
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    (options || []).forEach((opt, idx) => {
+        tbody.appendChild(quadrantModal_buildRow(axis, idx, opt.value, opt.label, opt.description));
+    });
+};
+
+window.quadrantModal_collectScoreTable = function(axis) {
+    const rows = document.querySelectorAll(`#quadrant${axis.toUpperCase()}ScoreBody tr`);
+    const opts = [];
+    rows.forEach(row => {
+        const val = row.querySelector('.qscore-value')?.value?.trim() || '';
+        const lbl = row.querySelector('.qscore-label')?.value?.trim() || '';
+        const desc = row.querySelector('.qscore-desc')?.value?.trim() || null;
+        if (val) opts.push({ value: val, label: lbl, description: desc || null });
+    });
+    return opts;
+};
+
+window.quadrantModal_toggleYPanel = function(hide) {
+    const panel = document.getElementById('quadrantYScorePanel');
+    if (panel) panel.style.display = hide ? 'none' : '';
+};
+
+window.quadrantModal_addRow = function(axis) {
+    const tbody = document.getElementById(`quadrant${axis.toUpperCase()}ScoreBody`);
+    if (!tbody) return;
+    const idx = tbody.querySelectorAll('tr').length;
+    tbody.appendChild(quadrantModal_buildRow(axis, idx, '', '', null));
+};
+
+window.quadrantModal_applyPreset = function(axis, preset) {
+    let opts;
+    if (preset === 'fibonacci') opts = QuadrantActivity.fibonacciPreset();
+    else if (preset === 'odd')   opts = QuadrantActivity.oddPreset();
+    else if (preset === '1-5')   opts = QuadrantActivity.defaultNumeric(1, 5);
+    else                          opts = QuadrantActivity.defaultNumeric(1, 10);
+    window.quadrantModal_renderScoreTable(axis, opts);
+};
+
+function quadrantModal_buildRow(axis, idx, value, label, description) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" class="form-control form-control-sm qscore-value" value="${escapeHtml(value)}" placeholder="e.g. 5" /></td>
+        <td><input type="text" class="form-control form-control-sm qscore-label" value="${escapeHtml(label)}" placeholder="e.g. Medium" /></td>
+        <td><input type="text" class="form-control form-control-sm qscore-desc" value="${escapeHtml(description || '')}" placeholder="Optional description" /></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()"><i class="fas fa-times"></i></button></td>`;
+    return tr;
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 
 window.saveAiSummaryActivity = async function() {
     const title = document.getElementById('aisummaryTitle').value;
@@ -341,6 +399,7 @@ window.saveAiSummaryActivity = async function() {
 
     try {
         await window.addActivitiesManager.createActivityFromData(activity);
+        hideActivityModal('aisummaryModal');
     } catch (error) {
         console.error('Error creating AI Summary activity:', error);
         alert('Failed to create activity: ' + error.message);
@@ -380,6 +439,7 @@ window.saveQnAActivity = async function() {
 
     try {
         await window.addActivitiesManager.createActivityFromData(activity);
+        hideActivityModal('qnaModal');
     } catch (error) {
         console.error('Error creating Q&A activity:', error);
         alert('Failed to create activity: ' + error.message);
@@ -428,6 +488,7 @@ window.saveFiveWhysActivity = async function() {
 
     try {
         await window.addActivitiesManager.createActivityFromData(activity);
+        hideActivityModal('fivewhysModal');
     } catch (error) {
         console.error('Error creating 5 Whys activity:', error);
         alert('Failed to create activity: ' + error.message);
@@ -467,6 +528,7 @@ window.saveBreakActivity = async function() {
 
     try {
         await window.addActivitiesManager.createActivityFromData(activity);
+        hideActivityModal('breakModal');
     } catch (error) {
         console.error('Error creating Break activity:', error);
         alert('Failed to create activity: ' + error.message);
@@ -501,7 +563,12 @@ function resetFeedbackForm() {
 }
 
 function resetQuadrantForm() {
-    document.getElementById('quadrantForm').reset();
+    document.getElementById('quadrantForm')?.reset();
+    window.quadrantModal_renderScoreTable('x', QuadrantActivity.defaultNumeric(1, 10));
+    window.quadrantModal_renderScoreTable('y', []);
+    window.quadrantModal_toggleYPanel(true);
+    const sharesY = document.getElementById('quadrantYSharesX');
+    if (sharesY) sharesY.checked = true;
 }
 
 function resetFiveWhysForm() {

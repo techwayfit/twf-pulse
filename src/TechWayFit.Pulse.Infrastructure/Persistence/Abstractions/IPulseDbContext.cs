@@ -60,6 +60,12 @@ public interface IPulseDbContext : IDisposable
     DbSet<SessionTemplateRecord> SessionTemplates { get; }
 
     /// <summary>
+    /// Transient runtime metadata for session activities (key-value per activity).
+    /// Separate from the immutable activity Config so session/template copies do not carry runtime state.
+    /// </summary>
+    DbSet<SessionActivityMetadataRecord> SessionActivityMetadata { get; }
+
+    /// <summary>
     /// Saves all changes made in this context to the database.
     /// </summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

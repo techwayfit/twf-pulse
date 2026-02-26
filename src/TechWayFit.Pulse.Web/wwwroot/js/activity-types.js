@@ -353,55 +353,74 @@ class WordCloudActivity extends Activity {
 class QuadrantActivity extends Activity {
     constructor(data = {}) {
         super(data);
-        this.xAxisLabel = this.config.xAxisLabel || 'X Axis';
-        this.yAxisLabel = this.config.yAxisLabel || 'Y Axis';
-        this.topLeft = this.config.topLeft || 'Top Left';
-        this.topRight = this.config.topRight || 'Top Right';
-        this.bottomLeft = this.config.bottomLeft || 'Bottom Left';
-        this.bottomRight = this.config.bottomRight || 'Bottom Right';
+        this.xAxisLabel = this.config.xAxisLabel || 'Complexity';
+        this.yAxisLabel = this.config.yAxisLabel || 'Effort';
+        this.xScoreOptions = this.config.xScoreOptions || QuadrantActivity.defaultNumeric(1, 10);
+        this.yScoreOptions = this.config.yScoreOptions || [];
+        this.items = this.config.items || [];
+        this.bubbleSizeMode = this.config.bubbleSizeMode ?? 0; // 0=Proportional, 1=Uniform
+        this.allowNotes = this.config.allowNotes ?? false;
     }
 
-    getModalId() {
-        return 'quadrantModal';
+    static defaultNumeric(min, max) {
+        const opts = [];
+        for (let i = min; i <= max; i++) opts.push({ value: String(i), label: '', description: null });
+        return opts;
     }
 
-    getFieldPrefix() {
-        return 'quadrant';
+    static fibonacciPreset() {
+        return [1, 2, 3, 5, 8, 13].map(v => ({ value: String(v), label: '', description: null }));
     }
 
-    getEmoji() {
-        return '<i class="ics ics-chart-increasing ic-sm"></i>';
+    static oddPreset() {
+        return [1, 3, 5, 7, 9].map(v => ({ value: String(v), label: '', description: null }));
     }
+
+    getModalId() { return 'quadrantModal'; }
+    getFieldPrefix() { return 'quadrant'; }
+    getEmoji() { return '<i class="ics ics-chart-increasing ic-sm"></i>'; }
 
     populateSpecificFields(prefix) {
         this.setFieldValue(`${prefix}XAxis`, this.xAxisLabel);
         this.setFieldValue(`${prefix}YAxis`, this.yAxisLabel);
-        this.setFieldValue(`${prefix}TopLeft`, this.topLeft);
-        this.setFieldValue(`${prefix}TopRight`, this.topRight);
-        this.setFieldValue(`${prefix}BottomLeft`, this.bottomLeft);
-        this.setFieldValue(`${prefix}BottomRight`, this.bottomRight);
+        this.setFieldValue(`${prefix}Items`, this.items.join('\n'));
+        this.setFieldValue(`${prefix}BubbleSize`, String(this.bubbleSizeMode));
+        document.getElementById(`${prefix}AllowNotes`).checked = this.allowNotes;
+        // Populate score tables
+        window.quadrantModal_renderScoreTable('x', this.xScoreOptions);
+        const yOpts = (this.yScoreOptions && this.yScoreOptions.length > 0) ? this.yScoreOptions : null;
+        const shareY = document.getElementById(`${prefix}YSharesX`);
+        if (shareY) shareY.checked = !yOpts;
+        window.quadrantModal_toggleYPanel(!yOpts);
+        if (yOpts) window.quadrantModal_renderScoreTable('y', yOpts);
     }
 
     collectData() {
         const prefix = this.getFieldPrefix();
         const commonData = this.collectCommonData(prefix);
+        const xOpts = window.quadrantModal_collectScoreTable('x');
+        const sharesY = document.getElementById(`${prefix}YSharesX`)?.checked ?? true;
+        const yOpts = sharesY ? [] : window.quadrantModal_collectScoreTable('y');
+        const rawItems = document.getElementById(`${prefix}Items`)?.value || '';
+        const items = rawItems.split('\n').map(s => s.trim()).filter(s => s.length > 0);
 
         return {
             ...commonData,
             type: 'Quadrant',
             config: {
-                xAxisLabel: this.getFieldValue(`${prefix}XAxis`),
-                yAxisLabel: this.getFieldValue(`${prefix}YAxis`),
-                topLeft: this.getFieldValue(`${prefix}TopLeft`) || 'Top Left',
-                topRight: this.getFieldValue(`${prefix}TopRight`) || 'Top Right',
-                bottomLeft: this.getFieldValue(`${prefix}BottomLeft`) || 'Bottom Left',
-                bottomRight: this.getFieldValue(`${prefix}BottomRight`) || 'Bottom Right'
+                xAxisLabel: this.getFieldValue(`${prefix}XAxis`) || 'Complexity',
+                yAxisLabel: this.getFieldValue(`${prefix}YAxis`) || 'Effort',
+                xScoreOptions: xOpts,
+                yScoreOptions: yOpts,
+                items,
+                bubbleSizeMode: parseInt(document.getElementById(`${prefix}BubbleSize`)?.value ?? '0', 10),
+                allowNotes: document.getElementById(`${prefix}AllowNotes`)?.checked ?? false
             }
         };
     }
 
     renderCardDetails() {
-        return `4 quadrants`;
+        return `${this.items.length} item${this.items.length !== 1 ? 's' : ''} · ${this.xAxisLabel} vs ${this.yAxisLabel}`;
     }
 
     toJSON() {
@@ -410,10 +429,11 @@ class QuadrantActivity extends Activity {
             config: {
                 xAxisLabel: this.xAxisLabel,
                 yAxisLabel: this.yAxisLabel,
-                topLeft: this.topLeft,
-                topRight: this.topRight,
-                bottomLeft: this.bottomLeft,
-                bottomRight: this.bottomRight
+                xScoreOptions: this.xScoreOptions,
+                yScoreOptions: this.yScoreOptions,
+                items: this.items,
+                bubbleSizeMode: this.bubbleSizeMode,
+                allowNotes: this.allowNotes
             }
         };
     }
@@ -824,7 +844,7 @@ class ActivityFactory {
         return [
             { type: 'Poll', class: PollActivity, emoji: '<i class="ics ics-chart ic-sm"></i>', description: 'Multiple choice questions' },
             { type: 'WordCloud', class: WordCloudActivity, emoji: '<i class="ics ics-thought-balloon ic-sm"></i>', description: 'Collect words or short phrases' },
-            { type: 'Quadrant', class: QuadrantActivity, emoji: '<i class="ics ics-chart-increasing ic-sm"></i>', description: '2x2 matrix for categorization' },
+            { type: 'Quadrant', class: QuadrantActivity, emoji: '<i class="ics ics-chart-increasing ic-sm"></i>', description: 'Item scoring with bubble chart' },
             { type: 'FiveWhys', class: FiveWhysActivity, emoji: '<i class="ics ics-question ic-sm"></i>', description: 'Root cause analysis' },
             { type: 'Rating', class: RatingActivity, emoji: '<i class="ics ics-star ic-sm"></i>', description: 'Star or numeric ratings' },
             { type: 'Feedback', class: FeedbackActivity, emoji: '<i class="ics ics-chat ic-sm"></i>', description: 'Open-ended feedback' },

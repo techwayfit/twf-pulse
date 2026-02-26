@@ -221,6 +221,7 @@ options.UseMySQL(connectionString, mySqlOptions =>
         services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository<PulseSqlServerDbContext>>();
         services.AddScoped<ISessionGroupRepository, SessionGroupRepository<PulseSqlServerDbContext>>();
         services.AddScoped<ISessionTemplateRepository, SessionTemplateRepository<PulseSqlServerDbContext>>();
+        services.AddScoped<ISessionActivityMetadataRepository, SessionActivityMetadataRepository<PulseSqlServerDbContext>>();
 
         return services;
     }
@@ -247,6 +248,7 @@ options.UseMySQL(connectionString, mySqlOptions =>
         services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository<PulseMariaDbContext>>();
         services.AddScoped<ISessionGroupRepository, SessionGroupRepository<PulseMariaDbContext>>();
         services.AddScoped<ISessionTemplateRepository, SessionTemplateRepository<PulseMariaDbContext>>();
+        services.AddScoped<ISessionActivityMetadataRepository, SessionActivityMetadataRepository<PulseMariaDbContext>>();
 
         return services;
     }
@@ -273,6 +275,7 @@ options.UseMySQL(connectionString, mySqlOptions =>
         services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository<PulseSqlLiteDbContext>>();
         services.AddScoped<ISessionGroupRepository, SessionGroupRepository<PulseSqlLiteDbContext>>();
         services.AddScoped<ISessionTemplateRepository, SessionTemplateRepository<PulseSqlLiteDbContext>>();
+        services.AddScoped<ISessionActivityMetadataRepository, SessionActivityMetadataRepository<PulseSqlLiteDbContext>>();
 
         return services;
     }
