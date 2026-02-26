@@ -32,5 +32,10 @@ public sealed class Response
 
     public IReadOnlyDictionary<string, string?> Dimensions { get; private set; }
 
+    public void UpdatePayload(string newPayload)
+    {
+        Payload = newPayload;
+    }
+
     public DateTimeOffset CreatedAt { get; }
 }

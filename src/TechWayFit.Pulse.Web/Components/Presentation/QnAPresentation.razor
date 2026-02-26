@@ -26,28 +26,20 @@
     </div>
 
     <div class="activity-content">
-        @if (Questions != null && Questions.Any())
-        {
-            <div class="qna-presentation-list">
-                @{
-                    var ranked = Questions
-                        .OrderByDescending(q => q.UpvoteCount)
-                        .ThenBy(q => q.SubmittedAt)
-                        .ToList();
-                }
-                @foreach (var (q, idx) in ranked.Select((q, i) => (q, i + 1)))
-                {
-                    <div class="qna-item @(idx == 1 ? "qna-item-top" : "")">
-                        <div class="qna-vote-pill">
-                            <span class="qna-vote-count">@q.UpvoteCount</span>
-                            <i class="fas fa-thumbs-up qna-vote-icon"></i>
-                        </div>
-                        <div class="qna-text">@q.Text</div>
-                    </div>
-                }
-            </div>
+        @{
+            var open = (Questions ?? new())
+                .Where(q => !q.IsAnswered)
+                .OrderByDescending(q => q.UpvoteCount)
+                .ThenBy(q => q.SubmittedAt)
+                .ToList();
+
+            var answered = (Questions ?? new())
+                .Where(q => q.IsAnswered)
+                .OrderByDescending(q => q.SubmittedAt)
+                .ToList();
         }
-        else
+
+        @if (!open.Any() && !answered.Any())
         {
             <div class="waiting-state">
                 <i class="fas fa-lightbulb waiting-icon"></i>
@@ -55,73 +47,216 @@
                 <p>Participants can submit and upvote questions</p>
             </div>
         }
+        else
+        {
+            @* Open questions *@
+            @if (open.Any())
+            {
+                <div class="qna-section-label">Questions</div>
+                <div class="qna-presentation-list">
+                    @foreach (var (q, idx) in open.Select((q, i) => (q, i + 1)))
+                    {
+                        <div class="qna-item @(idx == 1 ? "qna-item-top" : "")">
+                            @* Rank badge *@
+                            <div class="qna-rank">#@idx</div>
+
+                            @* Vote pill *@
+                            <div class="qna-vote-pill">
+                                <span class="qna-vote-count">@q.UpvoteCount</span>
+                                <i class="fas fa-thumbs-up qna-vote-icon"></i>
+                            </div>
+
+                            @* Text *@
+                            <div class="qna-text">@q.Text</div>
+
+                            @* Mark answered *@
+                            <button class="qna-answered-btn" @onclick="() => ToggleAnswered(q.ResponseId)" title="Mark as answered">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+
+            @* Answered questions *@
+            @if (answered.Any())
+            {
+                <div class="qna-section-label qna-section-answered-label mt-3">
+                    <i class="fas fa-check-circle me-1"></i>Answered (@answered.Count)
+                </div>
+                <div class="qna-presentation-list qna-answered-list">
+                    @foreach (var q in answered)
+                    {
+                        <div class="qna-item qna-item-answered">
+                            <div class="qna-vote-pill qna-vote-pill-answered">
+                                <span class="qna-vote-count">@q.UpvoteCount</span>
+                                <i class="fas fa-thumbs-up qna-vote-icon"></i>
+                            </div>
+                            <div class="qna-text qna-text-answered">@q.Text</div>
+                            <button class="qna-answered-btn qna-answered-btn-undo" @onclick="() => ToggleAnswered(q.ResponseId)" title="Reopen question">
+                                <i class="fas fa-rotate-left"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+        }
     </div>
 </div>
 
 <style>
     .badge-qna {
-        background: var(--pulse-info, #0ea5e9);
-        color: white;
+        background: #e0f2fe;
+        color: var(--pulse-blue-dark);
         padding: 0.4em 1em;
-        border-radius: 1rem;
+        border-radius: var(--pulse-radius-full);
         font-size: 0.85rem;
         font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
     }
 
+    .qna-section-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--pulse-gray-400);
+        margin-bottom: 0.5rem;
+    }
+
+    .qna-section-answered-label {
+        color: var(--pulse-green-dark);
+    }
+
     .qna-presentation-list {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
-        max-height: 60vh;
+        gap: 0;
         overflow-y: auto;
-        padding-right: 0.5rem;
+        border-radius: var(--pulse-radius-lg);
+        border: 1px solid var(--pulse-gray-200);
+        overflow: hidden;
+    }
+
+    .qna-answered-list {
+        max-height: 22vh;
+        overflow-y: auto;
+        border-color: #bbf7d0;
     }
 
     .qna-item {
         display: flex;
-        align-items: flex-start;
-        gap: 1.25rem;
-        padding: 1.25rem 1.5rem;
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 1rem;
-        transition: all 0.2s ease;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        background: #fff;
+        border-bottom: 1px solid var(--pulse-gray-100);
+        transition: background 0.15s ease;
+    }
+
+    .qna-item:last-child {
+        border-bottom: none;
     }
 
     .qna-item-top {
-        background: rgba(255,255,255,0.15);
-        border-color: rgba(255,255,255,0.3);
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        background: #f0f9ff;
+        border-left: 4px solid var(--pulse-blue);
+    }
+
+    .qna-item-answered {
+        background: #f0fdf4;
+        border-left: 4px solid #86efac;
+    }
+
+    .qna-rank {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--pulse-gray-400);
+        min-width: 24px;
+        text-align: right;
+        flex-shrink: 0;
     }
 
     .qna-vote-pill {
         display: flex;
         flex-direction: column;
         align-items: center;
-        background: rgba(255,255,255,0.18);
-        border-radius: 0.75rem;
-        padding: 0.75rem 1rem;
-        min-width: 64px;
-        gap: 0.3rem;
+        background: #eff8ff;
+        border: 1px solid #bae6fd;
+        border-radius: var(--pulse-radius-md);
+        padding: 0.5rem 0.75rem;
+        min-width: 60px;
+        gap: 0.15rem;
+        flex-shrink: 0;
+    }
+
+    .qna-vote-pill-answered {
+        background: #f0fdf4;
+        border-color: #bbf7d0;
     }
 
     .qna-vote-count {
-        font-size: 2rem;
+        font-size: 1.75rem;
         font-weight: 800;
         line-height: 1;
+        color: var(--pulse-blue-dark);
     }
 
     .qna-vote-icon {
-        font-size: 1rem;
-        opacity: 0.8;
+        font-size: 0.8rem;
+        color: var(--pulse-blue);
+    }
+
+    .qna-vote-pill-answered .qna-vote-count,
+    .qna-vote-pill-answered .qna-vote-icon {
+        color: var(--pulse-green-dark);
     }
 
     .qna-text {
         flex: 1;
-        font-size: 1.2rem;
-        line-height: 1.5;
+        font-size: 1.15rem;
+        line-height: 1.45;
+        color: var(--pulse-gray-800);
+        min-width: 0;
+    }
+
+    .qna-text-answered {
+        text-decoration: line-through;
+        color: var(--pulse-gray-400);
+    }
+
+    .qna-answered-btn {
+        flex-shrink: 0;
+        background: transparent;
+        border: 1px solid var(--pulse-gray-200);
+        border-radius: var(--pulse-radius-md);
+        color: var(--pulse-gray-400);
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.15s;
+        opacity: 0;
+    }
+
+    .qna-item:hover .qna-answered-btn {
+        opacity: 1;
+    }
+
+    .qna-answered-btn:hover {
+        background: #dcfce7;
+        border-color: #86efac;
+        color: var(--pulse-green-dark);
+    }
+
+    .qna-answered-btn-undo:hover {
+        background: #fef3c7;
+        border-color: #fcd34d;
+        color: #92400e;
     }
 </style>
 
@@ -230,13 +365,16 @@
         }, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
     }
 
-    private string GetInitials(string text)
+    private async void ToggleAnswered(Guid questionId)
     {
-        if (string.IsNullOrWhiteSpace(text)) return "?";
-        var words = text.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return words.Length > 1
-            ? $"{char.ToUpper(words[0][0])}{char.ToUpper(words[^1][0])}"
-            : char.ToUpper(words[0][0]).ToString();
+        var q = Questions.FirstOrDefault(x => x.ResponseId == questionId);
+        if (q is null) return;
+        try
+        {
+            await DashboardService.ToggleAnsweredAsync(questionId, !q.IsAnswered);
+            await LoadData();
+        }
+        catch { }
     }
 
     public async ValueTask DisposeAsync()

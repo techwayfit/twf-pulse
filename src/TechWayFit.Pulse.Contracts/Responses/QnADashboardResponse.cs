@@ -19,6 +19,7 @@ public sealed record QnAQuestionItem(
     string Text,
     int UpvoteCount,
     bool IsAnonymous,
+    bool IsAnswered,
     DateTimeOffset SubmittedAt,
     /// <summary>
     /// The participant who submitted this question.

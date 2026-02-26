@@ -8,4 +8,9 @@ public interface IQnADashboardService
         Guid sessionId,
         Guid activityId,
         CancellationToken cancellationToken = default);
+
+    Task ToggleAnsweredAsync(
+        Guid questionResponseId,
+        bool isAnswered,
+        CancellationToken cancellationToken = default);
 }

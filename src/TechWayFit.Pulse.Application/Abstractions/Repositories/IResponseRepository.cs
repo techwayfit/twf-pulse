@@ -21,4 +21,13 @@ public interface IResponseRepository
     Task<IReadOnlyList<Response>> GetBySessionAsync(
         Guid sessionId,
         CancellationToken cancellationToken = default);
+
+    Task UpdatePayloadAsync(
+        Guid responseId,
+        string newPayload,
+        CancellationToken cancellationToken = default);
+
+    Task<Response?> GetByIdAsync(
+        Guid responseId,
+        CancellationToken cancellationToken = default);
 }

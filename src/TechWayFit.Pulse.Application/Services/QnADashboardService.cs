@@ -45,7 +45,7 @@ public sealed class QnADashboardService : IQnADashboardService
         var participants = await _participants.GetBySessionAsync(sessionId, cancellationToken);
 
         // Split into question responses and vote responses
-        var questionResponses = new List<(Domain.Entities.Response Response, string Text, bool IsAnonymous)>();
+        var questionResponses = new List<(Domain.Entities.Response Response, string Text, bool IsAnonymous, bool IsAnswered)>();
         var votesByQuestionId = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var response in allResponses)
@@ -71,8 +71,11 @@ public sealed class QnADashboardService : IQnADashboardService
                     var isAnonymous = root.TryGetProperty("isAnonymous", out var anonProp)
                         && anonProp.GetBoolean();
 
+                    var isAnswered = root.TryGetProperty("isAnswered", out var answeredProp)
+                        && answeredProp.GetBoolean();
+
                     if (!string.IsNullOrWhiteSpace(text))
-                        questionResponses.Add((response, text, isAnonymous));
+                        questionResponses.Add((response, text, isAnonymous, isAnswered));
                 }
                 else if (string.Equals(type, "vote", StringComparison.OrdinalIgnoreCase))
                 {
@@ -104,6 +107,7 @@ public sealed class QnADashboardService : IQnADashboardService
                     r.Text,
                     votes,
                     r.IsAnonymous,
+                    r.IsAnswered,
                     r.Response.CreatedAt,
                     r.Response.ParticipantId);
             })
@@ -130,5 +134,23 @@ public sealed class QnADashboardService : IQnADashboardService
             respondedParticipants,
             questions,
             lastResponseAt);
+    }
+
+    public async Task ToggleAnsweredAsync(
+        Guid questionResponseId,
+        bool isAnswered,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _responses.GetByIdAsync(questionResponseId, cancellationToken)
+            ?? throw new ArgumentException("Response not found.", nameof(questionResponseId));
+
+        // Merge isAnswered flag into the existing JSON payload
+        using var doc = JsonDocument.Parse(response.Payload);
+        var dict = doc.RootElement.EnumerateObject()
+            .ToDictionary(p => p.Name, p => (object?)p.Value.Clone());
+        dict["isAnswered"] = isAnswered;
+
+        var updatedPayload = JsonSerializer.Serialize(dict);
+        await _responses.UpdatePayloadAsync(questionResponseId, updatedPayload, cancellationToken);
     }
 }

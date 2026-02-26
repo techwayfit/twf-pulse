@@ -92,4 +92,27 @@ public abstract class ResponseRepositoryBase<TContext> : IResponseRepository
     {
         return query.OrderBy(x => x.CreatedAt);
     }
+
+    public async Task UpdatePayloadAsync(
+        Guid responseId,
+        string newPayload,
+        CancellationToken cancellationToken = default)
+    {
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = await dbContext.Responses.FindAsync(new object[] { responseId }, cancellationToken);
+        if (record is null) return;
+        record.PayloadJson = newPayload;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<Domain.Entities.Response?> GetByIdAsync(
+        Guid responseId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+        var record = await dbContext.Responses
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == responseId, cancellationToken);
+        return record?.ToDomain();
+    }
 }
