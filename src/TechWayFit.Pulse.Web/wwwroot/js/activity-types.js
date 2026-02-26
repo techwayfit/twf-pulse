@@ -421,6 +421,13 @@ class QuadrantActivity extends Activity {
 
 // Five Whys Activity
 class FiveWhysActivity extends Activity {
+    constructor(data = {}) {
+        super(data);
+        this.rootQuestion = this.config.rootQuestion || '';
+        this.context = this.config.context || '';
+        this.maxDepth = this.config.maxDepth || 5;
+    }
+
     getModalId() {
         return 'fivewhysModal';
     }
@@ -430,7 +437,13 @@ class FiveWhysActivity extends Activity {
     }
 
     getEmoji() {
-        return '<i class="ics ics-question ic-sm"></i>';
+        return '<i class="fas fa-search-location"></i>';
+    }
+
+    populateSpecificFields(prefix) {
+        this.setFieldValue(`${prefix}RootQuestion`, this.rootQuestion);
+        this.setFieldValue(`${prefix}Context`, this.context);
+        this.setFieldValue(`${prefix}MaxDepth`, this.maxDepth);
     }
 
     collectData() {
@@ -440,7 +453,39 @@ class FiveWhysActivity extends Activity {
         return {
             ...commonData,
             type: 'FiveWhys',
-            config: {}
+            config: {
+                rootQuestion: this.getFieldValue(`${prefix}RootQuestion`) || '',
+                context: this.getFieldValue(`${prefix}Context`) || null,
+                maxDepth: parseInt(this.getFieldValue(`${prefix}MaxDepth`)) || 5
+            }
+        };
+    }
+
+    toJSON() {
+        return {
+            ...super.toJSON(),
+            config: {
+                rootQuestion: this.rootQuestion,
+                context: this.context,
+                maxDepth: this.maxDepth
+            }
+        };
+    }
+
+    renderCardDetails() {
+        return this.rootQuestion
+            ? `<i class="fas fa-quote-left me-1"></i>${this.escapeHtml(this.rootQuestion.slice(0, 60))}${this.rootQuestion.length > 60 ? '…' : ''}`
+            : 'AI-driven root cause analysis';
+    }
+
+    toJSON() {
+        return {
+            ...super.toJSON(),
+            config: {
+                rootQuestion: this.rootQuestion,
+                context: this.context,
+                maxDepth: this.maxDepth
+            }
         };
     }
 }

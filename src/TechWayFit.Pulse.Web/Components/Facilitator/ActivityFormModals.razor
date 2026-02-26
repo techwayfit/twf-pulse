@@ -292,9 +292,70 @@
     </div>
 </div>
 
-<!-- Break Activity Modal -->
-<div class="modal fade" id="breakModal" tabindex="-1" data-bs-backdrop="static">
+<!-- 5 Whys Activity Modal -->
+<div class="modal fade" id="fivewhysModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-search-location me-1"></i>Create 5 Whys Activity</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info d-flex align-items-start gap-2 mb-3">
+                    <i class="fas fa-robot mt-1 flex-shrink-0"></i>
+                    <div class="small">
+                        <strong>AI-driven root cause analysis.</strong>
+                        Each participant answers your initial question, then AI asks personalised follow-up
+                        &ldquo;Why?&rdquo; questions, drilling deeper until the root cause is identified.
+                    </div>
+                </div>
+                <form id="fivewhysForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Activity Title *</label>
+                        <input type="text" class="form-control" id="fivewhysTitle" value="Root Cause Analysis" required
+                               placeholder="e.g., Why Did Our Sprint Fail?" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Initial Problem Question *</label>
+                        <textarea class="form-control" id="fivewhysRootQuestion" rows="2" required
+                                  placeholder="e.g., Why did our last deployment fail?"></textarea>
+                        <div class="form-text">This is the first question every participant will answer. Start with &ldquo;Why&hellip;&rdquo; for best results.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Background Context <span class="text-muted">(optional)</span></label>
+                        <textarea class="form-control" id="fivewhysContext" rows="2"
+                                  placeholder="e.g., We had 3 failed deployments this sprint, causing a 2-hour production outage..."></textarea>
+                        <div class="form-text">Helps AI generate more targeted follow-up questions. Not shown to participants.</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">Max Depth (Whys)</label>
+                            <select class="form-select" id="fivewhysMaxDepth">
+                                <option value="3">3 Levels</option>
+                                <option value="4">4 Levels</option>
+                                <option value="5" selected>5 Levels (recommended)</option>
+                                <option value="7">7 Levels (thorough)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="fivewhysDuration" value="15" min="5" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveFiveWhysActivity()">
+                    <i class="fas fa-robot me-1"></i>Create Activity
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Break Activity Modal -->
+<div class="modal fade" id="breakModal" tabindex="-1" data-bs-backdrop="static">    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title"><i class="fas fa-coffee me-1"></i>Create Break Activity</h5>

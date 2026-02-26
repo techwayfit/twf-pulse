@@ -1,0 +1,249 @@
+@using TechWayFit.Pulse.Domain.Models.ResponsePayloads
+@using TechWayFit.Pulse.Application.Abstractions.Services
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Text.Json
+@namespace TechWayFit.Pulse.Web.Components.Presentation
+@inject IResponseService ResponseService
+@inject NavigationManager Navigation
+@inject ILogger<FiveWhysPresentation> Logger
+@implements IAsyncDisposable
+
+<div class="activity-display">
+    <div class="activity-header">
+        <div class="activity-title-section">
+            <span class="activity-badge badge-five-whys">5 Whys</span>
+            <h2>@ActivityTitle</h2>
+            @if (!string.IsNullOrEmpty(ActivityPrompt))
+            {
+                <p class="activity-description">@ActivityPrompt</p>
+            }
+        </div>
+        @if (DurationMinutes.HasValue && OpenedAt.HasValue)
+        {
+            <div class="activity-timer">
+                <div class="timer-value" id="timer-display">@timeRemaining</div>
+                <div class="timer-label">Time Remaining</div>
+            </div>
+        }
+    </div>
+
+    <div class="activity-content">
+        <!-- Stats row -->
+        <div class="five-whys-stats">
+            <div class="stat-card">
+                <div class="stat-value-primary">@completedCount</div>
+                <div class="stat-label">Root Causes Found</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value-secondary">@inProgressCount</div>
+                <div class="stat-label">Exploring</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value-accent">@avgDepthLabel</div>
+                <div class="stat-label">Avg Depth</div>
+            </div>
+        </div>
+
+        <!-- Root causes -->
+        @if (completedChains.Count == 0 && inProgressCount == 0)
+        {
+            <div class="waiting-state">
+                <i class="fas fa-search waiting-icon"></i>
+                <h3>Participants are digging for root causes...</h3>
+                <p>Results will appear here as they complete their analysis</p>
+            </div>
+        }
+        else if (completedChains.Count > 0)
+        {
+            <div class="five-whys-root-causes-grid">
+                @{int idx = 0;}
+                @foreach (var chain in completedChains.Take(6))
+                {
+                    idx++;
+                    <div class="five-whys-root-cause-card">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="activity-badge badge-five-whys">
+                                <i class="fas fa-bullseye me-1"></i>Root Cause #@idx
+                            </span>
+                            <span class="text-muted" style="font-size:.8rem;">@chain.Chain.Count @(chain.Chain.Count == 1 ? "why" : "whys") deep</span>
+                        </div>
+                        <p class="mb-0 fw-semibold" style="color: var(--pulse-gray-800); line-height: 1.4;">@chain.RootCause</p>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .badge-five-whys {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .five-whys-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--pulse-spacing-lg);
+        flex-shrink: 0;
+    }
+
+    .five-whys-stats .stat-value-primary {
+        font-size: 2.5rem;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--pulse-blue-dark);
+    }
+
+    .five-whys-stats .stat-value-secondary {
+        font-size: 2.5rem;
+        font-weight: 800;
+        line-height: 1;
+        color: #d97706;
+    }
+
+    .five-whys-stats .stat-value-accent {
+        font-size: 2.5rem;
+        font-weight: 800;
+        line-height: 1;
+        color: var(--pulse-green-dark);
+    }
+
+    .five-whys-stats .stat-label {
+        font-size: .8rem;
+        color: var(--pulse-gray-500);
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-top: 4px;
+    }
+
+    .five-whys-root-causes-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .five-whys-root-cause-card {
+        background: var(--pulse-gray-50);
+        border: 1px solid var(--pulse-gray-200);
+        border-left: 4px solid #ef4444;
+        border-radius: var(--pulse-radius-lg);
+        padding: 1rem 1.25rem;
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired] public required string SessionCode { get; set; }
+    [Parameter, EditorRequired] public required Guid ActivityId { get; set; }
+    [Parameter] public string? ActivityTitle { get; set; }
+    [Parameter] public string? ActivityPrompt { get; set; }
+    [Parameter] public int? DurationMinutes { get; set; }
+    [Parameter] public DateTimeOffset? OpenedAt { get; set; }
+
+    private List<FiveWhysResponsePayload> completedChains = new();
+    private int inProgressCount;
+    private string avgDepthLabel = "—";
+    private string timeRemaining = "--:--";
+    private HubConnection? hubConnection;
+    private System.Threading.Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        await SetupSignalR();
+        StartTimer();
+    }
+
+    private void StartTimer()
+    {
+        if (DurationMinutes.HasValue && OpenedAt.HasValue)
+        {
+            _timer = new System.Threading.Timer(UpdateTimer, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        }
+    }
+
+    private void UpdateTimer(object? state)
+    {
+        if (DurationMinutes.HasValue && OpenedAt.HasValue)
+        {
+            var endTime = OpenedAt.Value.AddMinutes(DurationMinutes.Value);
+            var remaining = endTime - DateTimeOffset.UtcNow;
+            timeRemaining = remaining.TotalSeconds > 0
+                ? $"{(int)remaining.TotalMinutes}:{remaining.Seconds:D2}"
+                : "0:00";
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var responses = await ResponseService.GetByActivityAsync(ActivityId);
+            completedChains = new();
+            inProgressCount = 0;
+            var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            foreach (var resp in responses)
+            {
+                try
+                {
+                    var payload = JsonSerializer.Deserialize<FiveWhysResponsePayload>(resp.Payload, opts);
+                    if (payload == null) continue;
+                    if (payload.IsComplete) completedChains.Add(payload);
+                    else if (payload.Chain.Count > 0) inProgressCount++;
+                }
+                catch { /* skip malformed */ }
+            }
+
+            avgDepthLabel = completedChains.Count > 0
+                ? Math.Round(completedChains.Average(c => c.Chain.Count), 1).ToString("F1")
+                : "—";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load 5 Whys presentation data");
+        }
+    }
+
+    private async Task SetupSignalR()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.On<object>("ResponseReceived", async _ =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    await LoadData();
+                    StateHasChanged();
+                });
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "SignalR setup failed for 5 Whys presentation");
+        }
+    }
+
+    private int completedCount => completedChains.Count;
+
+    public async ValueTask DisposeAsync()
+    {
+        _timer?.Dispose();
+        if (hubConnection != null)
+        {
+            try { await hubConnection.InvokeAsync("Unsubscribe", SessionCode); } catch { }
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

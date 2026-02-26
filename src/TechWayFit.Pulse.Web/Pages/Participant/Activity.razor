@@ -188,6 +188,10 @@
                                 {
                                     <QnAActivity Parameters="@CreateActivityParameters()" />
                                 }
+                                else if (currentActivity.Type == ActivityType.FiveWhys)
+                                {
+                                    <FiveWhysActivity Parameters="@CreateActivityParameters()" />
+                                }
                                 else
                                 {
                                     <GenericActivity Parameters="@CreateActivityParameters()" ActivityType="@currentActivity.Type.ToString()" />

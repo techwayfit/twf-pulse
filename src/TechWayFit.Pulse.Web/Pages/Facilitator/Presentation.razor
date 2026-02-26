@@ -201,6 +201,16 @@ else
                         }
                     </div>
                 }
+                else if (activity.Type == ActivityType.FiveWhys)
+                {
+                    <FiveWhysPresentation
+                        SessionCode="@SessionCode"
+                        ActivityId="@activity.ActivityId"
+                        ActivityTitle="@activity.Title"
+                        ActivityPrompt="@activity.Prompt"
+                        DurationMinutes="@activity.DurationMinutes"
+                        OpenedAt="@activity.OpenedAt" />
+                }
                 else if (activity.Type == ActivityType.Break)
                 {
                     <div class="activity-display">

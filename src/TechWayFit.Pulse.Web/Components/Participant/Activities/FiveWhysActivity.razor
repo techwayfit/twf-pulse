@@ -1,0 +1,341 @@
+@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using TechWayFit.Pulse.Domain.Models.ResponsePayloads
+@using TechWayFit.Pulse.Application.Abstractions.Services
+@using TechWayFit.Pulse.Contracts.AI
+@using System.Text.Json
+@namespace TechWayFit.Pulse.Web.Components.Participant.Activities
+@inject IFiveWhysAIService FiveWhysAI
+@inject ILogger<FiveWhysActivity> Logger
+
+<div class="five-whys-activity">
+
+    @if (Parameters.HasSubmitted && Parameters.SubmitSuccess)
+    {
+        <!-- Root Cause Submitted -->
+        <div class="text-center py-4">
+            <div class="root-cause-badge mb-3">
+                <i class="fas fa-bullseye fa-3x text-danger"></i>
+            </div>
+            <h4 class="fw-bold mb-2 text-success">Root Cause Uncovered!</h4>
+            <p class="text-muted mb-0 small">Your analysis has been submitted. Thank you for digging deep.</p>
+        </div>
+    }
+    else
+    {
+        <!-- Journey Header -->
+        <div class="d-flex align-items-center gap-2 mb-4">
+            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2">
+                <i class="fas fa-search me-1"></i>Root Cause Journey
+            </span>
+            @if (!isComplete)
+            {
+                <span class="text-muted small">Level @(chain.Count + 1) of @maxDepth</span>
+                <div class="flex-grow-1 ms-2">
+                    <div class="progress" style="height: 6px;" role="progressbar">
+                        <div class="progress-bar bg-danger" style="width: @(Math.Min(100, (chain.Count * 100) / maxDepth))%"></div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Conversation Chain (previous levels) -->
+        @if (chain.Count > 0)
+        {
+            <div class="five-whys-chain mb-4">
+                @foreach (var exchange in chain)
+                {
+                    <div class="five-whys-exchange">
+                        <div class="five-whys-level-pill">
+                            <span class="badge @GetLevelBadgeClass(exchange.Level) px-2 py-1">
+                                @GetLevelLabel(exchange.Level)
+                            </span>
+                        </div>
+                        <div class="five-whys-q text-muted small fw-medium mb-1">
+                            <i class="fas fa-question-circle me-1 text-primary opacity-75"></i>@exchange.Question
+                        </div>
+                        <div class="five-whys-a rounded-3 p-2 bg-white border-start border-3 border-primary ps-3">
+                            <span class="small fw-medium">@exchange.Answer</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @if (isComplete && rootCause != null)
+        {
+            <!-- Root Cause Revealed -->
+            <div class="root-cause-reveal mb-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="fas fa-bullseye text-danger fs-4"></i>
+                    <h5 class="fw-bold mb-0 text-danger">Root Cause Identified</h5>
+                </div>
+                <div class="p-3 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-3 mb-3">
+                    <p class="mb-0 fw-semibold">@rootCause</p>
+                </div>
+                @if (!string.IsNullOrEmpty(aiInsight))
+                {
+                    <div class="p-3 bg-light rounded-3 border">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="fas fa-lightbulb text-warning"></i>
+                            <span class="fw-semibold small text-muted text-uppercase" style="letter-spacing: .05em;">AI Insight</span>
+                        </div>
+                        <p class="mb-0 small">@aiInsight</p>
+                    </div>
+                }
+
+                <button class="btn btn-danger w-100 mt-4 py-2 fw-semibold"
+                        @onclick="SubmitFinalResult"
+                        disabled="@Parameters.IsSubmitting">
+                    @if (Parameters.IsSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <text>Submitting...</text>
+                    }
+                    else
+                    {
+                        <i class="fas fa-paper-plane me-2"></i>
+                        <text>Submit Root Cause Analysis</text>
+                    }
+                </button>
+            </div>
+        }
+        else if (!isComplete)
+        {
+            <!-- Current Question -->
+            <div class="current-question-card p-3 rounded-3 border mb-3 @(isAiThinking ? "thinking" : "")">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge @GetLevelBadgeClass(chain.Count + 1) px-2 py-1">
+                        @GetLevelLabel(chain.Count + 1)
+                    </span>
+                    @if (isAiThinking)
+                    {
+                        <span class="text-muted small fst-italic">
+                            <span class="spinner-grow spinner-grow-sm text-primary me-1" role="status"></span>
+                            AI is formulating the next question...
+                        </span>
+                    }
+                </div>
+                <p class="fw-semibold mb-0 fs-6">@currentQuestion</p>
+            </div>
+
+            <div class="mb-3">
+                <textarea class="form-control"
+                          rows="3"
+                          placeholder="Think carefully and give a specific, honest answer..."
+                          @bind="currentAnswer"
+                          @bind:event="oninput"
+                          maxlength="500"
+                          disabled="@(isAiThinking || Parameters.IsSubmitting)"></textarea>
+                <div class="form-text text-end">@(currentAnswer?.Length ?? 0) / 500</div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger py-2 small mb-3">
+                    <i class="fas fa-exclamation-triangle me-1"></i>@errorMessage
+                </div>
+            }
+
+            <button class="btn btn-primary w-100 py-2 fw-semibold"
+                    @onclick="SubmitAnswer"
+                    disabled="@(isAiThinking || string.IsNullOrWhiteSpace(currentAnswer) || currentAnswer.Trim().Length < 5)">
+                @if (isAiThinking)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    <text>Analysing your answer...</text>
+                }
+                else
+                {
+                    <i class="fas fa-arrow-right me-2"></i>
+                    <text>Dig Deeper</text>
+                }
+            </button>
+        }
+
+        @if (!string.IsNullOrEmpty(Parameters.SubmitMessage) && !Parameters.SubmitSuccess)
+        {
+            <div class="alert alert-danger mt-3 mb-0 small">@Parameters.SubmitMessage</div>
+        }
+    }
+</div>
+
+<style>
+    .five-whys-chain {
+        border-left: 2px solid var(--bs-border-color);
+        padding-left: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .five-whys-exchange {
+        position: relative;
+    }
+
+    .five-whys-level-pill {
+        margin-bottom: .35rem;
+    }
+
+    .current-question-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        transition: all .3s ease;
+    }
+
+    .current-question-card.thinking {
+        border-color: var(--bs-primary) !important;
+        background: linear-gradient(135deg, #e8f4fd 0%, #d1ecf1 100%);
+    }
+
+    .root-cause-reveal {
+        animation: fadeSlideIn .4s ease-out;
+    }
+
+    @@keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .root-cause-badge {
+        animation: pulse .8s ease-in-out infinite alternate;
+    }
+
+    @@keyframes pulse {
+        from { transform: scale(1); }
+        to   { transform: scale(1.08); }
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ParticipantActivityParameters Parameters { get; set; }
+
+    private FiveWhysConfig? config;
+    private List<FiveWhysExchange> chain = new();
+    private string currentQuestion = string.Empty;
+    private string? currentAnswer;
+    private bool isAiThinking = false;
+    private bool isComplete = false;
+    private string? rootCause;
+    private string? aiInsight;
+    private string errorMessage = string.Empty;
+    private int maxDepth = 5;
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(Parameters.Config))
+        {
+            try
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                config = JsonSerializer.Deserialize<FiveWhysConfig>(Parameters.Config, options);
+            }
+            catch (JsonException ex)
+            {
+                Logger.LogWarning(ex, "Failed to parse FiveWhysConfig");
+            }
+        }
+
+        if (chain.Count == 0)
+        {
+            currentQuestion = config?.RootQuestion ?? "Why is this problem occurring?";
+            maxDepth = config?.MaxDepth ?? 5;
+        }
+    }
+
+    private async Task SubmitAnswer()
+    {
+        var answer = currentAnswer?.Trim();
+        if (string.IsNullOrEmpty(answer)) return;
+
+        errorMessage = string.Empty;
+        isAiThinking = true;
+        StateHasChanged();
+
+        // Record the current exchange
+        var exchange = new FiveWhysExchange
+        {
+            Level = chain.Count + 1,
+            Question = currentQuestion,
+            Answer = answer
+        };
+        chain.Add(exchange);
+        currentAnswer = null;
+
+        try
+        {
+            // Call AI for next step
+            var chainEntries = chain.Select(e => new FiveWhysChainEntry
+            {
+                Level = e.Level,
+                Question = e.Question,
+                Answer = e.Answer
+            }).ToList();
+
+            var result = await FiveWhysAI.GetNextStepAsync(
+                config?.RootQuestion ?? currentQuestion,
+                config?.Context,
+                chainEntries,
+                maxDepth);
+
+            if (result.IsComplete)
+            {
+                isComplete = true;
+                rootCause = result.RootCause;
+                aiInsight = result.Insight;
+            }
+            else
+            {
+                currentQuestion = result.NextQuestion ?? "Why did that happen?";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "5 Whys AI call failed");
+            errorMessage = "Could not get the next question. Please try again.";
+            // Roll back the last exchange so user can retry
+            chain.RemoveAt(chain.Count - 1);
+            currentAnswer = answer;
+        }
+        finally
+        {
+            isAiThinking = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SubmitFinalResult()
+    {
+        var payload = new FiveWhysResponsePayload
+        {
+            Chain = chain,
+            IsComplete = isComplete,
+            RootCause = rootCause,
+            Insight = aiInsight
+        };
+
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        await Parameters.OnSubmit(JsonSerializer.Serialize(payload, options));
+    }
+
+    private static string GetLevelLabel(int level) => level switch
+    {
+        1 => "The Symptom",
+        2 => "First Layer",
+        3 => "Going Deeper",
+        4 => "Almost There",
+        _ => "Root Level"
+    };
+
+    private static string GetLevelBadgeClass(int level) => level switch
+    {
+        1 => "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25",
+        2 => "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25",
+        3 => "bg-orange bg-opacity-10 text-orange border border-orange border-opacity-25",
+        4 => "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25",
+        _ => "bg-danger text-white"
+    };
+}

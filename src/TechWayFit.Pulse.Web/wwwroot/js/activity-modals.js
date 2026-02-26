@@ -311,10 +311,6 @@ window.saveQuadrantActivity = async function() {
     }
 };
 
-window.saveFiveWhysActivity = async function() {
-    alert('5 Whys creation is temporarily disabled until the full participant and facilitator experience is implemented.');
-};
-
 window.saveAiSummaryActivity = async function() {
     const title = document.getElementById('aisummaryTitle').value;
     if (!title) {
@@ -397,6 +393,49 @@ window.saveQnAActivity = async function() {
     }
 };
 
+window.saveFiveWhysActivity = async function() {
+    const title = document.getElementById('fivewhysTitle').value;
+    if (!title) {
+        alert('Please enter an activity title');
+        return;
+    }
+
+    const rootQuestion = document.getElementById('fivewhysRootQuestion').value;
+    if (!rootQuestion) {
+        alert('Please enter the initial problem question');
+        return;
+    }
+
+    const config = {
+        rootQuestion: rootQuestion,
+        context: document.getElementById('fivewhysContext').value || null,
+        maxDepth: parseInt(document.getElementById('fivewhysMaxDepth').value) || 5
+    };
+
+    const activity = {
+        type: 'FiveWhys',
+        title: title,
+        prompt: rootQuestion,
+        durationMinutes: parseInt(document.getElementById('fivewhysDuration').value) || 15,
+        config: JSON.stringify(config)
+    };
+
+    if (!window.addActivitiesManager) {
+        console.error('addActivitiesManager not found!');
+        alert('Activity manager not initialized. Please refresh the page.');
+        return;
+    }
+
+    try {
+        await window.addActivitiesManager.createActivityFromData(activity);
+    } catch (error) {
+        console.error('Error creating 5 Whys activity:', error);
+        alert('Failed to create activity: ' + error.message);
+    } finally {
+        resetFiveWhysForm();
+    }
+};
+
 window.saveBreakActivity = async function() {
     const title = document.getElementById('breakTitle').value;
     if (!title) {
@@ -466,7 +505,12 @@ function resetQuadrantForm() {
 }
 
 function resetFiveWhysForm() {
-    document.getElementById('fivewhysForm').reset();
+    const form = document.getElementById('fivewhysForm');
+    if (form) form.reset();
+    const depthSel = document.getElementById('fivewhysMaxDepth');
+    if (depthSel) depthSel.value = '5';
+    const durInput = document.getElementById('fivewhysDuration');
+    if (durInput) durInput.value = '15';
 }
 
     // Expose initialization functions globally for external use

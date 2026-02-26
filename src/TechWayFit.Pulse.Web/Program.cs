@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 using Serilog.Events;
 using TechWayFit.Pulse.Application.Abstractions.Services;
@@ -182,6 +183,7 @@ try
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.ParticipantAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.FacilitatorAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.SessionAIService>();
+        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.FiveWhysAIService>();
     }
     else if (aiProvider.Equals("MLNet", StringComparison.OrdinalIgnoreCase))
     {
@@ -189,6 +191,7 @@ try
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.MLNetSessionAIService>();
+        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.MockFiveWhysAIService>();
     }
     else if (aiProvider.Equals("Intelligent", StringComparison.OrdinalIgnoreCase))
     {
@@ -196,9 +199,12 @@ try
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.IntelligentSessionAIService>();
+        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.MockFiveWhysAIService>();
     }
     builder.Services.AddKeyedScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.IntelligentSessionAIService>("Intelligent");
-    
+
+    // Ensure IFiveWhysAIService always has a fallback registration (mock if not already registered by a provider above)
+    builder.Services.TryAddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.MockFiveWhysAIService>();
 
     // Register AI work queue and background processor
     builder.Services.AddSingleton<TechWayFit.Pulse.Application.Abstractions.Services.IAIWorkQueue, TechWayFit.Pulse.Infrastructure.AI.AIWorkQueue>();

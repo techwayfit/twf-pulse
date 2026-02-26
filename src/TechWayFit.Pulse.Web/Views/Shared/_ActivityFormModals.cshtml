@@ -323,15 +323,30 @@
                 <form id="fivewhysForm">
                     <div class="mb-3">
                         <label class="form-label fw-medium">Activity Title *</label>
-                        <input type="text" class="form-control" id="fivewhysTitle" required />
+                        <input type="text" class="form-control" id="fivewhysTitle" placeholder="e.g. Root Cause Analysis" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Root Problem Statement</label>
-                        <textarea class="form-control" id="fivewhysPrompt" rows="3" placeholder="Describe the problem you want to analyze..."></textarea>
+                        <label class="form-label fw-medium">Initial Problem Question *</label>
+                        <input type="text" class="form-control" id="fivewhysRootQuestion" placeholder="e.g. Why is our deployment pipeline failing?" required />
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Duration (minutes)</label>
-                        <input type="number" class="form-control" id="fivewhysDuration" value="10" min="1" />
+                        <label class="form-label fw-medium">Additional Context <span class="text-muted fw-normal">(optional)</span></label>
+                        <textarea class="form-control" id="fivewhysContext" rows="2" placeholder="Provide any background information to help participants..."></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-medium">Max &ldquo;Why&rdquo; Depth</label>
+                            <select class="form-select" id="fivewhysMaxDepth">
+                                <option value="3">3 levels</option>
+                                <option value="4">4 levels</option>
+                                <option value="5" selected>5 levels (recommended)</option>
+                                <option value="7">7 levels</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-medium">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="fivewhysDuration" value="15" min="1" />
+                        </div>
                     </div>
                 </form>
             </div>
