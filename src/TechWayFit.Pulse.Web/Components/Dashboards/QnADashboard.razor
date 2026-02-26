@@ -1,0 +1,307 @@
+@using TechWayFit.Pulse.Contracts.Responses
+@using TechWayFit.Pulse.Application.Abstractions.Services
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Web.Hubs
+@namespace TechWayFit.Pulse.Web.Components.Dashboards
+@inject IQnADashboardService QnADashboardService
+@inject ISessionService SessionService
+@inject NavigationManager Navigation
+@inject ILogger<QnADashboard> Logger
+@implements IAsyncDisposable
+
+<div class="qna-dashboard">
+    @if (isLoading)
+    {
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mt-2 small text-muted">Loading questions...</div>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger py-2">
+            <i class="fas fa-exclamation-triangle me-1"></i>@errorMessage
+        </div>
+    }
+    else if (dashboard != null)
+    {
+        @* Stats bar *@
+        <div class="row g-3 mb-4">
+            <div class="col-4">
+                <div class="text-center p-3 bg-white border rounded-3">
+                    <div class="fw-bold fs-4 text-primary">@dashboard.TotalQuestions</div>
+                    <div class="small text-muted">Questions</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="text-center p-3 bg-white border rounded-3">
+                    <div class="fw-bold fs-4 text-warning">@dashboard.TotalVotes</div>
+                    <div class="small text-muted">Upvotes</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="text-center p-3 bg-white border rounded-3">
+                    <div class="fw-bold fs-4 text-success">@dashboard.RespondedParticipants</div>
+                    <div class="small text-muted">Participants</div>
+                </div>
+            </div>
+        </div>
+
+        @* Sort controls *@
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 fw-semibold">
+                <i class="fas fa-comments me-1 text-primary"></i>Questions
+            </h6>
+            <div class="btn-group btn-group-sm shadow-sm">
+                <button class="btn @(sortBy == "votes" ? "btn-primary" : "btn-outline-secondary")"
+                        @onclick='() => sortBy = "votes"'>
+                    <i class="fas fa-fire me-1"></i>Top
+                </button>
+                <button class="btn @(sortBy == "recent" ? "btn-primary" : "btn-outline-secondary")"
+                        @onclick='() => sortBy = "recent"'>
+                    <i class="fas fa-clock me-1"></i>Recent
+                </button>
+            </div>
+        </div>
+
+        @* Question list *@
+        @if (dashboard.Questions.Count > 0)
+        {
+            <div class="d-flex flex-column gap-2">
+                @{
+                    int qIndex = 0;
+                }
+                @foreach (var q in GetSortedQuestions())
+                {
+                    qIndex++;
+                    var isAnswered = answeredQuestions.Contains(q.ResponseId);
+                    <div class="d-flex gap-3 align-items-start p-3 bg-white border rounded-3 shadow-sm @(isAnswered ? "opacity-50" : "")">
+                        @* Vote count *@
+                        <div class="d-flex flex-column align-items-center gap-1" style="min-width: 48px;">
+                            <div class="fw-bold fs-4 lh-1 @(isAnswered ? "text-muted" : "text-primary")">
+                                @q.UpvoteCount
+                            </div>
+                            <i class="fas fa-thumbs-up @(isAnswered ? "text-muted" : "text-primary")" style="font-size:0.85rem;"></i>
+                        </div>
+
+                        @* Question body *@
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                <span class="badge bg-light text-dark border fw-normal" style="font-size:0.7rem;">#@qIndex</span>
+                                @if (q.IsAnonymous)
+                                {
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border" style="font-size:0.7rem;">Anonymous</span>
+                                }
+                                @if (isAnswered)
+                                {
+                                    <span class="badge bg-success bg-opacity-15 text-success border border-success" style="font-size:0.7rem;">
+                                        <i class="fas fa-check me-1"></i>Answered
+                                    </span>
+                                }
+                            </div>
+                            <p class="mb-1 @(isAnswered ? "text-decoration-line-through text-muted" : "")">@q.Text</p>
+                            <span class="text-muted small">@GetRelativeTime(q.SubmittedAt)</span>
+                        </div>
+
+                        @* Mark as answered toggle *@
+                        <div class="flex-shrink-0">
+                            <button class="btn btn-sm @(isAnswered ? "btn-outline-secondary" : "btn-outline-success") px-2 py-1"
+                                    style="font-size:0.75rem; white-space:nowrap;"
+                                    @onclick="() => ToggleAnswered(q.ResponseId)"
+                                    title="@(isAnswered ? "Mark as unanswered" : "Mark as answered")">
+                                <i class="fas @(isAnswered ? "fa-rotate-left" : "fa-check") me-1"></i>
+                                @(isAnswered ? "Reopen" : "Answered")
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (displayCount < dashboard.Questions.Count)
+            {
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-primary btn-sm" @onclick="LoadMore">
+                        Show @(dashboard.Questions.Count - displayCount) more
+                    </button>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-lightbulb fa-2x mb-3 d-block opacity-25"></i>
+                <p class="mb-1">No questions yet</p>
+                <p class="small mb-0">Participants can submit questions using the session code</p>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string SessionCode { get; set; } = string.Empty;
+    [Parameter] public Guid ActivityId { get; set; }
+
+    private QnADashboardResponse? dashboard;
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private string sortBy = "votes";
+    private int displayCount = 25;
+    private HubConnection? hubConnection;
+    private HashSet<Guid> answeredQuestions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboard();
+        await SetupSignalR();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!isLoading)
+            await LoadDashboard();
+    }
+
+    private async Task LoadDashboard()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            var session = await SessionService.GetByCodeAsync(SessionCode);
+            if (session is null)
+            {
+                errorMessage = "Session not found.";
+                return;
+            }
+
+            dashboard = await QnADashboardService.GetQnADashboardAsync(session.Id, ActivityId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load Q&A dashboard: {ex.Message}";
+            Logger.LogError(ex, "Failed to load QnA dashboard for session {SessionCode}, activity {ActivityId}", SessionCode, ActivityId);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SetupSignalR()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.Reconnected += async _ =>
+            {
+                try
+                {
+                    await hubConnection.InvokeAsync("Subscribe", SessionCode);
+                    await InvokeAsync(async () =>
+                    {
+                        await LoadDashboard();
+                        StateHasChanged();
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to re-subscribe QnA dashboard after reconnect");
+                }
+            };
+
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (evt) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (evt.SessionCode == SessionCode && evt.ActivityId == ActivityId)
+                    {
+                        await LoadDashboard();
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            hubConnection.On<DashboardUpdatedEvent>("DashboardUpdated", async (evt) =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (evt.SessionCode == SessionCode && evt.ActivityId == ActivityId)
+                    {
+                        await LoadDashboard();
+                        StateHasChanged();
+                    }
+                });
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to set up SignalR for QnA dashboard");
+        }
+    }
+
+    private IEnumerable<QnAQuestionItem> GetSortedQuestions()
+    {
+        if (dashboard?.Questions == null) return Enumerable.Empty<QnAQuestionItem>();
+
+        // Unanswered first, then sort within groups
+        var sorted = sortBy switch
+        {
+            "recent" => dashboard.Questions
+                .OrderBy(q => answeredQuestions.Contains(q.ResponseId) ? 1 : 0)
+                .ThenByDescending(q => q.SubmittedAt),
+            _ => dashboard.Questions
+                .OrderBy(q => answeredQuestions.Contains(q.ResponseId) ? 1 : 0)
+                .ThenByDescending(q => q.UpvoteCount)
+                .ThenBy(q => q.SubmittedAt)
+        };
+
+        return sorted.Take(displayCount);
+    }
+
+    private void ToggleAnswered(Guid questionId)
+    {
+        if (answeredQuestions.Contains(questionId))
+            answeredQuestions.Remove(questionId);
+        else
+            answeredQuestions.Add(questionId);
+    }
+
+    private void LoadMore() => displayCount += 25;
+
+    private static string GetRelativeTime(DateTimeOffset ts)
+    {
+        var diff = DateTimeOffset.UtcNow - ts;
+        if (diff.TotalSeconds < 60) return "Just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        return ts.ToString("MMM d");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            try
+            {
+                await hubConnection.InvokeAsync("Unsubscribe", SessionCode);
+                await hubConnection.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error disposing SignalR for QnA dashboard");
+            }
+        }
+    }
+}

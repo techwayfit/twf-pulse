@@ -354,6 +354,49 @@ window.saveAiSummaryActivity = async function() {
     }
 };
 
+window.saveQnAActivity = async function() {
+    const title = document.getElementById('qnaTitle').value;
+    if (!title) {
+        alert('Please enter an activity title');
+        return;
+    }
+
+    const config = {
+        maxQuestionsPerParticipant: parseInt(document.getElementById('qnaMaxQuestions').value) || 3,
+        maxQuestionLength: parseInt(document.getElementById('qnaMaxLength').value) || 300,
+        allowAnonymous: document.getElementById('qnaAllowAnonymous').checked,
+        allowUpvoting: document.getElementById('qnaAllowUpvoting').checked
+    };
+
+    const activity = {
+        type: 'QnA',
+        title: title,
+        prompt: document.getElementById('qnaPrompt').value || null,
+        durationMinutes: parseInt(document.getElementById('qnaDuration').value) || 10,
+        config: JSON.stringify(config)
+    };
+
+    if (!window.addActivitiesManager) {
+        console.error('addActivitiesManager not found!');
+        alert('Activity manager not initialized. Please refresh the page.');
+        return;
+    }
+
+    try {
+        await window.addActivitiesManager.createActivityFromData(activity);
+    } catch (error) {
+        console.error('Error creating Q&A activity:', error);
+        alert('Failed to create activity: ' + error.message);
+    } finally {
+        document.getElementById('qnaForm').reset();
+        document.getElementById('qnaMaxQuestions').value = '3';
+        document.getElementById('qnaMaxLength').value = '300';
+        document.getElementById('qnaDuration').value = '10';
+        document.getElementById('qnaAllowAnonymous').checked = true;
+        document.getElementById('qnaAllowUpvoting').checked = true;
+    }
+};
+
 window.saveBreakActivity = async function() {
     const title = document.getElementById('breakTitle').value;
     if (!title) {

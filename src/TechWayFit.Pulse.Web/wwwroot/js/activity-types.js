@@ -681,6 +681,70 @@ class BreakActivity extends Activity {
     }
 }
 
+// Q&A Activity
+class QnAActivity extends Activity {
+    constructor(data = {}) {
+        super(data);
+        this.maxQuestionsPerParticipant = this.config.maxQuestionsPerParticipant || 3;
+        this.maxQuestionLength = this.config.maxQuestionLength || 300;
+        this.allowAnonymous = this.config.allowAnonymous !== false;
+        this.allowUpvoting = this.config.allowUpvoting !== false;
+    }
+
+    getModalId() {
+        return 'qnaModal';
+    }
+
+    getFieldPrefix() {
+        return 'qna';
+    }
+
+    getEmoji() {
+        return '<i class="fas fa-lightbulb"></i>';
+    }
+
+    populateSpecificFields(prefix) {
+        this.setFieldValue(`${prefix}MaxQuestions`, this.maxQuestionsPerParticipant);
+        this.setFieldValue(`${prefix}MaxLength`, this.maxQuestionLength);
+        this.setFieldValue(`${prefix}AllowAnonymous`, this.allowAnonymous);
+        this.setFieldValue(`${prefix}AllowUpvoting`, this.allowUpvoting);
+    }
+
+    collectData() {
+        const prefix = this.getFieldPrefix();
+        const commonData = this.collectCommonData(prefix);
+        return {
+            ...commonData,
+            type: 'QnA',
+            config: {
+                maxQuestionsPerParticipant: parseInt(this.getFieldValue(`${prefix}MaxQuestions`)) || 3,
+                maxQuestionLength: parseInt(this.getFieldValue(`${prefix}MaxLength`)) || 300,
+                allowAnonymous: this.getFieldValue(`${prefix}AllowAnonymous`) !== false,
+                allowUpvoting: this.getFieldValue(`${prefix}AllowUpvoting`) !== false
+            }
+        };
+    }
+
+    renderCardDetails() {
+        const upvote = this.allowUpvoting ? '<i class="fas fa-chevron-up me-1"></i>Upvoting on · ' : '';
+        return `<span class="d-inline-flex align-items-center gap-1 text-muted small fw-semibold">
+            ${upvote}Max ${this.maxQuestionsPerParticipant} questions per person
+        </span>`;
+    }
+
+    toJSON() {
+        return {
+            ...super.toJSON(),
+            config: {
+                maxQuestionsPerParticipant: this.maxQuestionsPerParticipant,
+                maxQuestionLength: this.maxQuestionLength,
+                allowAnonymous: this.allowAnonymous,
+                allowUpvoting: this.allowUpvoting
+            }
+        };
+    }
+}
+
 // Activity Factory - creates appropriate activity instance based on type
 class ActivityFactory {
     static create(data) {
@@ -699,6 +763,8 @@ class ActivityFactory {
                 return new RatingActivity(data);
             case 'feedback':
                 return new FeedbackActivity(data);
+            case 'qna':
+                return new QnAActivity(data);
             case 'aisummary':
                 return new AiSummaryActivity(data);
             case 'break':
@@ -717,6 +783,7 @@ class ActivityFactory {
             { type: 'FiveWhys', class: FiveWhysActivity, emoji: '<i class="ics ics-question ic-sm"></i>', description: 'Root cause analysis' },
             { type: 'Rating', class: RatingActivity, emoji: '<i class="ics ics-star ic-sm"></i>', description: 'Star or numeric ratings' },
             { type: 'Feedback', class: FeedbackActivity, emoji: '<i class="ics ics-chat ic-sm"></i>', description: 'Open-ended feedback' },
+            { type: 'QnA', class: QnAActivity, emoji: '<i class="fas fa-lightbulb ic-sm"></i>', description: 'Live Q&A with upvoting' },
             { type: 'AiSummary', class: AiSummaryActivity, emoji: '<i class="fas fa-robot ic-sm"></i>', description: 'AI-generated session summary' },
             { type: 'Break', class: BreakActivity, emoji: '<i class="fas fa-coffee"></i>', description: 'Timed break with ready signal' }
         ];
@@ -731,6 +798,7 @@ window.QuadrantActivity = QuadrantActivity;
 window.FiveWhysActivity = FiveWhysActivity;
 window.RatingActivity = RatingActivity;
 window.FeedbackActivity = FeedbackActivity;
+window.QnAActivity = QnAActivity;
 window.AiSummaryActivity = AiSummaryActivity;
 window.BreakActivity = BreakActivity;
 window.ActivityFactory = ActivityFactory;

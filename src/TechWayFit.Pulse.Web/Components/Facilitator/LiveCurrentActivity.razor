@@ -78,6 +78,10 @@
             {
                 <BreakDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
             }
+            else if (Activity.Type == ActivityType.QnA)
+            {
+                <QnADashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
+            }
             else
             {
                 <div class="text-center">

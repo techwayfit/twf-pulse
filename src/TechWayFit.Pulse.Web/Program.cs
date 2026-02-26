@@ -221,6 +221,7 @@ try
     builder.Services.AddScoped<IWordCloudDashboardService, WordCloudDashboardService>();
     builder.Services.AddScoped<IRatingDashboardService, RatingDashboardService>();
     builder.Services.AddScoped<IGeneralFeedbackDashboardService, GeneralFeedbackDashboardService>();
+    builder.Services.AddScoped<IQnADashboardService, QnADashboardService>();
     builder.Services.AddScoped<ISessionCodeGenerator, SessionCodeGenerator>();
     builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
     builder.Services.AddScoped<ISessionGroupService, SessionGroupService>();

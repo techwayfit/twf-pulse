@@ -184,6 +184,10 @@
                                 {
                                     <BreakActivity Parameters="@CreateActivityParameters()" />
                                 }
+                                else if (currentActivity.Type == ActivityType.QnA)
+                                {
+                                    <QnAActivity Parameters="@CreateActivityParameters()" />
+                                }
                                 else
                                 {
                                     <GenericActivity Parameters="@CreateActivityParameters()" ActivityType="@currentActivity.Type.ToString()" />

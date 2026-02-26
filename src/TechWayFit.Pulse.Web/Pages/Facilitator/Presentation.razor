@@ -161,6 +161,16 @@ else
                         DurationMinutes="@activity.DurationMinutes"
                         OpenedAt="@activity.OpenedAt" />
                 }
+                else if (activity.Type == ActivityType.QnA)
+                {
+                    <QnAPresentation
+                        SessionCode="@SessionCode"
+                        ActivityId="@activity.ActivityId"
+                        ActivityTitle="@activity.Title"
+                        ActivityPrompt="@activity.Prompt"
+                        DurationMinutes="@activity.DurationMinutes"
+                        OpenedAt="@activity.OpenedAt" />
+                }
                 else if (activity.Type == ActivityType.AiSummary)
                 {
                     <div class="activity-display">
