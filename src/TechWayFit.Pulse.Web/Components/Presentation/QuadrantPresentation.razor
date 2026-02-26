@@ -43,46 +43,48 @@
         }
         else if (dashboard is not null)
         {
-            <!-- Current item banner + navigation -->
-            <div class="d-flex align-items-center justify-content-between mb-3 px-2 flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-outline-secondary btn-sm"
-                            @onclick="PrevItem"
-                            disabled="@(currentItemIndex <= 0 || _isNavigating)">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <div>
-                        <div class="text-muted small">Now scoring (@(currentItemIndex + 1) / @(config?.Items.Count ?? 0))</div>
-                        <div class="fw-bold fs-4">@currentItemName</div>
-                    </div>
-                    <button class="btn btn-outline-secondary btn-sm"
-                            @onclick="NextItem"
-                            disabled="@(config == null || currentItemIndex >= config.Items.Count - 1 || _isNavigating)">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-                <div class="d-flex gap-3 text-center">
-                    <div>
-                        <div class="fw-bold fs-5 text-primary">@dashboard.TotalResponses</div>
-                        <div class="text-muted small">Responses</div>
-                    </div>
-                    <div>
-                        <div class="fw-bold fs-5 text-success">@dashboard.RespondedParticipants</div>
-                        <div class="text-muted small">Participants</div>
-                    </div>
-                </div>
-            </div>
+            <div class="row g-0 flex-fill overflow-hidden">
+                <!-- Left col 5: item info + navigation -->
+                <div class="col-5 d-flex flex-column justify-content-center px-4 border-end overflow-y-auto">
+                    <div class="text-muted small mb-1">Item @(currentItemIndex + 1) of @(config?.Items.Count ?? 0)</div>
+                    <div class="fw-bold fs-3 mb-4">@currentItemName</div>
 
-            <!-- Bubble chart -->
-            <div class="quadrant-container" style="position: relative; width: 100%; height: 500px;">
-                <canvas id="@canvasId"></canvas>
-                @if (!dashboard.Items.Any())
-                {
-                    <div class="position-absolute top-50 start-50 translate-middle text-center">
-                        <i class="fas fa-chart-scatter fs-1 text-muted mb-2"></i>
-                        <div class="text-muted">Waiting for scores</div>
+                    <div class="d-flex gap-2 mb-4">
+                        <button class="btn btn-outline-secondary flex-fill"
+                                @onclick="PrevItem"
+                                disabled="@(currentItemIndex <= 0 || _isNavigating)">
+                            <i class="fas fa-chevron-left me-1"></i> Prev
+                        </button>
+                        <button class="btn btn-outline-secondary flex-fill"
+                                @onclick="NextItem"
+                                disabled="@(config == null || currentItemIndex >= config.Items.Count - 1 || _isNavigating)">
+                            Next <i class="fas fa-chevron-right ms-1"></i>
+                        </button>
                     </div>
-                }
+
+                    <div class="d-flex gap-4">
+                        <div class="text-center">
+                            <div class="fw-bold fs-4 text-primary">@dashboard.TotalResponses</div>
+                            <div class="text-muted small">Responses</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="fw-bold fs-4 text-success">@dashboard.RespondedParticipants</div>
+                            <div class="text-muted small">Participants</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right col 7: bubble chart fills remaining height -->
+                <div class="col-7 position-relative">
+                    <canvas id="@canvasId" style="position: absolute; inset: 0; width: 100% !important; height: 100% !important;"></canvas>
+                    @if (!dashboard.Items.Any())
+                    {
+                        <div class="position-absolute top-50 start-50 translate-middle text-center">
+                            <i class="fas fa-chart-scatter fs-1 text-muted mb-2 d-block"></i>
+                            <div class="text-muted">Waiting for scores</div>
+                        </div>
+                    }
+                </div>
             </div>
         }
         else
