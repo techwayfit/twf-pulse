@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5 Whys — Understand the Real Problem</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  html, body { width:100%; height:100%; font-family:'Inter',sans-serif; overflow:hidden; }
+  .app {
+    display:grid; grid-template-rows:58px 1fr 58px; height:100vh;
+    background: linear-gradient(135deg, #0d6b72 0%, #0fa99e 45%, #2ee8ce 100%);
+  }
+
+  /* TOP BAR */
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:0 24px; background:rgba(10,80,85,0.78); backdrop-filter:blur(12px); border-bottom:1px solid rgba(255,255,255,0.12); }
+  .topbar-left { display:flex; align-items:center; gap:14px; min-width:0; }
+  .session-title { font-size:14px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:580px; letter-spacing:-0.01em; }
+  .code-badge { font-family:'DM Mono',monospace; font-size:11px; color:rgba(255,255,255,0.6); background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18); padding:2px 8px; border-radius:4px; white-space:nowrap; }
+  .live-pill { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:#4ade80; background:rgba(74,222,128,0.14); border:1px solid rgba(74,222,128,0.32); padding:3px 10px; border-radius:20px; }
+  .live-dot { width:6px; height:6px; background:#4ade80; border-radius:50%; animation:pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.35;transform:scale(0.65)} }
+  .topbar-right { display:flex; align-items:center; gap:8px; }
+  .tb-btn { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:500; color:rgba(255,255,255,0.82); background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); padding:6px 13px; border-radius:8px; cursor:pointer; transition:all 0.18s; white-space:nowrap; }
+  .tb-btn:hover { background:rgba(255,255,255,0.2); color:#fff; }
+  .tb-btn span { color:#7fffed; font-weight:700; }
+
+  /* MAIN */
+  .main { display:flex; flex-direction:column; padding:16px 24px; gap:0; overflow:hidden; min-height:0; }
+
+  /* CARD */
+  .card { background:#fff; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.14); flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+  .card-header { padding:28px 28px 20px; flex-shrink:0; display:flex; justify-content:space-between; align-items:flex-start; }
+  .card-header-left { flex:1; }
+
+  .activity-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); padding:3px 10px; border-radius:6px; margin-bottom:12px; }
+  .card-title { font-size:26px; font-weight:800; color:#1a1a2e; letter-spacing:-0.02em; margin-bottom:8px; }
+  .card-desc { font-size:13px; color:#4a5568; line-height:1.6; max-width:800px; }
+
+  .timer-wrap { text-align:right; flex-shrink:0; padding-left:40px; }
+  .timer-display { font-family:'DM Mono',monospace; font-size:40px; font-weight:800; color:#1a1a2e; letter-spacing:-0.03em; line-height:1; }
+  .timer-label { font-size:11px; color:#94a3b8; font-weight:500; margin-top:4px; }
+
+  /* STATS */
+  .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; padding:0 28px 20px; flex-shrink:0; }
+  .stat-box { background:#f8f9fc; border:1px solid #e8eaf0; border-radius:10px; padding:20px 16px; text-align:center; }
+  .stat-value { font-size:30px; font-weight:700; line-height:1; margin-bottom:8px; }
+  .stat-value.blue { color:#3b82f6; }
+  .stat-value.orange { color:#f59e0b; }
+  .stat-value.green { color:#10b981; }
+  .stat-label { font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#94a3b8; }
+
+  /* ROOT CAUSES */
+  .causes-area { flex:1; min-height:0; overflow-y:auto; padding:0 28px 24px; display:flex; flex-wrap:wrap; gap:14px; align-content:flex-start; }
+  .cause-card {
+    width: 280px;
+    border-left: 4px solid #ef4444;
+    border-radius: 0 10px 10px 0;
+    background: #fff;
+    border-top: 1px solid #e8eaf0;
+    border-right: 1px solid #e8eaf0;
+    border-bottom: 1px solid #e8eaf0;
+    padding: 16px;
+  }
+  .cause-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .cause-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); padding:3px 8px; border-radius:20px; }
+  .cause-depth { font-size:12px; color:#94a3b8; }
+  .cause-text { font-size:13px; font-weight:600; color:#1a1a2e; line-height:1.5; }
+
+  /* BOTTOM BAR */
+  .bottombar { display:flex; align-items:center; justify-content:space-between; padding:0 24px; background:rgba(10,80,85,0.78); backdrop-filter:blur(12px); border-top:1px solid rgba(255,255,255,0.12); }
+  .progress-wrap { display:flex; align-items:center; gap:14px; }
+  .activity-indicator { font-size:12px; font-weight:600; color:rgba(255,255,255,0.75); }
+  .progress-track { width:160px; height:4px; background:rgba(255,255,255,0.2); border-radius:4px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,#7fffed,#22c55e); border-radius:4px; }
+  .bottom-actions { display:flex; gap:8px; }
+  .btn-complete { padding:9px 26px; background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; font-size:13px; font-weight:700; border:none; border-radius:9px; cursor:pointer; box-shadow:0 3px 12px rgba(59,130,246,0.4); transition:all 0.18s; }
+  .btn-complete:hover { filter:brightness(1.08); transform:translateY(-1px); }
+  .btn-nav { display:flex; align-items:center; gap:5px; padding:9px 16px; font-size:13px; font-weight:600; border:1px solid rgba(255,255,255,0.22); background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.8); border-radius:9px; cursor:pointer; transition:all 0.18s; }
+  .btn-nav:hover { background:rgba(255,255,255,0.2); color:#fff; }
+  .btn-nav:disabled { opacity:0.3; cursor:not-allowed; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="session-title">The Invisible Bottleneck — Manual Incident Escalation in 24/7 Operations</span>
+      <span class="code-badge">C9Y-ZFV-NXZ</span>
+      <div class="live-pill"><div class="live-dot"></div>Live</div>
+    </div>
+    <div class="topbar-right">
+      <div class="tb-btn"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>1</span> Participant</div>
+      <div class="tb-btn"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Join Instructions</div>
+      <div class="tb-btn"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M10 2h4v4M14 2l-6 6M6 4H3a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Exit</div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="activity-badge">5 Whys</div>
+          <div class="card-title">Understand the real problem</div>
+          <div class="card-desc">In day-to-day operations, teams often work around broken processes without realising it. These workarounds become invisible — they feel normal. But every workaround is a signal that something underneath is not working the way it should.</div>
+        </div>
+        <div class="timer-wrap">
+          <div class="timer-display">0:00</div>
+          <div class="timer-label">Time Remaining</div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-value blue">1</div><div class="stat-label">Root Causes Found</div></div>
+        <div class="stat-box"><div class="stat-value orange">0</div><div class="stat-label">Exploring</div></div>
+        <div class="stat-box"><div class="stat-value green">4.0</div><div class="stat-label">Avg Depth</div></div>
+      </div>
+
+      <div class="causes-area">
+        <div class="cause-card">
+          <div class="cause-header">
+            <div class="cause-badge">⊕ Root Cause #1</div>
+            <span class="cause-depth">4 whys deep</span>
+          </div>
+          <div class="cause-text">The lack of formal documentation and accountability for service ownership and contact information leads to inefficiencies in incident resolution.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bottombar">
+    <div class="progress-wrap">
+      <span class="activity-indicator">Activity 9 of 9</span>
+      <div class="progress-track"><div class="progress-fill" style="width:100%"></div></div>
+    </div>
+    <div class="bottom-actions">
+      <button class="btn-nav"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Previous</button>
+      <button class="btn-complete">Complete</button>
+      <button class="btn-nav" disabled>Next<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

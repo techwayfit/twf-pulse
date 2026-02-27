@@ -69,25 +69,15 @@
             @await Component.InvokeAsync("StatCards", new { cards = statCards })
         </div>
 
-        <!-- Collapsible Search and Filter Bar -->
-        <div class="filter-toggle-wrapper d-lg-none">
-            <button class="filter-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#filterSection" aria-expanded="false" aria-controls="filterSection">
-                <span class="filter-toggle-icon"><i class="ics ics-search ic-xs"></i></span>
-                <span class="filter-toggle-text">Search & Filter</span>
-                <span class="filter-toggle-arrow">▼</span>
-            </button>
-        </div>
-
-        <div class="collapse d-lg-block" id="filterSection">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                <div class="row g-3 align-items-end">
+        <!-- Search and Filter Bar -->
+        <div class="filter-card mb-4">
+            <div class="row g-3 align-items-end">
                     <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold d-none d-md-block">Search</label>
+                        <label class="filter-label">Search</label>
                         <input type="text" class="form-control" id="sessionSearch" placeholder="Search sessions...">
                     </div>
                     <div class="col-6 col-md-2">
-                        <label class="form-label fw-semibold d-none d-md-block">Status</label>
+                        <label class="filter-label">Status</label>
                         <select class="form-select" id="statusFilter">
                             <option value="">All</option>
                             <option value="Live">Live</option>
@@ -98,7 +88,7 @@
                     </div>
                     <div class="col-6 col-md-3">
                         <div>
-                            <label class="form-label fw-semibold d-none d-md-block">Group</label>
+                            <label class="filter-label">Group</label>
                             <div class="flex-grow-1">
                                 @{
                                     var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
@@ -130,7 +120,7 @@
                         </div>
                     </div>
                     <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold d-none d-md-block">&nbsp;</label>
+                        <label class="filter-label">&nbsp;</label>
                         <div class="d-flex gap-2 flex-nowrap">
                             <button type="button" class="btn btn-primary" id="applyFilters" style="flex: 1; white-space: nowrap;">
                                 Apply
@@ -141,37 +131,28 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
         </div>
 
         <!-- Sessions Table -->
-        <div class="card shadow-sm">
+        <div class="card shadow-sm sessions-card">
             <div class="card-header bg-white">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Sessions</h5>
+                    <h5 class="mb-0 fw-bold">Sessions</h5>
                     <div class="sort-controls">
-                        <label class="me-2 text-muted small">Sort by:</label>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <input type="radio" class="btn-check" name="sortOption" id="sortRecent" value="recent" checked autocomplete="off">
-                            <label class="btn btn-outline-secondary" for="sortRecent">
-                                <i class="fas fa-clock me-1"></i>Recent
-                            </label>
-
-                            <input type="radio" class="btn-check" name="sortOption" id="sortUpcoming" value="upcoming" autocomplete="off">
-                            <label class="btn btn-outline-secondary" for="sortUpcoming">
-                                <i class="fas fa-calendar-alt me-1"></i>Upcoming
-                            </label>
-
-                            <input type="radio" class="btn-check" name="sortOption" id="sortGroup" value="group" autocomplete="off">
-                            <label class="btn btn-outline-secondary" for="sortGroup">
-                                <i class="fas fa-folder me-1"></i>Group
-                            </label>
-
-                            <input type="radio" class="btn-check" name="sortOption" id="sortTitle" value="title" autocomplete="off">
-                            <label class="btn btn-outline-secondary" for="sortTitle">
-                                <i class="fas fa-font me-1"></i>A-Z
-                            </label>
+                        <span class="filter-label me-2 mb-0 d-inline">Sort:</span>
+                        <div class="sort-pills" id="sortPills">
+                            <span class="sort-pill active" data-sort="recent">
+                                <i class="fas fa-clock"></i> Recent
+                            </span>
+                            <span class="sort-pill" data-sort="upcoming">
+                                <i class="fas fa-calendar-alt"></i> Upcoming
+                            </span>
+                            <span class="sort-pill" data-sort="group">
+                                <i class="fas fa-folder"></i> Group
+                            </span>
+                            <span class="sort-pill" data-sort="title">
+                                <i class="fas fa-font"></i> A-Z
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -228,7 +209,7 @@
                                         onclick="window.location.href='/facilitator/live?Code=@session.Code'"
                                         style="cursor: pointer;">
                                         <td onclick="event.stopPropagation();">
-                                            <a href="/facilitator/live?Code=@session.Code" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 text-decoration-none session-code-link">
+                                            <a href="/facilitator/live?Code=@session.Code" class="session-code">
                                                 @session.Code
                                             </a>
                                         </td>
@@ -281,16 +262,16 @@
                                             @switch (session.Status)
                                             {
                                                 case TechWayFit.Pulse.Domain.Enums.SessionStatus.Live:
-                                                    <span class="status-badge status-live">Live</span>
+                                                    <span class="status-badge status-live"><span class="status-dot"></span>Live</span>
                                                     break;
                                                 case TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft:
-                                                    <span class="status-badge status-draft">Draft</span>
+                                                    <span class="status-badge status-draft"><span class="status-dot"></span>Draft</span>
                                                     break;
                                                 case TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended:
-                                                    <span class="status-badge status-ended">Ended</span>
+                                                    <span class="status-badge status-ended"><span class="status-dot"></span>Ended</span>
                                                     break;
                                                 case TechWayFit.Pulse.Domain.Enums.SessionStatus.Expired:
-                                                    <span class="status-badge status-expired">Expired</span>
+                                                    <span class="status-badge status-expired"><span class="status-dot"></span>Expired</span>
                                                     break;
                                             }
                                         </td>
@@ -329,20 +310,20 @@
                                  data-title="@session.Title"
                                  data-search-text="@($"{session.Code} {session.Title} {session.Goal ?? ""}").ToLower()">
                                 <div class="session-mobile-card-header">
-                                    <a href="/facilitator/live?Code=@session.Code" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 text-decoration-none session-code-link">@session.Code</a>
+                                    <a href="/facilitator/live?Code=@session.Code" class="session-code">@session.Code</a>
                                     @switch (session.Status)
                                     {
                                         case TechWayFit.Pulse.Domain.Enums.SessionStatus.Live:
-                                            <span class="status-badge status-live">Live</span>
+                                            <span class="status-badge status-live"><span class="status-dot"></span>Live</span>
                                             break;
                                         case TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft:
-                                            <span class="status-badge status-draft">Draft</span>
+                                            <span class="status-badge status-draft"><span class="status-dot"></span>Draft</span>
                                             break;
                                         case TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended:
-                                            <span class="status-badge status-ended">Ended</span>
+                                            <span class="status-badge status-ended"><span class="status-dot"></span>Ended</span>
                                             break;
                                         case TechWayFit.Pulse.Domain.Enums.SessionStatus.Expired:
-                                            <span class="status-badge status-expired">Expired</span>
+                                            <span class="status-badge status-expired"><span class="status-dot"></span>Expired</span>
                                             break;
                                     }
                                 </div>
@@ -775,11 +756,14 @@
         });
 
         // Sort functionality
-        const sortOptions = document.querySelectorAll('input[name="sortOption"]');
-        sortOptions.forEach(option => {
-            option.addEventListener('change', function() {
-                const sortBy = this.value;
+        const sortPills = document.querySelectorAll('.sort-pill');
+        sortPills.forEach(pill => {
+            pill.addEventListener('click', function() {
+                sortPills.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+                const sortBy = this.dataset.sort;
                 sortSessions(sortBy);
+                sortMobileCards(sortBy);
             });
         });
 
@@ -827,16 +811,7 @@
             rows.forEach(row => tableBody.appendChild(row));
         }
 
-        // Mobile card sorting
-        const mobileCards = document.getElementById('sessionCards');
-        if (mobileCards) {
-            sortOptions.forEach(option => {
-                option.addEventListener('change', function() {
-                    const sortBy = this.value;
-                    sortMobileCards(sortBy);
-                });
-            });
-        }
+        // Mobile card sorting handled by unified sort pills above
 
         function sortMobileCards(sortBy) {
             const container = document.getElementById('sessionCards');

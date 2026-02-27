@@ -26,6 +26,16 @@
     </div>
 
     <div class="activity-content">
+        <div class="response-stats" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="stat-card">
+                <div class="stat-value blue">@TotalVotes</div>
+                <div class="stat-label">Total Votes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">@PollOptions.Count</div>
+                <div class="stat-label">Options</div>
+            </div>
+        </div>
         <div class="poll-results">
             @if (PollOptions != null && PollOptions.Any())
             {

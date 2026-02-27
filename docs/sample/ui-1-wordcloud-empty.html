@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Cloud — Empty State</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --teal-header: #0d6b72;
+    --grad-start: #0d6b72;
+    --grad-mid: #0fa99e;
+    --grad-end: #2ee8ce;
+    --card-bg: #ffffff;
+    --text-dark: #1a1a2e;
+    --text-mid: #4a5568;
+    --text-light: #94a3b8;
+    --border: #e8eaf0;
+    --surface: #f8f9fc;
+    --green: #22c55e;
+    --review-bg: #fffbeb;
+    --review-border: #f59e0b;
+    --review-text: #b45309;
+  }
+  html, body { width:100%; height:100%; font-family:'Inter',sans-serif; overflow:hidden; }
+  .app {
+    display: grid;
+    grid-template-rows: 58px 1fr 58px;
+    height: 100vh;
+    background: linear-gradient(135deg, var(--grad-start) 0%, var(--grad-mid) 45%, var(--grad-end) 100%);
+  }
+
+  /* TOP BAR */
+  .topbar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 0 24px;
+    background: rgba(10,80,85,0.78);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .topbar-left { display:flex; align-items:center; gap:14px; min-width:0; }
+  .session-title { font-size:14px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:580px; letter-spacing:-0.01em; }
+  .code-badge { font-family:'DM Mono',monospace; font-size:11px; color:rgba(255,255,255,0.6); background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.18); padding:2px 8px; border-radius:4px; white-space:nowrap; }
+  .live-pill { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:#4ade80; background:rgba(74,222,128,0.14); border:1px solid rgba(74,222,128,0.32); padding:3px 10px; border-radius:20px; }
+  .live-dot { width:6px; height:6px; background:#4ade80; border-radius:50%; animation:pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.35;transform:scale(0.65)} }
+  .topbar-right { display:flex; align-items:center; gap:8px; }
+  .tb-btn { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:500; color:rgba(255,255,255,0.82); background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); padding:6px 13px; border-radius:8px; cursor:pointer; transition:all 0.18s; white-space:nowrap; }
+  .tb-btn:hover { background:rgba(255,255,255,0.2); color:#fff; }
+  .tb-btn span { color:#7fffed; font-weight:700; }
+
+  /* MAIN */
+  .main { display:flex; flex-direction:column; padding:16px 24px; gap:12px; overflow:hidden; min-height:0; }
+
+  /* REVIEW BANNER */
+  .review-banner {
+    background: var(--review-bg);
+    border: 1.5px solid var(--review-border);
+    border-radius: 10px;
+    padding: 12px 18px;
+    flex-shrink: 0;
+  }
+  .review-label { font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--review-text); margin-bottom:4px; }
+  .review-status { font-size:13px; font-weight:500; color:var(--text-dark); }
+
+  /* WHITE CARD */
+  .card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.14);
+    flex:1; min-height:0;
+    display: flex; flex-direction:column;
+    overflow: hidden;
+  }
+  .card-inner { padding:28px 28px 0; flex-shrink:0; }
+
+  .activity-badge {
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase;
+    color:#3b82f6; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2);
+    padding:3px 10px; border-radius:6px; margin-bottom:14px;
+  }
+  .card-title { font-size:26px; font-weight:800; color:var(--text-dark); letter-spacing:-0.02em; margin-bottom:6px; }
+  .card-subtitle { font-size:13px; color:var(--text-mid); margin-bottom:22px; }
+
+  /* STATS ROW */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:0; padding:0 28px 20px; flex-shrink:0; }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 16px;
+    text-align: center;
+  }
+  .stat-value { font-size:28px; font-weight:700; color:var(--text-dark); line-height:1; margin-bottom:8px; }
+  .stat-label { font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-light); }
+
+  /* CLOUD AREA */
+  .cloud-area {
+    flex:1; min-height:0;
+    background: linear-gradient(180deg, #f8fafc 0%, #eef4f8 100%);
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:10px;
+  }
+  .cloud-icon { opacity:0.3; }
+  .cloud-empty-title { font-size:15px; font-weight:600; color:var(--text-mid); }
+  .cloud-empty-sub { font-size:12px; color:var(--text-light); }
+
+  /* BOTTOM BAR */
+  .bottombar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 0 24px;
+    background: rgba(10,80,85,0.78);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255,255,255,0.12);
+  }
+  .activity-indicator { font-size:12px; font-weight:600; color:rgba(255,255,255,0.75); }
+  .progress-track { width:160px; height:4px; background:rgba(255,255,255,0.2); border-radius:4px; overflow:hidden; margin-left:14px; display:inline-block; vertical-align:middle; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,#7fffed,#22c55e); border-radius:4px; }
+  .progress-wrap { display:flex; align-items:center; gap:0; }
+  .bottom-actions { display:flex; gap:8px; }
+  .btn-start { padding:9px 26px; background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; font-size:13px; font-weight:700; border:none; border-radius:9px; cursor:pointer; box-shadow:0 3px 12px rgba(34,197,94,0.4); transition:all 0.18s; }
+  .btn-start:hover { filter:brightness(1.08); transform:translateY(-1px); }
+  .btn-nav { display:flex; align-items:center; gap:5px; padding:9px 16px; font-size:13px; font-weight:600; border:1px solid rgba(255,255,255,0.22); background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.8); border-radius:9px; cursor:pointer; transition:all 0.18s; }
+  .btn-nav:hover { background:rgba(255,255,255,0.2); color:#fff; }
+  .btn-nav:disabled { opacity:0.3; cursor:not-allowed; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="session-title">The Invisible Bottleneck — Manual Incident Escalation in 24/7 Operations</span>
+      <span class="code-badge">C9Y-ZFV-NXZ</span>
+      <div class="live-pill"><div class="live-dot"></div>Live</div>
+    </div>
+    <div class="topbar-right">
+      <div class="tb-btn"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>1</span> Participant</div>
+      <div class="tb-btn"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Join Instructions</div>
+      <div class="tb-btn"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M10 2h4v4M14 2l-6 6M6 4H3a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Exit</div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="review-banner">
+      <div class="review-label">Review Mode</div>
+      <div class="review-status"><strong>Status: Pending</strong> — This activity is pending and visible in review mode.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-inner">
+        <div class="activity-badge">Word Cloud</div>
+        <div class="card-title">Bottlenecks Identified</div>
+        <div class="card-subtitle">What words come to mind when you think of the bottlenecks in your current escalation process?</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-value">0</div><div class="stat-label">Responses</div></div>
+        <div class="stat-box"><div class="stat-value">1</div><div class="stat-label">Participants</div></div>
+        <div class="stat-box"><div class="stat-value">0</div><div class="stat-label">Total Words</div></div>
+        <div class="stat-box"><div class="stat-value">0</div><div class="stat-label">Unique Words</div></div>
+      </div>
+
+      <div class="cloud-area">
+        <svg class="cloud-icon" width="64" height="48" viewBox="0 0 64 48" fill="none">
+          <path d="M52 30a10 10 0 00-10-10 10 10 0 00-9.4 6.6A8 8 0 1016 34h36a8 8 0 000-4z" fill="#94a3b8"/>
+        </svg>
+        <div class="cloud-empty-title">No words to display yet</div>
+        <div class="cloud-empty-sub">Word cloud will appear as participants submit their responses</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bottombar">
+    <div class="progress-wrap">
+      <span class="activity-indicator">Activity 2 of 9</span>
+      <div class="progress-track" style="margin-left:14px;"><div class="progress-fill" style="width:22%"></div></div>
+    </div>
+    <div class="bottom-actions">
+      <button class="btn-nav"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Previous</button>
+      <button class="btn-start">Start</button>
+      <button class="btn-nav">Next<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

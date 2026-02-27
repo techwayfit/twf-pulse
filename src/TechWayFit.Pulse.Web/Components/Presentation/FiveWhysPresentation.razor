@@ -31,15 +31,15 @@
         <!-- Stats row -->
         <div class="five-whys-stats">
             <div class="stat-card">
-                <div class="stat-value-primary">@completedCount</div>
+                <div class="stat-value blue">@completedCount</div>
                 <div class="stat-label">Root Causes Found</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value-secondary">@inProgressCount</div>
+                <div class="stat-value orange">@inProgressCount</div>
                 <div class="stat-label">Exploring</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value-accent">@avgDepthLabel</div>
+                <div class="stat-value green">@avgDepthLabel</div>
                 <div class="stat-label">Avg Depth</div>
             </div>
         </div>
@@ -74,65 +74,6 @@
         }
     </div>
 </div>
-
-<style>
-    .badge-five-whys {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .five-whys-stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--pulse-spacing-lg);
-        flex-shrink: 0;
-    }
-
-    .five-whys-stats .stat-value-primary {
-        font-size: 2.5rem;
-        font-weight: 800;
-        line-height: 1;
-        color: var(--pulse-blue-dark);
-    }
-
-    .five-whys-stats .stat-value-secondary {
-        font-size: 2.5rem;
-        font-weight: 800;
-        line-height: 1;
-        color: #d97706;
-    }
-
-    .five-whys-stats .stat-value-accent {
-        font-size: 2.5rem;
-        font-weight: 800;
-        line-height: 1;
-        color: var(--pulse-green-dark);
-    }
-
-    .five-whys-stats .stat-label {
-        font-size: .8rem;
-        color: var(--pulse-gray-500);
-        text-transform: uppercase;
-        letter-spacing: .05em;
-        margin-top: 4px;
-    }
-
-    .five-whys-root-causes-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1rem;
-        overflow-y: auto;
-        flex: 1;
-    }
-
-    .five-whys-root-cause-card {
-        background: var(--pulse-gray-50);
-        border: 1px solid var(--pulse-gray-200);
-        border-left: 4px solid #ef4444;
-        border-radius: var(--pulse-radius-lg);
-        padding: 1rem 1.25rem;
-    }
-</style>
 
 @code {
     [Parameter, EditorRequired] public required string SessionCode { get; set; }

@@ -4,14 +4,10 @@
         <div class="session-info">
             <h1>@SessionTitle</h1>
             <div class="session-meta">
-                <span>Code: @SessionCode</span>
-                @if (!string.IsNullOrEmpty(SessionTTL))
-                {
-                    <span>TTL: @SessionTTL</span>
-                }
+                <span class="session-code-badge">@SessionCode</span>
                 <div class="live-indicator">
                     <div class="live-dot"></div>
-                    <span>LIVE</span>
+                    <span>Live</span>
                 </div>
             </div>
         </div>

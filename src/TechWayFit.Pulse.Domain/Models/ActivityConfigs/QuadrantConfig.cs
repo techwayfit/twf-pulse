@@ -70,6 +70,20 @@ public sealed class QuadrantConfig
     /// <summary>Optional note field for participants per item (true = show note input).</summary>
     public bool AllowNotes { get; set; }
 
+    // ── Quadrant zone labels ──────────────────────────────────────────────────
+
+    /// <summary>Label for the top-left quadrant (low X, high Y). E.g. "Quick Wins".</summary>
+    public string Q1Label { get; set; } = "Quick Wins";
+
+    /// <summary>Label for the top-right quadrant (high X, high Y). E.g. "Major Projects".</summary>
+    public string Q2Label { get; set; } = "Major Projects";
+
+    /// <summary>Label for the bottom-left quadrant (low X, low Y). E.g. "Fill-Ins".</summary>
+    public string Q3Label { get; set; } = "Fill-Ins";
+
+    /// <summary>Label for the bottom-right quadrant (high X, low Y). E.g. "Thankless Tasks".</summary>
+    public string Q4Label { get; set; } = "Thankless Tasks";
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     /// <summary>Generates a list of simple integer score options from <paramref name="min"/> to <paramref name="max"/>.</summary>

@@ -24,13 +24,28 @@
                 <p class="activity-description">@ActivityPrompt</p>
             }
         </div>
-        @if (DurationMinutes.HasValue && OpenedAt.HasValue)
-        {
-            <div class="activity-timer">
-                <div class="timer-label">Time Remaining</div>
-                <div class="timer-value" id="timer-display">@timeRemaining</div>
-            </div>
-        }
+        <div class="d-flex align-items-center gap-4 ms-auto">
+            @if (dashboard is not null)
+            {
+                <div class="d-flex align-items-center gap-1">
+                    <i class="fas fa-comment-dots text-primary fs-5"></i>
+                    <span class="fw-bold fs-5 text-primary">@dashboard.TotalResponses</span>
+                    <span class="text-muted small">Responses</span>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    <i class="fas fa-users text-success fs-5"></i>
+                    <span class="fw-bold fs-5 text-success">@dashboard.RespondedParticipants</span>
+                    <span class="text-muted small">Participants</span>
+                </div>
+            }
+            @if (DurationMinutes.HasValue && OpenedAt.HasValue)
+            {
+                <div class="activity-timer">
+                    <div class="timer-label">Time Remaining</div>
+                    <div class="timer-value" id="timer-display">@timeRemaining</div>
+                </div>
+            }
+        </div>
     </div>
 
     <div class="activity-content">
@@ -44,38 +59,28 @@
         else if (dashboard is not null)
         {
             <div class="row g-0 flex-fill overflow-hidden">
-                <!-- Left col 5: item info + navigation -->
-                <div class="col-5 d-flex flex-column justify-content-center px-4 border-end overflow-y-auto">
-                    <div class="text-muted small mb-1">Item @(currentItemIndex + 1) of @(config?.Items.Count ?? 0)</div>
-                    <div class="fw-bold fs-3 mb-4">@currentItemName</div>
+                <!-- Left col 3: item info + navigation -->
+                <div class="col-3 d-flex flex-column px-3 pt-3 border-end">
+                    <div class="text-muted" style="font-size:0.7rem;">Item @(currentItemIndex + 1) of @(config?.Items.Count ?? 0)</div>
+                    <div class="fw-semibold mt-1" style="font-size:0.85rem; line-height:1.4;">@currentItemName</div>
 
-                    <div class="d-flex gap-2 mb-4">
-                        <button class="btn btn-outline-secondary flex-fill"
+                    <div class="d-flex gap-2 mt-auto pb-3">
+                        <button class="btn btn-outline-secondary btn-sm flex-fill"
                                 @onclick="PrevItem"
                                 disabled="@(currentItemIndex <= 0 || _isNavigating)">
                             <i class="fas fa-chevron-left me-1"></i> Prev
                         </button>
-                        <button class="btn btn-outline-secondary flex-fill"
+                        <button class="btn btn-outline-secondary btn-sm flex-fill"
                                 @onclick="NextItem"
                                 disabled="@(config == null || currentItemIndex >= config.Items.Count - 1 || _isNavigating)">
                             Next <i class="fas fa-chevron-right ms-1"></i>
                         </button>
                     </div>
 
-                    <div class="d-flex gap-4">
-                        <div class="text-center">
-                            <div class="fw-bold fs-4 text-primary">@dashboard.TotalResponses</div>
-                            <div class="text-muted small">Responses</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="fw-bold fs-4 text-success">@dashboard.RespondedParticipants</div>
-                            <div class="text-muted small">Participants</div>
-                        </div>
-                    </div>
                 </div>
 
-                <!-- Right col 7: bubble chart fills remaining height -->
-                <div class="col-7 position-relative">
+                <!-- Right col 9: bubble chart fills remaining height -->
+                <div class="col-9 position-relative">
                     <canvas id="@canvasId" style="position: absolute; inset: 0; width: 100% !important; height: 100% !important;"></canvas>
                     @if (!dashboard.Items.Any())
                     {
@@ -126,7 +131,6 @@
     private HubConnection? hubConnection;
     private string timeRemaining = "--:--";
     private System.Threading.Timer? clockTimer;
-    private System.Threading.Timer? refreshTimer;
     private int currentItemIndex = 0;
     private string currentItemName = string.Empty;
     private Guid? sessionId;
@@ -155,9 +159,6 @@
         }
         await SetupSignalR();
         StartClock();
-        refreshTimer = new System.Threading.Timer(
-            async _ => await InvokeAsync(async () => { await LoadData(); StateHasChanged(); }),
-            null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -277,7 +278,11 @@
             chartItems,
             config?.BubbleSizeMode == QuadrantBubbleSizeMode.Uniform,
             xMin,
-            xMax);
+            xMax,
+            config?.Q1Label ?? "Quick Wins",
+            config?.Q2Label ?? "Major Projects",
+            config?.Q3Label ?? "Fill-Ins",
+            config?.Q4Label ?? "Thankless Tasks");
     }
 
     private async Task SetupSignalR()
@@ -336,7 +341,6 @@
     public async ValueTask DisposeAsync()
     {
         clockTimer?.Dispose();
-        refreshTimer?.Dispose();
         try { await JS.InvokeVoidAsync("destroyQuadrantBubbleChart", canvasId); } catch { }
         if (hubConnection is not null)
         {
