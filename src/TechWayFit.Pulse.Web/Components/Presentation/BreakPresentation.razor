@@ -1,0 +1,372 @@
+@using TechWayFit.Pulse.Application.Abstractions.Services
+@using TechWayFit.Pulse.Domain.Entities
+@using TechWayFit.Pulse.Domain.Models
+@using TechWayFit.Pulse.Domain.Models.ActivityConfigs
+@using Microsoft.AspNetCore.SignalR.Client
+@using TechWayFit.Pulse.Web.Hubs
+@using System.Text.Json
+@namespace TechWayFit.Pulse.Web.Components.Presentation
+@inject ISessionService SessionService
+@inject IResponseService ResponseService
+@inject IParticipantService ParticipantService
+@inject ISessionActivityMetadataService MetadataService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ILogger<BreakPresentation> Logger
+@implements IAsyncDisposable
+
+<div class="activity-display">
+    <div class="activity-header">
+        <div class="activity-title-section">
+            <span class="activity-badge badge-break">Break</span>
+            <h2>@ActivityTitle</h2>
+        </div>
+    </div>
+
+    <div class="activity-content overflow-hidden">
+        <div class="d-flex flex-row flex-fill h-100 overflow-hidden">
+
+            <!-- ── Collapsible left sidebar: participant list ─────────── -->
+            <div class="break-sidebar @(sidebarCollapsed ? "break-sidebar-collapsed" : "break-sidebar-expanded") border-end d-flex flex-column">
+                @if (sidebarCollapsed)
+                {
+                    <button class="btn btn-light border-0 p-2 mt-2 d-flex flex-column align-items-center mx-auto gap-1"
+                            title="Show participants" @onclick="ToggleSidebar">
+                        <i class="fas fa-users text-muted"></i>
+                        @if (AllowReadySignal && participants.Any())
+                        {
+                            <span class="badge bg-success rounded-pill" style="font-size:0.6rem;">
+                                @readyParticipantIds.Count/@participants.Count
+                            </span>
+                        }
+                    </button>
+                }
+                else
+                {
+                    <!-- Sidebar header -->
+                    <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom flex-shrink-0">
+                        <span class="fw-semibold small">
+                            <i class="fas fa-users me-1 text-muted"></i>Participants
+                        </span>
+                        <button class="btn btn-sm btn-outline-secondary py-0 px-1"
+                                title="Collapse" @onclick="ToggleSidebar">
+                            <i class="fas fa-chevron-left" style="font-size:0.7rem;"></i>
+                        </button>
+                    </div>
+
+                    <!-- Participant list -->
+                    <div class="overflow-auto flex-fill py-1">
+                        @if (!participants.Any())
+                        {
+                            <div class="text-muted small px-3 pt-2">No participants yet</div>
+                        }
+                        else
+                        {
+                            @foreach (var p in participants)
+                            {
+                                var isReady = readyParticipantIds.Contains(p.Id);
+                                var name = p.IsAnonymous ? "Anonymous" : (p.DisplayName ?? "Participant");
+                                <div class="d-flex align-items-center gap-2 px-3 py-1">
+                                    <i class="fas fa-circle @(isReady ? "text-success" : "text-secondary")"
+                                       style="font-size:0.45rem; flex-shrink:0;"></i>
+                                    <span class="small text-truncate flex-fill" title="@name">@name</span>
+                                    @if (isReady)
+                                    {
+                                        <i class="fas fa-check text-success" style="font-size:0.7rem; flex-shrink:0;"></i>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <!-- Ready progress footer -->
+                    @if (AllowReadySignal && participants.Any())
+                    {
+                        <div class="px-3 py-2 border-top flex-shrink-0">
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Back from break</span>
+                                <span class="fw-semibold">@readyParticipantIds.Count / @participants.Count</span>
+                            </div>
+                            <div class="progress" style="height:5px;">
+                                <div class="progress-bar bg-success"
+                                     style="width:@ReadyPercent%"
+                                     aria-valuenow="@readyParticipantIds.Count"
+                                     aria-valuemin="0"
+                                     aria-valuemax="@participants.Count">
+                                </div>
+                            </div>
+                            @if (readyParticipantIds.Count >= participants.Count)
+                            {
+                                <div class="small text-success fw-semibold mt-1">
+                                    <i class="fas fa-check-circle me-1"></i>Everyone is back!
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- ── Right: timer animation + countdown ──────────────── -->
+            <div class="flex-fill d-flex flex-column align-items-center justify-content-center gap-3">
+                <!-- Multi-layer timer animation stage -->
+                <div class="bts-stage">
+                    <!-- Rotating half-arc (SVG) -->
+                    <svg class="bts-arc-svg" viewBox="0 0 200 200">
+                        <circle cx="100" cy="100" r="82" class="bts-arc-track"/>
+                        <circle cx="100" cy="100" r="82" class="bts-arc-fill"/>
+                    </svg>
+                    <!-- Central hourglass icon -->
+                    <div class="bts-center">
+                        <i class="fas fa-hourglass-half bts-hg-icon"></i>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(config?.Message))
+                {
+                    <p class="text-muted mb-0" style="font-size:1.1rem;">@config.Message</p>
+                }
+
+                @if (config?.ShowCountdown == true && config.DurationMinutes > 0)
+                {
+                    <div id="@countdownId"
+                         style="font-size:5rem; font-weight:700; font-variant-numeric:tabular-nums;
+                                letter-spacing:0.08em; color:#f59e0b; line-height:1;">
+                        @FormatDuration(config.DurationMinutes)
+                    </div>
+                    <p class="text-muted small mb-0">remaining</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ── Sidebar ─────────────────────────────────────────────────────── */
+    .break-sidebar { transition: width 0.2s ease; flex-shrink: 0; }
+    .break-sidebar-expanded  { width: 220px; }
+    .break-sidebar-collapsed { width: 48px; }
+
+    /* ── Timer stage ─────────────────────────────────────────────────── */
+    .bts-stage {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Arc SVG */
+    .bts-arc-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%; height: 100%;
+        animation: bts-arc-spin 8s linear infinite;
+    }
+    .bts-arc-track {
+        fill: none;
+        stroke: rgba(245,158,11,0.12);
+        stroke-width: 3;
+    }
+    .bts-arc-fill {
+        fill: none;
+        stroke: #f59e0b;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-dasharray: 110 405;
+        stroke-dashoffset: 0;
+        opacity: 0.85;
+        filter: drop-shadow(0 0 5px rgba(245,158,11,0.9));
+    }
+
+    /* Central icon */
+    .bts-center {
+        position: absolute;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .bts-hg-icon {
+        font-size: 3.5rem;
+        color: #f59e0b;
+        animation: bts-hg-flip 6s ease-in-out infinite;
+        filter: drop-shadow(0 0 10px rgba(245,158,11,0.7));
+    }
+
+    /* ── Keyframes ───────────────────────────────────────────────────── */
+    @@keyframes bts-arc-spin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+    }
+    @@keyframes bts-hg-flip {
+        0%,  40% { transform: rotate(0deg)   scale(1);    filter: drop-shadow(0 0 10px rgba(245,158,11,0.7)); }
+        46%      { transform: rotate(90deg)  scale(0.85); filter: drop-shadow(0 0  4px rgba(245,158,11,0.3)); }
+        52%, 90% { transform: rotate(180deg) scale(1);    filter: drop-shadow(0 0 10px rgba(245,158,11,0.7)); }
+        96%      { transform: rotate(270deg) scale(0.85); filter: drop-shadow(0 0  4px rgba(245,158,11,0.3)); }
+        100%     { transform: rotate(360deg) scale(1);    filter: drop-shadow(0 0 10px rgba(245,158,11,0.7)); }
+    }
+</style>
+
+@code {
+    [Parameter, EditorRequired] public required string SessionCode { get; set; }
+    [Parameter, EditorRequired] public required Guid ActivityId { get; set; }
+    [Parameter] public string? ActivityTitle { get; set; }
+    [Parameter] public string? ActivityConfig { get; set; }
+
+    private BreakConfig? config;
+    private List<Participant> participants = new();
+    private HashSet<Guid> readyParticipantIds = new();
+    private Guid? sessionId;
+    private bool sidebarCollapsed = false;
+    private HubConnection? hubConnection;
+    private int remainingSeconds = 0;
+
+    private string countdownId => $"break-presentation-countdown-{ActivityId}";
+    private bool AllowReadySignal => config?.AllowReadySignal == true;
+    private double ReadyPercent => participants.Count > 0
+        ? Math.Round(readyParticipantIds.Count * 100.0 / participants.Count, 0)
+        : 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadConfig();
+        await LoadDataAsync();
+        await SetupSignalRAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && config?.ShowCountdown == true && remainingSeconds > 0)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("window.startBreakCountdown", countdownId, remainingSeconds);
+            }
+            catch { }
+        }
+    }
+
+    private void LoadConfig()
+    {
+        if (!string.IsNullOrWhiteSpace(ActivityConfig))
+        {
+            try
+            {
+                config = JsonSerializer.Deserialize<BreakConfig>(ActivityConfig,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch { }
+        }
+        config ??= new BreakConfig();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            if (!sessionId.HasValue)
+            {
+                var session = await SessionService.GetByCodeAsync(SessionCode);
+                if (session is null) return;
+                sessionId = session.Id;
+            }
+
+            var allParticipants = await ParticipantService.GetBySessionAsync(sessionId.Value);
+            participants = allParticipants.ToList();
+
+            var responses = await ResponseService.GetByActivityAsync(ActivityId);
+            readyParticipantIds = responses.Select(r => r.ParticipantId).ToHashSet();
+
+            // Compute remaining seconds from persisted start time
+            if (config?.ShowCountdown == true && config.DurationMinutes > 0)
+            {
+                var totalSecs = config.DurationMinutes * 60;
+                var storedAt = await MetadataService.GetValueAsync(sessionId.Value, ActivityId, ActivityMetadataKeys.BreakStartedAt);
+                if (!string.IsNullOrEmpty(storedAt) && DateTimeOffset.TryParse(storedAt, out var startedAt))
+                {
+                    var elapsed = (int)(DateTimeOffset.UtcNow - startedAt).TotalSeconds;
+                    remainingSeconds = Math.Max(0, totalSecs - elapsed);
+                }
+                else
+                {
+                    remainingSeconds = totalSecs;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load BreakPresentation data for {SessionCode}/{ActivityId}", SessionCode, ActivityId);
+        }
+    }
+
+    private void ToggleSidebar() => sidebarCollapsed = !sidebarCollapsed;
+
+    private async Task SetupSignalRAsync()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.Reconnected += async _ =>
+            {
+                try
+                {
+                    await hubConnection.InvokeAsync("Subscribe", SessionCode);
+                    await InvokeAsync(async () => { await LoadDataAsync(); StateHasChanged(); });
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "BreakPresentation SignalR reconnect failed");
+                }
+            };
+
+            hubConnection.On<ResponseReceivedEvent>("ResponseReceived", async (e) =>
+            {
+                if (e.SessionCode == SessionCode && e.ActivityId == ActivityId)
+                {
+                    await InvokeAsync(() =>
+                    {
+                        readyParticipantIds.Add(e.ParticipantId);
+                        StateHasChanged();
+                        return Task.CompletedTask;
+                    });
+                }
+            });
+
+            hubConnection.On<ParticipantJoinedEvent>("ParticipantJoined", async (e) =>
+            {
+                if (e.SessionCode == SessionCode)
+                {
+                    await InvokeAsync(async () => { await LoadDataAsync(); StateHasChanged(); });
+                }
+            });
+
+            await hubConnection.StartAsync();
+            await hubConnection.InvokeAsync("Subscribe", SessionCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to setup SignalR for BreakPresentation");
+        }
+    }
+
+    private static string FormatDuration(int minutes)
+    {
+        var ts = TimeSpan.FromMinutes(minutes);
+        return ts.TotalHours >= 1
+            ? $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:00"
+            : $"{ts.Minutes:D2}:00";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            try { await hubConnection.DisposeAsync(); } catch { }
+        }
+    }
+}

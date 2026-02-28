@@ -64,17 +64,26 @@
                     <div class="text-muted" style="font-size:0.7rem;">Item @(currentItemIndex + 1) of @(config?.Items.Count ?? 0)</div>
                     <div class="fw-semibold mt-1" style="font-size:0.85rem; line-height:1.4;">@currentItemName</div>
 
-                    <div class="d-flex gap-2 mt-auto pb-3">
-                        <button class="btn btn-outline-secondary btn-sm flex-fill"
-                                @onclick="PrevItem"
-                                disabled="@(currentItemIndex <= 0 || _isNavigating)">
-                            <i class="fas fa-chevron-left me-1"></i> Prev
-                        </button>
-                        <button class="btn btn-outline-secondary btn-sm flex-fill"
-                                @onclick="NextItem"
-                                disabled="@(config == null || currentItemIndex >= config.Items.Count - 1 || _isNavigating)">
-                            Next <i class="fas fa-chevron-right ms-1"></i>
-                        </button>
+                    <div class="mt-auto pb-3">
+                        <div class="mb-2">
+                            <label class="form-label mb-1 small">Bubble size:</label>
+                            <select class="form-select form-select-sm" @onchange="OnBubbleSizeModeChanged">
+                                <option value="0" selected="@(bubbleSizeMode == QuadrantBubbleSizeMode.Proportional)">Proportional to responses</option>
+                                <option value="1" selected="@(bubbleSizeMode == QuadrantBubbleSizeMode.Uniform)">Uniform</option>
+                            </select>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary btn-sm flex-fill"
+                                    @onclick="PrevItem"
+                                    disabled="@(currentItemIndex <= 0 || _isNavigating)">
+                                <i class="fas fa-chevron-left me-1"></i> Prev
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm flex-fill"
+                                    @onclick="NextItem"
+                                    disabled="@(config == null || currentItemIndex >= config.Items.Count - 1 || _isNavigating)">
+                                Next <i class="fas fa-chevron-right ms-1"></i>
+                            </button>
+                        </div>
                     </div>
 
                 </div>
@@ -128,6 +137,7 @@
     private readonly string canvasId = $"quadrantPresChart_{Guid.NewGuid().ToString("N")[..8]}";
     private QuadrantDashboardResponse? dashboard;
     private QuadrantConfig? config;
+    private QuadrantBubbleSizeMode bubbleSizeMode = QuadrantBubbleSizeMode.Proportional;
     private HubConnection? hubConnection;
     private string timeRemaining = "--:--";
     private System.Threading.Timer? clockTimer;
@@ -178,7 +188,11 @@
         {
             config = JsonSerializer.Deserialize<QuadrantConfig>(ActivityConfig,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            if (config is not null) UpdateCurrentItemName();
+            if (config is not null)
+            {
+                bubbleSizeMode = config.BubbleSizeMode;
+                UpdateCurrentItemName();
+            }
         }
         catch { }
     }
@@ -192,6 +206,17 @@
     }
 
     private bool _isNavigating = false;
+
+    private async Task OnBubbleSizeModeChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var v))
+        {
+            bubbleSizeMode = (QuadrantBubbleSizeMode)v;
+            StateHasChanged();
+            if (dashboard?.Items.Any() == true)
+                try { await RenderChart(); } catch { }
+        }
+    }
 
     private void PrevItem() => _ = AdvanceToItem(currentItemIndex - 1);
     private void NextItem() => _ = AdvanceToItem(currentItemIndex + 1);
@@ -276,13 +301,13 @@
             dashboard.XAxisLabel,
             dashboard.YAxisLabel,
             chartItems,
-            config?.BubbleSizeMode == QuadrantBubbleSizeMode.Uniform,
+            bubbleSizeMode == QuadrantBubbleSizeMode.Uniform,
             xMin,
             xMax,
-            config?.Q1Label ?? "Quick Wins",
-            config?.Q2Label ?? "Major Projects",
-            config?.Q3Label ?? "Fill-Ins",
-            config?.Q4Label ?? "Thankless Tasks");
+            config?.Q1Label,
+            config?.Q2Label,
+            config?.Q3Label,
+            config?.Q4Label);
     }
 
     private async Task SetupSignalR()

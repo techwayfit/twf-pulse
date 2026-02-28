@@ -1,7 +1,11 @@
 @using TechWayFit.Pulse.Domain.Models.ActivityConfigs
 @using TechWayFit.Pulse.Domain.Models.ResponsePayloads
+@using TechWayFit.Pulse.Domain.Models
+@using TechWayFit.Pulse.Application.Abstractions.Services
 @using System.Text.Json
 @inject IJSRuntime JS
+@inject ISessionService SessionService
+@inject ISessionActivityMetadataService MetadataService
 
 <div class="break-activity">
     <div class="text-center mb-4">
@@ -122,19 +126,35 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && config?.ShowCountdown == true && config.DurationMinutes > 0)
+        if (!firstRender || config?.ShowCountdown != true || config.DurationMinutes <= 0)
+            return;
+
+        try
         {
-            try
+            var totalSecs = config.DurationMinutes * 60;
+            int remaining = totalSecs;
+
+            var session = await SessionService.GetByCodeAsync(Parameters.SessionCode);
+            if (session is not null)
             {
-                // Initialize the countdown via JS
+                var storedAt = await MetadataService.GetValueAsync(session.Id, Parameters.ActivityId, ActivityMetadataKeys.BreakStartedAt);
+                if (!string.IsNullOrEmpty(storedAt) && DateTimeOffset.TryParse(storedAt, out var startedAt))
+                {
+                    var elapsed = (int)(DateTimeOffset.UtcNow - startedAt).TotalSeconds;
+                    remaining = Math.Max(0, totalSecs - elapsed);
+                }
+            }
+
+            if (remaining > 0)
+            {
                 await JS.InvokeVoidAsync("window.startBreakCountdown",
                     $"break-countdown-{Parameters.ActivityId}",
-                    config.DurationMinutes);
+                    remaining);
             }
-            catch
-            {
-                // JS interop unavailable in prerender - ignore
-            }
+        }
+        catch
+        {
+            // JS interop errors or service failures — timer just won't show
         }
     }
 

@@ -283,7 +283,11 @@ window.saveQuadrantActivity = async function() {
         yScoreOptions: sharesY ? [] : window.quadrantModal_collectScoreTable('y'),
         items,
         bubbleSizeMode: parseInt(document.getElementById('quadrantBubbleSize')?.value ?? '0', 10),
-        allowNotes: document.getElementById('quadrantAllowNotes')?.checked ?? false
+        allowNotes: document.getElementById('quadrantAllowNotes')?.checked ?? false,
+        q1Label: document.getElementById('quadrantQ1Label')?.value?.trim() || '',
+        q2Label: document.getElementById('quadrantQ2Label')?.value?.trim() || '',
+        q3Label: document.getElementById('quadrantQ3Label')?.value?.trim() || '',
+        q4Label: document.getElementById('quadrantQ4Label')?.value?.trim() || ''
     };
 
     if (config.xScoreOptions.length === 0) { alert('Please add at least one X-axis score option.'); return; }

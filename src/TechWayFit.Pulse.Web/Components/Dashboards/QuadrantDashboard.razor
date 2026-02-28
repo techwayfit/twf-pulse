@@ -304,7 +304,11 @@
             chartItems,
             bubbleSizeMode == QuadrantBubbleSizeMode.Uniform,
             xMin,
-            xMax);
+            xMax,
+            config?.Q1Label,
+            config?.Q2Label,
+            config?.Q3Label,
+            config?.Q4Label);
     }
 
     private async Task PrevItem()

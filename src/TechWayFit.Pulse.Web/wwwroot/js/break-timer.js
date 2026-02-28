@@ -1,14 +1,14 @@
 /**
  * Break countdown timer utility.
- * Called via Blazor JS interop: window.startBreakCountdown(elementId, durationMinutes)
- * Counts down from durationMinutes and shows the remaining time inside the element.
+ * Called via Blazor JS interop: window.startBreakCountdown(elementId, remainingSeconds)
+ * Counts down from remainingSeconds and shows the remaining time inside the element.
  */
 (function () {
     'use strict';
 
     const activeTimers = new Map();
 
-    window.startBreakCountdown = function (elementId, durationMinutes) {
+    window.startBreakCountdown = function (elementId, remainingSeconds) {
         // Clear any existing timer for this element
         if (activeTimers.has(elementId)) {
             clearInterval(activeTimers.get(elementId));
@@ -18,7 +18,7 @@
         const el = document.getElementById(elementId);
         if (!el) return;
 
-        let totalSeconds = durationMinutes * 60;
+        let totalSeconds = Math.max(0, Math.round(remainingSeconds));
 
         function formatTime(seconds) {
             const h = Math.floor(seconds / 3600);

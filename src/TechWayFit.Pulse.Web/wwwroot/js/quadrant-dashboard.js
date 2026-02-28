@@ -1,6 +1,9 @@
 // Quadrant Item Scoring — bubble chart dashboard
 'use strict';
 
+if (!window.__quadrantDashboardLoaded) {
+window.__quadrantDashboardLoaded = true;
+
 const quadrantBubbleCharts = new Map(); // canvas ID → Chart instance
 
 // Per-item colour palette (cycles if more than 8 items)
@@ -25,10 +28,10 @@ const quadrantZonesPlugin = {
         const labels = chart.options.quadrantLabels || {};
 
         const zones = [
-            { x: left,  y: top,   w: midX - left,  h: midY - top,    bg: 'rgba(59,130,246,0.06)',  label: (labels.q1 || 'Quick Wins').toUpperCase(),      lx: left + 10,  ly: top + 14  },
-            { x: midX,  y: top,   w: right - midX,  h: midY - top,    bg: 'rgba(239,68,68,0.06)',   label: (labels.q2 || 'Major Projects').toUpperCase(),  lx: midX + 10,  ly: top + 14  },
-            { x: left,  y: midY,  w: midX - left,  h: bottom - midY,  bg: 'rgba(16,185,129,0.06)',  label: (labels.q3 || 'Fill-Ins').toUpperCase(),        lx: left + 10,  ly: midY + 14 },
-            { x: midX,  y: midY,  w: right - midX,  h: bottom - midY, bg: 'rgba(139,92,246,0.06)',  label: (labels.q4 || 'Thankless Tasks').toUpperCase(), lx: midX + 10,  ly: midY + 14 },
+            { x: left,  y: top,   w: midX - left,  h: midY - top,    bg: 'rgba(59,130,246,0.06)',  label: (labels.q1 || '').toUpperCase(), lx: left + 10,  ly: top + 14  },
+            { x: midX,  y: top,   w: right - midX,  h: midY - top,    bg: 'rgba(239,68,68,0.06)',   label: (labels.q2 || '').toUpperCase(), lx: midX + 10,  ly: top + 14  },
+            { x: left,  y: midY,  w: midX - left,  h: bottom - midY,  bg: 'rgba(16,185,129,0.06)',  label: (labels.q3 || '').toUpperCase(), lx: left + 10,  ly: midY + 14 },
+            { x: midX,  y: midY,  w: right - midX,  h: bottom - midY, bg: 'rgba(139,92,246,0.06)',  label: (labels.q4 || '').toUpperCase(), lx: midX + 10,  ly: midY + 14 },
         ];
 
         zones.forEach(z => {
@@ -222,3 +225,5 @@ window.destroyQuadrantBubbleChart = function (canvasId) {
         quadrantBubbleCharts.delete(canvasId);
     }
 };
+
+} // end __quadrantDashboardLoaded guard

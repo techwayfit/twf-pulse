@@ -647,29 +647,10 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
         catch { return null; }
     }
 
-    private static BreakConfig? TryParseBreakConfig(string? configJson)
-    {
-        if (string.IsNullOrEmpty(configJson)) return null;
-        try
-        {
-            return System.Text.Json.JsonSerializer.Deserialize<BreakConfig>(
-                configJson,
-                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        }
-        catch { return null; }
-    }
-
     private static string RenderSummaryMarkdown(string markdown)
     {
         var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
         return Markdown.ToHtml(markdown, pipeline);
     }
 
-    private static string FormatBreakDuration(int minutes)
-    {
-        var ts = TimeSpan.FromMinutes(minutes);
-        return ts.TotalHours >= 1
-            ? $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:00"
-            : $"{ts.Minutes:D2}:00";
-    }
 }

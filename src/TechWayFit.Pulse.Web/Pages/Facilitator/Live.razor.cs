@@ -9,6 +9,7 @@ using TechWayFit.Pulse.Web.Components.Facilitator;
 using TechWayFit.Pulse.Web.Hubs;
 using TechWayFit.Pulse.Web.Services;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Domain.Models;
 using TechWayFit.Pulse.Web.Api;
 using System.Text.Json;
 
@@ -27,6 +28,7 @@ public partial class Live : IAsyncDisposable
     [Inject] private ILogger<Live> Logger { get; set; } = default!;
     [Inject] private IWebHostEnvironment Environment { get; set; } = default!;
     [Inject] private TechWayFit.Pulse.Web.Services.IHubNotificationService HubNotifications { get; set; } = default!;
+    [Inject] private ISessionActivityMetadataService MetadataService { get; set; } = default!;
 
     [SupplyParameterFromQuery]
     public string? Code { get; set; }
@@ -618,6 +620,7 @@ public partial class Live : IAsyncDisposable
 
             await ActivityService.OpenAsync(sessionEntity.Id, activityId, DateTimeOffset.UtcNow);
             await SessionService.SetCurrentActivityAsync(sessionEntity.Id, activityId, DateTimeOffset.UtcNow);
+            await ResetBreakStartedAtAsync(sessionEntity.Id, activityId);
 
             // Broadcast SignalR events to participants
             var updatedSession = await SessionService.GetByCodeAsync(sessionCode);
@@ -740,6 +743,7 @@ public partial class Live : IAsyncDisposable
             // 3. Open next activity
             await ActivityService.OpenAsync(sessionEntity.Id, nextActivity.ActivityId, DateTimeOffset.UtcNow);
             await SessionService.SetCurrentActivityAsync(sessionEntity.Id, nextActivity.ActivityId, DateTimeOffset.UtcNow);
+            await ResetBreakStartedAtAsync(sessionEntity.Id, nextActivity.ActivityId);
 
             // Broadcast SignalR events to participants
             var updatedSession = await SessionService.GetByCodeAsync(sessionCode);
@@ -818,6 +822,7 @@ public partial class Live : IAsyncDisposable
             // 3. Open previous activity
             await ActivityService.OpenAsync(sessionEntity.Id, previousActivity.ActivityId, DateTimeOffset.UtcNow);
             await SessionService.SetCurrentActivityAsync(sessionEntity.Id, previousActivity.ActivityId, DateTimeOffset.UtcNow);
+            await ResetBreakStartedAtAsync(sessionEntity.Id, previousActivity.ActivityId);
 
             // Broadcast SignalR events to participants
             var updatedSession = await SessionService.GetByCodeAsync(sessionCode);
@@ -926,6 +931,7 @@ public partial class Live : IAsyncDisposable
 
             await ActivityService.ReopenAsync(sessionEntity.Id, activityId, DateTimeOffset.UtcNow);
             await SessionService.SetCurrentActivityAsync(sessionEntity.Id, activityId, DateTimeOffset.UtcNow);
+            await ResetBreakStartedAtAsync(sessionEntity.Id, activityId);
 
             // Broadcast SignalR events to participants
             var updatedSession = await SessionService.GetByCodeAsync(sessionCode);
@@ -953,6 +959,26 @@ public partial class Live : IAsyncDisposable
         {
             isPerformingAction = false;
             StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// (Re)sets the break countdown start timestamp when an activity is opened/reopened.
+    /// For non-Break activities the metadata key is never read, so this is a cheap no-op in practice.
+    /// </summary>
+    private async Task ResetBreakStartedAtAsync(Guid sessionId, Guid activityId)
+    {
+        try
+        {
+            await MetadataService.SetValueAsync(
+                sessionId,
+                activityId,
+                ActivityMetadataKeys.BreakStartedAt,
+                DateTimeOffset.UtcNow.ToString("O"));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to reset BreakStartedAt for activity {ActivityId}", activityId);
         }
     }
 
