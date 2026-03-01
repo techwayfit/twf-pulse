@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -18,7 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechWayFit.Pulse.Contracts"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechWayFit.Pulse.Tests", "tests\TechWayFit.Pulse.Tests\TechWayFit.Pulse.Tests.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
-
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechWayFit.Pulse.AI", "src\TechWayFit.Pulse.AI\TechWayFit.Pulse.AI.csproj", "{67ACAA82-4809-EF90-F757-2F58DAA9344B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -101,7 +103,18 @@ Global
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x64.Build.0 = Release|Any CPU
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x86.ActiveCfg = Release|Any CPU
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}.Release|x86.Build.0 = Release|Any CPU
-
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Debug|x64.Build.0 = Debug|Any CPU
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Debug|x86.Build.0 = Debug|Any CPU
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Release|x64.ActiveCfg = Release|Any CPU
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Release|x64.Build.0 = Release|Any CPU
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Release|x86.ActiveCfg = Release|Any CPU
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -113,5 +126,9 @@ Global
 		{BC9AD69C-A9D2-4C65-9C33-0E74C9C721AF} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{92A5E382-7FFA-412F-8E73-13F6660FC300} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {F2A71F9B-5D33-465A-B9C2-BFABD2BD2000}
+		{67ACAA82-4809-EF90-F757-2F58DAA9344B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {525D3596-D429-4964-B2A7-08DA7FCCB0BF}
 	EndGlobalSection
 EndGlobal
