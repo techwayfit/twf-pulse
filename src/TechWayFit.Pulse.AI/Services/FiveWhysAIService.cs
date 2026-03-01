@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using TechWayFit.Pulse.AI.Http;
+using TechWayFit.Pulse.AI.Options;
+using TechWayFit.Pulse.AI.Prompts;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Contracts.AI;
 
@@ -15,17 +17,17 @@ namespace TechWayFit.Pulse.AI.Services
 {
     public class FiveWhysAIService : IFiveWhysAIService
     {
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IConfiguration _configuration;
+        private readonly OpenAIApiClient _aiClient;
+        private readonly OpenAIOptions _openAIOptions;
         private readonly ILogger<FiveWhysAIService> _logger;
 
         public FiveWhysAIService(
-            IHttpClientFactory httpClientFactory,
-            IConfiguration configuration,
+            OpenAIApiClient aiClient,
+            IOptions<OpenAIOptions> openAIOptions,
             ILogger<FiveWhysAIService> logger)
         {
-            _httpClientFactory = httpClientFactory;
-            _configuration = configuration;
+            _aiClient = aiClient;
+            _openAIOptions = openAIOptions.Value;
             _logger = logger;
         }
 
@@ -36,8 +38,8 @@ namespace TechWayFit.Pulse.AI.Services
             int maxDepth = 5,
             CancellationToken cancellationToken = default)
         {
-            var apiKey = _configuration["AI:OpenAI:ApiKey"];
-            var model = _configuration["AI:OpenAI:Model"] ?? "gpt-4o-mini";
+            var apiKey = _openAIOptions.ApiKey;
+            var model  = _openAIOptions.Model;
 
             if (string.IsNullOrWhiteSpace(apiKey))
             {
@@ -45,56 +47,32 @@ namespace TechWayFit.Pulse.AI.Services
                 return BuildMockStep(chain, maxDepth, rootQuestion);
             }
 
-            var systemPrompt = BuildSystemPrompt(maxDepth);
-            var userPrompt = BuildUserPrompt(rootQuestion, context, chain, maxDepth);
-
-            var payload = new
-            {
-                model,
-                messages = new[]
+            var chatRequest = OpenAIChatRequest.Build(model)
+                .WithMessages(new[]
                 {
-                    new { role = "system", content = systemPrompt },
-                    new { role = "user", content = userPrompt }
-                },
-                temperature = 0.6,
-                max_tokens = 400,
-                response_format = new { type = "json_object" }
-            };
-
-            var client = _httpClientFactory.CreateClient("openai");
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-
-            var requestJson = JsonSerializer.Serialize(payload);
-            var httpContent = new StringContent(requestJson, Encoding.UTF8, "application/json");
+                    OpenAIChatMessage.System(PromptConstants.FiveWhys.GetSystemPrompt(maxDepth)),
+                    OpenAIChatMessage.User(BuildUserPrompt(rootQuestion, context, chain, maxDepth))
+                })
+                .WithTemperature(0.6)
+                .WithMaxTokens(400)
+                .WithJsonResponseFormat()
+                .Create();
 
             var stopwatch = Stopwatch.StartNew();
 
             try
             {
-                var response = await client.PostAsync("chat/completions", httpContent, cancellationToken);
-                response.EnsureSuccessStatusCode();
-                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                var chatResponse = await _aiClient.PostChatAsync(apiKey, _openAIOptions.BaseUrl, chatRequest, cancellationToken);
                 stopwatch.Stop();
 
-                using var doc = JsonDocument.Parse(body);
+                var messageContent = chatResponse.GetContent() ?? "{}";
+                _logger.LogDebug("5 Whys AI raw response: {Response}", messageContent);
 
-                if (doc.RootElement.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
-                {
-                    var messageContent = choices[0]
-                        .GetProperty("message")
-                        .GetProperty("content")
-                        .GetString() ?? "{}";
+                var result = JsonSerializer.Deserialize<FiveWhysNextStepResult>(
+                    messageContent,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                    _logger.LogDebug("5 Whys AI raw response: {Response}", messageContent);
-
-                    var result = JsonSerializer.Deserialize<FiveWhysNextStepResult>(
-                        messageContent,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    return result ?? BuildFallbackStep(chain, maxDepth, rootQuestion);
-                }
-
-                return BuildFallbackStep(chain, maxDepth, rootQuestion);
+                return result ?? BuildFallbackStep(chain, maxDepth, rootQuestion);
             }
             catch (Exception ex)
             {
@@ -102,24 +80,6 @@ namespace TechWayFit.Pulse.AI.Services
                 return BuildFallbackStep(chain, maxDepth, rootQuestion);
             }
         }
-
-        private static string BuildSystemPrompt(int maxDepth) => $@"You are a Socratic strategy coach running a '5 Whys' root cause analysis in a workshop.
-Your job is to help the participant dig deeper to find the TRUE root cause of a problem.
-
-Rules:
-1. If the participant's last answer reveals a ROOT CAUSE (i.e., a foundational issue you cannot dig further into meaningfully, OR you have reached depth {maxDepth}), set isComplete=true and provide rootCause and insight.
-2. Otherwise, ask ONE precise follow-up question that starts with ""Why"" or ""What caused"" to push deeper.
-3. Your follow-up question must directly address the specific reason given in the last answer — not the original problem.
-4. Be concise. One sentence per question. No preamble.
-5. A root cause is typically a process gap, missing capability, structural issue, or human factor — not just a surface symptom.
-
-Respond ONLY with valid JSON in this exact format:
-{{
-  ""nextQuestion"": ""<follow-up question, or null if complete>"",
-  ""isComplete"": <true|false>,
-  ""rootCause"": ""<one-sentence root cause statement, or null>"",
-  ""insight"": ""<2-3 sentence insight explaining the root cause and suggesting a concrete action, or null>""
-}}";
 
         private static string BuildUserPrompt(
             string rootQuestion,
@@ -129,13 +89,13 @@ Respond ONLY with valid JSON in this exact format:
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine($"ORIGINAL PROBLEM QUESTION: {rootQuestion}");
+            sb.AppendLine($"{PromptConstants.FiveWhys.UserPromptOriginalProblem}{rootQuestion}");
 
             if (!string.IsNullOrWhiteSpace(context))
-                sb.AppendLine($"BACKGROUND CONTEXT: {context}");
+                sb.AppendLine($"{PromptConstants.FiveWhys.UserPromptBackgroundContext}{context}");
 
             sb.AppendLine();
-            sb.AppendLine("CONVERSATION CHAIN SO FAR:");
+            sb.AppendLine(PromptConstants.FiveWhys.UserPromptChainHeader);
 
             foreach (var entry in chain)
             {
@@ -147,10 +107,10 @@ Respond ONLY with valid JSON in this exact format:
             sb.AppendLine($"Current depth: {chain.Count} / {maxDepth}");
 
             if (chain.Count >= maxDepth)
-                sb.AppendLine("NOTE: Maximum depth reached. You MUST set isComplete=true and provide a root cause now.");
+                sb.AppendLine(PromptConstants.FiveWhys.UserPromptMaxDepthReached);
 
             sb.AppendLine();
-            sb.AppendLine("Based on the last answer, should we dig deeper or have we found the root cause? Respond in JSON.");
+            sb.AppendLine(PromptConstants.FiveWhys.UserPromptDecisionRequest);
 
             return sb.ToString();
         }
@@ -165,8 +125,8 @@ Respond ONLY with valid JSON in this exact format:
                 return new FiveWhysNextStepResult
                 {
                     IsComplete = true,
-                    RootCause = "Insufficient process documentation and lack of clear ownership for this area.",
-                    Insight = "The root cause appears to be a systemic gap in process ownership. Consider assigning a clear DRI (Directly Responsible Individual) and documenting the process end-to-end to prevent recurrence."
+                    RootCause = PromptConstants.FiveWhys.FallbackRootCause,
+                    Insight = PromptConstants.FiveWhys.FallbackInsight
                 };
             }
 

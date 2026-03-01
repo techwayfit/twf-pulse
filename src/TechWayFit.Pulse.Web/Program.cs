@@ -52,6 +52,10 @@ try
     builder.Services.Configure<ActivityDefaultsOptions>(
         builder.Configuration.GetSection(ActivityDefaultsOptions.SectionName));
 
+    // Configure OpenAI options
+    builder.Services.Configure<TechWayFit.Pulse.AI.Options.OpenAIOptions>(
+        builder.Configuration.GetSection(TechWayFit.Pulse.AI.Options.OpenAIOptions.SectionName));
+
     // Configure context document limits
     builder.Services.Configure<ContextDocumentLimitsOptions>(
         builder.Configuration.GetSection(ContextDocumentLimitsOptions.SectionName));
@@ -162,6 +166,9 @@ try
         // Configure total timeout - increased for retries
         options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
     });
+
+    // Shared HTTP client for all OpenAI/Azure OpenAI calls (singleton — stateless)
+    builder.Services.AddSingleton<TechWayFit.Pulse.AI.Http.OpenAIApiClient>();
 
     // AI services: register real implementations when AI enabled and API key present, otherwise register mocks
     var aiEnabled = builder.Configuration.GetValue<bool>("AI:Enabled");

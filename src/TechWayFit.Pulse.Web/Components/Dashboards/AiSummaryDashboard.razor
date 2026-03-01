@@ -31,6 +31,24 @@
             <i class="fas fa-exclamation-triangle me-2"></i>@errorMessage
         </div>
     }
+    else if (isStreaming || (!string.IsNullOrEmpty(streamingContent) && string.IsNullOrEmpty(config?.GeneratedSummary)))
+    {
+        <!-- Streaming: show growing content live -->
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+                <h6 class="mb-0 fw-semibold">
+                    <i class="fas fa-robot"></i>Generating Summary
+                    <span class="spinner-border spinner-border-sm ms-2 text-primary" role="status"></span>
+                </h6>
+                <div class="text-muted small">Streaming response from AI...</div>
+            </div>
+        </div>
+        <div class="summary-preview p-3 border rounded bg-light">
+            <div class="prose summary-prose">
+                @((MarkupString)RenderMarkdown(streamingContent))
+            </div>
+        </div>
+    }
     else if (config?.IsGenerating == true)
     {
         <div class="text-center py-4">
@@ -151,6 +169,8 @@
     private AiSummaryConfig? config;
     private bool isLoading = true;
     private bool isGenerating = false;
+    private bool isStreaming = false;
+    private string streamingContent = string.Empty;
     private string errorMessage = string.Empty;
     private HubConnection? hubConnection;
 
@@ -261,25 +281,40 @@
             if (updatingActivity != null)
                 await HubNotifications.PublishActivityStateChangedAsync(session.Code, updatingActivity);
 
-            // Update local state to show spinner
+            // Update local state to show spinner (before first token arrives)
+            streamingContent = string.Empty;
+            isStreaming = false;
             config = new AiSummaryConfig { IsGenerating = true, GeneratedSummary = string.Empty };
             StateHasChanged();
 
-            // Generate the summary
-            string summaryText;
+            // Stream summary tokens from AI
+            var summaryBuilder = new System.Text.StringBuilder();
             try
             {
-                summaryText = await SessionAIService.GenerateSessionSummaryAsync(
+                isStreaming = true;
+                await foreach (var token in SessionAIService.StreamSessionSummaryAsync(
                     session.Title,
                     session.Goal,
                     completedActivities,
-                    customPromptAddition);
+                    customPromptAddition))
+                {
+                    summaryBuilder.Append(token);
+                    streamingContent = summaryBuilder.ToString();
+                    await InvokeAsync(StateHasChanged);
+                }
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Failed to generate AI summary for activity {ActivityId}", ActivityId);
-                summaryText = $"## Session Summary\n\nAI summary generation encountered an error. Please try again.\n\n*Error: {ex.Message}*";
+                Logger.LogError(ex, "Streaming failed for activity {ActivityId}, using fallback", ActivityId);
+                if (summaryBuilder.Length == 0)
+                    summaryBuilder.Append($"## Session Summary\n\nAI summary generation encountered an error. Please try again.\n\n*Error: {ex.Message}*");
             }
+            finally
+            {
+                isStreaming = false;
+            }
+
+            var summaryText = summaryBuilder.ToString();
 
             // Store the generated summary
             var finalConfig = JsonSerializer.Serialize(

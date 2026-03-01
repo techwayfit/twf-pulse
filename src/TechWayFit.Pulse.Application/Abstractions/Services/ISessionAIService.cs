@@ -38,5 +38,17 @@ namespace TechWayFit.Pulse.Application.Abstractions.Services
             IReadOnlyList<AgendaActivityResponse> completedActivities,
             string? customPromptAddition = null,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Stream the session summary token by token using OpenAI streaming.
+        /// Yields each text chunk as it arrives. Falls back to a single yield of the full summary
+        /// for non-OpenAI implementations. AiSummary and Break activities are excluded from context.
+        /// </summary>
+        IAsyncEnumerable<string> StreamSessionSummaryAsync(
+            string sessionTitle,
+            string? sessionGoal,
+            IReadOnlyList<AgendaActivityResponse> completedActivities,
+            string? customPromptAddition = null,
+            CancellationToken cancellationToken = default);
     }
 }

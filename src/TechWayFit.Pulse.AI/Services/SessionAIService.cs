@@ -2,42 +2,43 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TechWayFit.Pulse.AI.Http;
+using TechWayFit.Pulse.AI.Options;
+using TechWayFit.Pulse.AI.Prompts;
 using TechWayFit.Pulse.AI.Utilities;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Application.Context;
+using TechWayFit.Pulse.Contracts.Enums;
 using TechWayFit.Pulse.Contracts.Models;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
-using TechWayFit.Pulse.Contracts.Enums;
 using TechWayFit.Pulse.Domain.Entities;
 
 namespace TechWayFit.Pulse.AI.Services
 {
     public class SessionAIService : ISessionAIService
     {
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IConfiguration _configuration;
+        private readonly OpenAIApiClient _aiClient;
+        private readonly OpenAIOptions _openAIOptions;
         private readonly ILogger<SessionAIService> _logger;
         private readonly ISessionAIService _mock;
         private readonly ActivityDefaultsOptions _activityDefaults;
         private readonly IAiQuotaService? _quotaService;
         private readonly IActivityService? _activityService;
 
-        public SessionAIService(IHttpClientFactory httpClientFactory, IConfiguration configuration, 
+        public SessionAIService(OpenAIApiClient aiClient, IOptions<OpenAIOptions> openAIOptions,
         IServiceProvider serviceProvider,
         ILogger<SessionAIService> logger, IOptions<ActivityDefaultsOptions> activityDefaults)
         {
-            _httpClientFactory = httpClientFactory;
-            _configuration = configuration;
+            _aiClient = aiClient;
+            _openAIOptions = openAIOptions.Value;
             _logger = logger;
             _mock = serviceProvider.GetKeyedService<ISessionAIService>("Intelligent") ?? throw new ArgumentNullException("Mock IntelligentSessionAIService not found");   
             _activityDefaults = activityDefaults?.Value ?? new ActivityDefaultsOptions();
@@ -69,10 +70,10 @@ namespace TechWayFit.Pulse.AI.Services
                 }
             }
             
-            // Use facilitator's API key/URL if available, otherwise fall back to configuration
-            var apiKey = facilitatorContext?.OpenAiApiKey ?? _configuration["AI:OpenAI:ApiKey"];
-            var model = request.GenerationOptions?.Model ?? _configuration["AI:OpenAI:Model"] ?? "gpt-4o-mini";
-            var baseUrl = facilitatorContext?.OpenAiBaseUrl ?? _configuration["AI:OpenAI:BaseUrl"];
+            // Use facilitator's API key/URL if available, otherwise fall back to options
+            var apiKey  = facilitatorContext?.OpenAiApiKey ?? _openAIOptions.ApiKey;
+            var model   = request.GenerationOptions?.Model ?? _openAIOptions.Model;
+            var baseUrl = facilitatorContext?.OpenAiBaseUrl ?? _openAIOptions.BaseUrl;
 
             if (string.IsNullOrWhiteSpace(apiKey))
             {
@@ -84,43 +85,20 @@ namespace TechWayFit.Pulse.AI.Services
 
             try
             {
-                var client = _httpClientFactory.CreateClient("openai");
-                
-                // Override base URL if provided
-                if (!string.IsNullOrWhiteSpace(baseUrl))
-                {
-                    // Ensure baseUrl ends with /
-                    if (!baseUrl.EndsWith("/"))
-                    {
-                        baseUrl += "/";
-                    }
-                    client.BaseAddress = new Uri(baseUrl);
-                    _logger.LogInformation("Using custom OpenAI base URL: {BaseUrl}", baseUrl);
-                }
-                
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-
                 // Build improved system prompt with schema
                 var systemPrompt = BuildSystemPrompt();
                 
                 // Build enhanced user prompt with generation context
                 var userPrompt = BuildUserPrompt(request);
 
-                var payload = new
-                {
-                    model = model,
-                    messages = new[]
-                    {
-                        new { role = "system", content = systemPrompt },
-                        new { role = "user", content = userPrompt }
-                    },
-                    temperature = request.GenerationOptions?.Temperature ?? 0.7,
-                    max_tokens = _configuration.GetValue<int?>("AI:OpenAI:MaxTokens") ?? 800
-                };
+                var chatRequest = OpenAIChatRequest.Build(model)
+                    .WithMessages(new[] { OpenAIChatMessage.System(systemPrompt), OpenAIChatMessage.User(userPrompt) })
+                    .WithTemperature(request.GenerationOptions?.Temperature ?? 0.7)
+                    .WithMaxTokens(_openAIOptions.MaxTokens)
+                    .Create();
 
-                var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-                var resp = await client.PostAsync("chat/completions", content, cancellationToken);
-                
+                var resp = await _aiClient.PostAsync(apiKey!, baseUrl, chatRequest, cancellationToken);
+
                 if (!resp.IsSuccessStatusCode)
                 {
                     var errorBody = await resp.Content.ReadAsStringAsync(cancellationToken);
@@ -213,8 +191,7 @@ namespace TechWayFit.Pulse.AI.Services
         private string BuildUserPrompt(CreateSessionRequest request)
         {
             var prompt = new StringBuilder();
-            prompt.AppendLine("Generate a session agenda as a JSON array of activities.");
-            prompt.AppendLine("Return an array where each item has: type (Poll|WordCloud|Rating|GeneralFeedback), title, prompt, durationMinutes (integer), optional config (object).\n");
+            prompt.AppendLine(PromptConstants.ActivityGeneration.UserPromptHeader);
             
             // Basic info
             prompt.AppendLine($"Session title: {request.Title}");
@@ -248,7 +225,7 @@ namespace TechWayFit.Pulse.AI.Services
                 else
                 {
                     // No duration specified - suggest default count
-                    prompt.AppendLine($"Generate 5-8 activities for this session.");
+                    prompt.AppendLine(PromptConstants.ActivityGeneration.DefaultActivityCount);
                 }
                 if (ctx.ParticipantCount > 0)
                 {
@@ -317,10 +294,10 @@ namespace TechWayFit.Pulse.AI.Services
                     _logger.LogWarning("PII detected in legacy context and sanitized for session generation");
                 }
                 prompt.AppendLine($"Context: {sanitizedContext}");
-                prompt.AppendLine($"Generate 5-8 activities for this session.");
+                prompt.AppendLine(PromptConstants.ActivityGeneration.DefaultActivityCount);
             }
             
-            prompt.AppendLine("\nReturn ONLY valid JSON array, no explanatory text.");
+            prompt.AppendLine(PromptConstants.ActivityGeneration.UserPromptFooter);
             
             return prompt.ToString();
         }
@@ -333,7 +310,7 @@ namespace TechWayFit.Pulse.AI.Services
 
         private void BuildParticipantTypeContext(StringBuilder prompt, ParticipantTypesDto participantTypes)
         {
-            prompt.AppendLine("\nParticipants:");
+            prompt.AppendLine(PromptConstants.ActivityGeneration.ParticipantSection);
             
             if (!string.IsNullOrEmpty(participantTypes.Primary))
             {
@@ -343,16 +320,16 @@ namespace TechWayFit.Pulse.AI.Services
                 switch (participantTypes.Primary.ToLower())
                 {
                     case "technical":
-                        prompt.AppendLine("  → Use technical terminology, focus on implementation details, code quality, architecture.");
+                        prompt.AppendLine(PromptConstants.ActivityGeneration.TechnicalAudienceHint);
                         break;
                     case "business":
-                        prompt.AppendLine("  → Use business terminology, focus on ROI, impact, strategy, outcomes.");
+                        prompt.AppendLine(PromptConstants.ActivityGeneration.BusinessAudienceHint);
                         break;
                     case "managers":
-                        prompt.AppendLine("  → Focus on team dynamics, process improvements, efficiency, leadership.");
+                        prompt.AppendLine(PromptConstants.ActivityGeneration.ManagersAudienceHint);
                         break;
                     case "leaders":
-                        prompt.AppendLine("  → Focus on strategic vision, organizational impact, change management.");
+                        prompt.AppendLine(PromptConstants.ActivityGeneration.LeadersAudienceHint);
                         break;
                 }
             }
@@ -389,7 +366,7 @@ namespace TechWayFit.Pulse.AI.Services
             if (documents.SprintBacklog?.Provided == true)
             {
                 hasAnyDocument = true;
-                prompt.AppendLine("\n📋 Sprint Backlog Context:");
+                prompt.AppendLine(PromptConstants.ActivityGeneration.SprintBacklogHeader);
                 var summary = PiiSanitizer.Sanitize(documents.SprintBacklog.Summary, 500);
                 prompt.AppendLine(summary);
                 if (documents.SprintBacklog.KeyItems?.Count > 0)
@@ -401,14 +378,14 @@ namespace TechWayFit.Pulse.AI.Services
                         prompt.AppendLine($"- {sanitizedItem}");
                     }
                 }
-                prompt.AppendLine("→ Generate activities that reference specific backlog items or stories.");
+                prompt.AppendLine(PromptConstants.ActivityGeneration.SprintBacklogInstruction);
             }
             
             // Incident report
             if (documents.IncidentReport?.Provided == true)
             {
                 hasAnyDocument = true;
-                prompt.AppendLine("\n🚨 Incident Report Context:");
+                prompt.AppendLine(PromptConstants.ActivityGeneration.IncidentReportHeader);
                 var summary = PiiSanitizer.Sanitize(documents.IncidentReport.Summary, 500);
                 prompt.AppendLine(summary);
                 if (!string.IsNullOrEmpty(documents.IncidentReport.Severity))
@@ -423,14 +400,14 @@ namespace TechWayFit.Pulse.AI.Services
                 {
                     prompt.AppendLine($"Incident duration: {documents.IncidentReport.DurationMinutes} minutes");
                 }
-                prompt.AppendLine("→ Generate postmortem-style activities focusing on root cause analysis and improvement.");
+                prompt.AppendLine(PromptConstants.ActivityGeneration.IncidentReportInstruction);
             }
             
             // Product documentation
             if (documents.ProductDocumentation?.Provided == true)
             {
                 hasAnyDocument = true;
-                prompt.AppendLine("\n📖 Product Documentation Context:");
+                prompt.AppendLine(PromptConstants.ActivityGeneration.ProductDocHeader);
                 var summary = PiiSanitizer.Sanitize(documents.ProductDocumentation.Summary, 500);
                 prompt.AppendLine(summary);
                 if (documents.ProductDocumentation.Features?.Count > 0)
@@ -442,7 +419,7 @@ namespace TechWayFit.Pulse.AI.Services
                         prompt.AppendLine($"- {sanitized}");
                     }
                 }
-                prompt.AppendLine("→ Reference specific features in your questions.");
+                prompt.AppendLine(PromptConstants.ActivityGeneration.ProductDocInstruction);
             }
             
             // Custom documents
@@ -471,32 +448,13 @@ namespace TechWayFit.Pulse.AI.Services
             
             if (hasAnyDocument)
             {
-                prompt.AppendLine("\n⚠️ IMPORTANT: Reference the above context documents in your generated activities to make them specific and relevant.");
+                prompt.AppendLine(PromptConstants.ActivityGeneration.ContextDocImportance);
             }
         }
 
         private string BuildSystemPrompt()
         {
-            return @"You are an expert workshop facilitator and instructional designer. Generate a complete, valid JSON array of workshop activities.
-
-IMPORTANT: Only use these 4 activity types: Poll, WordCloud, Rating, GeneralFeedback
-
-For each activity, return:
-- type: Poll | WordCloud | Rating | GeneralFeedback
-- title: Clear, engaging title (3-50 chars)
-- prompt: The question or instruction for participants (10-500 chars)
-- durationMinutes: Recommended time (5-30 minutes)
-- config: Activity-specific configuration object
-
-Activity Guidelines:
-- Poll: Use for quick consensus, voting, or decision-making. Config must include 'options' as array of objects with {""id"": ""opt-1"", ""label"": ""Option text"", ""description"": ""Optional detail""}. Provide 2-6 choices with unique IDs (opt-1, opt-2, etc.). Set MaxResponsesPerParticipant (1 is typical). Optionally set allowMultiple: true for multi-select.
-- WordCloud: Use for brainstorming or sentiment capture. Config should set 'maxWords' (1-3), 'allowMultipleSubmissions', and MaxSubmissionsPerParticipant (1-3 is typical).
-- Rating: Use for satisfaction or confidence checks. Config should set 'scale' (5 or 10), 'minLabel', 'maxLabel', 'allowComments', and MaxResponsesPerParticipant (1 is typical).
-- GeneralFeedback: Use for open-ended input. Config can include 'categories' for organization and MaxResponsesPerParticipant (1-5 is typical).
-
-Note: You can suggest response limits for each activity, but the system will enforce configured maximums.
-
-Return ONLY a valid JSON array. No markdown, no explanation.";
+            return PromptConstants.ActivityGeneration.SystemPrompt;
         }
 
         private IReadOnlyList<AgendaActivityResponse> ParseActivitiesJson(string jsonText)
@@ -621,6 +579,25 @@ Return ONLY a valid JSON array. No markdown, no explanation.";
                 ActivityType.Rating => JsonSerializer.Serialize(new { MaxResponsesPerParticipant = _activityDefaults.Rating.MaxResponsesPerParticipant }),
                 ActivityType.WordCloud => JsonSerializer.Serialize(new { MaxSubmissionsPerParticipant = _activityDefaults.WordCloud.MaxSubmissionsPerParticipant }),
                 ActivityType.GeneralFeedback => JsonSerializer.Serialize(new { MaxResponsesPerParticipant = _activityDefaults.GeneralFeedback.MaxResponsesPerParticipant }),
+                ActivityType.Quadrant => JsonSerializer.Serialize(new
+                {
+                    xAxisLabel = "Complexity",
+                    yAxisLabel = "Impact",
+                    xScoreOptions = Enumerable.Range(1, 10).Select(i => new { value = i.ToString() }).ToArray(),
+                    yScoreOptions = Array.Empty<object>(),
+                    items = Array.Empty<string>(),
+                    q1Label = "Quick Wins",
+                    q2Label = "Major Projects",
+                    q3Label = "Fill-Ins",
+                    q4Label = "Thankless Tasks",
+                    allowNotes = false
+                }),
+                ActivityType.FiveWhys => JsonSerializer.Serialize(new
+                {
+                    rootQuestion = "Why is this problem occurring?",
+                    context = (string?)null,
+                    maxDepth = 5
+                }),
                 _ => "{}"
             };
         }
@@ -700,9 +677,9 @@ Return ONLY a valid JSON array. No markdown, no explanation.";
             }
 
             var facilitatorContext = FacilitatorContextAccessor.Current;
-            var apiKey = facilitatorContext?.OpenAiApiKey ?? _configuration["AI:OpenAI:ApiKey"];
-            var model = _configuration["AI:OpenAI:Model"] ?? "gpt-4o-mini";
-            var baseUrl = facilitatorContext?.OpenAiBaseUrl ?? _configuration["AI:OpenAI:BaseUrl"];
+            var apiKey  = facilitatorContext?.OpenAiApiKey ?? _openAIOptions.ApiKey;
+            var model   = _openAIOptions.Model;
+            var baseUrl = facilitatorContext?.OpenAiBaseUrl ?? _openAIOptions.BaseUrl;
 
             if (string.IsNullOrWhiteSpace(apiKey))
             {
@@ -712,57 +689,77 @@ Return ONLY a valid JSON array. No markdown, no explanation.";
 
             try
             {
-                var client = _httpClientFactory.CreateClient("openai");
-                if (!string.IsNullOrWhiteSpace(baseUrl))
-                {
-                    if (!baseUrl.EndsWith("/")) baseUrl += "/";
-                    client.BaseAddress = new Uri(baseUrl);
-                }
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-
-                var systemPrompt = @"You are an expert workshop facilitator producing a concise, insightful summary of a completed workshop session. 
-Write in clear, professional language. Structure the summary with markdown headings. 
-Highlight key themes, decisions, and patterns that emerged from participant responses.
-Keep it actionable – end with 2-3 key takeaways or next steps.
-Application supports bootstrap 3.7, so use bootstrap alerts, cards, buttons, tables, etc. to make it more beautiful and presentable.
-";
+                var systemPrompt = PromptConstants.SessionSummary.SystemPrompt;
 
                 var userPrompt = BuildSummaryUserPrompt(sessionTitle, sessionGoal, relevantActivities, customPromptAddition);
 
-                var payload = new
-                {
-                    model,
-                    messages = new[]
-                    {
-                        new { role = "system", content = systemPrompt },
-                        new { role = "user", content = userPrompt }
-                    },
-                    temperature = 0.5,
-                    max_tokens = 1200
-                };
+                var chatRequest = OpenAIChatRequest.Build(model)
+                    .WithMessages(new[] { OpenAIChatMessage.System(systemPrompt), OpenAIChatMessage.User(userPrompt) })
+                    .WithTemperature(0.5)
+                    .WithMaxTokens(1200)
+                    .Create();
 
-                var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-                var resp = await client.PostAsync("chat/completions", content, cancellationToken);
-                resp.EnsureSuccessStatusCode();
-
-                var body = await resp.Content.ReadAsStringAsync(cancellationToken);
-                using var doc = JsonDocument.Parse(body);
-                if (doc.RootElement.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
-                {
-                    var first = choices[0];
-                    if (first.TryGetProperty("message", out var message) && message.TryGetProperty("content", out var contentEl))
-                    {
-                        return contentEl.GetString() ?? BuildFallbackSummary(sessionTitle, relevantActivities);
-                    }
-                }
-
-                return BuildFallbackSummary(sessionTitle, relevantActivities);
+                var chatResponse = await _aiClient.PostChatAsync(apiKey!, baseUrl, chatRequest, cancellationToken);
+                return chatResponse.GetContent() ?? BuildFallbackSummary(sessionTitle, relevantActivities);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to generate session summary via AI, using fallback");
                 return BuildFallbackSummary(sessionTitle, relevantActivities);
             }
+        }
+
+        public async IAsyncEnumerable<string> StreamSessionSummaryAsync(
+            string sessionTitle,
+            string? sessionGoal,
+            IReadOnlyList<AgendaActivityResponse> completedActivities,
+            string? customPromptAddition = null,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var relevantActivities = completedActivities
+                .Where(a => a.Type != ActivityType.AiSummary && a.Type != ActivityType.Break)
+                .OrderBy(a => a.Order)
+                .ToList();
+
+            if (relevantActivities.Count == 0)
+            {
+                yield return "No activities with participant responses have been completed yet. Run the session activities first, then re-open this summary.";
+                yield break;
+            }
+
+            var facilitatorContext = FacilitatorContextAccessor.Current;
+            var apiKey  = facilitatorContext?.OpenAiApiKey ?? _openAIOptions.ApiKey;
+            var model   = _openAIOptions.Model;
+            var baseUrl = facilitatorContext?.OpenAiBaseUrl ?? _openAIOptions.BaseUrl;
+
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                _logger.LogWarning("OpenAI API key not configured – returning fallback summary via stream");
+                yield return BuildFallbackSummary(sessionTitle, relevantActivities);
+                yield break;
+            }
+
+
+
+            var systemPrompt = PromptConstants.SessionSummary.SystemPrompt;
+            var userPrompt = BuildSummaryUserPrompt(sessionTitle, sessionGoal, relevantActivities, customPromptAddition);
+
+            var chatRequest = OpenAIChatRequest.Build(model)
+                .WithMessages(new[] { OpenAIChatMessage.System(systemPrompt), OpenAIChatMessage.User(userPrompt) })
+                .WithTemperature(0.5)
+                .WithMaxTokens(1200)
+                .WithStream()
+                .Create();
+
+            bool yieldedAny = false;
+            await foreach (var token in _aiClient.StreamAsync(apiKey!, baseUrl, chatRequest, cancellationToken))
+            {
+                yieldedAny = true;
+                yield return token;
+            }
+
+            if (!yieldedAny)
+                yield return BuildFallbackSummary(sessionTitle, relevantActivities);
         }
 
         private static string BuildSummaryUserPrompt(
@@ -772,7 +769,7 @@ Application supports bootstrap 3.7, so use bootstrap alerts, cards, buttons, tab
             string? customAddition)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"Please summarise this workshop session.");
+            sb.AppendLine(PromptConstants.SessionSummary.UserPromptOpener);
             sb.AppendLine($"Session title: {sessionTitle}");
             if (!string.IsNullOrEmpty(sessionGoal))
                 sb.AppendLine($"Session goal: {sessionGoal}");
@@ -797,10 +794,10 @@ Application supports bootstrap 3.7, so use bootstrap alerts, cards, buttons, tab
 
             if (!string.IsNullOrEmpty(customAddition))
             {
-                sb.AppendLine($"\nAdditional instructions: {customAddition}");
+                sb.AppendLine($"{PromptConstants.SessionSummary.AdditionalInstructions}{customAddition}");
             }
 
-            sb.AppendLine("\nGenerate a comprehensive session summary in markdown format.");
+            sb.AppendLine(PromptConstants.SessionSummary.UserPromptCloser);
             return sb.ToString();
         }
 

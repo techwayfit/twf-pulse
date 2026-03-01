@@ -385,5 +385,16 @@ namespace TechWayFit.Pulse.AI.Services
             sb.AppendLine("\n> AI summary generation requires an AI API key. Configure one in session settings for rich summaries.");
             return Task.FromResult(sb.ToString());
         }
+
+        public async IAsyncEnumerable<string> StreamSessionSummaryAsync(
+            string sessionTitle,
+            string? sessionGoal,
+            IReadOnlyList<AgendaActivityResponse> completedActivities,
+            string? customPromptAddition = null,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var result = await GenerateSessionSummaryAsync(sessionTitle, sessionGoal, completedActivities, customPromptAddition, cancellationToken);
+            yield return result;
+        }
     }
 }
