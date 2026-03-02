@@ -7,10 +7,10 @@
     {
         <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
             <i class="fas fa-check-circle me-3 fs-4" aria-hidden="true"></i>
-            <div>
-                <strong>Response submitted successfully!</strong>
-                <div class="small">Your choice has been recorded. Waiting for the next activity...</div>
-            </div>
+    <div>
+    <strong>Response submitted successfully!</strong>
+    <div class="small">Your choice has been recorded. Waiting for the next activity...</div>
+         </div>
         </div>
     }
     else
@@ -20,91 +20,61 @@
 
         @if (pollConfig != null && pollConfig.Options != null && pollConfig.Options.Count > 0)
         {
-            <div class="poll-options mb-4">
-                @foreach (var option in pollConfig.Options)
-                {
-                    var optionId = option.Id;
-                    var isSelected = selectedOptionIds.Contains(optionId);
-                    <div class="form-check poll-option mb-3 p-3 border rounded-3 position-relative
-          @(isSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-2")
-                 poll-option-interactive @(Parameters.HasSubmitted ? "cursor-not-allowed" : "cursor-pointer")"
-                         @onclick="@(async () => await HandleOptionClick(optionId))">
-                        @if (pollConfig.AllowMultiple)
-                        {
-                            <input class="form-check-input position-absolute poll-input-position"
-                                   type="checkbox"
-                                   id="poll-@optionId"
-                                   checked="@isSelected"
-                                   disabled="@Parameters.HasSubmitted"
-                                   @onchange="@((e) => ToggleOption(optionId))" />
-                        }
-                        else
-                        {
-                            <input class="form-check-input position-absolute poll-input-position"
-                                   type="radio"
-                                   name="pollChoice"
-                                   id="poll-@optionId"
-                                   checked="@isSelected"
-                                   disabled="@Parameters.HasSubmitted"
-                                   @onchange="@((e) => SelectOption(optionId))" />
-                        }
-                        <label class="form-check-label w-100 ps-4 ms-1 cursor-pointer" for="poll-@optionId">
-                            <strong class="d-block mb-1 fs-6">@option.Label</strong>
-                            @if (!string.IsNullOrEmpty(option.Description))
-                            {
-                                <small class="text-muted d-block">@option.Description</small>
-                            }
-                        </label>
-                    </div>
-                }
+     <div class="poll-options mb-4">
+  @foreach (var option in pollConfig.Options)
+        {
+              var optionId = option.Id;
+        var isSelected = selectedOptionIds.Contains(optionId);
+         <div class="poll-option mb-3 p-3 border rounded-3 position-relative
+          @(isSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm poll-option-selected" : "border-2")
+         poll-option-interactive @(Parameters.HasSubmitted ? "cursor-not-allowed" : "cursor-pointer")"
+       @onclick="@(async () => await HandleOptionClick(optionId))">
+              <div class="w-100">
+   <strong class="d-block mb-1 fs-6">@option.Label</strong>
+         @if (!string.IsNullOrEmpty(option.Description))
+        {
+           <small class="text-muted d-block">@option.Description</small>
+         }
+    </div>
+    @if (isSelected)
+    {
+    <i class="fas fa-check-circle position-absolute poll-check-icon text-primary"></i>
+        }
+         </div>
+         }
 
                 @if (pollConfig.AllowCustomOption)
-                {
-                    var isCustomSelected = selectedOptionIds.Contains("custom");
-                    <div class="form-check poll-option mb-3 p-3 border rounded-3 position-relative
-           @(isCustomSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm" : "border-2")
-                    poll-option-interactive @(Parameters.HasSubmitted ? "cursor-not-allowed" : "cursor-pointer")"
-                         @onclick="@(async () => await HandleOptionClick("custom"))">
-                        @if (pollConfig.AllowMultiple)
-                        {
-                            <input class="form-check-input position-absolute poll-input-position"
-                                   type="checkbox"
-                                   id="poll-custom"
-                                   checked="@isCustomSelected"
-                                   disabled="@Parameters.HasSubmitted"
-                                   @onchange="@((e) => ToggleOption("custom"))" />
-                        }
-                        else
-                        {
-                            <input class="form-check-input position-absolute poll-input-position"
-                                   type="radio"
-                                   name="pollChoice"
-                                   id="poll-custom"
-                                   checked="@isCustomSelected"
-                                   disabled="@Parameters.HasSubmitted"
-                                   @onchange="@((e) => SelectOption("custom"))" />
-                        }
-                        <label class="form-check-label w-100 ps-4 ms-1 cursor-pointer" for="poll-custom">
-                            <strong class="d-block mb-2 fs-6">Other</strong>
-                            @if (isCustomSelected)
-                            {
-                                <input type="text"
-                                       class="form-control"
-                                       placeholder="@pollConfig.CustomOptionPlaceholder"
-                                       @bind="customText"
-                                       @onclick:stopPropagation="true"
-                                       disabled="@Parameters.HasSubmitted"
-                                       maxlength="100" />
-                            }
-                        </label>
-                    </div>
-                }
-            </div>
+       {
+          var isCustomSelected = selectedOptionIds.Contains("custom");
+    <div class="poll-option mb-3 p-3 border rounded-3 position-relative
+      @(isCustomSelected ? "border-primary bg-primary bg-opacity-10 shadow-sm poll-option-selected" : "border-2")
+  poll-option-interactive @(Parameters.HasSubmitted ? "cursor-not-allowed" : "cursor-pointer")"
+   @onclick="@(async () => await HandleOptionClick("custom"))">
+        <div class="w-100">
+       <strong class="d-block mb-2 fs-6">Other</strong>
+     @if (isCustomSelected)
+        {
+    <input type="text"
+class="form-control"
+               placeholder="@pollConfig.CustomOptionPlaceholder"
+          @bind="customText"
+     @onclick:stopPropagation="true"
+        disabled="@Parameters.HasSubmitted"
+  maxlength="100" />
+           }
+    </div>
+@if (isCustomSelected)
+    {
+   <i class="fas fa-check-circle position-absolute poll-check-icon text-primary"></i>
+        }
+        </div>
+      }
+      </div>
         }
         else
         {
             <div class="alert alert-warning">
-                <span>No poll options configured.</span>
+          <span>No poll options configured.</span>
             </div>
         }
     </div>
@@ -112,23 +82,23 @@
 
     <button class="@(Parameters.HasSubmitted ? "btn-secondary" : "btn-primary") btn-lg w-100 py-3" tabindex="1"
             @onclick="HandleSubmit"
-            disabled="@(Parameters.IsSubmitting || selectedOptionIds.Count == 0 || Parameters.HasSubmitted)">
+          disabled="@(Parameters.IsSubmitting || selectedOptionIds.Count == 0 || Parameters.HasSubmitted)">
         @if (Parameters.HasSubmitted)
         {
             <i class="fas fa-check-circle me-2" aria-hidden="true"></i>
-            <text>Response already submitted</text>
+    <text>Response already submitted</text>
         }
-        else
+ else
         {
-            <text>@GetSubmitButtonText()</text>
+   <text>@GetSubmitButtonText()</text>
         }
     </button>
 
     @if (!string.IsNullOrEmpty(Parameters.SubmitMessage) && !Parameters.SubmitSuccess)
     {
-        <div class="alert @(Parameters.SubmitSuccess ? "alert-success" : "alert-danger") mt-3 mb-0">
+     <div class="alert @(Parameters.SubmitSuccess ? "alert-success" : "alert-danger") mt-3 mb-0">
             @Parameters.SubmitMessage
-        </div>
+  </div>
     }
 </div>
 
@@ -142,18 +112,18 @@
 
     protected override void OnParametersSet()
     {
-        if (!string.IsNullOrEmpty(Parameters.Config))
+    if (!string.IsNullOrEmpty(Parameters.Config))
         {
-            try
+  try
             {
-                pollConfig = ParsePollConfig(Parameters.Config);
+  pollConfig = ParsePollConfig(Parameters.Config);
             }
             catch (JsonException ex)
             {
-                Debug.WriteLine($"Failed to parse poll config: {ex.Message}");
-                Debug.WriteLine($"Config JSON: {Parameters.Config}");
+            Debug.WriteLine($"Failed to parse poll config: {ex.Message}");
+   Debug.WriteLine($"Config JSON: {Parameters.Config}");
             }
-        }
+     }
     }
 
     private PollConfig? ParsePollConfig(string configJson)
@@ -163,72 +133,72 @@
 
         var options = new List<PollOption>();
         
-        // Parse options - handle both string array (legacy/AI) and object array (standard) formats
-        if (root.TryGetProperty("options", out var optionsElement) && optionsElement.ValueKind == JsonValueKind.Array)
-        {
+// Parse options - handle both string array (legacy/AI) and object array (standard) formats
+     if (root.TryGetProperty("options", out var optionsElement) && optionsElement.ValueKind == JsonValueKind.Array)
+  {
             var index = 0;
-            foreach (var optionElement in optionsElement.EnumerateArray())
+       foreach (var optionElement in optionsElement.EnumerateArray())
             {
-                if (optionElement.ValueKind == JsonValueKind.String)
+      if (optionElement.ValueKind == JsonValueKind.String)
                 {
-                    // Legacy format: array of strings
-                    var label = optionElement.GetString();
-                    if (!string.IsNullOrEmpty(label))
-                    {
-                        options.Add(new PollOption($"option_{index}", label));
-                    }
-                }
-                else if (optionElement.ValueKind == JsonValueKind.Object)
-                {
-                    // Standard format: {id, label, description?}
-                    var id = optionElement.TryGetProperty("id", out var idElement) 
-                        ? idElement.GetString() ?? $"option_{index}" 
-                        : $"option_{index}";
-                    var label = optionElement.TryGetProperty("label", out var labelElement) 
-                        ? labelElement.GetString() ?? "" 
-                        : "";
-                    var description = optionElement.TryGetProperty("description", out var descElement) 
-                        ? descElement.GetString() 
-                        : null;
+          // Legacy format: array of strings
+          var label = optionElement.GetString();
+               if (!string.IsNullOrEmpty(label))
+ {
+          options.Add(new PollOption($"option_{index}", label));
+   }
+             }
+           else if (optionElement.ValueKind == JsonValueKind.Object)
+   {
+          // Standard format: {id, label, description?}
+                var id = optionElement.TryGetProperty("id", out var idElement) 
+          ? idElement.GetString() ?? $"option_{index}" 
+     : $"option_{index}";
+ var label = optionElement.TryGetProperty("label", out var labelElement) 
+          ? labelElement.GetString() ?? "" 
+          : "";
+          var description = optionElement.TryGetProperty("description", out var descElement) 
+         ? descElement.GetString() 
+         : null;
 
-                    if (!string.IsNullOrEmpty(label))
-                    {
-                        options.Add(new PollOption(id, label, description));
-                    }
-                }
-                index++;
-            }
+        if (!string.IsNullOrEmpty(label))
+      {
+       options.Add(new PollOption(id, label, description));
+    }
+    }
+             index++;
+       }
         }
 
         // Parse other properties with defaults
         var allowMultiple = root.TryGetProperty("allowMultiple", out var allowMultipleElement) 
             && allowMultipleElement.GetBoolean();
-        var allowCustomOption = root.TryGetProperty("allowCustomOption", out var allowCustomElement) 
+   var allowCustomOption = root.TryGetProperty("allowCustomOption", out var allowCustomElement) 
             && allowCustomElement.GetBoolean();
         var customPlaceholder = root.TryGetProperty("customOptionPlaceholder", out var placeholderElement) 
-            ? placeholderElement.GetString() 
-            : "Other (please specify)";
+   ? placeholderElement.GetString() 
+     : "Other (please specify)";
         var minSelections = root.TryGetProperty("minSelections", out var minElement) 
-            ? minElement.GetInt32() 
-            : 1;
+     ? minElement.GetInt32() 
+       : 1;
         var maxSelections = root.TryGetProperty("maxSelections", out var maxElement) 
-            ? (int?)maxElement.GetInt32() 
-            : null;
+? (int?)maxElement.GetInt32() 
+   : null;
 
-        return new PollConfig(
-            options,
-            allowMultiple,
-            minSelections,
+      return new PollConfig(
+         options,
+ allowMultiple,
+ minSelections,
             maxSelections,
             allowCustomOption,
-            customPlaceholder);
+    customPlaceholder);
     }
 
     private void SelectOption(string optionId)
     {
-        if (Parameters.HasSubmitted) return;
+   if (Parameters.HasSubmitted) return;
 
-        selectedOptionIds.Clear();
+      selectedOptionIds.Clear();
         selectedOptionIds.Add(optionId);
     }
 
@@ -238,29 +208,29 @@
 
         if (selectedOptionIds.Contains(optionId))
         {
-            selectedOptionIds.Remove(optionId);
+      selectedOptionIds.Remove(optionId);
         }
         else
         {
-            selectedOptionIds.Add(optionId);
-        }
+          selectedOptionIds.Add(optionId);
+      }
     }
 
     private async Task HandleOptionClick(string optionId)
     {
-        if (Parameters.HasSubmitted)
-        {
-            return;
+    if (Parameters.HasSubmitted)
+     {
+      return;
         }
 
         if (pollConfig?.AllowMultiple == true)
-        {
-            ToggleOption(optionId);
+   {
+     ToggleOption(optionId);
         }
         else
         {
             SelectOption(optionId);
-        }
+      }
         StateHasChanged();
         await Task.CompletedTask;
     }
@@ -269,13 +239,13 @@
     {
         if (Parameters.HasSubmitted)
         {
-            return;
-        }
+  return;
+      }
 
         var payload = new
         {
-            selectedOptionIds = selectedOptionIds,
-            customOptionText = selectedOptionIds.Contains("custom") ? customText : null
+ selectedOptionIds = selectedOptionIds,
+     customOptionText = selectedOptionIds.Contains("custom") ? customText : null
         };
 
         await Parameters.OnSubmit(JsonSerializer.Serialize(payload));
@@ -284,9 +254,9 @@
     private string GetSubmitButtonText()
     {
         if (Parameters.HasSubmitted)
-            return "Response already submitted";
-        if (Parameters.IsSubmitting)
-            return "Submitting...";
+   return "Response already submitted";
+   if (Parameters.IsSubmitting)
+ return "Submitting...";
         return "Submit Response";
     }
 }

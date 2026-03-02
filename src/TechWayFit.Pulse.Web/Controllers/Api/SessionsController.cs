@@ -462,6 +462,89 @@ public sealed class SessionsController : ControllerBase
         }
     }
 
+    [HttpPost("{code}/activities/bulk")]
+    public async Task<ActionResult<ApiResponse<BulkCreateActivitiesResponse>>> BulkCreateActivities(
+   string code,
+   [FromBody] BulkCreateActivitiesRequest request,
+        CancellationToken cancellationToken)
+    {
+     try
+     {
+       var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+   if (session is null)
+   {
+           return NotFound(Error<BulkCreateActivitiesResponse>("not_found", "Session not found."));
+            }
+
+            var authError = RequireFacilitatorToken<BulkCreateActivitiesResponse>(session);
+   if (authError is not null)
+        {
+            return authError;
+    }
+
+      if (request.Activities == null || request.Activities.Count == 0)
+            {
+return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", "No activities provided."));
+       }
+
+            if (request.Activities.Count > 100)
+ {
+         return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", "Cannot create more than 100 activities at once."));
+       }
+
+            var createdActivityIds = new List<Guid>();
+   var errors = new List<string>();
+
+            // Get current activities to determine starting order
+      var existingActivities = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+            var nextOrder = existingActivities.Count + 1;
+
+            foreach (var item in request.Activities.OrderBy(a => a.Order))
+  {
+          try
+     {
+    var activity = await _activities.AddActivityAsync(
+        session.Id,
+      nextOrder++,
+     ApiMapper.MapActivityType(item.Type),
+       item.Title,
+     item.Prompt,
+item.Config,
+ item.DurationMinutes,
+       cancellationToken);
+
+    createdActivityIds.Add(activity.Id);
+           await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+              }
+  catch (Exception ex)
+       {
+   errors.Add($"Row {item.Order}: {ex.Message}");
+   }
+       }
+
+            var response = new BulkCreateActivitiesResponse(
+      createdActivityIds.Count,
+       createdActivityIds,
+        errors.Any() ? errors : null
+            );
+
+      if (createdActivityIds.Count == 0)
+   {
+        return BadRequest(Error<BulkCreateActivitiesResponse>("bulk_create_failed", "Failed to create any activities. Check errors."));
+   }
+
+  return Ok(Wrap(response));
+    }
+        catch (ArgumentException ex)
+        {
+    return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", ex.Message));
+        }
+   catch (InvalidOperationException ex)
+   {
+         return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", ex.Message));
+        }
+    }
+
     [HttpPut("{code}")]
     public async Task<ActionResult<ApiResponse<SessionSummaryResponse>>> UpdateSession(
         string code,

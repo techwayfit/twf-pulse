@@ -1229,10 +1229,10 @@ code, pre, .font-mono {
 
 /* ── Poll option row ── */
 .poll-option {
-    display: flex;
+ display: flex;
     align-items: center;
     background: var(--pulse-surface-alt);
-    border: 1.5px solid var(--pulse-border);
+ border: 1.5px solid var(--pulse-border);
     border-radius: var(--pulse-radius-lg);
     padding: 1rem 1.25rem;
     position: relative;
@@ -1246,7 +1246,7 @@ code, pre, .font-mono {
 }
 
 .poll-option-fill {
-    position: absolute;
+  position: absolute;
     left: 0; top: 0; bottom: 0;
     background: rgba(14, 158, 154, 0.07);
     border-radius: var(--pulse-radius-lg) 0 0 var(--pulse-radius-lg);
@@ -1261,209 +1261,30 @@ code, pre, .font-mono {
     color: var(--pulse-teal-mid);
 }
 
-/* ── Stat box (word cloud counts, etc.) ── */
-.pulse-stat-box {
-    background: var(--pulse-surface-alt);
-    border: 1px solid var(--pulse-border);
-    border-radius: var(--pulse-radius-lg);
-    padding: 1.25rem 1rem;
-    text-align: center;
+/* ── Poll input positioning (participant view) ── */
+.poll-input-position {
+    top: 1.25rem;
+    left: 1rem;
 }
 
-.pulse-stat-box .stat-value {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--pulse-text-dark);
-    line-height: 1;
-    margin-bottom: 0.4rem;
+.poll-option-interactive {
+  cursor: pointer;
 }
 
-.pulse-stat-box .stat-label {
-    font-size: 0.625rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--pulse-text-light);
+.poll-option-interactive.cursor-not-allowed {
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
-/* ── Root cause card (5 Whys) ── */
-.cause-card {
-    border-left: 4px solid var(--pulse-danger);
-    border-radius: 0 var(--pulse-radius-lg) var(--pulse-radius-lg) 0;
-    background: var(--pulse-surface);
-    border-top: 1px solid var(--pulse-border);
-    border-right: 1px solid var(--pulse-border);
-    border-bottom: 1px solid var(--pulse-border);
-    padding: 1rem;
+/* ── Poll check icon (shown when selected) ── */
+.poll-check-icon {
+    top: 50%;
+right: 1.25rem;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    pointer-events: none;
 }
 
-/* ── Timer display ── */
-.pulse-timer {
-    font-family: var(--pulse-font-mono);
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: var(--pulse-text-dark);
-    letter-spacing: -0.03em;
-    line-height: 1;
-}
-
-.pulse-timer-label {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--pulse-text-light);
-}
-
-/* Break timer (amber) */
-.pulse-timer-break {
-    font-family: var(--pulse-font-mono);
-    font-size: 4rem;
-    font-weight: 800;
-    color: var(--pulse-warning);
-    letter-spacing: -0.03em;
-    line-height: 1;
-    text-shadow: 0 0 24px rgba(245, 158, 11, 0.25);
-}
-
-/* ── Live pill (topbar) ── */
-.pulse-live-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: #4ade80;
-    background: rgba(74, 222, 128, 0.14);
-    border: 1px solid rgba(74, 222, 128, 0.32);
-    padding: 0.2rem 0.65rem;
-    border-radius: var(--pulse-radius-full);
-}
-
-.pulse-live-dot {
-    width: 6px;
-    height: 6px;
-    background: #4ade80;
-    border-radius: 50%;
-    animation: badge-pulse 1.4s ease-in-out infinite;
-    flex-shrink: 0;
-}
-
-/* ── Q&A question row ── */
-.qa-row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    border: 1.5px solid var(--pulse-border);
-    border-radius: var(--pulse-radius-lg);
-    padding: 0.875rem 1rem;
-    background: var(--pulse-surface);
-    transition: var(--pulse-transition);
-}
-
-.qa-row.active {
-    border-color: var(--pulse-info);
-    border-left-width: 4px;
-    background: linear-gradient(90deg, rgba(59, 130, 246, 0.04), var(--pulse-surface));
-}
-
-.qa-row.answered {
-    border-color: #bbf7d0;
-    background: linear-gradient(90deg, rgba(16, 185, 129, 0.04), var(--pulse-surface));
-}
-
-.qa-vote-badge {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border-radius: var(--pulse-radius-md);
-    padding: 0.25rem 0.5rem;
-    min-width: 36px;
-    font-size: 1rem;
-    font-weight: 800;
-    line-height: 1;
-}
-
-.qa-vote-badge.unanswered {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    color: var(--pulse-info);
-}
-
-.qa-vote-badge.answered {
-    background: #ecfdf5;
-    border: 1px solid #bbf7d0;
-    color: var(--pulse-success);
-}
-
-/* ── Workshop summary sections ── */
-.summary-section-heading {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--pulse-text-dark);
-    letter-spacing: -0.015em;
-    margin-bottom: 0.625rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.summary-section-heading::before {
-    content: '';
-    width: 3px;
-    height: 20px;
-    background: var(--pulse-gradient);
-    border-radius: 2px;
-    flex-shrink: 0;
-}
-
-.summary-callout {
-    font-size: 0.8125rem;
-    line-height: 1.6;
-    padding: 0.625rem 0.875rem;
-    background: #f0fdf4;
-    border-left: 3px solid var(--pulse-success);
-    border-radius: 0 var(--pulse-radius-md) var(--pulse-radius-md) 0;
-    margin-top: 0.5rem;
-}
-
-/* ── Word cloud area ── */
-.word-cloud-area {
-    flex: 1;
-    background: linear-gradient(180deg, #f8fafc 0%, #eef4f8 100%);
-    border-top: 1px solid var(--pulse-border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem 2.5rem;
-    border-radius: 0 0 var(--pulse-radius-xl) var(--pulse-radius-xl);
-}
-
-/* ------------------------------------------
-   23. PAGE ENTRY ANIMATIONS
-   ------------------------------------------ */
-
-@keyframes pulse-fade-up {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-up {
-    animation: pulse-fade-up 0.5s ease both;
-}
-
-.animate-fade-up-1 { animation: pulse-fade-up 0.5s 0.06s ease both; }
-.animate-fade-up-2 { animation: pulse-fade-up 0.5s 0.12s ease both; }
-.animate-fade-up-3 { animation: pulse-fade-up 0.5s 0.18s ease both; }
-.animate-fade-up-4 { animation: pulse-fade-up 0.5s 0.24s ease both; }
-
-@keyframes pulse-float {
-    0%,100% { transform: translateY(0); }
-    50%      { transform: translateY(-10px); }
-}
-
-.animate-float {
-    animation: pulse-float 4s ease-in-out infinite;
+.poll-option-selected {
+    border-width: 2px;
 }

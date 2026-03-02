@@ -66,18 +66,16 @@ public sealed class PollDashboardService : IPollDashboardService
         
         // Count votes for each option
         var optionCounts = CountPollResponses(filteredResponses, pollConfig);
-        
-        // Calculate percentages
+  
+        // Calculate percentages and preserve original order from config
         var totalVotes = optionCounts.Values.Sum();
-        var results = optionCounts
-            .Select(kvp => new PollOptionResult(
-                kvp.Key.Id,
-                kvp.Key.Label,
-                kvp.Value,
-                totalVotes > 0 ? (double)kvp.Value / totalVotes * 100.0 : 0.0))
-            .OrderByDescending(r => r.Count)
-            .ThenBy(r => r.Label)
-            .ToList();
+      var results = pollConfig.Options
+            .Select(option => new PollOptionResult(
+                option.Id,
+      option.Label,
+         optionCounts.TryGetValue(option, out var count) ? count : 0,
+    totalVotes > 0 ? (double)(optionCounts.TryGetValue(option, out var c) ? c : 0) / totalVotes * 100.0 : 0.0))
+          .ToList();
 
         return new PollDashboardResponse(
             sessionId,

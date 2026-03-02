@@ -39,7 +39,7 @@
         <div class="poll-results">
             @if (PollOptions != null && PollOptions.Any())
             {
-                foreach (var option in PollOptions.OrderByDescending(o => o.Count))
+                foreach (var option in PollOptions)
                 {
                     var percentage = option.Percentage;
                     <div class="poll-option">

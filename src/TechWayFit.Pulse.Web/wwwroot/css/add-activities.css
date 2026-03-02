@@ -99,3 +99,17 @@
     width: 20px;
     height: 20px;
 }
+
+/* CSV Bulk Upload */
+#csvFileInput {
+    flex: 1;
+    max-width: 400px;
+}
+
+#csvUploadStatus {
+    font-size: 0.875rem;
+}
+
+#csvUploadStatus .ics {
+    flex-shrink: 0;
+}
