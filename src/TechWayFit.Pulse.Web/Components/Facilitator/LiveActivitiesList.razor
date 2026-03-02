@@ -2,240 +2,154 @@
 @using TechWayFit.Pulse.Contracts.Enums
 @using Microsoft.AspNetCore.Components
 
-<!-- All Activities -->
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="card-title fw-bold mb-0">Workshop Activities</h5>
-            <span class="badge badge-gradient rounded-pill px-3 py-2">@Activities.Count total</span>
-        </div>
+<!-- Sidebar header -->
+<div class="live-sidebar-header">
+    <span class="live-sidebar-label">Activities</span>
+    <span class="badge badge-gradient rounded-pill" style="font-size: 0.68rem;">@Activities.Count</span>
+</div>
 
-        @if (Activities != null && Activities.Any())
+<!-- Scrollable activity queue -->
+<div class="live-sidebar-queue">
+    @if (Activities != null && Activities.Any())
+    {
+        @foreach (var (activity, index) in Activities.OrderBy(a => a.Order).Select((a, i) => (a, i)))
         {
-            <div class="d-flex flex-column gap-3">
-                @foreach (var (activity, index) in Activities.OrderBy(a => a.Order).Select((a, i) => (a, i)))
-                {
-                    <div class="activity-card @(activity.Status == ActivityStatus.Open ? "activity-live" : "") @(activity.Status == ActivityStatus.Closed ? "activity-completed" : "") position-relative overflow-hidden p-4 rounded-pulse-lg"
-                         style="border: 2px solid @(activity.Status == ActivityStatus.Closed ? "var(--pulse-success)" : "var(--pulse-gray-200)"); transition: all 0.3s ease; background: @(activity.Status == ActivityStatus.Closed ? "var(--pulse-gray-50)" : "white");">
+            <div class="live-activity-item live-activity-item--@(activity.Status == ActivityStatus.Open ? "live" : activity.Status == ActivityStatus.Closed ? "completed" : "pending")">
 
-                        <!-- Left accent border -->
-                        <div class="position-absolute top-0 start-0 h-100"
-                             style="width: 4px; background: @(activity.Status == ActivityStatus.Closed ? "var(--pulse-success)" : "var(--pulse-gradient)");">
-                        </div>
+                <!-- Status dot -->
+                <div class="live-activity-item-status live-activity-item-status--@(activity.Status == ActivityStatus.Open ? "live" : activity.Status == ActivityStatus.Closed ? "completed" : "pending")"></div>
 
-                        <!-- Header: Index, Type, and Status on one line -->
-                        <div class="d-flex align-items-center gap-2 mb-3 ms-2">
-                            <span class="badge badge-gradient fw-bold rounded-pulse-md text-center"
-                                  style="min-width: 40px;">#@(index + 1)</span>
-                            <span class="badge" style="@GetActivityTypeBadgeStyle(activity.Type)">
-                                @GetActivityTypeIcon(activity.Type) @activity.Type
+                <!-- Order -->
+                <span class="live-activity-item-order">@(index + 1)</span>
+
+                <!-- Body -->
+                <div class="live-activity-item-body">
+                    <div class="d-flex align-items-center gap-1 mb-1">
+                        <span class="badge" style="@GetActivityTypeBadgeStyle(activity.Type); padding: 0.2rem 0.45rem; font-size: 0.65rem;">
+                            @GetActivityTypeIcon(activity.Type)
+                            @activity.Type
+                        </span>
+                        @if (activity.DurationMinutes.HasValue)
+                        {
+                            <span class="text-muted" style="font-size: 0.65rem;">
+                                <i class="far fa-clock"></i> @activity.DurationMinutes&#8202;m
                             </span>
-                            <div class="ms-auto">
-                                @if (activity.Status == ActivityStatus.Open)
-                                {
-                                    <span class="badge badge-success px-3 py-2">
-                                        <span class="d-inline-block rounded-circle me-2"
-                                              style="width: 8px; height: 8px; background: white; animation: pulse 2s infinite;"></span>
-                                        Live
-                                    </span>
-                                }
-                                else if (activity.Status == ActivityStatus.Closed)
-                                {
-                                    <span class="badge badge-success px-3 py-2">
-                                        <span class="d-inline-block rounded-circle me-2"
-                                              style="width: 8px; height: 8px; background: white;"></span>
-                                        Completed
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-warning px-3 py-2">
-                                        <span class="d-inline-block rounded-circle me-2"
-                                              style="width: 8px; height: 8px; background: currentColor;"></span>
-                                        Pending
-                                    </span>
-                                }
-                            </div>
-                        </div>
-
-                        <!-- Title and Description: Full Width -->
-                        <div class="ms-2">
-                            <h6 class="fw-bold mb-1 fs-6">@activity.Title</h6>
-                            @if (!string.IsNullOrEmpty(activity.Prompt))
-                            {
-                                <p class="text-muted mb-2 small">@activity.Prompt</p>
-                            }
-
-                            @* Display options count right below description for Poll activities *@
-                            @if (!string.IsNullOrEmpty(activity.Config) && activity.Type == ActivityType.Poll)
-                            {
-                                try
-                                {
-                                    var pollConfig =
-                                    System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
-                                    if (pollConfig.TryGetProperty("options", out var options) && options.ValueKind ==
-                                    System.Text.Json.JsonValueKind.Array)
-                                    {
-                                        <span class="d-inline-flex align-items-center gap-1 text-muted small fw-semibold">
-                                            <i class="far fa-list-alt text-primary"></i>
-                                            @options.GetArrayLength() options
-                                        </span>
-                                    }
-                                }
-                                catch { }
-                            }
-                        </div>
-
-                        <!-- Footer -->
-                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top ms-2">
-                            <div class="d-flex gap-3">
-                                @if (activity.DurationMinutes.HasValue)
-                                {
-                                    <span class="d-flex align-items-center gap-1 text-muted small fw-semibold">
-                                        <i class="far fa-clock text-primary"></i>
-                                        @activity.DurationMinutes min
-                                    </span>
-                                }
-                                @if (!string.IsNullOrEmpty(activity.Config))
-                                {
-                                    @switch (activity.Type)
-                                    {
-                                        case ActivityType.WordCloud:
-                                            try
-                                            {
-                                                var wcConfig =
-                                                System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
-                                                if (wcConfig.TryGetProperty("maxSubmissionsPerParticipant", out var maxSub))
-                                                {
-                                                    <span class="d-flex align-items-center gap-1 text-muted small fw-semibold">
-                                                        <i class="far fa-comment text-primary"></i>
-                                                        Max @maxSub.GetInt32()
-                                                    </span>
-                                                }
-                                            }
-                                            catch { }
-                                            break;
-                                        case ActivityType.Rating:
-                                            try
-                                            {
-                                                var ratingConfig =
-                                                System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
-                                                if (ratingConfig.TryGetProperty("maxRating", out var maxRating))
-                                                {
-                                                    <span class="d-flex align-items-center gap-1 text-muted small fw-semibold">
-                                                        <i class="far fa-star text-warning"></i>
-                                                        1-@maxRating.GetInt32()
-                                                    </span>
-                                                }
-                                            }
-                                            catch { }
-                                            break;
-                                    }
-                                }
-                            </div>
-
-                            <div class="d-flex gap-2">
-                                @if (activity.Status == ActivityStatus.Pending)
-                                {
-                                    <button class="btn btn-sm btn-outline-primary rounded-pulse-md fw-semibold"
-                                            @onclick="@(() => OnEditActivity.InvokeAsync(activity))">
-                                        <i class="fas fa-edit me-1"></i>Edit
-                                    </button>
-                                    @if (CurrentActivity == null)
-                                    {
-                                        <button class="btn btn-sm btn-success rounded-pulse-md fw-semibold"
-                                                @onclick="@(() => OnOpenActivity.InvokeAsync(activity.ActivityId))"
-                                                disabled="@IsPerformingAction">
-                                            <i class="fas fa-play me-1"></i>
-                                            @(IsPerformingAction ? "Starting..." : "Start")
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted small">
-                                            <i class="fas fa-lock me-1"></i>Close current first
-                                        </span>
-                                    }
-                                }
-                                else if (activity.Status == ActivityStatus.Open)
-                                {
-                                    <span class="text-success small fw-semibold">
-                                        <i class="fas fa-play-circle me-1"></i>Currently active
-                                    </span>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-sm btn-outline-primary rounded-pulse-md fw-semibold"
-                                            @onclick="@(() => OnReopenActivity.InvokeAsync(activity.ActivityId))"
-                                            disabled="@IsPerformingAction">
-                                        <i class="fas fa-redo me-1"></i>
-                                        @(IsPerformingAction ? "Reopening..." : "Reopen")
-                                    </button>
-                                    <a href="/facilitator/dashboards"
-                                           class="btn btn-sm btn-gradient rounded-pulse-md fw-semibold text-decoration-none">
-                                        <i class="fas fa-chart-bar me-1"></i>Results
-                                    </a>
-                                }
-                            </div>
-                        </div>
+                        }
                     </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="text-center py-5">
-                <div class="mb-3">
-                    <i class="fas fa-clipboard-list fa-3x text-muted"></i>
-                </div>
-                <p class="text-muted mb-0">No activities yet. Create your first activity to get started.</p>
-            </div>
-        }
-    </div>
+                    <div class="live-activity-item-title">@activity.Title</div>
 
-    <!-- Add Activity Buttons -->
-    <div class="border-top pt-4 mt-4 pb-3">
-        <div class="text-center mb-4">
-            <h6 class="text-muted mb-0">Add New Activity</h6>
+                    @* Display options count right below description for Poll activities *@
+                    @if (!string.IsNullOrEmpty(activity.Config) && activity.Type == ActivityType.Poll)
+                    {
+                        try
+                        {
+                            var pollConfig = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
+                            if (pollConfig.TryGetProperty("options", out var options) && options.ValueKind == System.Text.Json.JsonValueKind.Array)
+                            {
+                                <span class="live-activity-item-meta">
+                                    <i class="far fa-list-alt text-primary"></i>
+                                    @options.GetArrayLength() options
+                                </span>
+                            }
+                        }
+                        catch { }
+                    }
+
+                    <!-- Actions -->
+                    <div class="live-activity-item-actions">
+                        @if (activity.Status == ActivityStatus.Pending)
+                        {
+                            <button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size: 0.65rem;"
+                                    @onclick="@(() => OnEditActivity.InvokeAsync(activity))">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            @if (CurrentActivity == null)
+                            {
+                                <button class="btn btn-sm btn-success px-2 py-0" style="font-size: 0.65rem;"
+                                        @onclick="@(() => OnOpenActivity.InvokeAsync(activity.ActivityId))"
+                                        disabled="@IsPerformingAction">
+                                    <i class="fas fa-play me-1"></i>@(IsPerformingAction ? "..." : "Start")
+                                </button>
+                            }
+                            else
+                            {
+                                <span class="text-muted" style="font-size: 0.65rem;">
+                                    <i class="fas fa-lock me-1"></i>Close current first
+                                </span>
+                            }
+                        }
+                        else if (activity.Status == ActivityStatus.Open)
+                        {
+                            <span class="text-success fw-semibold" style="font-size: 0.68rem;">
+                                <i class="fas fa-circle me-1"></i>Active
+                            </span>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-outline-secondary px-2 py-0" style="font-size: 0.65rem;"
+                                    @onclick="@(() => OnReopenActivity.InvokeAsync(activity.ActivityId))"
+                                    disabled="@IsPerformingAction">
+                                <i class="fas fa-redo me-1"></i>@(IsPerformingAction ? "..." : "Reopen")
+                            </button>
+                            <a href="/facilitator/dashboards"
+                               class="btn btn-sm btn-gradient px-2 py-0 text-decoration-none" style="font-size: 0.65rem;">
+                                <i class="fas fa-chart-bar me-1"></i>Results
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-center py-4 px-3">
+            <i class="fas fa-clipboard-list fa-2x text-muted mb-2"></i>
+            <p class="text-muted small mb-0">No activities yet.</p>
         </div>
-        <div class="d-flex flex-wrap gap-3 justify-content-center px-3">
-            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
-                    data-bs-target="#pollModal" @onclick='() => OnAddActivity.InvokeAsync("Poll")'>
-                <i class="fas fa-chart-bar me-1"></i>Poll
-            </button>
-            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
-                    data-bs-target="#wordcloudModal" @onclick='() => OnAddActivity.InvokeAsync("WordCloud")'>
-                <i class="fas fa-cloud me-1"></i>Word Cloud
-            </button>
-            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
-                    data-bs-target="#quadrantModal" @onclick='() => OnAddActivity.InvokeAsync("Quadrant")'>
-                <i class="fas fa-chart-line me-1"></i>Quadrant
-            </button>
-            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
-                    data-bs-target="#fivewhysModal" @onclick='() => OnAddActivity.InvokeAsync("FiveWhys")'>
-                <i class="fas fa-magnifying-glass me-1"></i>5 Whys
-            </button>
-            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
-                    data-bs-target="#ratingModal" @onclick='() => OnAddActivity.InvokeAsync("Rating")'>
-                <i class="fas fa-star me-1"></i>Rating
-            </button>
-            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
-                    data-bs-target="#feedbackModal" @onclick='() => OnAddActivity.InvokeAsync("Feedback")'>
-                <i class="fas fa-comment me-1"></i>Feedback
-            </button>
-            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
-                    data-bs-target="#qnaModal" @onclick='() => OnAddActivity.InvokeAsync("QnA")'>
-                <i class="fas fa-lightbulb me-1"></i>Q&amp;A
-            </button>
-            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
-                    data-bs-target="#aisummaryModal" @onclick='() => OnAddActivity.InvokeAsync("AiSummary")'>
-                <i class="fas fa-robot me-1"></i>AI Summary
-            </button>
-            <button type="button" class="btn btn-outline-primary btn-sm px-3 py-2" data-bs-toggle="modal"
-                    data-bs-target="#breakModal" @onclick='() => OnAddActivity.InvokeAsync("Break")'>
-                <i class="fas fa-coffee me-1"></i>Break
-            </button>
-        </div>
+    }
+</div>
+
+<!-- Add activity footer -->
+<div class="live-sidebar-add">
+    <div class="live-sidebar-add-label">Add Activity</div>
+    <div class="live-add-activity-grid">
+        <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+                data-bs-target="#pollModal" @onclick='() => OnAddActivity.InvokeAsync("Poll")'>
+            <i class="fas fa-chart-bar"></i>Poll
+        </button>
+        <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+                data-bs-target="#wordcloudModal" @onclick='() => OnAddActivity.InvokeAsync("WordCloud")'>
+            <i class="fas fa-cloud"></i>Word Cloud
+        </button>
+        <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+                data-bs-target="#quadrantModal" @onclick='() => OnAddActivity.InvokeAsync("Quadrant")'>
+            <i class="fas fa-chart-line"></i>Quadrant
+        </button>
+        <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+                data-bs-target="#fivewhysModal" @onclick='() => OnAddActivity.InvokeAsync("FiveWhys")'>
+            <i class="fas fa-magnifying-glass"></i>5 Whys
+        </button>
+        <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+                data-bs-target="#ratingModal" @onclick='() => OnAddActivity.InvokeAsync("Rating")'>
+            <i class="fas fa-star"></i>Rating
+        </button>
+        <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+                data-bs-target="#feedbackModal" @onclick='() => OnAddActivity.InvokeAsync("Feedback")'>
+            <i class="fas fa-comment"></i>Feedback
+        </button>
+        <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+                data-bs-target="#qnaModal" @onclick='() => OnAddActivity.InvokeAsync("QnA")'>
+            <i class="fas fa-lightbulb"></i>Q&amp;A
+        </button>
+        <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+                data-bs-target="#aisummaryModal" @onclick='() => OnAddActivity.InvokeAsync("AiSummary")'>
+            <i class="fas fa-robot"></i>AI Summary
+        </button>
+        <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+                data-bs-target="#breakModal" @onclick='() => OnAddActivity.InvokeAsync("Break")'>
+            <i class="fas fa-coffee"></i>Break
+        </button>
     </div>
 </div>
 

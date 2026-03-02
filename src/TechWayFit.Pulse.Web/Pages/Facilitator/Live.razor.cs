@@ -107,6 +107,9 @@ public partial class Live : IAsyncDisposable
 
     private async Task InitializePageAsync()
     {
+        // Ensure live layout uses viewport height and pinned bottom controls.
+        await JS.InvokeVoidAsync("eval", "document.body.classList.add('live-layout-active')");
+
         // Set page title
         await JS.InvokeVoidAsync("eval", "document.title = 'TechWayFit Pulse - Live Session'");
 
@@ -1252,6 +1255,15 @@ public partial class Live : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        try
+        {
+            await JS.InvokeVoidAsync("eval", "document.body.classList.remove('live-layout-active')");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogDebug(ex, "Unable to remove live layout body class during disposal");
+        }
+
         if (hubConnection is not null)
         {
             try

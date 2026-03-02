@@ -92,7 +92,7 @@ main.flex-grow-1 {
 .footer-dark {
   background: var(--pulse-gray-900);
   color: var(--pulse-gray-300);
-  padding: 2rem 0;
+  padding: 0.75rem 0;
   margin-top: auto;
 }
 

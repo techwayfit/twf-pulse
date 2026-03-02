@@ -1,0 +1,514 @@
+/* ══════════════════════════════════════════════════════
+   Live Session – Two-Panel Mentimeter-Style Layout
+   ══════════════════════════════════════════════════════ */
+
+/* ── Fix the flex chain when the live shell is on screen ──
+   body is already "d-flex flex-column min-vh-100".
+   We lock it to exactly 100vh and make <main> a flex column
+   so the shell can fill the gap between navbar + footer
+   without overflowing (which was pushing footer off-screen). */
+body.live-layout-active,
+body:has(.live-page-shell) {
+    height: 100vh;
+    overflow: hidden;
+}
+
+body.live-layout-active > main.flex-grow-1,
+body:has(.live-page-shell) > main {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* ── Page shell: fills 100% of the <main> flex slot ── */
+.live-page-shell {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--pulse-bg);
+}
+
+/* ── Slim top bar ── */
+.live-top-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 1.25rem;
+    height: 52px;
+    min-height: 52px;
+    background: var(--pulse-surface);
+    border-bottom: 1px solid var(--pulse-border);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.live-top-bar-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--pulse-text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+    flex-shrink: 1;
+}
+
+.live-top-bar-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--pulse-border);
+    flex-shrink: 0;
+}
+
+.live-top-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* ── Stat pills in top bar ── */
+.live-stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    background: var(--pulse-gray-100);
+    color: var(--pulse-text-mid);
+    flex-shrink: 0;
+}
+
+.live-stat-pill--users  { background: #e0f2fe; color: #0369a1; }
+.live-stat-pill--active { background: #dcfce7; color: #15803d; }
+.live-stat-pill--done   { background: #f0fdf4; color: #166534; }
+.live-stat-pill--total  { background: var(--pulse-gray-100); color: var(--pulse-text-mid); }
+
+/* ── Sidebar toggle button ── */
+.live-sidebar-toggle {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--pulse-border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--pulse-text-mid);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.live-sidebar-toggle:hover {
+    background: var(--pulse-gray-100);
+    border-color: var(--pulse-gray-300);
+}
+
+/* ── Workspace row (sidebar + stage) ── */
+.live-workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   SIDEBAR
+   ══════════════════════════════════════════════════════ */
+.live-sidebar {
+    width: 300px;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    background: var(--pulse-surface);
+    border-right: 1px solid var(--pulse-border);
+    overflow: hidden;
+    min-height: 0;
+    transition: width 0.25s ease, min-width 0.25s ease;
+    flex-shrink: 0;
+}
+
+.live-sidebar.live-sidebar--collapsed {
+    width: 0;
+    min-width: 0;
+}
+
+.live-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--pulse-border);
+    flex-shrink: 0;
+}
+
+.live-sidebar-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--pulse-text-light);
+    margin: 0;
+}
+
+/* ── Scrollable queue ── */
+.live-sidebar-queue {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.6rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--pulse-gray-200) transparent;
+}
+
+.live-sidebar-queue::-webkit-scrollbar       { width: 4px; }
+.live-sidebar-queue::-webkit-scrollbar-track { background: transparent; }
+.live-sidebar-queue::-webkit-scrollbar-thumb { background: var(--pulse-gray-200); border-radius: 2px; }
+
+/* ── Activity queue item ── */
+.live-activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    padding: 0.55rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid var(--pulse-border);
+    border-left: 4px solid var(--pulse-gray-300);
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 32, 39, 0.06);
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    cursor: default;
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.live-activity-item--live {
+    background: #f0fdf4;
+    border-color: #86efac !important;
+    border-left-color: var(--pulse-success);
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.18);
+}
+
+.live-activity-item--pending:hover {
+    background: #ffffff;
+    border-color: var(--pulse-teal-mid);
+    box-shadow: 0 3px 10px rgba(13, 107, 114, 0.14);
+}
+
+.live-activity-item--completed {
+    background: #f8fafc;
+    border-color: var(--pulse-gray-200);
+    border-left-color: var(--pulse-gray-400);
+}
+
+.live-activity-item--pending {
+    border-left-color: var(--pulse-teal-mid);
+}
+
+.live-sidebar-queue .live-activity-item:last-child {
+    margin-bottom: 0;
+}
+
+.live-activity-item-order {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--pulse-text-light);
+    min-width: 16px;
+    padding-top: 2px;
+    flex-shrink: 0;
+}
+
+.live-activity-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.live-activity-item-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--pulse-text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+.live-activity-item--completed .live-activity-item-title {
+    color: var(--pulse-text-light);
+}
+
+.live-activity-item-meta {
+    font-size: 0.68rem;
+    color: var(--pulse-text-light);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 2px;
+}
+
+.live-activity-item-actions {
+    display: flex;
+    gap: 0.3rem;
+    margin-top: 0.35rem;
+}
+
+.live-activity-item-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+}
+.live-activity-item-status--live      { background: var(--pulse-success); animation: live-dot-pulse 1.5s ease-in-out infinite; }
+.live-activity-item-status--completed { background: var(--pulse-success); }
+.live-activity-item-status--pending   { background: var(--pulse-gray-300); }
+
+@keyframes live-dot-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.45; transform: scale(0.7); }
+}
+
+/* ── Sidebar "Add Activity" footer ── */
+.live-sidebar-add {
+    border-top: 1px solid var(--pulse-border);
+    padding: 0.6rem 0.75rem 0.75rem;
+    flex-shrink: 0;
+}
+
+.live-sidebar-add-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--pulse-text-light);
+    margin-bottom: 0.45rem;
+    text-align: center;
+}
+
+.live-add-activity-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem;
+}
+
+.live-add-activity-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.45rem 0.25rem;
+    border: 1px solid var(--pulse-border);
+    border-radius: 7px;
+    background: transparent;
+    color: var(--pulse-text-mid);
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    line-height: 1.2;
+}
+
+.live-add-activity-btn i {
+    font-size: 0.8rem;
+}
+
+.live-add-activity-btn:hover {
+    background: var(--pulse-gray-50);
+    border-color: var(--pulse-teal-mid);
+    color: var(--pulse-teal-dark);
+}
+
+/* ══════════════════════════════════════════════════════
+   MAIN STAGE
+   ══════════════════════════════════════════════════════ */
+.live-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--pulse-bg);
+    min-width: 0;
+    min-height: 0;
+}
+
+/* ── Idle state (no active activity) ── */
+.live-stage-idle {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 2rem;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* ── Active activity stage ── */
+.live-stage-active {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* ── Stage header: title + timer + badges ── */
+.live-stage-header {
+    padding: 0.65rem 1.5rem;
+    background: var(--pulse-surface);
+    border-bottom: 1px solid var(--pulse-border);
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+}
+
+.live-stage-title {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--pulse-text-dark);
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.live-stage-prompt {
+    font-size: 0.78rem;
+    color: var(--pulse-text-light);
+    flex-basis: 100%;
+    margin-top: -0.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── The visualization area (fills all remaining height) ── */
+.live-stage-viz {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--pulse-gray-200) transparent;
+}
+
+.live-stage-viz::-webkit-scrollbar       { width: 5px; }
+.live-stage-viz::-webkit-scrollbar-track { background: transparent; }
+.live-stage-viz::-webkit-scrollbar-thumb { background: var(--pulse-gray-200); border-radius: 3px; }
+
+/* ── Stage footer: navigation controls ── */
+.live-stage-footer {
+    padding: 0.6rem 1.5rem;
+    background: var(--pulse-surface);
+    border-top: 1px solid var(--pulse-border);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+/* ── Timer badge in stage header ── */
+.live-timer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--pulse-gradient);
+    color: white;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    box-shadow: 0 2px 8px rgba(13, 107, 114, 0.25);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.live-timer-badge.timer-warning {
+    background: var(--pulse-warning);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+    animation: live-glow-warning 2s ease-in-out infinite;
+}
+
+.live-timer-badge.timer-expired {
+    background: var(--pulse-danger);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+    animation: live-glow-danger 1s ease-in-out infinite;
+}
+
+.live-timer-badge .timer-text {
+    font-variant-numeric: tabular-nums;
+}
+
+@keyframes live-glow-warning {
+    0%, 100% { box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); }
+    50%       { box-shadow: 0 4px 16px rgba(245, 158, 11, 0.65); }
+}
+
+@keyframes live-glow-danger {
+    0%, 100% { box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3); }
+    50%       { box-shadow: 0 4px 16px rgba(239, 68, 68, 0.65); }
+}
+
+/* ── Response count badge ── */
+.live-response-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: var(--pulse-gray-100);
+    color: var(--pulse-text-mid);
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   RESPONSIVE – collapse sidebar on tablet/mobile
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 991.98px) {
+    /* On mobile, hide sidebar stats in top bar to save space */
+    .live-top-bar-stats { display: none !important; }
+    .live-top-bar-title { max-width: 160px; }
+
+    /* Sidebar becomes a slide-over drawer on mobile */
+    .live-sidebar {
+        position: fixed;
+        left: 0;
+        top: 60px;
+        height: calc(100vh - 60px);
+        z-index: 200;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.14);
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        width: 300px !important;
+        min-width: 300px !important;
+    }
+
+    .live-sidebar.live-sidebar--open {
+        transform: translateX(0);
+    }
+
+    /* Sidebar-collapsed on desktop resets to hidden on mobile */
+    .live-sidebar.live-sidebar--collapsed {
+        transform: translateX(-100%);
+    }
+}
