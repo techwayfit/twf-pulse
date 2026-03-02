@@ -33,109 +33,395 @@
     }
     else
     {
-        <!-- Header row: break message + timer -->
-        <div class="row g-3 mb-3">
-            <div class="col-md-7">
-                <div class="card border-0 bg-warning-subtle h-100">
-                    <div class="card-body">
-                        <h6 class="fw-semibold mb-1">
-                            <i class="fas fa-coffee me-2"></i>Break Details
-                        </h6>
-                        @if (!string.IsNullOrWhiteSpace(config?.Message))
+        <div class="break-layout">
+            <section class="break-hero-card">
+                <div class="break-hero-copy">
+                    <div class="break-hero-kicker">
+                        <i class="fas fa-mug-hot"></i>
+                        <span>Break Time</span>
+                    </div>
+                    <h4 class="break-hero-title">@BreakMessage</h4>
+                    <div class="break-chip-row">
+                        <span class="break-chip">
+                            <i class="far fa-clock"></i>
+                            @(config?.DurationMinutes ?? 0) min
+                        </span>
+                        @if (config?.AllowReadySignal == true)
                         {
-                            <p class="mb-1">@config.Message</p>
+                            <span class="break-chip">
+                                <i class="fas fa-hand-paper"></i>
+                                Ready signal on
+                            </span>
                         }
-                        @if (config != null)
+                        @if (config?.ShowCountdown == true)
                         {
-                            <div class="text-muted small">
-                                Duration: @config.DurationMinutes minutes
-                                @if (config.AllowReadySignal)
-                                {
-                                    <span class="ms-2"><i class="fas fa-hand-wave me-1"></i>Ready signal enabled</span>
-                                }
-                                @if (config.ShowCountdown)
-                                {
-                                    <span class="ms-2"><i class="fas fa-clock me-1"></i>Countdown visible to participants</span>
-                                }
-                            </div>
+                            <span class="break-chip">
+                                <i class="fas fa-hourglass-half"></i>
+                                Countdown visible
+                            </span>
                         }
                     </div>
                 </div>
-            </div>
 
-            @if (config?.ShowCountdown == true && config.DurationMinutes > 0)
+                <div class="break-hero-timer-pane">
+                    @if (config?.ShowCountdown == true && config.DurationMinutes > 0)
+                    {
+                        <div class="break-facilitator-timer" id="break-facilitator-countdown-@ActivityId">
+                            <span class="timer-label">Time Remaining</span>
+                            <span class="timer-value">@FormatDurationFromSeconds(remainingSeconds)</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="break-timer-muted">
+                            <i class="fas fa-eye-slash"></i>
+                            <span>Countdown hidden for participants</span>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            @if (config?.AllowReadySignal == true)
             {
-                <div class="col-md-5">
-                    <div class="card border-0 bg-light h-100 text-center">
-                        <div class="card-body d-flex flex-column justify-content-center">
-                            <div class="fw-medium text-muted small mb-1">Break Timer</div>
-                            <div class="break-facilitator-timer" id="break-facilitator-countdown-@ActivityId">
-                                @FormatDuration(config.DurationMinutes)
+                <section class="break-status-grid">
+                    <article class="break-ready-card">
+                        <div class="break-ready-head">
+                            <h6 class="mb-0 fw-semibold">
+                                <i class="fas fa-users me-2"></i>Participants Ready
+                            </h6>
+                            <span class="badge bg-success fs-6 px-3">@readyCount / @totalParticipants</span>
+                        </div>
+
+                        <div class="break-ready-content">
+                            <div class="break-ready-ring" style="@GetReadyRingStyle()">
+                                <div class="break-ready-ring-inner">@ReadyPercent%</div>
+                            </div>
+
+                            <div class="break-ready-metrics">
+                                <div class="break-ready-metric">
+                                    <div class="label">Back now</div>
+                                    <div class="value">@readyCount</div>
+                                </div>
+                                <div class="break-ready-metric">
+                                    <div class="label">Pending</div>
+                                    <div class="value">@ParticipantsRemaining</div>
+                                </div>
+                                <div class="break-ready-metric">
+                                    <div class="label">Total</div>
+                                    <div class="value">@totalParticipants</div>
+                                </div>
                             </div>
                         </div>
+
+                        @if (totalParticipants > 0)
+                        {
+                            <div class="progress break-ready-progress">
+                                <div class="progress-bar bg-success"
+                                     role="progressbar"
+                                     style="width: @ReadyPercent%;"
+                                     aria-valuenow="@readyCount"
+                                     aria-valuemin="0"
+                                     aria-valuemax="@totalParticipants">
+                                </div>
+                            </div>
+                            <div class="text-muted small">@ReadyPercent% back from break</div>
+                        }
+                        @if (readyCount == 0)
+                        {
+                            <div class="text-muted small mt-2">
+                                <i class="fas fa-hourglass-half me-1"></i>Waiting for participants to signal they're back...
+                            </div>
+                        }
+                        else if (IsEveryoneBack)
+                        {
+                            <div class="alert alert-success mb-0 mt-2 py-2">
+                                <i class="fas fa-check-circle me-2"></i>All participants are back. You can resume the session.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-muted small mt-2">
+                                <i class="fas fa-user-clock me-1"></i>@ParticipantsRemaining participant(s) still returning.
+                            </div>
+                        }
+                    </article>
+                </section>
+            }
+            else
+            {
+                <section class="break-guidance-card break-guidance-card--full">
+                    <div class="break-guidance-title">
+                        <i class="fas fa-info-circle me-2"></i>Ready signal is disabled
                     </div>
-                </div>
+                    <p class="mb-0 text-muted">Participants are on break. Resume whenever you're ready.</p>
+                </section>
             }
         </div>
-
-        <!-- Ready count -->
-        @if (config?.AllowReadySignal == true)
-        {
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h6 class="mb-0 fw-semibold">
-                            <i class="fas fa-users me-2 text-success"></i>Participants Ready
-                        </h6>
-                        <span class="badge bg-success fs-6 px-3">@readyCount / @totalParticipants</span>
-                    </div>
-
-                    @if (totalParticipants > 0)
-                    {
-                        <div class="progress mb-2" style="height: 8px;">
-                            <div class="progress-bar bg-success"
-                                 role="progressbar"
-                                 style="width: @ReadyPercent%;"
-                                 aria-valuenow="@readyCount"
-                                 aria-valuemin="0"
-                                 aria-valuemax="@totalParticipants">
-                            </div>
-                        </div>
-                        <div class="text-muted small">@ReadyPercent% back from break</div>
-                    }
-
-                    @if (readyCount == 0)
-                    {
-                        <div class="text-muted small mt-2">
-                            <i class="fas fa-hourglass-half me-1"></i>Waiting for participants to signal they're back...
-                        </div>
-                    }
-                    else if (readyCount >= totalParticipants && totalParticipants > 0)
-                    {
-                        <div class="alert alert-success mb-0 mt-2 py-2">
-                            <i class="fas fa-check-circle me-2"></i>All participants are back! You can resume the session.
-                        </div>
-                    }
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-info mb-0">
-                <i class="fas fa-info-circle me-2"></i>Ready signal is disabled for this break. Proceed when you're ready.
-            </div>
-        }
     }
 </div>
 
 <style>
-    .break-dashboard .break-facilitator-timer {
-        font-size: 2.5rem;
+    .break-dashboard {
+        min-height: 380px;
+    }
+
+    .break-dashboard .break-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .break-dashboard .break-hero-card {
+        display: grid;
+        grid-template-columns: 1.4fr minmax(280px, 0.9fr);
+        gap: 1rem;
+        border-radius: 16px;
+        padding: 1.1rem;
+        border: 1px solid #d9e8eb;
+        background:
+            radial-gradient(1200px 280px at -10% -60%, rgba(245, 158, 11, 0.18), transparent 55%),
+            linear-gradient(135deg, #fff7df 0%, #f3fbfd 100%);
+        box-shadow: 0 6px 20px rgba(15, 32, 39, 0.08);
+    }
+
+    .break-dashboard .break-hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.8rem;
+        min-width: 0;
+    }
+
+    .break-dashboard .break-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: fit-content;
+        font-size: 0.74rem;
         font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #9a5f00;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(245, 158, 11, 0.16);
+    }
+
+    .break-dashboard .break-hero-title {
+        margin: 0;
+        font-size: 1.65rem;
+        line-height: 1.2;
+        color: #16323a;
+        font-weight: 700;
+    }
+
+    .break-dashboard .break-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .break-dashboard .break-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        color: #3f6972;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid #d2e3e7;
+        padding: 0.28rem 0.65rem;
+    }
+
+    .break-dashboard .break-hero-timer-pane {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .break-dashboard .break-facilitator-timer {
+        width: 100%;
+        border-radius: 14px;
+        border: 1px solid #d6e5e9;
+        background: white;
+        padding: 1.15rem 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .break-dashboard .break-facilitator-timer .timer-label {
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #5f8188;
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+    }
+
+    .break-dashboard .break-facilitator-timer .timer-value {
+        font-size: 3rem;
+        font-weight: 800;
         font-variant-numeric: tabular-nums;
         color: var(--pulse-warning, #f59e0b);
-        letter-spacing: 0.05em;
+        letter-spacing: 0.04em;
         line-height: 1;
+    }
+
+    .break-dashboard .break-facilitator-timer.timer-expired .timer-value {
+        color: var(--pulse-danger, #ef4444);
+    }
+
+    .break-dashboard .break-timer-muted {
+        width: 100%;
+        border-radius: 14px;
+        border: 1px dashed #bfd5db;
+        background: rgba(255, 255, 255, 0.66);
+        color: #5f8188;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 1rem;
+        font-weight: 600;
+    }
+
+    .break-dashboard .break-status-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .break-dashboard .break-ready-card,
+    .break-dashboard .break-guidance-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 1rem 1.1rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+    }
+
+    .break-dashboard .break-ready-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+        margin-bottom: 0.9rem;
+    }
+
+    .break-dashboard .break-ready-content {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .break-dashboard .break-ready-ring {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+    }
+
+    .break-dashboard .break-ready-ring-inner {
+        width: 82px;
+        height: 82px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: white;
+        border: 1px solid #d8e7ea;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #1c8b5f;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .break-dashboard .break-ready-metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.55rem;
+        width: 100%;
+    }
+
+    .break-dashboard .break-ready-metric {
+        border-radius: 10px;
+        border: 1px solid #dbe8ec;
+        background: #f7fbfc;
+        padding: 0.55rem 0.6rem;
+    }
+
+    .break-dashboard .break-ready-metric .label {
+        font-size: 0.72rem;
+        color: #63848b;
+        margin-bottom: 0.12rem;
+    }
+
+    .break-dashboard .break-ready-metric .value {
+        font-size: 1.15rem;
+        font-weight: 800;
+        line-height: 1.1;
+        color: #16323a;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .break-dashboard .break-ready-progress {
+        height: 10px;
+        margin-bottom: 0.4rem;
+        border-radius: 999px;
+        background: #dbe8ec;
+        overflow: hidden;
+    }
+
+    .break-dashboard .break-guidance-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 0.8rem;
+        min-height: 100%;
+    }
+
+    .break-dashboard .break-guidance-card--full {
+        min-height: 140px;
+    }
+
+    .break-dashboard .break-guidance-title {
+        font-size: 1.02rem;
+        font-weight: 700;
+        color: #16323a;
+        margin-bottom: 0.35rem;
+    }
+
+    @@media (max-width: 991.98px) {
+        .break-dashboard .break-hero-card {
+            grid-template-columns: 1fr;
+        }
+
+        .break-dashboard .break-status-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .break-dashboard .break-facilitator-timer .timer-value {
+            font-size: 2.4rem;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .break-dashboard .break-hero-title {
+            font-size: 1.25rem;
+        }
+
+        .break-dashboard .break-ready-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .break-dashboard .break-ready-metrics {
+            grid-template-columns: 1fr;
+        }
+
     }
 </style>
 
@@ -152,9 +438,15 @@
     private Guid? sessionId;
     private int remainingSeconds = 0;
 
-    private double ReadyPercent => totalParticipants > 0
-        ? Math.Round(readyCount * 100.0 / totalParticipants, 0)
+    private int ReadyPercent => totalParticipants > 0
+        ? Math.Clamp((int)Math.Round(readyCount * 100.0 / totalParticipants, 0), 0, 100)
         : 0;
+
+    private int ParticipantsRemaining => Math.Max(0, totalParticipants - readyCount);
+    private bool IsEveryoneBack => totalParticipants > 0 && readyCount >= totalParticipants;
+    private string BreakMessage => string.IsNullOrWhiteSpace(config?.Message)
+        ? "Take a short break. We'll resume shortly!"
+        : config!.Message!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -311,12 +603,15 @@
         }
     }
 
-    private static string FormatDuration(int minutes)
+    private string GetReadyRingStyle()
+        => $"background: conic-gradient(var(--pulse-success) 0% {ReadyPercent}%, #d9e7ea {ReadyPercent}% 100%);";
+
+    private static string FormatDurationFromSeconds(int seconds)
     {
-        var ts = TimeSpan.FromMinutes(minutes);
+        var ts = TimeSpan.FromSeconds(Math.Max(0, seconds));
         return ts.TotalHours >= 1
-            ? $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:00"
-            : $"{ts.Minutes:D2}:00";
+            ? $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}"
+            : $"{ts.Minutes:D2}:{ts.Seconds:D2}";
     }
 
     public async ValueTask DisposeAsync()

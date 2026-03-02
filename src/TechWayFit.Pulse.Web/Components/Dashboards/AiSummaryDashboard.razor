@@ -18,89 +18,161 @@
 <div class="ai-summary-dashboard">
     @if (isLoading)
     {
-        <div class="text-center py-4">
-            <div class="spinner-border text-primary" role="status">
+        <div class="ai-summary-state-card text-center py-4">
+            <div class="spinner-border text-primary mb-2" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <div class="mt-2 text-muted">Loading summary data...</div>
+            <div class="text-muted">Loading summary data...</div>
         </div>
     }
     else if (!string.IsNullOrEmpty(errorMessage))
     {
-        <div class="alert alert-danger mb-3">
+        <div class="alert alert-danger mb-0">
             <i class="fas fa-exclamation-triangle me-2"></i>@errorMessage
         </div>
     }
     else if (isStreaming || (!string.IsNullOrEmpty(streamingContent) && string.IsNullOrEmpty(config?.GeneratedSummary)))
     {
-        <!-- Streaming: show growing content live -->
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <div>
-                <h6 class="mb-0 fw-semibold">
-                    <i class="fas fa-robot"></i>Generating Summary
-                    <span class="spinner-border spinner-border-sm ms-2 text-primary" role="status"></span>
-                </h6>
-                <div class="text-muted small">Streaming response from AI...</div>
+        <div class="ai-summary-shell">
+            <section class="ai-summary-hero">
+                <div class="ai-summary-hero-copy">
+                    <div class="ai-summary-kicker"><i class="fas fa-robot"></i> AI Summary</div>
+                    <h5 class="ai-summary-title mb-0">Generating Live Summary</h5>
+                    <div class="ai-summary-sub">Streaming response from AI...</div>
+
+                    <div class="ai-summary-chip-row">
+                        <span class="ai-summary-chip">
+                            <i class="fas fa-wave-square"></i>Live stream
+                        </span>
+                        <span class="ai-summary-chip">
+                            <i class="fas fa-font"></i>@StreamingWordCount words
+                        </span>
+                        <span class="ai-summary-chip">
+                            <i class="fas fa-list-ul"></i>@StreamingBulletCount bullets
+                        </span>
+                    </div>
+                </div>
+
+                <div class="ai-summary-hero-side">
+                    <div class="ai-summary-hero-side-label">Status</div>
+                    <div class="ai-summary-hero-side-value">
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        <span>Streaming</span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="ai-summary-metrics">
+                <article class="ai-metric-card">
+                    <div class="label">Words</div>
+                    <div class="value">@StreamingWordCount</div>
+                </article>
+                <article class="ai-metric-card">
+                    <div class="label">Read Time</div>
+                    <div class="value">@StreamingReadMinutes min</div>
+                </article>
+                <article class="ai-metric-card">
+                    <div class="label">Bullets</div>
+                    <div class="value">@StreamingBulletCount</div>
+                </article>
+                <article class="ai-metric-card">
+                    <div class="label">State</div>
+                    <div class="value">Draft</div>
+                </article>
             </div>
-        </div>
-        <div class="summary-preview p-3 border rounded bg-light">
-            <div class="prose summary-prose">
-                @((MarkupString)RenderMarkdown(streamingContent))
+
+            <div class="summary-preview ai-summary-content">
+                <div class="prose summary-prose">
+                    @((MarkupString)RenderMarkdown(streamingContent))
+                </div>
             </div>
         </div>
     }
     else if (config?.IsGenerating == true)
     {
-        <div class="text-center py-4">
-            <div class="spinner-border text-primary mb-3" role="status">
-                <span class="visually-hidden">Generating...</span>
+        <div class="ai-summary-state-card text-center py-4">
+            <div class="ai-generating-icon mb-3">
+                <i class="fas fa-sparkles"></i>
             </div>
-            <p class="fw-medium mb-1">AI is generating the session summary...</p>
-            <p class="text-muted small">Participants can see this message. The summary will appear automatically when ready.</p>
+            <p class="fw-semibold mb-1">AI is generating the session summary...</p>
+            <p class="text-muted small mb-0">The summary will appear automatically when ready.</p>
         </div>
     }
     else if (!string.IsNullOrEmpty(config?.GeneratedSummary))
     {
-        <!-- Summary display -->
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <div>
-                <h6 class="mb-0 fw-semibold">
-                    <i class="fas fa-robot"></i>Generated Summary
-                </h6>
-                @if (config.GeneratedAt.HasValue)
-                {
-                    <div class="text-muted small">
-                        Generated at @config.GeneratedAt.Value.ToLocalTime().ToString("HH:mm")
-                    </div>
-                }
-            </div>
-            <button class="btn btn-sm btn-outline-primary" @onclick="TriggerGenerationAsync" disabled="@isGenerating">
-                @if (isGenerating)
-                {
-                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                    <text>Regenerating...</text>
-                }
-                else
-                {
-                    <i class="fas fa-rotate-right me-1"></i>
-                    <text>Regenerate</text>
-                }
-            </button>
-        </div>
+        <div class="ai-summary-shell">
+            <section class="ai-summary-hero">
+                <div class="ai-summary-hero-copy">
+                    <div class="ai-summary-kicker"><i class="fas fa-robot"></i> AI Summary</div>
+                    <h5 class="ai-summary-title mb-0">Generated Summary</h5>
+                    @if (config.GeneratedAt.HasValue)
+                    {
+                        <div class="ai-summary-sub">Generated at @config.GeneratedAt.Value.ToLocalTime().ToString("HH:mm")</div>
+                    }
 
-        <div class="summary-preview p-3 border rounded bg-light">
-            <div class="prose summary-prose">
-                @((MarkupString)RenderMarkdown(config.GeneratedSummary))
+                    <div class="ai-summary-chip-row">
+                        <span class="ai-summary-chip">
+                            <i class="fas fa-font"></i>@SummaryWordCount words
+                        </span>
+                        <span class="ai-summary-chip">
+                            <i class="fas fa-book-open"></i>@SummaryReadMinutes min read
+                        </span>
+                        <span class="ai-summary-chip">
+                            <i class="fas fa-list-ul"></i>@SummaryBulletCount bullets
+                        </span>
+                    </div>
+                </div>
+
+                <div class="ai-summary-hero-side">
+                    <div class="ai-summary-hero-side-label">Last Generated</div>
+                    <div class="ai-summary-hero-side-time">@GeneratedTimeLabel</div>
+                    <button class="btn btn-sm btn-outline-primary" @onclick="TriggerGenerationAsync" disabled="@isGenerating">
+                        @if (isGenerating)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            <text>Regenerating...</text>
+                        }
+                        else
+                        {
+                            <i class="fas fa-rotate-right me-1"></i>
+                            <text>Regenerate</text>
+                        }
+                    </button>
+                </div>
+            </section>
+
+            <div class="ai-summary-metrics">
+                <article class="ai-metric-card">
+                    <div class="label">Words</div>
+                    <div class="value">@SummaryWordCount</div>
+                </article>
+                <article class="ai-metric-card">
+                    <div class="label">Read Time</div>
+                    <div class="value">@SummaryReadMinutes min</div>
+                </article>
+                <article class="ai-metric-card">
+                    <div class="label">Bullets</div>
+                    <div class="value">@SummaryBulletCount</div>
+                </article>
+                <article class="ai-metric-card">
+                    <div class="label">Breakdown</div>
+                    <div class="value">@((config?.ShowActivityBreakdown ?? true) ? "On" : "Off")</div>
+                </article>
+            </div>
+
+            <div class="summary-preview ai-summary-content">
+                <div class="prose summary-prose">
+                    @((MarkupString)RenderMarkdown(config?.GeneratedSummary ?? string.Empty))
+                </div>
             </div>
         </div>
     }
     else
     {
-        <!-- No summary yet - auto-generation trigger or manual -->
-        <div class="text-center py-4">
-            <i class="fas fa-robot  ic-xl text-muted mb-3 d-block"></i>
-            <p class="fw-medium mb-1">No summary generated yet</p>
-            <p class="text-muted small mb-3">Click the button below to generate an AI summary of all completed activities.</p>
+        <div class="ai-summary-state-card text-center py-4">
+            <i class="fas fa-robot ic-xl text-muted mb-3 d-block"></i>
+            <p class="fw-semibold mb-1">No summary generated yet</p>
+            <p class="text-muted small mb-3">Generate an AI summary of completed activities.</p>
             <button class="btn btn-primary" @onclick="TriggerGenerationAsync" disabled="@isGenerating">
                 @if (isGenerating)
                 {
@@ -118,6 +190,186 @@
 </div>
 
 <style>
+    .ai-summary-dashboard .ai-summary-shell {
+        border: 1px solid #d3e5ea;
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, #f8fbfc 100%);
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+        padding: 1rem;
+    }
+
+    .ai-summary-dashboard .ai-summary-hero {
+        display: grid;
+        grid-template-columns: 1.4fr minmax(260px, 0.9fr);
+        gap: 1rem;
+        border-radius: 14px;
+        padding: 1rem;
+        border: 1px solid #d9e8eb;
+        background:
+            radial-gradient(1000px 260px at -12% -60%, rgba(56, 189, 248, 0.16), transparent 58%),
+            linear-gradient(135deg, #edf8fb 0%, #f8fcfd 100%);
+        box-shadow: 0 4px 14px rgba(15, 32, 39, 0.06);
+        margin-bottom: 0.85rem;
+    }
+
+    .ai-summary-dashboard .ai-summary-hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.65rem;
+        min-width: 0;
+    }
+
+    .ai-summary-dashboard .ai-summary-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        width: fit-content;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #0f6b72;
+        background: rgba(13, 107, 114, 0.14);
+        padding: 0.26rem 0.58rem;
+    }
+
+    .ai-summary-dashboard .ai-summary-title {
+        font-size: 1.55rem;
+        line-height: 1.18;
+        font-weight: 700;
+        color: #16323a;
+    }
+
+    .ai-summary-dashboard .ai-summary-sub {
+        font-size: 0.88rem;
+        color: #6d8e95;
+    }
+
+    .ai-summary-dashboard .ai-summary-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .ai-summary-dashboard .ai-summary-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.78rem;
+        color: #3f6972;
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid #d2e3e7;
+        border-radius: 999px;
+        padding: 0.3rem 0.68rem;
+    }
+
+    .ai-summary-dashboard .ai-summary-hero-side {
+        border: 1px solid #d6e5e9;
+        border-radius: 12px;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.95rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .ai-summary-dashboard .ai-summary-hero-side-label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #5f8188;
+        font-weight: 700;
+    }
+
+    .ai-summary-dashboard .ai-summary-hero-side-value {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-weight: 700;
+        color: #0f6b72;
+    }
+
+    .ai-summary-dashboard .ai-summary-hero-side-time {
+        font-size: 1.7rem;
+        line-height: 1;
+        font-weight: 800;
+        color: #0f6b72;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ai-summary-dashboard .ai-summary-hero-side .btn {
+        min-width: 132px;
+    }
+
+    .ai-summary-dashboard .ai-summary-metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.55rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .ai-summary-dashboard .ai-metric-card {
+        border: 1px solid #d9e8ec;
+        background: #fff;
+        border-radius: 10px;
+        padding: 0.55rem 0.65rem;
+    }
+
+    .ai-summary-dashboard .ai-metric-card .label {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6c8a91;
+        margin-bottom: 0.15rem;
+        font-weight: 700;
+    }
+
+    .ai-summary-dashboard .ai-metric-card .value {
+        font-size: 1.05rem;
+        line-height: 1.1;
+        font-weight: 800;
+        color: #16323a;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ai-summary-dashboard .ai-summary-content {
+        border: 1px solid #d8e7ea;
+        border-radius: 10px;
+        background: #fdfefe;
+        padding: 1rem 1rem 0.95rem;
+    }
+
+    .ai-summary-dashboard .ai-summary-state-card {
+        border: 1px solid #d3e5ea;
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.76) 0%, #f8fbfc 100%);
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.05);
+        padding: 1rem;
+    }
+
+    .ai-summary-dashboard .ai-generating-icon {
+        width: 56px;
+        height: 56px;
+        margin-inline: auto;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: #0f6b72;
+        background: radial-gradient(circle at 30% 30%, #d2f2f6 0%, #e7f8fa 100%);
+        border: 1px solid #b9dde2;
+        animation: ai-pulse 1.8s ease-in-out infinite;
+    }
+
+    @@keyframes ai-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
     .ai-summary-dashboard .summary-prose h1,
     .ai-summary-dashboard .summary-prose h2 {
         font-size: 1.1rem;
@@ -154,11 +406,36 @@
     }
 
     .ai-summary-dashboard .summary-prose blockquote {
-        border-left: 3px solid var(--pulse-primary, #6366f1);
+        border-left: 3px solid #0f6b72;
         padding-left: 0.75rem;
         color: #6b7280;
         font-style: italic;
         margin: 0.75rem 0;
+    }
+
+    @@media (max-width: 991.98px) {
+        .ai-summary-dashboard .ai-summary-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .ai-summary-dashboard .ai-summary-hero-side {
+            align-items: flex-start;
+        }
+
+        .ai-summary-dashboard .ai-summary-metrics {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .ai-summary-dashboard .ai-summary-metrics {
+            grid-template-columns: 1fr;
+        }
+
+        .ai-summary-dashboard .ai-summary-hero-side .btn {
+            width: 100%;
+            min-width: 0;
+        }
     }
 </style>
 
@@ -173,6 +450,13 @@
     private string streamingContent = string.Empty;
     private string errorMessage = string.Empty;
     private HubConnection? hubConnection;
+    private int SummaryWordCount => CountWords(config?.GeneratedSummary);
+    private int SummaryReadMinutes => EstimateReadMinutes(SummaryWordCount);
+    private int SummaryBulletCount => CountBullets(config?.GeneratedSummary);
+    private string GeneratedTimeLabel => config?.GeneratedAt?.ToLocalTime().ToString("HH:mm") ?? "--:--";
+    private int StreamingWordCount => CountWords(streamingContent);
+    private int StreamingReadMinutes => EstimateReadMinutes(StreamingWordCount);
+    private int StreamingBulletCount => CountBullets(streamingContent);
 
     protected override async Task OnInitializedAsync()
     {
@@ -403,6 +687,61 @@
         var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
         return Markdown.ToHtml(markdown, pipeline);
     }
+
+    private static int CountWords(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return 0;
+
+        var count = 0;
+        var inWord = false;
+        foreach (var ch in text)
+        {
+            if (char.IsLetterOrDigit(ch))
+            {
+                if (!inWord)
+                {
+                    count++;
+                    inWord = true;
+                }
+            }
+            else
+            {
+                inWord = false;
+            }
+        }
+
+        return count;
+    }
+
+    private static int CountBullets(string? markdown)
+    {
+        if (string.IsNullOrWhiteSpace(markdown))
+            return 0;
+
+        var count = 0;
+        foreach (var rawLine in markdown.Split('\n'))
+        {
+            var line = rawLine.TrimStart();
+            if (line.StartsWith("- ") || line.StartsWith("* "))
+            {
+                count++;
+                continue;
+            }
+
+            if (line.Length > 0 && char.IsDigit(line[0]))
+            {
+                var dotIndex = line.IndexOf(". ", StringComparison.Ordinal);
+                if (dotIndex > 0)
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static int EstimateReadMinutes(int words)
+        => Math.Max(1, (int)Math.Ceiling(words / 180.0));
 
     public async ValueTask DisposeAsync()
     {
