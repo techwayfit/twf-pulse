@@ -1,70 +1,8 @@
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Contracts.Enums
 @using TechWayFit.Pulse.Web.Components.Dashboards
-@inject NavigationManager Navigation
 
 <div class="live-stage-active">
-
-    <!-- Stage header: activity info + timer + badges -->
-    <div class="live-stage-header">
-        <!-- LIVE badge -->
-        <span class="badge bg-success d-flex align-items-center gap-1 flex-shrink-0" style="font-size: 0.72rem;">
-            <span class="pulse-dot"></span>LIVE
-        </span>
-
-        <!-- Type badge -->
-        <span class="badge flex-shrink-0" style="@GetActivityTypeBadgeStyle(Activity.Type); padding: 0.25rem 0.55rem; font-size: 0.7rem;">
-            @GetActivityTypeIcon(Activity.Type) @Activity.Type
-        </span>
-
-        <!-- Order -->
-        <span class="badge bg-light text-dark flex-shrink-0" style="font-size: 0.7rem;">#@Activity.Order</span>
-
-        <!-- Title -->
-        <span class="live-stage-title">@Activity.Title</span>
-
-        <!-- Timer -->
-        @if (Activity.DurationMinutes.HasValue && Activity.OpenedAt.HasValue)
-        {
-            <div id="activity-timer"
-                 data-duration="@Activity.DurationMinutes.Value"
-                 data-opened-at="@Activity.OpenedAt.Value.ToString("o")"
-                 class="live-timer-badge">
-                <i class="fas fa-clock"></i>
-                <span class="timer-text">--:--</span>
-            </div>
-        }
-        else if (Activity.DurationMinutes.HasValue)
-        {
-            <span class="live-timer-badge" style="background: var(--pulse-gray-200); color: var(--pulse-text-mid); box-shadow: none;">
-                <i class="fas fa-clock"></i> @Activity.DurationMinutes&#8202;m
-            </span>
-        }
-        else
-        {
-            <button class="btn btn-sm btn-outline-secondary flex-shrink-0" @onclick="OnShowSetTimer">
-                <i class="fas fa-clock me-1"></i>Set Timer
-            </button>
-        }
-
-        <!-- Response count -->
-        <span class="live-response-badge">
-            <i class="fas fa-reply"></i> @ResponseCount / @ParticipantCount
-        </span>
-
-        <!-- Presenter mode -->
-        <button class="btn btn-sm btn-primary flex-shrink-0 ms-auto" @onclick="NavigateToPresenterMode"
-                title="Present Activity Full-Screen">
-            <i class="fas fa-tv me-1"></i>
-            <span class="d-none d-lg-inline">Presenter Mode</span>
-        </button>
-
-        <!-- Prompt (second row) -->
-        @if (!string.IsNullOrEmpty(Activity.Prompt))
-        {
-            <span class="live-stage-prompt">@Activity.Prompt</span>
-        }
-    </div>
 
     <!-- Visualization area -->
     <div class="live-stage-viz">
@@ -214,43 +152,7 @@
     [Parameter] public bool IsPerformingAction { get; set; }
     [Parameter] public bool HasPrevious { get; set; }
     [Parameter] public bool HasNext { get; set; }
-    [Parameter] public int ParticipantCount { get; set; }
-    [Parameter] public int ResponseCount { get; set; }
-    [Parameter] public EventCallback OnShowSetTimer { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnGoBack { get; set; }
     [Parameter] public EventCallback OnMoveNext { get; set; }
-
-    private void NavigateToPresenterMode()
-        => Navigation.NavigateTo($"/facilitator/live/presentation?code={SessionCode}", true);
-
-    private MarkupString GetActivityTypeIcon(ActivityType type) => type switch
-    {
-        ActivityType.Poll            => (MarkupString)"<i class='fas fa-chart-bar'></i>",
-        ActivityType.WordCloud       => (MarkupString)"<i class='fas fa-cloud'></i>",
-        ActivityType.Quadrant        => (MarkupString)"<i class='fas fa-chart-line'></i>",
-        ActivityType.FiveWhys        => (MarkupString)"<i class='fas fa-magnifying-glass'></i>",
-        ActivityType.Rating          => (MarkupString)"<i class='fas fa-star'></i>",
-        ActivityType.GeneralFeedback => (MarkupString)"<i class='fas fa-comment'></i>",
-        ActivityType.Quiz            => (MarkupString)"<i class='fas fa-circle-question'></i>",
-        ActivityType.QnA             => (MarkupString)"<i class='fas fa-lightbulb'></i>",
-        ActivityType.AiSummary       => (MarkupString)"<i class='fas fa-robot'></i>",
-        ActivityType.Break           => (MarkupString)"<i class='fas fa-coffee'></i>",
-        _                            => (MarkupString)"<i class='fas fa-clipboard-list'></i>"
-    };
-
-    private string GetActivityTypeBadgeStyle(ActivityType type) => type switch
-    {
-        ActivityType.Poll            => "background: var(--pulse-gradient); color: white;",
-        ActivityType.WordCloud       => "background: var(--pulse-blue); color: white;",
-        ActivityType.Quadrant        => "background: var(--pulse-blue-dark); color: white;",
-        ActivityType.FiveWhys        => "background: var(--pulse-warning); color: white;",
-        ActivityType.Rating          => "background: var(--pulse-warning); color: white;",
-        ActivityType.GeneralFeedback => "background: var(--pulse-success); color: white;",
-        ActivityType.Quiz            => "background: var(--pulse-danger); color: white;",
-        ActivityType.QnA             => "background: var(--pulse-info); color: white;",
-        ActivityType.AiSummary       => "background: #7c3aed; color: white;",
-        ActivityType.Break           => "background: var(--pulse-warning); color: white;",
-        _                            => "background: var(--pulse-gray-400); color: white;"
-    };
 }

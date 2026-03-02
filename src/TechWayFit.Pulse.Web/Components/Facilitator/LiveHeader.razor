@@ -28,45 +28,49 @@
         @SessionCode
     </span>
 
-    <!-- Stat pills -->
-    <div class="live-top-bar-stats d-none d-lg-flex align-items-center gap-2">
-        <span class="live-stat-pill live-stat-pill--users">
-            <i class="fas fa-users"></i> @ParticipantCount
-        </span>
-        <span class="live-stat-pill live-stat-pill--total">
-            <i class="fas fa-tasks"></i> @Activities.Count
-        </span>
-        <span class="live-stat-pill live-stat-pill--active">
-            <i class="fas fa-play-circle"></i> @Activities.Count(a => a.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open)
-        </span>
-        <span class="live-stat-pill live-stat-pill--done">
-            <i class="fas fa-check-circle"></i> @Activities.Count(a => a.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Closed)
-        </span>
-    </div>
-
-    <!-- Live badge -->
-    @if (Session.Status == SessionStatus.Live)
+    @if (CurrentActivity != null)
     {
-        <span class="badge bg-success d-none d-sm-inline px-2 py-1" style="flex-shrink:0; font-size: 0.7rem;">
-            <span class="me-1" style="display:inline-block; width:6px; height:6px; border-radius:50%; background:white; animation: live-dot-pulse 1.5s ease-in-out infinite; vertical-align: middle;"></span>
-            LIVE
-        </span>
+        <div class="live-top-bar-current d-none d-xl-flex">
+            <span class="badge flex-shrink-0" style="@GetActivityTypeBadgeStyle(CurrentActivity.Type); padding: 0.25rem 0.55rem; font-size: 0.7rem;">
+                @CurrentActivity.Type
+            </span>
+            <span class="badge bg-light text-dark flex-shrink-0" style="font-size: 0.7rem;">#@CurrentActivity.Order</span>
+            <span class="live-top-bar-current-title">@CurrentActivity.Title</span>
+        </div>
     }
 
     <!-- Action buttons -->
     <div class="live-top-bar-actions">
-        <button class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex align-items-center gap-1" @onclick="OnShowEditSession">
-            <i class="fas fa-edit"></i>
-            <span class="d-none d-lg-inline">Edit</span>
-        </button>
-        <button class="btn btn-sm btn-outline-info d-none d-md-inline-flex align-items-center gap-1" @onclick="NavigateToReport">
-            <i class="fas fa-file-lines"></i>
-            <span class="d-none d-lg-inline">Report</span>
-        </button>
-        <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" @onclick="OnShowQRModal">
-            <i class="fas fa-qrcode"></i>
-            <span class="d-none d-sm-inline">Join</span>
-        </button>
+        @if (CurrentActivity != null)
+        {
+            @if (!IsSessionEnded)
+            {
+                <button class="btn btn-sm btn-primary d-none d-lg-inline-flex align-items-center gap-1" @onclick="NavigateToPresenterMode"
+                        title="Present Activity Full-Screen">
+                    <i class="fas fa-tv"></i>
+                    <span class="d-none d-xl-inline">Presenter</span>
+                </button>
+            }
+        }
+
+        @if (!IsSessionEnded)
+        {
+            <button class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex align-items-center gap-1" @onclick="OnShowEditSession">
+                <i class="fas fa-edit"></i>
+                <span class="d-none d-lg-inline">Edit</span>
+            </button>
+            <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" @onclick="OnShowQRModal">
+                <i class="fas fa-qrcode"></i>
+                <span class="d-none d-sm-inline">Join</span>
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-sm btn-outline-info d-none d-md-inline-flex align-items-center gap-1" @onclick="NavigateToReport">
+                <i class="fas fa-file-lines"></i>
+                <span class="d-none d-lg-inline">Report</span>
+            </button>
+        }
         @if (Session.Status == SessionStatus.Live)
         {
             <button class="btn btn-sm btn-danger" @onclick="OnEndSession" disabled="@IsPerformingAction">
@@ -93,6 +97,9 @@
 
     [Parameter]
     public int ParticipantCount { get; set; }
+
+    [Parameter]
+    public AgendaActivityResponse? CurrentActivity { get; set; }
 
     [Parameter, EditorRequired]
     public List<AgendaActivityResponse> Activities { get; set; } = new();
@@ -122,4 +129,26 @@
     {
         Navigation.NavigateTo($"/facilitator/report/{SessionCode}", forceLoad: true);
     }
+
+    private void NavigateToPresenterMode()
+    {
+        Navigation.NavigateTo($"/facilitator/live/presentation?code={SessionCode}", true);
+    }
+
+    private string GetActivityTypeBadgeStyle(ActivityType type) => type switch
+    {
+        ActivityType.Poll => "background: var(--pulse-gradient); color: white;",
+        ActivityType.WordCloud => "background: var(--pulse-blue); color: white;",
+        ActivityType.Quadrant => "background: var(--pulse-blue-dark); color: white;",
+        ActivityType.FiveWhys => "background: var(--pulse-warning); color: white;",
+        ActivityType.Rating => "background: var(--pulse-warning); color: white;",
+        ActivityType.GeneralFeedback => "background: var(--pulse-success); color: white;",
+        ActivityType.Quiz => "background: var(--pulse-danger); color: white;",
+        ActivityType.QnA => "background: var(--pulse-info); color: white;",
+        ActivityType.AiSummary => "background: #7c3aed; color: white;",
+        ActivityType.Break => "background: var(--pulse-warning); color: white;",
+        _ => "background: var(--pulse-gray-400); color: white;"
+    };
+
+    private bool IsSessionEnded => Session.Status == SessionStatus.Ended;
 }
