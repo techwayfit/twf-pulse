@@ -29,206 +29,493 @@
     }
     else if (dashboard != null)
     {
-        <!-- Poll Dashboard Header -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h4 class="card-title fw-bold mb-1">@dashboard.ActivityTitle</h4>
-                        <div class="text-muted">Poll Results</div>
+        var participationRate = GetParticipationRate();
+        var topResult = dashboard.Results
+            .OrderByDescending(r => r.Count)
+            .ThenBy(r => r.Label)
+            .FirstOrDefault();
+
+        <div class="poll-layout">
+            <section class="poll-hero-card">
+                <div class="poll-hero-copy">
+                    <div class="poll-hero-kicker">
+                        <i class="fas fa-list-ul"></i>
+                        <span>Live Poll</span>
                     </div>
-                    <div class="text-end">
-                        <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mb-2">
-                            Live Results
-                        </div>
+                    <h4 class="poll-hero-title">@dashboard.ActivityTitle</h4>
+                    <div class="poll-chip-row">
+                        <span class="poll-chip">
+                            <i class="fas fa-list-check"></i>
+                            @dashboard.Results.Count options
+                        </span>
+                        <span class="poll-chip">
+                            <i class="fas fa-reply"></i>
+                            @dashboard.TotalResponses responses
+                        </span>
+                        <span class="poll-chip">
+                            <i class="fas fa-users"></i>
+                            @dashboard.RespondedParticipants participants
+                        </span>
+                        <span class="poll-chip">
+                            <i class="fas fa-chart-line"></i>
+                            @participationRate% participation
+                        </span>
+                    </div>
+                </div>
+
+                <div class="poll-hero-pane">
+                    <div class="poll-live-badge">
+                        <i class="fas fa-circle"></i>
+                        <span>Live Results</span>
+                    </div>
+                    <div class="poll-updated-at">
                         @if (dashboard.LastResponseAt.HasValue)
                         {
-                            <div class="small text-muted">
-                                Last updated: @dashboard.LastResponseAt.Value.ToString("HH:mm:ss")
-                            </div>
+                            <span>Last updated: @dashboard.LastResponseAt.Value.ToString("HH:mm:ss")</span>
+                        }
+                        else
+                        {
+                            <span>No responses yet</span>
                         }
                     </div>
-                </div>
 
-                <!-- Summary Stats -->
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-number text-primary">@dashboard.TotalResponses</div>
-                            <div class="stat-label">Total Responses</div>
+                    @if (topResult is not null && topResult.Count > 0)
+                    {
+                        <div class="poll-top-answer">
+                            <span class="label">Leading option</span>
+                            <span class="value">@topResult.Label</span>
+                            <span class="meta">@topResult.Count votes (@topResult.Percentage.ToString("F1")%)</span>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-number text-success">@dashboard.RespondedParticipants</div>
-                            <div class="stat-label">Participants</div>
+                    }
+                    else
+                    {
+                        <div class="poll-pane-muted">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span>Waiting for participants to vote.</span>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-number text-info">@GetParticipationRate()%</div>
-                            <div class="stat-label">Participation Rate</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-number text-warning">@dashboard.Results.Count</div>
-                            <div class="stat-label">Options</div>
-                        </div>
-                    </div>
+                    }
                 </div>
-            </div>
-        </div>
+            </section>
+           
 
-        <!-- Poll Results -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <h5 class="card-title mb-4">
-                    <i class="fas fa-chart-bar me-2"></i>
-                    Vote Distribution
-                </h5>
+            <section class="poll-distribution-card">
+                <div class="poll-section-head">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-chart-bar me-2"></i>Vote Distribution
+                    </h6>
+                </div>
 
                 @if (dashboard.Results.Any())
                 {
                     <div class="poll-results">
                         @foreach (var result in dashboard.Results)
                         {
-                            <div class="result-item mb-4">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div class="option-label fw-semibold">@result.Label</div>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <span class="badge bg-primary">@result.Count votes</span>
-                                        <span class="percentage fw-bold text-primary">@result.Percentage.ToString("F1")%</span>
+                            <article class="poll-result-row">
+                                <div class="poll-result-head">
+                                    <div class="option-label">@result.Label</div>
+                                    <div class="poll-result-values">
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">@result.Count votes</span>
+                                        <span class="percentage">@result.Percentage.ToString("F1")%</span>
                                     </div>
                                 </div>
-                                
-                                <!-- Progress Bar -->
-                                <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar bg-primary" 
-                                         role="progressbar" 
-                                         style="width: @result.Percentage%" 
-                                         aria-valuenow="@result.Percentage" 
-                                         aria-valuemin="0" 
+                                <div class="progress poll-progress">
+                                    <div class="progress-bar"
+                                         role="progressbar"
+                                         style="width: @result.Percentage%"
+                                         aria-valuenow="@result.Percentage"
+                                         aria-valuemin="0"
                                          aria-valuemax="100">
                                     </div>
                                 </div>
-                            </div>
+                            </article>
                         }
-                    </div>
-
-                    <!-- Chart Placeholder -->
-                    <div class="chart-container mt-5">
-                        <h6 class="mb-3">Visual Chart</h6>
-                        <div class="chart-wrapper p-4 border rounded bg-light" style="height: 400px; position: relative;">
-                            <canvas id="@canvasId"></canvas>
-                            <div class="text-muted mt-2 position-absolute" style="bottom: 10px; left: 50%; transform: translateX(-50%);">
-                                <small>Chart ID: @canvasId</small>
-                            </div>
-                        </div>
                     </div>
                 }
                 else
                 {
-                    <div class="text-center py-5">
-                        <div class="display-4 text-muted mb-3"><i class="fas fa-chart-bar"></i></div>
-                        <h6 class="text-muted">No responses yet</h6>
-                        <p class="text-muted mb-0">Results will appear here once participants start voting.</p>
+                    <div class="poll-empty-state">
+                        <i class="fas fa-chart-bar"></i>
+                        <div>
+                            <div class="fw-semibold">No responses yet</div>
+                            <div class="small text-muted">Results will appear here once participants start voting.</div>
+                        </div>
                     </div>
                 }
-            </div>
-        </div>
+            </section>
 
-        <!-- Real-time Activity Log -->
-        <div class="card border-0 shadow-sm mt-4">
-            <div class="card-body p-4">
-                <h6 class="card-title">
-                    <i class="fas fa-clock me-2"></i>
-                    Recent Activity
-                </h6>
-                <div class="activity-log">
-                    @if (recentActivities.Any())
+            <section class="poll-chart-card">
+                <div class="poll-section-head">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-chart-pie me-2"></i>Visual Chart
+                    </h6>
+                </div>
+                <div class="poll-chart-canvas">
+                    @if (dashboard.Results.Any())
                     {
-                        @foreach (var activity in recentActivities.Take(5))
-                        {
-                            <div class="activity-item d-flex align-items-center py-2">
-                                <div class="activity-icon me-3">
-                                    <i class="fas fa-vote-yea text-success"></i>
-                                </div>
-                                <div class="activity-text small">
-                                    <strong>New response</strong> submitted at @activity.ToString("HH:mm:ss")
-                                </div>
-                            </div>
-                        }
+                        <canvas id="@canvasId"></canvas>
                     }
                     else
                     {
-                        <div class="text-muted small">No recent activity</div>
+                        <div class="poll-empty-state">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Chart will appear once options receive votes.</span>
+                        </div>
                     }
                 </div>
-            </div>
+            </section>
+
         </div>
     }
 </div>
 
 <style>
-.poll-dashboard .stat-card {
-    text-align: center;
-    padding: 1rem;
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.5rem;
-    background: var(--bs-light);
-}
+    .poll-dashboard {
+        min-height: 380px;
+    }
 
-.poll-dashboard .stat-number {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-}
+    .poll-dashboard .poll-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
 
-.poll-dashboard .stat-label {
-    font-size: 0.875rem;
-    color: var(--bs-secondary);
-    font-weight: 500;
-}
+    .poll-dashboard .poll-hero-card {
+        display: grid;
+        grid-template-columns: 1.4fr minmax(280px, 0.9fr);
+        gap: 1rem;
+        border-radius: 16px;
+        padding: 1.1rem;
+        border: 1px solid #d9e8eb;
+        background:
+            radial-gradient(1100px 260px at -10% -60%, rgba(16, 185, 129, 0.2), transparent 55%),
+            linear-gradient(135deg, #e9fbf5 0%, #f4fcff 45%, #f7fbfd 100%);
+        box-shadow: 0 6px 20px rgba(15, 32, 39, 0.08);
+    }
 
-.poll-dashboard .result-item {
-    background: var(--bs-gray-50);
-    border-radius: 0.5rem;
-    padding: 1rem;
-    border: 1px solid var(--bs-border-color);
-}
+    .poll-dashboard .poll-hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.8rem;
+        min-width: 0;
+    }
 
-.poll-dashboard .option-label {
-    color: var(--bs-dark);
-}
+    .poll-dashboard .poll-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: fit-content;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #0f766e;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(16, 185, 129, 0.16);
+    }
 
-.poll-dashboard .percentage {
-    font-size: 1.1rem;
-}
+    .poll-dashboard .poll-hero-title {
+        margin: 0;
+        font-size: 1.5rem;
+        line-height: 1.25;
+        color: #16323a;
+        font-weight: 700;
+    }
 
-.poll-dashboard .progress {
-    border-radius: 4px;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-}
+    .poll-dashboard .poll-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
 
-.poll-dashboard .activity-item {
-    border-bottom: 1px solid var(--bs-border-color);
-}
+    .poll-dashboard .poll-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        color: #3f6972;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid #d2e3e7;
+        padding: 0.28rem 0.65rem;
+    }
 
-.poll-dashboard .activity-item:last-child {
-    border-bottom: none;
-}
+    .poll-dashboard .poll-hero-pane {
+        border-radius: 14px;
+        border: 1px solid #d6e5e9;
+        background: white;
+        padding: 0.9rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+        justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
 
-.poll-dashboard .activity-icon {
-    width: 30px;
-    display: flex;
-    justify-content: center;
-}
+    .poll-dashboard .poll-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        width: fit-content;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.32);
+        background: rgba(16, 185, 129, 0.12);
+        border-radius: 999px;
+        padding: 0.22rem 0.56rem;
+        font-weight: 700;
+    }
 
-.poll-dashboard .chart-container canvas {
-    max-width: 100%;
-    height: auto;
-}
+    .poll-dashboard .poll-live-badge i {
+        font-size: 0.5rem;
+    }
+
+    .poll-dashboard .poll-updated-at {
+        font-size: 0.8rem;
+        color: #5f8188;
+        font-weight: 600;
+    }
+
+    .poll-dashboard .poll-top-answer {
+        border-radius: 10px;
+        border: 1px solid #d7e8ec;
+        background: #f8fcfd;
+        padding: 0.55rem 0.65rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .poll-dashboard .poll-top-answer .label {
+        font-size: 0.68rem;
+        color: #6b8991;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+    }
+
+    .poll-dashboard .poll-top-answer .value {
+        font-size: 1.02rem;
+        color: #1f3c44;
+        font-weight: 700;
+    }
+
+    .poll-dashboard .poll-top-answer .meta {
+        font-size: 0.78rem;
+        color: #51747c;
+        font-weight: 600;
+    }
+
+    .poll-dashboard .poll-pane-muted {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px dashed #bfd5db;
+        background: rgba(255, 255, 255, 0.66);
+        color: #5f8188;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.8rem;
+        font-weight: 600;
+    }
+
+    .poll-dashboard .poll-metrics-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.9rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.65rem;
+    }
+
+    .poll-dashboard .poll-metric {
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #f8fcfd;
+        padding: 0.7rem 0.75rem;
+        text-align: center;
+    }
+
+    .poll-dashboard .poll-metric .value {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+        color: #0f766e;
+        font-variant-numeric: tabular-nums;
+        margin-bottom: 0.2rem;
+    }
+
+    .poll-dashboard .poll-metric .label {
+        font-size: 0.78rem;
+        color: #5f8188;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 700;
+    }
+
+    .poll-dashboard .poll-distribution-card,
+    .poll-dashboard .poll-chart-card,
+    .poll-dashboard .poll-activity-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.9rem 1rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+    }
+
+    .poll-dashboard .poll-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+        margin-bottom: 0.75rem;
+        color: #1f3c44;
+    }
+
+    .poll-dashboard .poll-results {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .poll-dashboard .poll-result-row {
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #f8fcfd;
+        padding: 0.75rem 0.9rem;
+    }
+
+    .poll-dashboard .poll-result-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+        margin-bottom: 0.45rem;
+    }
+
+    .poll-dashboard .option-label {
+        color: #1f3c44;
+        font-weight: 700;
+    }
+
+    .poll-dashboard .poll-result-values {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .poll-dashboard .percentage {
+        font-size: 1.02rem;
+        font-weight: 700;
+        color: #0f766e;
+    }
+
+    .poll-dashboard .poll-progress {
+        height: 8px;
+        border-radius: 999px;
+        background: #d9e8eb;
+        overflow: hidden;
+    }
+
+    .poll-dashboard .poll-progress .progress-bar {
+        background: linear-gradient(90deg, #0d9488 0%, #2dd4bf 100%);
+    }
+
+    .poll-dashboard .poll-chart-canvas {
+        height: 380px;
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #ffffff;
+        padding: 0.6rem;
+        position: relative;
+    }
+
+    .poll-dashboard .poll-chart-canvas canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .poll-dashboard .poll-empty-state {
+        display: flex;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        color: #6b8991;
+        font-weight: 600;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .poll-dashboard .poll-empty-state i {
+        font-size: 1.35rem;
+        color: #22c55e;
+    }
+
+    .poll-dashboard .poll-activity-list {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .poll-dashboard .poll-activity-item {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        border-bottom: 1px solid #dbe9ec;
+        padding: 0.45rem 0;
+    }
+
+    .poll-dashboard .poll-activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .poll-dashboard .poll-activity-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #059669;
+        background: rgba(16, 185, 129, 0.14);
+        flex-shrink: 0;
+    }
+
+    .poll-dashboard .poll-activity-text {
+        font-size: 0.84rem;
+        color: #365a63;
+    }
+
+    @@media (max-width: 992px) {
+        .poll-dashboard .poll-hero-card {
+            grid-template-columns: 1fr;
+        }
+
+        .poll-dashboard .poll-metrics-card {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .poll-dashboard .poll-metrics-card {
+            grid-template-columns: 1fr;
+        }
+
+        .poll-dashboard .poll-result-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .poll-dashboard .poll-chart-canvas {
+            height: 300px;
+        }
+    }
 </style>
 
 @code {
@@ -240,7 +527,6 @@
     private PollDashboardResponse? dashboard;
     private bool isLoading = true;
     private string errorMessage = "";
-    private List<DateTimeOffset> recentActivities = new();
     private HubConnection? hubConnection;
 
     protected override async Task OnInitializedAsync()
@@ -409,13 +695,7 @@
                 await InvokeAsync(async () =>
                 {
                     if (responseEvent.SessionCode == SessionCode && responseEvent.ActivityId == ActivityId)
-                    {
-                        recentActivities.Insert(0, responseEvent.CreatedAt);
-                        if (recentActivities.Count > 10)
-                        {
-                            recentActivities.RemoveAt(recentActivities.Count - 1);
-                        }
-                        
+                    {   
                         // Reload dashboard data
                         await LoadDashboard();
                         

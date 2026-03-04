@@ -32,45 +32,62 @@
     }
     else if (dashboard is not null)
     {
-        <!-- Stats row -->
-        <div class="row g-3 mb-3">
-            <div class="col-6 col-lg-3">
-                <div class="border rounded p-3 bg-light text-center">
-                    <div class="h4 mb-0 text-primary">@dashboard.TotalResponses</div>
-                    <small class="text-muted">Total Responses</small>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="border rounded p-3 bg-light text-center">
-                    <div class="h4 mb-0 text-success">@dashboard.RespondedParticipants</div>
-                    <small class="text-muted">Participants</small>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="border rounded p-3 bg-light text-center">
-                    <div class="h4 mb-0 text-info">@ParticipationRate.ToString("F0")%</div>
-                    <small class="text-muted">Participation</small>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="border rounded p-3 bg-light text-center">
-                    <div class="h4 mb-0 text-warning">@dashboard.Items.Count</div>
-                    <small class="text-muted">Items</small>
-                </div>
-            </div>
-        </div>
+        var currentItem = dashboard.Items.FirstOrDefault(i => i.ItemIndex == currentItemIndex);
+        var configuredItemCount = config?.Items?.Count ?? dashboard.Items.Count;
+        var heroTitle = !string.IsNullOrWhiteSpace(currentItemName)
+            ? currentItemName
+            : currentItem?.ItemLabel ?? "Quadrant Mapping";
 
-        <!-- Current item + navigation -->
-        @if (config?.Items.Count > 0)
-        {
-            <div class="card border-primary border-2 mb-3">
-                <div class="card-body py-2 px-3">
-                    <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
-                        <div>
-                            <small class="text-muted">Current item (@(currentItemIndex + 1) / @config.Items.Count)</small>
-                            <div class="fw-semibold">@currentItemName</div>
+        <div class="quadrant-layout">
+            <section class="quadrant-hero-card">
+                <div class="quadrant-hero-copy">
+                    <div class="quadrant-hero-kicker">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Quadrant Mapping</span>
+                    </div>
+                    <h4 class="quadrant-hero-title">@heroTitle</h4>
+                    <div class="quadrant-chip-row">
+                        <span class="quadrant-chip">
+                            <i class="fas fa-arrows-left-right"></i>
+                            @dashboard.XAxisLabel
+                        </span>
+                        <span class="quadrant-chip">
+                            <i class="fas fa-arrows-up-down"></i>
+                            @dashboard.YAxisLabel
+                        </span>
+                        <span class="quadrant-chip">
+                            <i class="fas fa-list-check"></i>
+                            @dashboard.Items.Count items
+                        </span>
+                        <span class="quadrant-chip">
+                            <i class="fas fa-users"></i>
+                            @ParticipationRate.ToString("F0")% participation
+                        </span>
+                    </div>
+                </div>
+
+                <div class="quadrant-hero-pane">
+                    @if (configuredItemCount > 0)
+                    {
+                        <div class="quadrant-current-item">
+                            <span class="quadrant-current-item-label">Current Item</span>
+                            <span class="quadrant-current-item-value">@(currentItemIndex + 1) / @configuredItemCount</span>
                         </div>
-                        <div class="d-flex gap-2">
+                        <div class="quadrant-current-stats">
+                            <div class="quadrant-current-stat">
+                                <span class="label">Responses</span>
+                                <span class="value">@(currentItem?.ResponseCount ?? 0)</span>
+                            </div>
+                            <div class="quadrant-current-stat">
+                                <span class="label">Avg @dashboard.XAxisLabel</span>
+                                <span class="value">@(currentItem?.AverageX.ToString("F1") ?? "-")</span>
+                            </div>
+                            <div class="quadrant-current-stat">
+                                <span class="label">Avg @dashboard.YAxisLabel</span>
+                                <span class="value">@(currentItem?.AverageY.ToString("F1") ?? "-")</span>
+                            </div>
+                        </div>
+                        <div class="quadrant-nav-row">
                             <button class="btn btn-sm btn-outline-secondary"
                                     @onclick="PrevItem"
                                     disabled="@(currentItemIndex <= 0 || isNavigating)">
@@ -82,71 +99,393 @@
                                 Next <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
+                    }
+                    else
+                    {
+                        <div class="quadrant-pane-muted">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Add items to start quadrant scoring.</span>
+                        </div>
+                    }
+                </div>
+            </section>
+
+
+
+            <section class="quadrant-chart-card">
+                <div class="quadrant-section-head">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-chart-bubble me-2"></i>Bubble Chart
+                    </h6>
+                    <div class="quadrant-select-wrap">
+                        <label class="form-label mb-0">Bubble size</label>
+                        <select class="form-select form-select-sm quadrant-select" @onchange="OnBubbleSizeModeChanged">
+                            <option value="0" selected="@(bubbleSizeMode == QuadrantBubbleSizeMode.Proportional)">Proportional to responses</option>
+                            <option value="1" selected="@(bubbleSizeMode == QuadrantBubbleSizeMode.Uniform)">Uniform</option>
+                        </select>
                     </div>
                 </div>
-            </div>
-        }
 
-        <!-- Chart toolbar -->
-        <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-            <div class="fw-semibold small text-muted">Bubble Chart</div>
-            <div class="d-flex align-items-center gap-2">
-                <label class="form-label mb-0 small">Bubble size:</label>
-                <select class="form-select form-select-sm" style="width: auto;" @onchange="OnBubbleSizeModeChanged">
-                    <option value="0" selected="@(bubbleSizeMode == QuadrantBubbleSizeMode.Proportional)">Proportional to responses</option>
-                    <option value="1" selected="@(bubbleSizeMode == QuadrantBubbleSizeMode.Uniform)">Uniform</option>
-                </select>
-            </div>
-        </div>
+                <div class="quadrant-chart-canvas">
+                    @if (dashboard.Items.Any())
+                    {
+                        <canvas id="@canvasId"></canvas>
+                    }
+                    else
+                    {
+                        <div class="quadrant-empty-state">
+                            <i class="fas fa-chart-bubble"></i>
+                            <span>No responses yet — chart will appear as participants score items.</span>
+                        </div>
+                    }
+                </div>
+            </section>
 
-        <!-- Bubble chart canvas -->
-        <div class="chart-container border rounded bg-white p-2 mb-4" style="height: 420px; position:relative;">
             @if (dashboard.Items.Any())
             {
-                <canvas id="@canvasId"></canvas>
-            }
-            else
-            {
-                <div class="d-flex align-items-center justify-content-center h-100 text-muted">
-                    <div class="text-center">
-                        <i class="fas fa-chart-bubble fs-1 mb-2 d-block"></i>
-                        No responses yet — chart will appear as participants score items.
+                <section class="quadrant-table-card">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Item</th>
+                                    <th>Avg @dashboard.XAxisLabel</th>
+                                    <th>Avg @dashboard.YAxisLabel</th>
+                                    <th>Responses</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in dashboard.Items)
+                                {
+                                    <tr class="@(item.ItemIndex == currentItemIndex ? "quadrant-table-row--active" : string.Empty)">
+                                        <td class="text-muted">@(item.ItemIndex + 1)</td>
+                                        <td>@item.ItemLabel</td>
+                                        <td>@item.AverageX.ToString("F1")</td>
+                                        <td>@item.AverageY.ToString("F1")</td>
+                                        <td><span class="badge bg-secondary">@item.ResponseCount</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
-                </div>
+                </section>
             }
         </div>
-
-        <!-- Per-item table -->
-        @if (dashboard.Items.Any())
-        {
-            <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>Item</th>
-                            <th>Avg @dashboard.XAxisLabel</th>
-                            <th>Avg @dashboard.YAxisLabel</th>
-                            <th>Responses</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in dashboard.Items)
-                        {
-                            <tr class="@(item.ItemIndex == currentItemIndex ? "table-primary" : "")">
-                                <td class="text-muted">@(item.ItemIndex + 1)</td>
-                                <td>@item.ItemLabel</td>
-                                <td>@item.AverageX.ToString("F1")</td>
-                                <td>@item.AverageY.ToString("F1")</td>
-                                <td><span class="badge bg-secondary">@item.ResponseCount</span></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
     }
 </div>
+
+<style>
+    .quadrant-dashboard {
+        min-height: 380px;
+    }
+
+    .quadrant-dashboard .quadrant-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .quadrant-dashboard .quadrant-hero-card {
+        display: grid;
+        grid-template-columns: 1.4fr minmax(280px, 0.9fr);
+        gap: 1rem;
+        border-radius: 16px;
+        padding: 1.1rem;
+        border: 1px solid #d9e8eb;
+        background:
+            radial-gradient(1200px 280px at -10% -60%, rgba(56, 189, 248, 0.2), transparent 55%),
+            linear-gradient(135deg, #eaf8ff 0%, #f4fbff 45%, #f7fbfd 100%);
+        box-shadow: 0 6px 20px rgba(15, 32, 39, 0.08);
+    }
+
+    .quadrant-dashboard .quadrant-hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.8rem;
+        min-width: 0;
+    }
+
+    .quadrant-dashboard .quadrant-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: fit-content;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #0f766e;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(20, 184, 166, 0.16);
+    }
+
+    .quadrant-dashboard .quadrant-hero-title {
+        margin: 0;
+        font-size: 1.5rem;
+        line-height: 1.25;
+        color: #16323a;
+        font-weight: 700;
+    }
+
+    .quadrant-dashboard .quadrant-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .quadrant-dashboard .quadrant-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        color: #3f6972;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid #d2e3e7;
+        padding: 0.28rem 0.65rem;
+    }
+
+    .quadrant-dashboard .quadrant-hero-pane {
+        border-radius: 14px;
+        border: 1px solid #d6e5e9;
+        background: white;
+        padding: 0.9rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .quadrant-dashboard .quadrant-current-item {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.6rem;
+    }
+
+    .quadrant-dashboard .quadrant-current-item-label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #5f8188;
+        font-weight: 700;
+    }
+
+    .quadrant-dashboard .quadrant-current-item-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #0f766e;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+    }
+
+    .quadrant-dashboard .quadrant-current-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.45rem;
+    }
+
+    .quadrant-dashboard .quadrant-current-stat {
+        border-radius: 10px;
+        border: 1px solid #d7e8ec;
+        background: #f8fcfd;
+        padding: 0.45rem 0.5rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .quadrant-dashboard .quadrant-current-stat .label {
+        font-size: 0.68rem;
+        color: #6b8991;
+        line-height: 1.2;
+    }
+
+    .quadrant-dashboard .quadrant-current-stat .value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #204249;
+        line-height: 1.2;
+    }
+
+    .quadrant-dashboard .quadrant-nav-row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.45rem;
+    }
+
+    .quadrant-dashboard .quadrant-pane-muted {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px dashed #bfd5db;
+        background: rgba(255, 255, 255, 0.66);
+        color: #5f8188;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.8rem;
+        font-weight: 600;
+    }
+
+    .quadrant-dashboard .quadrant-metrics-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.9rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.65rem;
+    }
+
+    .quadrant-dashboard .quadrant-metric {
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #f8fcfd;
+        padding: 0.7rem 0.75rem;
+        text-align: center;
+    }
+
+    .quadrant-dashboard .quadrant-metric .value {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+        color: #0f766e;
+        font-variant-numeric: tabular-nums;
+        margin-bottom: 0.2rem;
+    }
+
+    .quadrant-dashboard .quadrant-metric .label {
+        font-size: 0.78rem;
+        color: #5f8188;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 700;
+    }
+
+    .quadrant-dashboard .quadrant-chart-card,
+    .quadrant-dashboard .quadrant-table-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.9rem 1rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+    }
+
+    .quadrant-dashboard .quadrant-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+        margin-bottom: 0.75rem;
+        color: #1f3c44;
+    }
+
+    .quadrant-dashboard .quadrant-select-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+
+    .quadrant-dashboard .quadrant-select-wrap label {
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #6b8991;
+        font-weight: 700;
+    }
+
+    .quadrant-dashboard .quadrant-select {
+        min-width: 220px;
+    }
+
+    .quadrant-dashboard .quadrant-chart-canvas {
+        height: 420px;
+        position: relative;
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #ffffff;
+        padding: 0.3rem;
+    }
+
+    .quadrant-dashboard .quadrant-empty-state {
+        display: flex;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        color: #6b8991;
+        font-weight: 600;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .quadrant-dashboard .quadrant-empty-state i {
+        font-size: 1.5rem;
+        color: #3bb6b5;
+    }
+
+    .quadrant-dashboard .quadrant-table-card table thead th {
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #6b8991;
+        border-top: 0;
+        background: #f8fcfd;
+    }
+
+    .quadrant-dashboard .quadrant-table-card table tbody td {
+        color: #2a4750;
+        vertical-align: middle;
+    }
+
+    .quadrant-dashboard .quadrant-table-row--active td {
+        background: rgba(59, 182, 181, 0.12);
+    }
+
+    @@media (max-width: 992px) {
+        .quadrant-dashboard .quadrant-hero-card {
+            grid-template-columns: 1fr;
+        }
+
+        .quadrant-dashboard .quadrant-metrics-card {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .quadrant-dashboard .quadrant-current-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .quadrant-dashboard .quadrant-nav-row {
+            justify-content: stretch;
+        }
+
+        .quadrant-dashboard .quadrant-nav-row .btn {
+            flex: 1;
+        }
+
+        .quadrant-dashboard .quadrant-metrics-card {
+            grid-template-columns: 1fr;
+        }
+
+        .quadrant-dashboard .quadrant-select {
+            min-width: 0;
+            width: 100%;
+        }
+
+        .quadrant-dashboard .quadrant-select-wrap {
+            width: 100%;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
 
 @code {
     [Parameter] public string SessionCode { get; set; } = string.Empty;

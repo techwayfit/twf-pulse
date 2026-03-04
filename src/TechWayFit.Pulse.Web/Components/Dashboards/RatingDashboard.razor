@@ -29,82 +29,96 @@
     }
     else if (dashboard != null)
     {
-        <!-- Rating Dashboard Header -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h4 class="card-title fw-bold mb-1">Rating Results</h4>
-                        <div class="text-muted"><i class="ics ics-star ic-sm"></i> Live Ratings</div>
+        var topBucket = dashboard.Distribution?
+            .OrderByDescending(d => d.Count)
+            .ThenByDescending(d => d.Rating)
+            .FirstOrDefault();
+
+        <div class="rating-layout">
+            <section class="rating-hero-card">
+                <div class="rating-hero-copy">
+                    <div class="rating-hero-kicker">
+                        <i class="ics ics-star ic-sm"></i>
+                        <span>Live Rating</span>
                     </div>
-                    <div class="text-end">
-                        <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mb-2">
-                            Live Results
-                        </div>
+                    <h4 class="rating-hero-title">Rating Results</h4>
+                    <div class="rating-chip-row">
+                        <span class="rating-chip">
+                            <i class="fas fa-star"></i>
+                            Avg @GetAverageRating()
+                        </span>
+                        <span class="rating-chip">
+                            <i class="fas fa-sliders"></i>
+                            Median @GetMedianRating()
+                        </span>
+                        <span class="rating-chip">
+                            <i class="fas fa-reply"></i>
+                            @dashboard.TotalResponses ratings
+                        </span>
+                        <span class="rating-chip">
+                            <i class="fas fa-users"></i>
+                            @dashboard.ParticipantCount participants
+                        </span>
                     </div>
                 </div>
 
-                <!-- Summary Stats -->
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <div class="stat-card bg-primary bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="stat-number text-primary h2 mb-0">@GetAverageRating()</div>
-                            <div class="stat-label text-muted">Average Rating</div>
-                        </div>
+                <div class="rating-hero-pane">
+                    <div class="rating-live-badge">
+                        <i class="fas fa-circle"></i>
+                        <span>Live Results</span>
                     </div>
-                    <div class="col-md-3">
-                        <div class="stat-card bg-success bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="stat-number text-success h2 mb-0">@dashboard.TotalResponses</div>
-                            <div class="stat-label text-muted">Total Ratings</div>
-                        </div>
+                    <div class="rating-updated-at">
+                        @if (recentActivities.Any())
+                        {
+                            <span>Last response: @recentActivities.First().ToString("HH:mm:ss")</span>
+                        }
+                        else
+                        {
+                            <span>No recent responses yet</span>
+                        }
                     </div>
-                    <div class="col-md-3">
-                        <div class="stat-card bg-info bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="stat-number text-info h2 mb-0">@dashboard.ParticipantCount</div>
-                            <div class="stat-label text-muted">Participants</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="stat-card bg-warning bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="stat-number text-warning h2 mb-0">@GetMedianRating()</div>
-                            <div class="stat-label text-muted">Median Rating</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Rating Distribution -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-4">
-                <h5 class="card-title mb-4">
-                    <i class="fas fa-chart-bar me-2"></i>
-                    Rating Distribution
-                </h5>
+                    @if (topBucket is not null && topBucket.Count > 0)
+                    {
+                        <div class="rating-top-bucket">
+                            <span class="label">Most selected rating</span>
+                            <span class="value">@topBucket.Rating / 5</span>
+                            <span class="meta">@topBucket.Count responses (@topBucket.Percentage.ToString("F1")%)</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="rating-pane-muted">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span>Waiting for participant ratings.</span>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="rating-distribution-card">
+                <div class="rating-section-head">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-chart-bar me-2"></i>Rating Distribution
+                    </h6>
+                </div>
 
                 @if (dashboard.TotalResponses > 0)
                 {
                     <div class="rating-distribution">
                         @foreach (var rating in GetRatingDistribution())
                         {
-                            <div class="rating-row mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <div class="rating-label fw-semibold">
-                                        @for (int i = 0; i < rating.Value; i++)
-                                        {
-                                            <i class="ics ics-star ic-sm text-warning"></i>
-                                        }
-                                        <span class="ms-2">@rating.Value</span>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <span class="badge bg-primary">@rating.Count responses</span>
-                                        <span class="percentage fw-bold text-primary">@rating.Percentage.ToString("F1")%</span>
-                                    </div>
+                            <div class="rating-bar-row rating-bar-row--@rating.Value @(rating.Count == 0 ? "rating-bar-row--zero" : "")" aria-label="@rating.Value star rating">
+                                <div class="rating-bar-label-col">
+                                    <i class="fas fa-star rating-bar-star"></i>
+                                    <span class="rating-bar-score">@rating.Value<span class="rating-bar-max">/5</span></span>
                                 </div>
-                                <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar bg-warning" 
-                                         role="progressbar" 
-                                         style="width: @rating.Percentage%"></div>
+                                <div class="rating-bar-track">
+                                    <div class="rating-bar-fill" style="width: @rating.Percentage%"></div>
+                                </div>
+                                <div class="rating-bar-meta">
+                                    <span class="rating-bar-pct">@rating.Percentage.ToString("F1")%</span>
+                                    <span class="rating-bar-cnt" title="@rating.Count vote(s)">@rating.Count</span>
                                 </div>
                             </div>
                         }
@@ -112,29 +126,29 @@
                 }
                 else
                 {
-                    <div class="text-center py-5">
-                        <div class="mb-3"><i class="ics ics-star ic-2xl text-muted"></i></div>
-                        <h6 class="text-muted">No ratings yet</h6>
-                        <p class="text-muted mb-0">Results will appear here once participants start rating.</p>
+                    <div class="rating-empty-state">
+                        <i class="ics ics-star ic-lg"></i>
+                        <div>
+                            <div class="fw-semibold">No ratings yet</div>
+                            <div class="small text-muted">Results will appear once participants start rating.</div>
+                        </div>
                     </div>
                 }
-            </div>
-        </div>
+            </section>
 
-        <!-- Comments -->
-        @if (dashboard.Comments?.Any() == true)
-        {
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <h6 class="card-title mb-3">
-                        <i class="fas fa-comments me-2"></i>
-                        Comments (@dashboard.Comments.Count)
-                    </h6>
-                    <div class="comments-list">
+            @if (dashboard.Comments?.Any() == true)
+            {
+                <section class="rating-comments-card">
+                    <div class="rating-section-head">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-comments me-2"></i>Comments (@dashboard.Comments.Count)
+                        </h6>
+                    </div>
+                    <div class="rating-comments-list">
                         @foreach (var comment in dashboard.Comments.Take(10))
                         {
-                            <div class="comment-item mb-3 p-3 border rounded">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
+                            <article class="rating-comment-item">
+                                <div class="rating-comment-head">
                                     <div>
                                         @for (int i = 0; i < comment.Rating; i++)
                                         {
@@ -144,12 +158,13 @@
                                     <small class="text-muted">@comment.CreatedAt.ToString("HH:mm:ss")</small>
                                 </div>
                                 <p class="mb-0 text-muted">@comment.Comment</p>
-                            </div>
+                            </article>
                         }
                     </div>
-                </div>
-            </div>
-        }
+                </section>
+            }
+
+        </div>
     }
     else
     {
@@ -159,6 +174,377 @@
         </div>
     }
 </div>
+
+<style>
+    .rating-dashboard {
+        min-height: 0;
+    }
+
+    .rating-dashboard .rating-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .rating-dashboard .rating-hero-card {
+        display: grid;
+        grid-template-columns: 1.4fr minmax(280px, 0.9fr);
+        gap: 1rem;
+        border-radius: 16px;
+        padding: 1.1rem;
+        border: 1px solid #d9e8eb;
+        background:
+            radial-gradient(1200px 280px at -10% -60%, rgba(245, 158, 11, 0.2), transparent 55%),
+            linear-gradient(135deg, #fff8e7 0%, #f4fcff 45%, #f7fbfd 100%);
+        box-shadow: 0 6px 20px rgba(15, 32, 39, 0.08);
+    }
+
+    .rating-dashboard .rating-hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.8rem;
+        min-width: 0;
+    }
+
+    .rating-dashboard .rating-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: fit-content;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #9a5f00;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(245, 158, 11, 0.16);
+    }
+
+    .rating-dashboard .rating-hero-title {
+        margin: 0;
+        font-size: 1.5rem;
+        line-height: 1.25;
+        color: #16323a;
+        font-weight: 700;
+    }
+
+    .rating-dashboard .rating-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .rating-dashboard .rating-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        color: #3f6972;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid #d2e3e7;
+        padding: 0.28rem 0.65rem;
+    }
+
+    .rating-dashboard .rating-hero-pane {
+        border-radius: 14px;
+        border: 1px solid #d6e5e9;
+        background: white;
+        padding: 0.9rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+        justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .rating-dashboard .rating-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        width: fit-content;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.32);
+        background: rgba(16, 185, 129, 0.12);
+        border-radius: 999px;
+        padding: 0.22rem 0.56rem;
+        font-weight: 700;
+    }
+
+    .rating-dashboard .rating-live-badge i {
+        font-size: 0.5rem;
+    }
+
+    .rating-dashboard .rating-updated-at {
+        font-size: 0.8rem;
+        color: #5f8188;
+        font-weight: 600;
+    }
+
+    .rating-dashboard .rating-top-bucket {
+        border-radius: 10px;
+        border: 1px solid #d7e8ec;
+        background: #f8fcfd;
+        padding: 0.55rem 0.65rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .rating-dashboard .rating-top-bucket .label {
+        font-size: 0.68rem;
+        color: #6b8991;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+    }
+
+    .rating-dashboard .rating-top-bucket .value {
+        font-size: 1.02rem;
+        color: #1f3c44;
+        font-weight: 700;
+    }
+
+    .rating-dashboard .rating-top-bucket .meta {
+        font-size: 0.78rem;
+        color: #51747c;
+        font-weight: 600;
+    }
+
+    .rating-dashboard .rating-pane-muted {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px dashed #bfd5db;
+        background: rgba(255, 255, 255, 0.66);
+        color: #5f8188;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.8rem;
+        font-weight: 600;
+    }
+
+    .rating-dashboard .rating-metrics-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.9rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.65rem;
+    }
+
+    .rating-dashboard .rating-metric {
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #f8fcfd;
+        padding: 0.7rem 0.75rem;
+        text-align: center;
+    }
+
+    .rating-dashboard .rating-metric .value {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+        color: #9a5f00;
+        font-variant-numeric: tabular-nums;
+        margin-bottom: 0.2rem;
+    }
+
+    .rating-dashboard .rating-metric .label {
+        font-size: 0.78rem;
+        color: #5f8188;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 700;
+    }
+
+    .rating-dashboard .rating-distribution-card,
+    .rating-dashboard .rating-comments-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.85rem 1rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+    }
+
+    .rating-dashboard .rating-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+        color: #1f3c44;
+        margin-bottom: 0.75rem;
+    }
+
+    /* ── compact bar-chart rows ────────────────────────────────── */
+    .rating-dashboard .rating-distribution {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .rating-dashboard .rating-bar-row {
+        display: grid;
+        grid-template-columns: 5rem 1fr 5.5rem;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.35rem 0.4rem;
+        border-radius: 8px;
+        transition: background 0.15s;
+    }
+
+    .rating-dashboard .rating-bar-row:hover {
+        background: rgba(245, 158, 11, 0.07);
+    }
+
+    .rating-dashboard .rating-bar-row--zero .rating-bar-track {
+        opacity: 0.45;
+    }
+
+    .rating-dashboard .rating-bar-row--zero .rating-bar-pct,
+    .rating-dashboard .rating-bar-row--zero .rating-bar-cnt {
+        opacity: 0.4;
+    }
+
+    .rating-dashboard .rating-bar-label-col {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        flex-shrink: 0;
+    }
+
+    .rating-dashboard .rating-bar-star {
+        font-size: 0.75rem;
+        color: #f59e0b;
+    }
+
+    .rating-dashboard .rating-bar-score {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #1f3c44;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .rating-dashboard .rating-bar-max {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #8faeb5;
+        margin-left: 0.05rem;
+    }
+
+    .rating-dashboard .rating-bar-track {
+        height: 8px;
+        border-radius: 999px;
+        background: #e5edf0;
+        overflow: hidden;
+        flex: 1;
+    }
+
+    .rating-dashboard .rating-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+        box-shadow: 0 1px 6px rgba(245, 158, 11, 0.3);
+        transition: width 0.4s ease;
+    }
+
+    /* per-star color tints */
+    .rating-dashboard .rating-bar-row--5 .rating-bar-fill { background: linear-gradient(90deg, #10b981 0%, #34d399 100%); box-shadow: 0 1px 6px rgba(16,185,129,0.28); }
+    .rating-dashboard .rating-bar-row--4 .rating-bar-fill { background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 100%); box-shadow: 0 1px 6px rgba(14,165,233,0.28); }
+    .rating-dashboard .rating-bar-row--3 .rating-bar-fill { background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); box-shadow: 0 1px 6px rgba(245,158,11,0.28); }
+    .rating-dashboard .rating-bar-row--2 .rating-bar-fill { background: linear-gradient(90deg, #f97316 0%, #fb923c 100%); box-shadow: 0 1px 6px rgba(249,115,22,0.28); }
+    .rating-dashboard .rating-bar-row--1 .rating-bar-fill { background: linear-gradient(90deg, #ef4444 0%, #f87171 100%); box-shadow: 0 1px 6px rgba(239,68,68,0.28); }
+
+    .rating-dashboard .rating-bar-meta {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.45rem;
+    }
+
+    .rating-dashboard .rating-bar-pct {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #374151;
+        font-variant-numeric: tabular-nums;
+        min-width: 3.2rem;
+        text-align: right;
+    }
+
+    .rating-dashboard .rating-bar-cnt {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #fff;
+        background: #6b8991;
+        border-radius: 999px;
+        padding: 0.1rem 0.45rem;
+        min-width: 1.6rem;
+        text-align: center;
+        line-height: 1.4;
+    }
+
+    .rating-dashboard .rating-empty-state {
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.7rem;
+        color: #6b8991;
+        text-align: center;
+        padding: 1rem;
+        font-weight: 600;
+    }
+
+    .rating-dashboard .rating-comments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .rating-dashboard .rating-comment-item {
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #f8fcfd;
+        padding: 0.75rem 0.85rem;
+    }
+
+    .rating-dashboard .rating-comment-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+        margin-bottom: 0.35rem;
+    }
+
+    @@media (max-width: 992px) {
+        .rating-dashboard .rating-hero-card {
+            grid-template-columns: 1fr;
+        }
+
+        .rating-dashboard .rating-metrics-card {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .rating-dashboard .rating-metrics-card {
+            grid-template-columns: 1fr;
+        }
+
+        .rating-dashboard .rating-row-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
 
 @code {
     [Parameter] public string SessionCode { get; set; } = string.Empty;
@@ -295,12 +681,14 @@
 
     private List<(int Value, int Count, double Percentage)> GetRatingDistribution()
     {
-        if (dashboard?.Distribution == null || !dashboard.Distribution.Any())
-            return new();
-        
-        return dashboard.Distribution
-            .Select(d => (d.Rating, d.Count, d.Percentage))
-            .OrderByDescending(d => d.Rating)
+        var existing = dashboard?.Distribution??
+            Enumerable.Empty<TechWayFit.Pulse.Contracts.Responses.RatingDistributionItem>();
+        var map = existing.ToDictionary(d => d.Rating, d => (d.Count, d.Percentage));
+        return Enumerable.Range(1, 5)
+            .Select(r => map.TryGetValue(r, out var v)
+                ? (Value: r, Count: v.Count, Percentage: v.Percentage)
+                : (Value: r, Count: 0, Percentage: 0.0))
+            .OrderByDescending(d => d.Value)
             .ToList();
     }
 

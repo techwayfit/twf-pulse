@@ -30,84 +30,95 @@
     }
     else if (dashboard != null)
     {
-        <!-- WordCloud Dashboard Header -->
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h4 class="card-title fw-bold mb-1">@dashboard.ActivityTitle</h4>
-                        <div class="text-muted">Word Cloud Results</div>
+        var participationRate = dashboard.ParticipantCount > 0
+            ? (int)Math.Round(dashboard.RespondedParticipants * 100.0 / dashboard.ParticipantCount)
+            : 0;
+        var topWord = dashboard.WordFrequencies
+            .OrderByDescending(w => w.Count)
+            .ThenBy(w => w.Text)
+            .FirstOrDefault();
+
+        <div class="wordcloud-layout">
+            <section class="wordcloud-hero-card">
+                <div class="wordcloud-hero-copy">
+                    <div class="wordcloud-hero-kicker">
+                        <i class="fas fa-cloud"></i>
+                        <span>Word Cloud</span>
                     </div>
-                    <div class="text-end">
-                        <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mb-2">
-                            Live Results
-                        </div>
+                    <h4 class="wordcloud-hero-title">@dashboard.ActivityTitle</h4>
+                    <div class="wordcloud-chip-row">
+                        <span class="wordcloud-chip">
+                            <i class="fas fa-reply"></i>
+                            @dashboard.TotalResponses responses
+                        </span>
+                        <span class="wordcloud-chip">
+                            <i class="fas fa-users"></i>
+                            @dashboard.RespondedParticipants participants
+                        </span>
+                        <span class="wordcloud-chip">
+                            <i class="fas fa-font"></i>
+                            @dashboard.TotalWords words
+                        </span>
+                        <span class="wordcloud-chip">
+                            <i class="fas fa-fingerprint"></i>
+                            @dashboard.UniqueWords unique
+                        </span>
+                    </div>
+                </div>
+
+                <div class="wordcloud-hero-pane">
+                    <div class="wordcloud-live-badge">
+                        <i class="fas fa-circle"></i>
+                        <span>Live Results</span>
+                    </div>
+                    <div class="wordcloud-updated-at">
                         @if (dashboard.LastResponseAt.HasValue)
                         {
-                            <div class="small text-muted">
-                                Last updated: @dashboard.LastResponseAt.Value.ToString("HH:mm:ss")
-                            </div>
+                            <span>Last updated: @dashboard.LastResponseAt.Value.ToString("HH:mm:ss")</span>
+                        }
+                        else
+                        {
+                            <span>No responses yet</span>
                         }
                     </div>
-                </div>
 
-                <!-- Summary Stats -->
-                <div class="row g-3 mb-4">
-                    <div class="col-md-3">
-                        <div class="bg-primary bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="h4 text-primary mb-0">@dashboard.TotalResponses</div>
-                            <small class="text-muted">Responses</small>
+                    @if (topWord is not null)
+                    {
+                        <div class="wordcloud-top-word">
+                            <span class="label">Top word</span>
+                            <span class="value">@topWord.Text</span>
+                            <span class="meta">@topWord.Count mentions</span>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="bg-info bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="h4 text-info mb-0">@dashboard.RespondedParticipants</div>
-                            <small class="text-muted">Participants</small>
+                    }
+                    else
+                    {
+                        <div class="wordcloud-pane-muted">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span>Waiting for participant responses.</span>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="bg-success bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="h4 text-success mb-0">@dashboard.TotalWords</div>
-                            <small class="text-muted">Total Words</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="bg-warning bg-opacity-10 rounded-3 p-3 text-center">
-                            <div class="h4 text-warning mb-0">@dashboard.UniqueWords</div>
-                            <small class="text-muted">Unique Words</small>
-                        </div>
-                    </div>
+                    }
                 </div>
+            </section>
 
-                <!-- Participation Rate -->
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-semibold">Participation Rate</span>
-                        <span class="text-muted">@dashboard.RespondedParticipants / @dashboard.ParticipantCount participants</span>
-                    </div>
-                    <div class="progress" style="height: 8px;">
-                        <div class="progress-bar bg-primary" 
-                             style="width: @(dashboard.ParticipantCount > 0 ? (dashboard.RespondedParticipants * 100.0 / dashboard.ParticipantCount) : 0)%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Word Cloud Visualization -->
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="card-title fw-semibold mb-0">Word Frequencies</h5>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-secondary @(viewType == "cloud" ? "active" : string.Empty)"
+            <section class="wordcloud-visualization-card">
+                <div class="wordcloud-section-head">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-chart-area me-2"></i>Word Frequencies
+                    </h6>
+                    <div class="wordcloud-view-toggle">
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary @(viewType == "cloud" ? "active" : string.Empty)"
                                 @onclick="@(async () => await SetViewType("cloud"))">
                             <i class="fas fa-cloud me-1"></i>Cloud
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary @(viewType == "chart" ? "active" : string.Empty)"
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary @(viewType == "chart" ? "active" : string.Empty)"
                                 @onclick="@(async () => await SetViewType("chart"))">
                             <i class="fas fa-chart-bar me-1"></i>Chart
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary @(viewType == "list" ? "active" : string.Empty)"
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary @(viewType == "list" ? "active" : string.Empty)"
                                 @onclick="@(async () => await SetViewType("list"))">
                             <i class="fas fa-list me-1"></i>List
                         </button>
@@ -118,33 +129,28 @@
                 {
                     @if (viewType == "cloud")
                     {
-                        <!-- Word Cloud Canvas -->
-                        <div class="text-center mb-4">
-                            <canvas id="wordcloud-@ActivityId" width="600" height="400" style="max-width: 100%; border: 1px solid #dee2e6; border-radius: 8px;"></canvas>
+                        <div class="wordcloud-canvas-shell">
+                            <canvas id="wordcloud-@ActivityId" width="600" height="400"></canvas>
                         </div>
                     }
                     else if (viewType == "chart")
                     {
-                        <!-- Bar Chart -->
-                        <div class="mb-4">
-                            <canvas id="wordcloud-chart-@ActivityId" width="600" height="400" style="max-width: 100%;"></canvas>
+                        <div class="wordcloud-canvas-shell">
+                            <canvas id="wordcloud-chart-@ActivityId" width="600" height="400"></canvas>
                         </div>
                     }
                     else
                     {
-                        <!-- Word List View -->
-                        <div class="row">
+                        <div class="wordcloud-list-grid">
                             @foreach (var word in dashboard.WordFrequencies.Take(20))
                             {
-                                <div class="col-md-6 col-lg-4 mb-3">
-                                    <div class="d-flex justify-content-between align-items-center p-3 border rounded-3">
-                                        <span class="fw-semibold">@word.Text</span>
-                                        <span class="badge bg-primary">@word.Count</span>
-                                    </div>
-                                </div>
+                                <article class="wordcloud-list-item">
+                                    <span class="word">@word.Text</span>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">@word.Count</span>
+                                </article>
                             }
                         </div>
-                        
+
                         @if (dashboard.WordFrequencies.Count > 20)
                         {
                             <div class="text-center mt-3">
@@ -155,15 +161,15 @@
                 }
                 else
                 {
-                    <div class="text-center py-5">
-                        <div class="mb-3">
-                            <i class="fas fa-cloud fa-3x text-muted"></i>
+                    <div class="wordcloud-empty-state">
+                        <i class="fas fa-cloud"></i>
+                        <div>
+                            <div class="fw-semibold">No words to display yet</div>
+                            <div class="small text-muted">Word cloud will appear as participants submit their responses.</div>
                         </div>
-                        <h6 class="text-muted">No words to display yet</h6>
-                        <p class="text-muted mb-0">Word cloud will appear as participants submit their responses.</p>
                     </div>
                 }
-            </div>
+            </section>
         </div>
     }
     else
@@ -176,6 +182,325 @@
         </div>
     }
 </div>
+
+<style>
+    .wordcloud-dashboard {
+        min-height: 380px;
+    }
+
+    .wordcloud-dashboard .wordcloud-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .wordcloud-dashboard .wordcloud-hero-card {
+        display: grid;
+        grid-template-columns: 1.4fr minmax(280px, 0.9fr);
+        gap: 1rem;
+        border-radius: 16px;
+        padding: 1.1rem;
+        border: 1px solid #d9e8eb;
+        background:
+            radial-gradient(1200px 280px at -10% -60%, rgba(14, 165, 233, 0.2), transparent 55%),
+            linear-gradient(135deg, #ebf8ff 0%, #f2fcff 45%, #f7fbfd 100%);
+        box-shadow: 0 6px 20px rgba(15, 32, 39, 0.08);
+    }
+
+    .wordcloud-dashboard .wordcloud-hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.8rem;
+        min-width: 0;
+    }
+
+    .wordcloud-dashboard .wordcloud-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: fit-content;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #0f766e;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(14, 165, 233, 0.16);
+    }
+
+    .wordcloud-dashboard .wordcloud-hero-title {
+        margin: 0;
+        font-size: 1.5rem;
+        line-height: 1.25;
+        color: #16323a;
+        font-weight: 700;
+    }
+
+    .wordcloud-dashboard .wordcloud-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .wordcloud-dashboard .wordcloud-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        color: #3f6972;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid #d2e3e7;
+        padding: 0.28rem 0.65rem;
+    }
+
+    .wordcloud-dashboard .wordcloud-hero-pane {
+        border-radius: 14px;
+        border: 1px solid #d6e5e9;
+        background: white;
+        padding: 0.9rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+        justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .wordcloud-dashboard .wordcloud-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        width: fit-content;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.32);
+        background: rgba(16, 185, 129, 0.12);
+        border-radius: 999px;
+        padding: 0.22rem 0.56rem;
+        font-weight: 700;
+    }
+
+    .wordcloud-dashboard .wordcloud-live-badge i {
+        font-size: 0.5rem;
+    }
+
+    .wordcloud-dashboard .wordcloud-updated-at {
+        font-size: 0.8rem;
+        color: #5f8188;
+        font-weight: 600;
+    }
+
+    .wordcloud-dashboard .wordcloud-top-word {
+        border-radius: 10px;
+        border: 1px solid #d7e8ec;
+        background: #f8fcfd;
+        padding: 0.55rem 0.65rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .wordcloud-dashboard .wordcloud-top-word .label {
+        font-size: 0.68rem;
+        color: #6b8991;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+    }
+
+    .wordcloud-dashboard .wordcloud-top-word .value {
+        font-size: 1.02rem;
+        color: #1f3c44;
+        font-weight: 700;
+    }
+
+    .wordcloud-dashboard .wordcloud-top-word .meta {
+        font-size: 0.78rem;
+        color: #51747c;
+        font-weight: 600;
+    }
+
+    .wordcloud-dashboard .wordcloud-pane-muted {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px dashed #bfd5db;
+        background: rgba(255, 255, 255, 0.66);
+        color: #5f8188;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.8rem;
+        font-weight: 600;
+    }
+
+    .wordcloud-dashboard .wordcloud-metrics-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.9rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.65rem;
+    }
+
+    .wordcloud-dashboard .wordcloud-metric {
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #f8fcfd;
+        padding: 0.7rem 0.75rem;
+        text-align: center;
+    }
+
+    .wordcloud-dashboard .wordcloud-metric .value {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+        color: #0f766e;
+        font-variant-numeric: tabular-nums;
+        margin-bottom: 0.2rem;
+    }
+
+    .wordcloud-dashboard .wordcloud-metric .label {
+        font-size: 0.78rem;
+        color: #5f8188;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 700;
+    }
+
+    .wordcloud-dashboard .wordcloud-participation-card,
+    .wordcloud-dashboard .wordcloud-visualization-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.9rem 1rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+    }
+
+    .wordcloud-dashboard .wordcloud-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+        color: #1f3c44;
+    }
+
+    .wordcloud-dashboard .wordcloud-progress {
+        height: 8px;
+        border-radius: 999px;
+        background: #d9e8eb;
+        overflow: hidden;
+    }
+
+    .wordcloud-dashboard .wordcloud-progress .progress-bar {
+        background: linear-gradient(90deg, #0d9488 0%, #2dd4bf 100%);
+    }
+
+    .wordcloud-dashboard .wordcloud-view-toggle {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+    }
+
+    .wordcloud-dashboard .wordcloud-view-toggle .btn {
+        border-radius: 999px;
+    }
+
+    .wordcloud-dashboard .wordcloud-view-toggle .btn.active {
+        background: #0d9488;
+        border-color: #0d9488;
+        color: white;
+    }
+
+    .wordcloud-dashboard .wordcloud-canvas-shell {
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #ffffff;
+        min-height: 420px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.6rem;
+    }
+
+    .wordcloud-dashboard .wordcloud-canvas-shell canvas {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .wordcloud-dashboard .wordcloud-list-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.65rem;
+    }
+
+    .wordcloud-dashboard .wordcloud-list-item {
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #f8fcfd;
+        padding: 0.7rem 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .wordcloud-dashboard .wordcloud-list-item .word {
+        font-weight: 700;
+        color: #1f3c44;
+    }
+
+    .wordcloud-dashboard .wordcloud-empty-state {
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.7rem;
+        color: #6b8991;
+        text-align: center;
+        padding: 1rem;
+        font-weight: 600;
+    }
+
+    .wordcloud-dashboard .wordcloud-empty-state i {
+        font-size: 1.5rem;
+        color: #0ea5e9;
+    }
+
+    @@media (max-width: 992px) {
+        .wordcloud-dashboard .wordcloud-hero-card {
+            grid-template-columns: 1fr;
+        }
+
+        .wordcloud-dashboard .wordcloud-metrics-card {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .wordcloud-dashboard .wordcloud-list-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .wordcloud-dashboard .wordcloud-metrics-card {
+            grid-template-columns: 1fr;
+        }
+
+        .wordcloud-dashboard .wordcloud-list-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .wordcloud-dashboard .wordcloud-canvas-shell {
+            min-height: 320px;
+        }
+    }
+</style>
 
 @code {
     [Parameter] public string SessionCode { get; set; } = string.Empty;
