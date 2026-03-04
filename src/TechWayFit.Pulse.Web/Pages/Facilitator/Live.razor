@@ -49,12 +49,8 @@ else if (session != null)
             @* Left sidebar: activity queue *@
             <aside class="live-sidebar @(_sidebarCollapsed ? "live-sidebar--collapsed" : "") @(_sidebarMobileOpen ? "live-sidebar--open" : "")">
                 <LiveActivitiesList Activities="@activities"
-                                    CurrentActivity="@currentActivity"
-                                    SessionCode="@sessionCode"
-                                    IsPerformingAction="@isPerformingAction"
-                                    OnEditActivity="@ShowEditActivityModal"
-                                    OnOpenActivity="@OpenActivity"
-                                    OnReopenActivity="@ReopenActivity"
+                                    SelectedActivityId="@selectedActivityId"
+                                    OnSelectActivity="@SelectActivity"
                                     OnAddActivity="@ShowAddActivityModal" />
             </aside>
 
@@ -68,6 +64,11 @@ else if (session != null)
 
             @* Main stage *@
             <section class="live-stage">
+                @{
+                    var displayedActivity = GetDisplayedActivity();
+                    var showCurrentControls = IsDisplayingCurrentActivity(displayedActivity);
+                }
+
                 <div class="live-stage-floating-metrics">
                     @if (session.Status == SessionStatus.Live)
                     {
@@ -111,16 +112,20 @@ else if (session != null)
                     }
                 </div>
 
-                @if (currentActivity != null)
+                @if (displayedActivity != null)
                 {
-                    <LiveCurrentActivity Activity="@currentActivity"
+                    <LiveCurrentActivity Activity="@displayedActivity"
                                          SessionCode="@sessionCode"
                                          IsPerformingAction="@isPerformingAction"
                                          HasPrevious="@HasPreviousActivity()"
                                          HasNext="@HasNextActivity()"
+                                         ShowCurrentControls="@showCurrentControls"
+                                         CanStart="@(currentActivity == null && displayedActivity.Status == ActivityStatus.Pending)"
                                          OnClose="@CloseCurrentActivity"
                                          OnGoBack="@GoBack"
-                                         OnMoveNext="@MoveNext" />
+                                         OnMoveNext="@MoveNext"
+                                         OnStart="@OpenSelectedActivity"
+                                         OnReopen="@ReopenSelectedActivity" />
                 }
                 else
                 {

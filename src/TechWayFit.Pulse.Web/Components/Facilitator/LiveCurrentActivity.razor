@@ -55,29 +55,48 @@
 
     <!-- Stage footer: navigation controls -->
     <div class="live-stage-footer">
-        @if (HasPrevious)
+        <span class="badge @GetStatusBadgeClass(Activity.Status)" style="font-size: 0.72rem;">@GetStatusLabel(Activity.Status)</span>
+
+        @if (ShowCurrentControls)
         {
-            <button class="btn btn-sm btn-outline-secondary" @onclick="OnGoBack" disabled="@IsPerformingAction">
-                <i class="fas fa-arrow-left me-1"></i>
-                <span class="d-none d-sm-inline">@(IsPerformingAction ? "Moving..." : "Back")</span>
+            @if (HasPrevious)
+            {
+                <button class="btn btn-sm btn-outline-secondary" @onclick="OnGoBack" disabled="@IsPerformingAction">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    <span class="d-none d-sm-inline">@(IsPerformingAction ? "Moving..." : "Back")</span>
+                </button>
+            }
+
+            <button class="btn btn-sm btn-warning" @onclick="OnClose" disabled="@IsPerformingAction">
+                <i class="fas fa-stop me-1"></i>
+                <span class="d-none d-sm-inline">@(IsPerformingAction ? "Closing..." : "Close")</span>
+            </button>
+
+            @if (HasNext)
+            {
+                <button class="btn btn-sm btn-primary" @onclick="OnMoveNext" disabled="@IsPerformingAction">
+                    <span class="d-none d-sm-inline me-1">@(IsPerformingAction ? "Moving..." : "Next")</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            }
+            else
+            {
+                <span class="badge bg-info" style="font-size: 0.72rem;">Last Activity</span>
+            }
+        }
+        else if (Activity.Status == ActivityStatus.Closed)
+        {
+            <button class="btn btn-sm btn-success" @onclick="OnReopen" disabled="@IsPerformingAction">
+                <i class="fas fa-redo me-1"></i>
+                <span class="d-none d-sm-inline">@(IsPerformingAction ? "Reopening..." : "Reopen")</span>
             </button>
         }
-
-        <button class="btn btn-sm btn-warning" @onclick="OnClose" disabled="@IsPerformingAction">
-            <i class="fas fa-stop me-1"></i>
-            <span class="d-none d-sm-inline">@(IsPerformingAction ? "Closing..." : "Close")</span>
-        </button>
-
-        @if (HasNext)
+        else if (Activity.Status == ActivityStatus.Pending && CanStart)
         {
-            <button class="btn btn-sm btn-primary" @onclick="OnMoveNext" disabled="@IsPerformingAction">
-                <span class="d-none d-sm-inline me-1">@(IsPerformingAction ? "Moving..." : "Next")</span>
-                <i class="fas fa-arrow-right"></i>
+            <button class="btn btn-sm btn-primary" @onclick="OnStart" disabled="@IsPerformingAction">
+                <i class="fas fa-play me-1"></i>
+                <span class="d-none d-sm-inline">@(IsPerformingAction ? "Starting..." : "Start")</span>
             </button>
-        }
-        else
-        {
-            <span class="badge bg-info" style="font-size: 0.72rem;">Last Activity</span>
         }
 
         <a class="btn btn-sm btn-outline-secondary ms-auto" href="/facilitator/dashboards">
@@ -152,7 +171,25 @@
     [Parameter] public bool IsPerformingAction { get; set; }
     [Parameter] public bool HasPrevious { get; set; }
     [Parameter] public bool HasNext { get; set; }
+    [Parameter] public bool ShowCurrentControls { get; set; }
+    [Parameter] public bool CanStart { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnGoBack { get; set; }
     [Parameter] public EventCallback OnMoveNext { get; set; }
+    [Parameter] public EventCallback OnStart { get; set; }
+    [Parameter] public EventCallback OnReopen { get; set; }
+
+    private static string GetStatusLabel(ActivityStatus status) => status switch
+    {
+        ActivityStatus.Open => "Active",
+        ActivityStatus.Closed => "Completed",
+        _ => "Pending"
+    };
+
+    private static string GetStatusBadgeClass(ActivityStatus status) => status switch
+    {
+        ActivityStatus.Open => "bg-success",
+        ActivityStatus.Closed => "bg-secondary",
+        _ => "bg-warning text-dark"
+    };
 }

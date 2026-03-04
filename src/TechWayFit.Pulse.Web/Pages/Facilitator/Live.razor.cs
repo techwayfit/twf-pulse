@@ -40,6 +40,7 @@ public partial class Live : IAsyncDisposable
     private SessionSummaryResponse? session;
     private List<AgendaActivityResponse> activities = new();
     private AgendaActivityResponse? currentActivity;
+    private Guid? selectedActivityId;
     private int participantCount = 0;
     private int currentActivityResponseCount = 0;
     private string joinUrl = string.Empty;
@@ -297,6 +298,7 @@ public partial class Live : IAsyncDisposable
             var activityEntities = await ActivityService.GetAgendaAsync(sessionEntity.Id);
             activities = activityEntities.Select(ApiMapper.ToAgenda).ToList();
             currentActivity = activities.FirstOrDefault(a => a.Status == ActivityStatus.Open);
+            SyncSelectedActivity();
 
             await RefreshCurrentActivityResponseCount();
 
@@ -560,6 +562,71 @@ public partial class Live : IAsyncDisposable
     #endregion
 
     #region Activity Management
+
+    private AgendaActivityResponse? GetDisplayedActivity()
+    {
+        if (selectedActivityId.HasValue)
+        {
+            var selectedActivity = activities.FirstOrDefault(a => a.ActivityId == selectedActivityId.Value);
+            if (selectedActivity != null)
+            {
+                return selectedActivity;
+            }
+        }
+
+        return currentActivity;
+    }
+
+    private bool IsDisplayingCurrentActivity(AgendaActivityResponse? displayedActivity)
+        => displayedActivity != null
+            && currentActivity != null
+            && displayedActivity.ActivityId == currentActivity.ActivityId;
+
+    private Task SelectActivity(Guid activityId)
+    {
+        selectedActivityId = activityId;
+        _sidebarMobileOpen = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task OpenSelectedActivity()
+    {
+        var displayedActivity = GetDisplayedActivity();
+        if (displayedActivity == null)
+        {
+            return;
+        }
+
+        await OpenActivity(displayedActivity.ActivityId);
+    }
+
+    private async Task ReopenSelectedActivity()
+    {
+        var displayedActivity = GetDisplayedActivity();
+        if (displayedActivity == null)
+        {
+            return;
+        }
+
+        await ReopenActivity(displayedActivity.ActivityId);
+    }
+
+    private void SyncSelectedActivity()
+    {
+        if (activities.Count == 0)
+        {
+            selectedActivityId = null;
+            return;
+        }
+
+        if (selectedActivityId.HasValue && activities.Any(a => a.ActivityId == selectedActivityId.Value))
+        {
+            return;
+        }
+
+        selectedActivityId = currentActivity?.ActivityId;
+    }
 
     private bool HasPreviousActivity()
     {
@@ -1194,6 +1261,12 @@ public partial class Live : IAsyncDisposable
                             {
                                 currentActivity = null;
                             }
+
+                            if (selectedActivityId == activityId)
+                            {
+                                selectedActivityId = null;
+                            }
+                            SyncSelectedActivity();
 
                             StateHasChanged();
                         });

@@ -218,6 +218,20 @@ body:has(.live-page-shell) > main {
     margin-bottom: 0.5rem;
 }
 
+.live-activity-item--clickable {
+    cursor: pointer;
+}
+
+.live-activity-item--clickable:focus-visible {
+    outline: 2px solid rgba(13, 148, 136, 0.35);
+    outline-offset: 2px;
+}
+
+.live-activity-item--selected {
+    border-color: var(--pulse-teal-mid);
+    box-shadow: 0 3px 10px rgba(13, 107, 114, 0.18);
+}
+
 .live-activity-item--live {
     background: #f0fdf4;
     border-color: #86efac !important;
@@ -225,7 +239,7 @@ body:has(.live-page-shell) > main {
     box-shadow: 0 2px 8px rgba(22, 163, 74, 0.18);
 }
 
-.live-activity-item--pending:hover {
+.live-activity-item--clickable:hover {
     background: #ffffff;
     border-color: var(--pulse-teal-mid);
     box-shadow: 0 3px 10px rgba(13, 107, 114, 0.14);
@@ -286,6 +300,24 @@ body:has(.live-page-shell) > main {
     display: flex;
     gap: 0.3rem;
     margin-top: 0.35rem;
+}
+
+.live-activity-item-status-text {
+    font-size: 0.68rem;
+    font-weight: 600;
+    margin-top: 0.35rem;
+}
+
+.live-activity-item-status-text--live {
+    color: var(--pulse-success);
+}
+
+.live-activity-item-status-text--completed {
+    color: var(--pulse-text-light);
+}
+
+.live-activity-item-status-text--pending {
+    color: var(--pulse-text-mid);
 }
 
 .live-activity-item-status {
