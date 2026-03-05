@@ -71,6 +71,12 @@ public sealed class ParticipantService : IParticipantService
                 continue;
             }
 
+            // displayName is passed as a dedicated parameter, not in dimensions — handled separately below
+            if (string.Equals(field.Id, "displayName", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
             if (!dimensions.TryGetValue(field.Id, out var value) || string.IsNullOrWhiteSpace(value))
             {
                 throw new InvalidOperationException($"Join form field '{field.Id}' is required.");

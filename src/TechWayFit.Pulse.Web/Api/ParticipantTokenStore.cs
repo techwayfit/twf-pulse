@@ -14,10 +14,7 @@ public interface IParticipantTokenStore
     /// <summary>Cache-first lookup with DB fallback. Always use this from async code.</summary>
     Task<ParticipantAuth?> TryGetAsync(Guid sessionId, Guid participantId);
 
-    /// <summary>Cache-only validation. Use IsValidAsync from async code.</summary>
-    bool IsValid(Guid sessionId, Guid participantId, string token);
-
-    /// <summary>Cache-first validation with DB fallback. Always use this from async code.</summary>
+    /// <summary>Cache-first validation with DB fallback.</summary>
     Task<bool> IsValidAsync(Guid sessionId, Guid participantId, string token);
 }
 
@@ -94,16 +91,6 @@ public sealed class ParticipantTokenStore : IParticipantTokenStore
         }
 
         return null;
-    }
-
-    /// <inheritdoc/>
-    public bool IsValid(Guid sessionId, Guid participantId, string token)
-    {
-        if (!TryGet(sessionId, participantId, out var auth))
-        {
-            return false;
-        }
-        return string.Equals(auth.Token, token, StringComparison.Ordinal);
     }
 
     /// <inheritdoc/>

@@ -462,14 +462,14 @@
 
             var currentIsValid = participantId.HasValue
                 && !string.IsNullOrWhiteSpace(participantToken)
-                && ParticipantTokenStore.IsValid(sessionId, participantId.Value, participantToken);
+                && await ParticipantTokenStore.IsValidAsync(sessionId, participantId.Value, participantToken);
 
             if (currentIsValid)
             {
                 return;
             }
 
-            if (ParticipantTokenStore.IsValid(sessionId, storedParticipantId, storedToken))
+            if (await ParticipantTokenStore.IsValidAsync(sessionId, storedParticipantId, storedToken))
             {
                 participantId = storedParticipantId;
                 Pid = storedParticipantId;
@@ -677,12 +677,12 @@
                 return;
             }
             
-            if (!ParticipantTokenStore.IsValid(sessionEntity.Id, participantId.Value, participantToken))
+            if (!await ParticipantTokenStore.IsValidAsync(sessionEntity.Id, participantId.Value, participantToken))
             {
                 await EnsureParticipantIdentityConsistency(sessionEntity.Id);
 
                 if (!participantId.HasValue || string.IsNullOrWhiteSpace(participantToken) ||
-                    !ParticipantTokenStore.IsValid(sessionEntity.Id, participantId.Value, participantToken))
+                    !await ParticipantTokenStore.IsValidAsync(sessionEntity.Id, participantId.Value, participantToken))
                 {
                     submitSuccess = false;
                     submitMessage = "Invalid or expired participant token. The token doesn't match. Please rejoin the session.";

@@ -149,15 +149,23 @@
                     <div class="mb-4">
                         <h6 class="small text-uppercase text-muted mb-3">Default Fields (Always Collected)</h6>
                         <div class="border rounded-3 p-3 bg-light">
-                            <div class="d-flex align-items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-primary" viewBox="0 0 16 16">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-primary flex-shrink-0" viewBox="0 0 16 16">
                                     <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
                                 </svg>
                                 <div class="flex-grow-1">
                                     <div class="fw-medium">Participant Name</div>
-                                    <small class="text-muted">Display name (optional) with anonymous join option</small>
+                                    <small class="text-muted" id="displayNameHint">Display name (optional) with anonymous join option</small>
                                 </div>
-                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Default Field</span>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                               id="displayNameRequired"
+                                               onchange="onDisplayNameRequiredChanged(this.checked)" />
+                                        <label class="form-check-label small" for="displayNameRequired">Required</label>
+                                    </div>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Default Field</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -247,6 +255,8 @@
 
                     <!-- Hidden input to store form fields as JSON -->
                     <input type="hidden" id="joinFormFields" name="joinFormFields" value="[]" />
+                    <!-- Hidden flag indicating whether display name is required -->
+                    <input type="hidden" id="displayNameRequiredFlag" name="displayNameRequiredFlag" value="false" />
                 </div>
             </div>
 
@@ -469,6 +479,19 @@
             allowInput: true
         });
     });
+
+    function onDisplayNameRequiredChanged(isRequired) {
+        const hint = document.getElementById('displayNameHint');
+        const flag = document.getElementById('displayNameRequiredFlag');
+        if (hint) {
+            hint.textContent = isRequired
+                ? 'Display name is required — participants cannot join anonymously'
+                : 'Display name (optional) with anonymous join option';
+        }
+        if (flag) {
+            flag.value = isRequired ? 'true' : 'false';
+        }
+    }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 }

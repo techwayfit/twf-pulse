@@ -500,9 +500,32 @@ if (nameLabel) {
       },
          joinFormSchema: {
       maxFields: 5,
-       fields: JSON.parse(formData.get('joinFormFields') || '[]')
+       fields: this.buildJoinFormFields(formData)
           }
     };
+    }
+
+    /**
+     * Build the final joinFormSchema fields array, prepending the displayName
+     * entry when the facilitator has marked it as required.
+     */
+    buildJoinFormFields(formData) {
+        const customFields = JSON.parse(formData.get('joinFormFields') || '[]');
+        const displayNameRequired = formData.get('displayNameRequiredFlag') === 'true';
+
+        if (!displayNameRequired) {
+            return customFields;
+        }
+
+        const displayNameField = {
+            id: 'displayName',
+            label: 'Display Name',
+            type: 'text',
+            required: true,
+            options: ''
+        };
+
+        return [displayNameField, ...customFields];
     }
 
     /**

@@ -1211,7 +1211,7 @@ item.Config,
             }
 
             // SECURITY: Validate participant token to prevent identity spoofing
-            var tokenValidationResult = RequireParticipantToken<SubmitResponseResponse>(session.Id, request.ParticipantId);
+            var tokenValidationResult = await RequireParticipantToken<SubmitResponseResponse>(session.Id, request.ParticipantId);
             if (tokenValidationResult is not null)
             {
                 return tokenValidationResult;
@@ -1530,7 +1530,7 @@ filters ?? new Dictionary<string, string?>(),
         return Unauthorized(Error<T>("facilitator_token_required", "Facilitator token is required."));
     }
 
-    private ActionResult<ApiResponse<T>>? RequireParticipantToken<T>(Guid sessionId, Guid participantId)
+    private async Task<ActionResult<ApiResponse<T>>?> RequireParticipantToken<T>(Guid sessionId, Guid participantId)
     {
         // SECURITY: Validate that the request includes a valid participant token
         if (!Request.Headers.TryGetValue(ParticipantTokenHeader, out var token))
@@ -1538,7 +1538,7 @@ filters ?? new Dictionary<string, string?>(),
             return Unauthorized(Error<T>("participant_token_required", "Participant token is required."));
         }
 
-        if (!_participantTokens.IsValid(sessionId, participantId, token.ToString()))
+        if (!await _participantTokens.IsValidAsync(sessionId, participantId, token.ToString()))
         {
             return Unauthorized(Error<T>("invalid_participant_token", "Invalid or mismatched participant token."));
         }
