@@ -46,6 +46,8 @@ public sealed class ActivityReportItem
     public DateTimeOffset? OpenedAt { get; set; }
     public DateTimeOffset? ClosedAt { get; set; }
     public int? DurationMinutes { get; set; }
+    public string? QuadrantXAxisLabel { get; set; }
+    public string? QuadrantYAxisLabel { get; set; }
     public ActivityChartModel Chart { get; set; } = new();
     public IReadOnlyList<ActivityResponseItem> Responses { get; set; } = [];
 }
@@ -56,6 +58,10 @@ public sealed class ActivityResponseItem
     public Guid ParticipantId { get; set; }
     public string ParticipantName { get; set; } = "Anonymous";
     public DateTimeOffset CreatedAt { get; set; }
+    public int? UpvoteCount { get; set; }
+    public string? Question { get; set; }
+    public string? XAxisValue { get; set; }
+    public string? YAxisValue { get; set; }
     public string Summary { get; set; } = string.Empty;
 }
 

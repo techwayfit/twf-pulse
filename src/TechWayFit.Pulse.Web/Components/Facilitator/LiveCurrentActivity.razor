@@ -84,7 +84,7 @@
                 <span class="badge bg-info" style="font-size: 0.72rem;">Last Activity</span>
             }
         }
-        else if (Activity.Status == ActivityStatus.Closed)
+        else if (Activity.Status == ActivityStatus.Closed && !IsSessionEnded)
         {
             <button class="btn btn-sm btn-success" @onclick="OnReopen" disabled="@IsPerformingAction">
                 <i class="fas fa-redo me-1"></i>
@@ -173,6 +173,7 @@
     [Parameter] public bool HasNext { get; set; }
     [Parameter] public bool ShowCurrentControls { get; set; }
     [Parameter] public bool CanStart { get; set; }
+    [Parameter] public bool IsSessionEnded { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnGoBack { get; set; }
     [Parameter] public EventCallback OnMoveNext { get; set; }

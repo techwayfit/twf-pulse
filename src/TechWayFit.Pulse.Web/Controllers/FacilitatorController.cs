@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Domain.Entities;
+using TechWayFit.Pulse.Domain.Models.ActivityConfigs;
 using TechWayFit.Pulse.Web.Extensions;
 using TechWayFit.Pulse.Web.Models;
 
@@ -102,6 +104,11 @@ ISessionRepository sessionRepository,
                 .Where(r => !participantId.HasValue || r.ParticipantId == participantId.Value)
                 .OrderBy(r => r.CreatedAt)
                 .ToList();
+            var isQuadrant = activity.Type == TechWayFit.Pulse.Domain.Enums.ActivityType.Quadrant;
+            var quadrantMeta = isQuadrant ? ParseQuadrantReportMetadata(activity.Config) : null;
+            var isQnA = activity.Type == TechWayFit.Pulse.Domain.Enums.ActivityType.QnA;
+            var isAiSummary = activity.Type == TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary;
+            var aiSummaryReport = isAiSummary ? ParseAiSummaryReportDetails(activity.Config) : null;
 
             totalResponses += filteredResponses.Count;
 
@@ -113,18 +120,45 @@ ISessionRepository sessionRepository,
                 }
             }
 
-            var responseRows = filteredResponses
-                .Select(r => new ActivityResponseItem
+            var responseRows = isQnA
+                ? BuildQnAReportRows(filteredResponses, participantLookup)
+                : filteredResponses
+                    .Select(r =>
+                    {
+                        var quadrantDetails = isQuadrant
+                            ? ParseQuadrantResponseDetails(r.Payload, quadrantMeta)
+                            : null;
+
+                        return new ActivityResponseItem
+                        {
+                            ResponseId = r.Id,
+                            ParticipantId = r.ParticipantId,
+                            ParticipantName = participantLookup.TryGetValue(r.ParticipantId, out var p)
+                                ? (string.IsNullOrWhiteSpace(p.DisplayName) ? "Anonymous" : p.DisplayName)
+                                : "Unknown",
+                            CreatedAt = r.CreatedAt,
+                            Question = quadrantDetails?.Question,
+                            XAxisValue = quadrantDetails?.XValue,
+                            YAxisValue = quadrantDetails?.YValue,
+                            Summary = BuildResponseSummary(activity.Type, r.Payload)
+                        };
+                    })
+                    .ToList();
+
+            if (isAiSummary && responseRows.Count == 0 && aiSummaryReport is not null)
+            {
+                responseRows.Add(new ActivityResponseItem
                 {
-                    ResponseId = r.Id,
-                    ParticipantId = r.ParticipantId,
-                    ParticipantName = participantLookup.TryGetValue(r.ParticipantId, out var p)
-                        ? (string.IsNullOrWhiteSpace(p.DisplayName) ? "Anonymous" : p.DisplayName)
-                        : "Unknown",
-                    CreatedAt = r.CreatedAt,
-                    Summary = BuildResponseSummary(activity.Type, r.Payload)
-                })
-                .ToList();
+                    ResponseId = activity.Id,
+                    ParticipantId = Guid.Empty,
+                    ParticipantName = "AI System",
+                    CreatedAt = aiSummaryReport.GeneratedAt
+                        ?? activity.ClosedAt
+                        ?? activity.OpenedAt
+                        ?? DateTimeOffset.UtcNow,
+                    Summary = aiSummaryReport.Summary
+                });
+            }
 
             activityItems.Add(new ActivityReportItem
             {
@@ -133,11 +167,13 @@ ISessionRepository sessionRepository,
                 Type = activity.Type.ToString(),
                 Title = activity.Title,
                 Prompt = activity.Prompt,
-                ResponseCount = filteredResponses.Count,
+                ResponseCount = responseRows.Count,
                 OpenedAt = activity.OpenedAt,
                 ClosedAt = activity.ClosedAt,
                 DurationMinutes = activity.DurationMinutes,
-                Chart = BuildChart(activity.Type, activity.Config, filteredResponses),
+                QuadrantXAxisLabel = isQuadrant ? quadrantMeta?.XAxisLabel : null,
+                QuadrantYAxisLabel = isQuadrant ? quadrantMeta?.YAxisLabel : null,
+                Chart = new ActivityChartModel(),
                 Responses = responseRows
             });
         }
@@ -426,6 +462,7 @@ ISessionRepository sessionRepository,
                 TechWayFit.Pulse.Domain.Enums.ActivityType.Rating => BuildRatingSummary(root),
                 TechWayFit.Pulse.Domain.Enums.ActivityType.GeneralFeedback => BuildFeedbackSummary(root),
                 TechWayFit.Pulse.Domain.Enums.ActivityType.Quadrant => BuildQuadrantSummary(root),
+                TechWayFit.Pulse.Domain.Enums.ActivityType.QnA => BuildQnASummary(root),
                 _ => payload
             };
         }
@@ -621,23 +658,26 @@ ISessionRepository sessionRepository,
             {
                 using var doc = JsonDocument.Parse(response.Payload);
                 var root = doc.RootElement;
-                if (!root.TryGetProperty("x", out var xElement)
-                    || !root.TryGetProperty("y", out var yElement)
-                    || xElement.ValueKind != JsonValueKind.Number
-                    || yElement.ValueKind != JsonValueKind.Number)
+
+                if (!TryGetNumericValue(root, "xValue", "x", out var x)
+                    || !TryGetNumericValue(root, "yValue", "y", out var y))
                 {
                     continue;
                 }
 
-                var label = root.TryGetProperty("label", out var labelElement)
-                    ? labelElement.GetString() ?? string.Empty
-                    : string.Empty;
+                var label = TryGetStringValue(root, "label");
+                if (string.IsNullOrWhiteSpace(label)
+                    && TryGetPropertyCaseInsensitive(root, "itemIndex", out var itemIndexElement)
+                    && itemIndexElement.TryGetInt32(out var itemIndex))
+                {
+                    label = $"Item {itemIndex + 1}";
+                }
 
                 points.Add(new ActivityScatterPoint
                 {
-                    X = xElement.GetDouble(),
-                    Y = yElement.GetDouble(),
-                    Label = label
+                    X = x,
+                    Y = y,
+                    Label = label ?? string.Empty
                 });
             }
             catch
@@ -763,18 +803,440 @@ ISessionRepository sessionRepository,
 
     private static string BuildQuadrantSummary(JsonElement root)
     {
-        var x = root.TryGetProperty("x", out var xElement) && xElement.ValueKind == JsonValueKind.Number
-            ? xElement.GetDouble().ToString("F1")
-            : "-";
-        var y = root.TryGetProperty("y", out var yElement) && yElement.ValueKind == JsonValueKind.Number
-            ? yElement.GetDouble().ToString("F1")
-            : "-";
-        var label = root.TryGetProperty("label", out var labelElement)
-            ? labelElement.GetString()
-            : null;
+        var x = GetDisplayValue(root, "xValue", "x");
+        var y = GetDisplayValue(root, "yValue", "y");
+
+        var label = TryGetStringValue(root, "label");
+        if (string.IsNullOrWhiteSpace(label)
+            && TryGetPropertyCaseInsensitive(root, "itemIndex", out var idxElement)
+            && idxElement.TryGetInt32(out var idx))
+        {
+            label = $"Item {idx + 1}";
+        }
 
         return string.IsNullOrWhiteSpace(label)
             ? $"x={x}, y={y}"
             : $"{label} (x={x}, y={y})";
+    }
+
+    private static string BuildQnASummary(JsonElement root)
+    {
+        var type = TryGetStringValue(root, "type");
+        var text = GetQnAText(root);
+        var questionResponseId = GetQnAQuestionResponseId(root);
+
+        if (string.Equals(type, "question", StringComparison.OrdinalIgnoreCase)
+            || (string.IsNullOrWhiteSpace(type) && !string.IsNullOrWhiteSpace(text)))
+        {
+            return string.IsNullOrWhiteSpace(text) ? "(empty question)" : text;
+        }
+
+        if (string.Equals(type, "vote", StringComparison.OrdinalIgnoreCase)
+            || (string.IsNullOrWhiteSpace(type) && !string.IsNullOrWhiteSpace(questionResponseId)))
+        {
+            return "Upvote";
+        }
+
+        return root.ToString();
+    }
+
+    private static List<ActivityResponseItem> BuildQnAReportRows(
+        IReadOnlyList<Response> responses,
+        IReadOnlyDictionary<Guid, Participant> participantLookup)
+    {
+        var questionRows = new List<ActivityResponseItem>();
+        var questionByResponseId = new Dictionary<string, ActivityResponseItem>(StringComparer.OrdinalIgnoreCase);
+        var pendingVotes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var response in responses.OrderBy(r => r.CreatedAt))
+        {
+            if (string.IsNullOrWhiteSpace(response.Payload))
+            {
+                continue;
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(NormalizeJsonPayload(response.Payload));
+                var root = doc.RootElement;
+                if (root.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                var type = TryGetStringValue(root, "type");
+                var text = GetQnAText(root);
+                var questionResponseId = GetQnAQuestionResponseId(root);
+                var isQuestionPayload = string.Equals(type, "question", StringComparison.OrdinalIgnoreCase)
+                    || (string.IsNullOrWhiteSpace(type) && !string.IsNullOrWhiteSpace(text));
+                var isVotePayload = string.Equals(type, "vote", StringComparison.OrdinalIgnoreCase)
+                    || (string.IsNullOrWhiteSpace(type) && !string.IsNullOrWhiteSpace(questionResponseId));
+
+                if (isQuestionPayload)
+                {
+                    if (string.IsNullOrWhiteSpace(text))
+                    {
+                        continue;
+                    }
+
+                    var isAnonymous = false;
+                    if (TryGetPropertyCaseInsensitive(root, "isAnonymous", out var anonymousElement))
+                    {
+                        if (anonymousElement.ValueKind is JsonValueKind.True or JsonValueKind.False)
+                        {
+                            isAnonymous = anonymousElement.GetBoolean();
+                        }
+                        else if (anonymousElement.ValueKind == JsonValueKind.String)
+                        {
+                            bool.TryParse(anonymousElement.GetString(), out isAnonymous);
+                        }
+                    }
+
+                    var participantName = participantLookup.TryGetValue(response.ParticipantId, out var participant)
+                        ? (string.IsNullOrWhiteSpace(participant.DisplayName) ? "Anonymous" : participant.DisplayName)
+                        : "Unknown";
+
+                    if (isAnonymous)
+                    {
+                        participantName = "Anonymous";
+                    }
+
+                    var responseId = response.Id.ToString();
+                    pendingVotes.TryGetValue(responseId, out var votes);
+                    pendingVotes.Remove(responseId);
+
+                    var row = new ActivityResponseItem
+                    {
+                        ResponseId = response.Id,
+                        ParticipantId = response.ParticipantId,
+                        ParticipantName = participantName,
+                        CreatedAt = response.CreatedAt,
+                        Summary = text.Trim(),
+                        UpvoteCount = votes
+                    };
+
+                    questionRows.Add(row);
+                    questionByResponseId[responseId] = row;
+                }
+                else if (isVotePayload)
+                {
+                    if (string.IsNullOrWhiteSpace(questionResponseId))
+                    {
+                        continue;
+                    }
+
+                    if (questionByResponseId.TryGetValue(questionResponseId, out var questionRow))
+                    {
+                        questionRow.UpvoteCount = (questionRow.UpvoteCount ?? 0) + 1;
+                    }
+                    else
+                    {
+                        pendingVotes[questionResponseId] = pendingVotes.GetValueOrDefault(questionResponseId) + 1;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore malformed payloads.
+            }
+        }
+
+        return questionRows;
+    }
+
+    private static string? GetQnAText(JsonElement root)
+    {
+        var text = TryGetStringValue(root, "text");
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
+
+        text = TryGetStringValue(root, "content");
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            return text;
+        }
+
+        return TryGetStringValue(root, "question");
+    }
+
+    private static string? GetQnAQuestionResponseId(JsonElement root)
+    {
+        var id = TryGetStringValue(root, "questionResponseId");
+        if (!string.IsNullOrWhiteSpace(id))
+        {
+            return id;
+        }
+
+        id = TryGetStringValue(root, "questionId");
+        if (!string.IsNullOrWhiteSpace(id))
+        {
+            return id;
+        }
+
+        return TryGetStringValue(root, "targetResponseId");
+    }
+
+    private static string NormalizeJsonPayload(string payload)
+    {
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            return payload;
+        }
+
+        var trimmed = payload.Trim();
+        if (!trimmed.StartsWith("\"", StringComparison.Ordinal))
+        {
+            return payload;
+        }
+
+        try
+        {
+            var unwrapped = JsonSerializer.Deserialize<string>(trimmed);
+            return string.IsNullOrWhiteSpace(unwrapped) ? payload : unwrapped;
+        }
+        catch
+        {
+            return payload;
+        }
+    }
+
+    private static AiSummaryReportDetails? ParseAiSummaryReportDetails(string? config)
+    {
+        if (string.IsNullOrWhiteSpace(config))
+        {
+            return null;
+        }
+
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<AiSummaryConfig>(
+                config,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (parsed is null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(parsed.GeneratedSummary))
+            {
+                return new AiSummaryReportDetails
+                {
+                    Summary = parsed.GeneratedSummary.Trim(),
+                    GeneratedAt = parsed.GeneratedAt
+                };
+            }
+
+            if (parsed.IsGenerating)
+            {
+                return new AiSummaryReportDetails
+                {
+                    Summary = "AI summary generation is in progress.",
+                    GeneratedAt = parsed.GeneratedAt
+                };
+            }
+        }
+        catch
+        {
+            // Ignore malformed config and return no report details.
+        }
+
+        return null;
+    }
+
+    private static QuadrantReportMetadata ParseQuadrantReportMetadata(string? config)
+    {
+        var metadata = new QuadrantReportMetadata
+        {
+            XAxisLabel = "Complexity",
+            YAxisLabel = "Effort",
+            Items = []
+        };
+
+        if (string.IsNullOrWhiteSpace(config))
+        {
+            return metadata;
+        }
+
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<QuadrantConfig>(
+                config,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (parsed is null)
+            {
+                return metadata;
+            }
+
+            metadata.XAxisLabel = string.IsNullOrWhiteSpace(parsed.XAxisLabel) ? metadata.XAxisLabel : parsed.XAxisLabel;
+            metadata.YAxisLabel = string.IsNullOrWhiteSpace(parsed.YAxisLabel) ? metadata.YAxisLabel : parsed.YAxisLabel;
+            metadata.Items = parsed.Items ?? [];
+        }
+        catch
+        {
+            // Ignore malformed config and fall back to defaults
+        }
+
+        return metadata;
+    }
+
+    private static QuadrantResponseDetails ParseQuadrantResponseDetails(string payload, QuadrantReportMetadata? metadata)
+    {
+        var result = new QuadrantResponseDetails
+        {
+            Question = "-",
+            XValue = "-",
+            YValue = "-"
+        };
+
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            return result;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(payload);
+            var root = doc.RootElement;
+
+            result.XValue = GetDisplayValue(root, "xValue", "x");
+            result.YValue = GetDisplayValue(root, "yValue", "y");
+
+            if (TryGetPropertyCaseInsensitive(root, "itemIndex", out var itemIndexElement)
+                && itemIndexElement.TryGetInt32(out var itemIndex))
+            {
+                var itemLabel = metadata?.Items is not null
+                    && itemIndex >= 0
+                    && itemIndex < metadata.Items.Count
+                    ? metadata.Items[itemIndex]
+                    : null;
+
+                result.Question = string.IsNullOrWhiteSpace(itemLabel)
+                    ? $"Item {itemIndex + 1}"
+                    : itemLabel;
+            }
+            else
+            {
+                result.Question = TryGetStringValue(root, "label") ?? "-";
+            }
+        }
+        catch
+        {
+            // Ignore malformed payload and return defaults
+        }
+
+        return result;
+    }
+
+    private static bool TryGetPropertyCaseInsensitive(JsonElement root, string propertyName, out JsonElement value)
+    {
+        foreach (var property in root.EnumerateObject())
+        {
+            if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = property.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
+    }
+
+    private static string? TryGetStringValue(JsonElement root, string propertyName)
+    {
+        if (!TryGetPropertyCaseInsensitive(root, propertyName, out var value))
+        {
+            return null;
+        }
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.String => value.GetString(),
+            JsonValueKind.Number => value.GetDouble().ToString("0.##", CultureInfo.InvariantCulture),
+            _ => null
+        };
+    }
+
+    private static string GetDisplayValue(JsonElement root, string preferredPropertyName, string fallbackPropertyName)
+    {
+        var preferred = TryGetStringValue(root, preferredPropertyName);
+        if (!string.IsNullOrWhiteSpace(preferred))
+        {
+            return preferred;
+        }
+
+        var fallback = TryGetStringValue(root, fallbackPropertyName);
+        if (!string.IsNullOrWhiteSpace(fallback))
+        {
+            return fallback;
+        }
+
+        return "-";
+    }
+
+    private static bool TryGetNumericValue(
+        JsonElement root,
+        string preferredPropertyName,
+        string fallbackPropertyName,
+        out double value)
+    {
+        if (TryGetPropertyCaseInsensitive(root, preferredPropertyName, out var preferred)
+            && TryParseNumeric(preferred, out value))
+        {
+            return true;
+        }
+
+        if (TryGetPropertyCaseInsensitive(root, fallbackPropertyName, out var fallback)
+            && TryParseNumeric(fallback, out value))
+        {
+            return true;
+        }
+
+        value = 0;
+        return false;
+    }
+
+    private static bool TryParseNumeric(JsonElement element, out double value)
+    {
+        if (element.ValueKind == JsonValueKind.Number)
+        {
+            return element.TryGetDouble(out value);
+        }
+
+        if (element.ValueKind == JsonValueKind.String)
+        {
+            return double.TryParse(
+                element.GetString(),
+                NumberStyles.Float | NumberStyles.AllowThousands,
+                CultureInfo.InvariantCulture,
+                out value);
+        }
+
+        value = 0;
+        return false;
+    }
+
+    private sealed class QuadrantReportMetadata
+    {
+        public string XAxisLabel { get; set; } = "Complexity";
+        public string YAxisLabel { get; set; } = "Effort";
+        public IReadOnlyList<string> Items { get; set; } = [];
+    }
+
+    private sealed class QuadrantResponseDetails
+    {
+        public string Question { get; set; } = "-";
+        public string XValue { get; set; } = "-";
+        public string YValue { get; set; } = "-";
+    }
+
+    private sealed class AiSummaryReportDetails
+    {
+        public string Summary { get; set; } = string.Empty;
+        public DateTimeOffset? GeneratedAt { get; set; }
     }
 }

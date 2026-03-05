@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.SignalR.Client
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Application.Abstractions.Services
+@using TechWayFit.Pulse.Domain.Enums
 @inject IQnADashboardService DashboardService
 @inject ISessionService SessionService
 @inject NavigationManager Navigation
@@ -49,6 +50,14 @@
         }
         else
         {
+            @if (isSessionEnded)
+            {
+                <div class="alert alert-secondary py-2 small mb-3">
+                    <i class="fas fa-lock me-1"></i>
+                    Session has ended. Question status updates are locked.
+                </div>
+            }
+
             @* Open questions *@
             @if (open.Any())
             {
@@ -70,9 +79,12 @@
                             <div class="qna-text">@q.Text</div>
 
                             @* Mark answered *@
-                            <button class="qna-answered-btn" @onclick="() => ToggleAnswered(q.ResponseId)" title="Mark as answered">
-                                <i class="fas fa-check"></i>
-                            </button>
+                            @if (!isSessionEnded)
+                            {
+                                <button class="qna-answered-btn" @onclick="() => ToggleAnswered(q.ResponseId)" title="Mark as answered">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            }
                         </div>
                     }
                 </div>
@@ -93,9 +105,12 @@
                                 <i class="fas fa-thumbs-up qna-vote-icon"></i>
                             </div>
                             <div class="qna-text qna-text-answered">@q.Text</div>
-                            <button class="qna-answered-btn qna-answered-btn-undo" @onclick="() => ToggleAnswered(q.ResponseId)" title="Reopen question">
-                                <i class="fas fa-rotate-left"></i>
-                            </button>
+                            @if (!isSessionEnded)
+                            {
+                                <button class="qna-answered-btn qna-answered-btn-undo" @onclick="() => ToggleAnswered(q.ResponseId)" title="Reopen question">
+                                    <i class="fas fa-rotate-left"></i>
+                                </button>
+                            }
                         </div>
                     }
                 </div>
@@ -126,6 +141,7 @@
     private HubConnection? hubConnection;
     private List<QnAQuestionItem> Questions { get; set; } = new();
     private string TimeRemaining { get; set; } = "--:--";
+    private bool isSessionEnded;
     private System.Threading.Timer? timer;
     private System.Threading.Timer? dataRefreshTimer;
 
@@ -143,6 +159,7 @@
         {
             var session = await SessionService.GetByCodeAsync(SessionCode);
             if (session == null) return;
+            isSessionEnded = session.Status is SessionStatus.Ended or SessionStatus.Expired;
 
             var result = await DashboardService.GetQnADashboardAsync(session.Id, ActivityId);
             Questions = result.Questions.ToList();
@@ -211,6 +228,9 @@
 
     private async void ToggleAnswered(Guid questionId)
     {
+        if (isSessionEnded)
+            return;
+
         var q = Questions.FirstOrDefault(x => x.ResponseId == questionId);
         if (q is null) return;
         try

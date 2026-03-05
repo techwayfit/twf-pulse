@@ -1,14 +1,8 @@
 @model TechWayFit.Pulse.Web.Models.SessionReportViewModel
-@using System.Text.Json
+@using Markdig
 
 @{
     ViewData["Title"] = $"Session Report - {Model.SessionCode}";
-    var chartPayload = Model.Activities.Select(a => new
-    {
-        activityId = a.ActivityId,
-        title = a.Title,
-        chart = a.Chart
-    });
 }
 
 <div class="container container-wide session-report-page py-4">
@@ -124,8 +118,6 @@
 
     @foreach (var activity in Model.Activities.OrderBy(a => a.Order))
     {
-        var chartCanvasId = $"activity-chart-{activity.ActivityId:N}";
-
         <div class="card shadow-sm mb-4 report-activity-block">
             <div class="card-header bg-white">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -146,10 +138,6 @@
                     <div class="col-md-4"><small class="text-muted">Duration</small><div>@(activity.DurationMinutes.HasValue ? $"{activity.DurationMinutes} min" : "-")</div></div>
                 </div>
 
-                <div class="report-chart-wrap mb-4">
-                    <canvas id="@chartCanvasId" data-chart-id="@activity.ActivityId"></canvas>
-                </div>
-
                 <h6 class="mb-2">Responses</h6>
                 @if (activity.Responses.Count == 0)
                 {
@@ -157,27 +145,108 @@
                 }
                 else
                 {
-                    <div class="table-responsive">
-                        <table class="table table-sm table-striped align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Participant</th>
-                                    <th>Response</th>
-                                    <th>Submitted At</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var response in activity.Responses)
+                    var isQuadrant = string.Equals(activity.Type, "Quadrant", StringComparison.OrdinalIgnoreCase);
+                    var isAiSummary = string.Equals(activity.Type, "AiSummary", StringComparison.OrdinalIgnoreCase);
+                    var xAxisLabel = string.IsNullOrWhiteSpace(activity.QuadrantXAxisLabel) ? "X Axis" : activity.QuadrantXAxisLabel;
+                    var yAxisLabel = string.IsNullOrWhiteSpace(activity.QuadrantYAxisLabel) ? "Y Axis" : activity.QuadrantYAxisLabel;
+
+                    @if (isAiSummary)
+                    {
+                        var summaryItem = activity.Responses.OrderBy(r => r.CreatedAt).LastOrDefault();
+                        if (summaryItem is null || string.IsNullOrWhiteSpace(summaryItem.Summary))
+                        {
+                            <div class="text-muted">No AI summary generated.</div>
+                        }
+                        else
+                        {
+                            <div class="report-ai-summary-block">
+                                <div class="report-ai-summary-meta">
+                                    <span>@summaryItem.ParticipantName</span>
+                                    <span>@summaryItem.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</span>
+                                </div>
+                                <div class="report-ai-summary-content">
+                                    @Html.Raw(RenderMarkdownAsHtml(summaryItem.Summary))
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        var isQnA = string.Equals(activity.Type, "QnA", StringComparison.OrdinalIgnoreCase);
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped align-middle mb-0 @(isQuadrant ? "report-table-quadrant" : "")">
+                                @if (isQuadrant)
                                 {
-                                    <tr>
-                                        <td>@response.ParticipantName</td>
-                                        <td>@response.Summary</td>
-                                        <td>@response.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
-                                    </tr>
+                                    <colgroup>
+                                        <col class="report-col-idx" />
+                                        <col class="report-col-question" />
+                                        <col class="report-col-participant" />
+                                        <col class="report-col-axis" />
+                                        <col class="report-col-axis" />
+                                        <col class="report-col-submitted" />
+                                    </colgroup>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        @if (isQuadrant)
+                                        {
+                                            <th>Question</th>
+                                        }
+                                        else if (isQnA)
+                                        {
+                                            <th>Text</th>
+                                            <th>Upvotes</th>
+                                        }
+                                        else
+                                        {
+                                            <th>Participant</th>
+                                            <th>Response</th>
+                                        }
+                                        @if (isQuadrant)
+                                        {
+                                            <th>@xAxisLabel</th>
+                                            <th>@yAxisLabel</th>
+                                        }
+                                        <th>Submitted At</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        var responseIndex = 0;
+                                    }
+                                    @foreach (var response in activity.Responses)
+                                    {
+                                        responseIndex++;
+                                        <tr>
+                                            <td>@responseIndex</td>
+                                            @if (isQuadrant)
+                                            {
+                                                <td class="report-question-cell"
+                                                    title="@(string.IsNullOrWhiteSpace(response.Question) ? "-" : response.Question)">
+                                                    @TruncateReportText(response.Question, 150)
+                                                </td>
+                                                <td>@response.ParticipantName</td>
+                                                <td>@(string.IsNullOrWhiteSpace(response.XAxisValue) ? "-" : response.XAxisValue)</td>
+                                                <td>@(string.IsNullOrWhiteSpace(response.YAxisValue) ? "-" : response.YAxisValue)</td>
+                                            }
+                                            else if (isQnA)
+                                            {
+                                                <td class="report-qna-text-cell">@response.Summary</td>
+                                                <td>@(response.UpvoteCount ?? 0)</td>
+                                            }
+                                            else
+                                            {
+                                                <td>@response.ParticipantName</td>
+                                                <td>@response.Summary</td>
+                                            }
+                                            <td>@response.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
                 }
             </div>
         </div>
@@ -187,101 +256,6 @@
 @section Scripts {
     <script>
         (function () {
-            const chartPayload = @Html.Raw(JsonSerializer.Serialize(chartPayload));
-            const chartInstances = [];
-
-            function pick(obj, camel, pascal, fallback) {
-                if (!obj) return fallback;
-                if (Object.prototype.hasOwnProperty.call(obj, camel) && obj[camel] !== undefined && obj[camel] !== null) {
-                    return obj[camel];
-                }
-                if (Object.prototype.hasOwnProperty.call(obj, pascal) && obj[pascal] !== undefined && obj[pascal] !== null) {
-                    return obj[pascal];
-                }
-                return fallback;
-            }
-
-            function renderChart(item) {
-                const chartContainer = document.getElementById(`activity-chart-${item.activityId.replaceAll('-', '')}`);
-                if (!chartContainer || !item.chart) {
-                    return;
-                }
-
-                const chartType = String(pick(item.chart, 'type', 'Type', 'bar')).toLowerCase();
-                const chartTitle = String(pick(item.chart, 'title', 'Title', item.title || 'Activity Chart'));
-
-                if (chartType === 'scatter') {
-                    const scatterPoints = (pick(item.chart, 'points', 'Points', []) || []).map(p => ({
-                        x: pick(p, 'x', 'X', 0),
-                        y: pick(p, 'y', 'Y', 0),
-                        label: pick(p, 'label', 'Label', '')
-                    }));
-                    chartInstances.push(new Chart(chartContainer, {
-                        type: 'scatter',
-                        data: {
-                            datasets: [{
-                                label: chartTitle,
-                                data: scatterPoints,
-                                backgroundColor: 'rgba(13,110,253,0.65)'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                x: { min: 0, max: 100, title: { display: true, text: 'X' } },
-                                y: { min: 0, max: 100, title: { display: true, text: 'Y' } }
-                            },
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function (ctx) {
-                                            const raw = ctx.raw || {};
-                                            const base = `x=${raw.x}, y=${raw.y}`;
-                                            return raw.label ? `${raw.label} (${base})` : base;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }));
-                    return;
-                }
-
-                const labels = pick(item.chart, 'labels', 'Labels', []) || [];
-                const values = pick(item.chart, 'values', 'Values', []) || [];
-
-                chartInstances.push(new Chart(chartContainer, {
-                    type: 'bar',
-                    data: {
-                        labels,
-                        datasets: [{
-                            label: chartTitle,
-                            data: values,
-                            backgroundColor: 'rgba(13,110,253,0.65)',
-                            borderColor: 'rgba(13,110,253,1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: { precision: 0 }
-                            }
-                        },
-                        plugins: {
-                            legend: { display: false }
-                        }
-                    }
-                }));
-            }
-
-            chartPayload.forEach(renderChart);
-
             const downloadBtn = document.getElementById('downloadPdfBtn');
             if (downloadBtn) {
                 downloadBtn.addEventListener('click', function () {
@@ -292,10 +266,92 @@
     </script>
 }
 
+@functions {
+    private static string TruncateReportText(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "-";
+        }
+
+        return value.Length <= maxLength
+            ? value
+            : $"{value[..maxLength].TrimEnd()}...";
+    }
+
+    private static string RenderMarkdownAsHtml(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "<p class=\"text-muted mb-0\">No AI summary generated.</p>";
+        }
+
+        var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+        return Markdown.ToHtml(value, pipeline);
+    }
+}
+
 <style>
-    .report-chart-wrap {
-        position: relative;
-        min-height: 320px;
+    .report-ai-summary-block {
+        border: 1px solid #d7e4e8;
+        border-radius: 12px;
+        background: #f8fbfc;
+        padding: 1rem 1.1rem;
+    }
+
+    .report-ai-summary-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        color: #6c7f85;
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .report-ai-summary-content {
+        color: #1f2d33;
+    }
+
+    .report-ai-summary-content > :last-child {
+        margin-bottom: 0;
+    }
+
+    .report-table-quadrant {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    .report-table-quadrant .report-col-idx {
+        width: 52px;
+    }
+
+    .report-table-quadrant .report-col-question {
+        width: 340px;
+    }
+
+    .report-table-quadrant .report-col-participant {
+        width: 180px;
+    }
+
+    .report-table-quadrant .report-col-axis {
+        width: 130px;
+    }
+
+    .report-table-quadrant .report-col-submitted {
+        width: 190px;
+    }
+
+    .report-table-quadrant .report-question-cell {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .report-qna-text-cell {
+        white-space: normal;
+        word-break: break-word;
     }
 
     @@media print {
@@ -311,10 +367,6 @@
 
         .report-activity-block {
             page-break-inside: avoid;
-        }
-
-        .report-chart-wrap {
-            min-height: 260px;
         }
     }
 </style>

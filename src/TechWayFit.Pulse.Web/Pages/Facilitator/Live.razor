@@ -121,6 +121,7 @@ else if (session != null)
                                          HasNext="@HasNextActivity()"
                                          ShowCurrentControls="@showCurrentControls"
                                          CanStart="@(currentActivity == null && displayedActivity.Status == ActivityStatus.Pending)"
+                                         IsSessionEnded="@(session.Status == SessionStatus.Ended || session.Status == SessionStatus.Expired)"
                                          OnClose="@CloseCurrentActivity"
                                          OnGoBack="@GoBack"
                                          OnMoveNext="@MoveNext"

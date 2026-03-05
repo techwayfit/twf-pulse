@@ -1,5 +1,6 @@
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Application.Abstractions.Services
+@using TechWayFit.Pulse.Domain.Enums
 @using Microsoft.AspNetCore.SignalR.Client
 @using TechWayFit.Pulse.Web.Hubs
 @namespace TechWayFit.Pulse.Web.Components.Dashboards
@@ -107,6 +108,13 @@
                     <h6 class="mb-0 fw-semibold">
                         <i class="fas fa-comments me-2"></i>Questions
                     </h6>
+                    @if (isSessionEnded)
+                    {
+                        <span class="qna-session-ended-pill">
+                            <i class="fas fa-lock"></i>
+                            Session ended
+                        </span>
+                    }
                     <div class="qna-sort-switch" role="group" aria-label="Sort questions">
                         <button class="qna-sort-btn @(sortBy == "votes" ? "is-active" : "")"
                                 @onclick='() => sortBy = "votes"'>
@@ -158,12 +166,22 @@
                                 </div>
 
                                 <div class="qna-actions">
-                                    <button class="qna-toggle-btn @(isAnswered ? "is-reopen" : "is-answer")"
-                                            @onclick="() => ToggleAnsweredAsync(q.ResponseId, !q.IsAnswered)"
-                                            title="@(isAnswered ? "Mark as unanswered" : "Mark as answered")">
-                                        <i class="fas @(isAnswered ? "fa-rotate-left" : "fa-check")"></i>
-                                        @(isAnswered ? "Reopen" : "Answered")
-                                    </button>
+                                    @if (isSessionEnded)
+                                    {
+                                        <span class="qna-locked-pill">
+                                            <i class="fas fa-lock"></i>
+                                            Locked
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <button class="qna-toggle-btn @(isAnswered ? "is-reopen" : "is-answer")"
+                                                @onclick="() => ToggleAnsweredAsync(q.ResponseId, !q.IsAnswered)"
+                                                title="@(isAnswered ? "Mark as unanswered" : "Mark as answered")">
+                                            <i class="fas @(isAnswered ? "fa-rotate-left" : "fa-check")"></i>
+                                            @(isAnswered ? "Reopen" : "Answered")
+                                        </button>
+                                    }
                                 </div>
                             </article>
                         }
@@ -398,6 +416,19 @@
         background: #f5fafb;
     }
 
+    .qna-dashboard .qna-session-ended-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        padding: 0.18rem 0.55rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #475569;
+        border: 1px solid rgba(100, 116, 139, 0.3);
+        background: rgba(100, 116, 139, 0.12);
+    }
+
     .qna-dashboard .qna-sort-btn {
         border: none;
         border-radius: 999px;
@@ -521,6 +552,19 @@
         align-items: center;
         gap: 0.3rem;
         white-space: nowrap;
+    }
+
+    .qna-dashboard .qna-locked-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        border-radius: 999px;
+        border: 1px solid rgba(100, 116, 139, 0.3);
+        background: rgba(100, 116, 139, 0.12);
+        color: #475569;
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 0.32rem 0.65rem;
     }
 
     .qna-dashboard .qna-toggle-btn.is-answer {
@@ -649,6 +693,7 @@
     private string errorMessage = string.Empty;
     private string sortBy = "votes";
     private int displayCount = 25;
+    private bool isSessionEnded;
     private HubConnection? hubConnection;
 
     protected override async Task OnInitializedAsync()
@@ -675,9 +720,11 @@
             if (session is null)
             {
                 errorMessage = "Session not found.";
+                isSessionEnded = false;
                 return;
             }
 
+            isSessionEnded = session.Status is SessionStatus.Ended or SessionStatus.Expired;
             dashboard = await QnADashboardService.GetQnADashboardAsync(session.Id, ActivityId);
         }
         catch (Exception ex)
@@ -772,6 +819,13 @@
 
     private async Task ToggleAnsweredAsync(Guid questionId, bool isAnswered)
     {
+        if (isSessionEnded)
+        {
+            errorMessage = "Session has ended. Questions can no longer be updated.";
+            StateHasChanged();
+            return;
+        }
+
         try
         {
             await QnADashboardService.ToggleAnsweredAsync(questionId, isAnswered);
@@ -779,7 +833,9 @@
         }
         catch (Exception ex)
         {
+            errorMessage = $"Unable to update question state: {ex.Message}";
             Logger.LogError(ex, "Failed to toggle answered state for question {QuestionId}", questionId);
+            StateHasChanged();
         }
     }
 
