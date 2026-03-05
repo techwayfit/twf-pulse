@@ -12,11 +12,11 @@
 <div class="qna-dashboard">
     @if (isLoading)
     {
-        <div class="text-center py-4">
+        <div class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <div class="mt-2 small text-muted">Loading questions...</div>
+            <div class="mt-3">Loading questions...</div>
         </div>
     }
     else if (!string.IsNullOrEmpty(errorMessage))
@@ -27,117 +27,618 @@
     }
     else if (dashboard != null)
     {
-        @* Stats bar *@
-        <div class="row g-3 mb-4">
-            <div class="col-4">
-                <div class="text-center p-3 bg-white border rounded-3">
-                    <div class="fw-bold fs-4 text-primary">@dashboard.TotalQuestions</div>
-                    <div class="small text-muted">Questions</div>
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="text-center p-3 bg-white border rounded-3">
-                    <div class="fw-bold fs-4 text-warning">@dashboard.TotalVotes</div>
-                    <div class="small text-muted">Upvotes</div>
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="text-center p-3 bg-white border rounded-3">
-                    <div class="fw-bold fs-4 text-success">@dashboard.RespondedParticipants</div>
-                    <div class="small text-muted">Participants</div>
-                </div>
-            </div>
-        </div>
+        var sortedQuestions = GetSortedQuestions().ToList();
+        var participationRate = GetParticipationRate();
+        var unansweredCount = dashboard.Questions.Count(q => !q.IsAnswered);
+        var answeredCount = dashboard.TotalQuestions - unansweredCount;
+        var avgVotesPerQuestion = dashboard.TotalQuestions > 0
+            ? ((double)dashboard.TotalVotes / dashboard.TotalQuestions).ToString("F1")
+            : "0.0";
+        var topQuestion = dashboard.Questions
+            .OrderBy(q => q.IsAnswered ? 1 : 0)
+            .ThenByDescending(q => q.UpvoteCount)
+            .ThenBy(q => q.SubmittedAt)
+            .FirstOrDefault();
 
-        @* Sort controls *@
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0 fw-semibold">
-                <i class="fas fa-comments me-1 text-primary"></i>Questions
-            </h6>
-            <div class="btn-group btn-group-sm shadow-sm">
-                <button class="btn @(sortBy == "votes" ? "btn-primary" : "btn-outline-secondary")"
-                        @onclick='() => sortBy = "votes"'>
-                    <i class="fas fa-fire me-1"></i>Top
-                </button>
-                <button class="btn @(sortBy == "recent" ? "btn-primary" : "btn-outline-secondary")"
-                        @onclick='() => sortBy = "recent"'>
-                    <i class="fas fa-clock me-1"></i>Recent
-                </button>
-            </div>
-        </div>
+        <div class="qna-layout">
+            <section class="qna-hero-card">
+                <div class="qna-hero-copy">
+                    <div class="qna-hero-kicker">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Live Q&A</span>
+                    </div>
+                    <h4 class="qna-hero-title">@dashboard.ActivityTitle</h4>
+                    <div class="qna-chip-row">
+                        <span class="qna-chip">
+                            <i class="fas fa-comments"></i>
+                            @dashboard.TotalQuestions questions
+                        </span>
+                        <span class="qna-chip">
+                            <i class="fas fa-thumbs-up"></i>
+                            @dashboard.TotalVotes upvotes
+                        </span>
+                        <span class="qna-chip">
+                            <i class="fas fa-users"></i>
+                            @dashboard.RespondedParticipants/@dashboard.ParticipantCount participants
+                        </span>
+                        <span class="qna-chip">
+                            <i class="fas fa-chart-line"></i>
+                            @participationRate% participation
+                        </span>
+                    </div>
+                </div>
 
-        @* Question list *@
-        @if (dashboard.Questions.Count > 0)
-        {
-            <div class="d-flex flex-column gap-2">
-                @{
-                    int qIndex = 0;
-                }
-                @foreach (var q in GetSortedQuestions())
+                <div class="qna-hero-pane">
+                    <div class="qna-live-badge">
+                        <i class="fas fa-circle"></i>
+                        <span>Live Results</span>
+                    </div>
+                    <div class="qna-updated-at">
+                        @if (dashboard.LastResponseAt.HasValue)
+                        {
+                            <span>Last updated: @dashboard.LastResponseAt.Value.ToString("HH:mm:ss")</span>
+                        }
+                        else
+                        {
+                            <span>No responses yet</span>
+                        }
+                    </div>
+
+                    @if (topQuestion is not null)
+                    {
+                        <div class="qna-top-question">
+                            <span class="label">Most relevant question</span>
+                            <span class="value">@GetPreviewText(topQuestion.Text, 110)</span>
+                            <span class="meta">@topQuestion.UpvoteCount upvotes @(topQuestion.IsAnswered ? "· answered" : "· unanswered")</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="qna-pane-muted">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span>Waiting for participants to ask questions.</span>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="qna-questions-card">
+                <div class="qna-section-head">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-comments me-2"></i>Questions
+                    </h6>
+                    <div class="qna-sort-switch" role="group" aria-label="Sort questions">
+                        <button class="qna-sort-btn @(sortBy == "votes" ? "is-active" : "")"
+                                @onclick='() => sortBy = "votes"'>
+                            <i class="fas fa-fire"></i>
+                            Top
+                        </button>
+                        <button class="qna-sort-btn @(sortBy == "recent" ? "is-active" : "")"
+                                @onclick='() => sortBy = "recent"'>
+                            <i class="fas fa-clock"></i>
+                            Recent
+                        </button>
+                    </div>
+                </div>
+
+                @if (dashboard.Questions.Count > 0)
                 {
-                    qIndex++;
-                    var isAnswered = q.IsAnswered;
-                    <div class="d-flex gap-3 align-items-start p-3 bg-white border rounded-3 shadow-sm @(isAnswered ? "opacity-50" : "")">
-                        @* Vote count *@
-                        <div class="d-flex flex-column align-items-center gap-1" style="min-width: 48px;">
-                            <div class="fw-bold fs-4 lh-1 @(isAnswered ? "text-muted" : "text-primary")">
-                                @q.UpvoteCount
-                            </div>
-                            <i class="fas fa-thumbs-up @(isAnswered ? "text-muted" : "text-primary")" style="font-size:0.85rem;"></i>
-                        </div>
+                    <div class="qna-list">
+                        @{
+                            var qIndex = 0;
+                        }
+                        @foreach (var q in sortedQuestions)
+                        {
+                            qIndex++;
+                            var isAnswered = q.IsAnswered;
 
-                        @* Question body *@
-                        <div class="flex-grow-1 min-w-0">
-                            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                                <span class="badge bg-light text-dark border fw-normal" style="font-size:0.7rem;">#@qIndex</span>
-                                @if (q.IsAnonymous)
-                                {
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border" style="font-size:0.7rem;">Anonymous</span>
-                                }
-                                @if (isAnswered)
-                                {
-                                    <span class="badge bg-success bg-opacity-15 text-success border border-success" style="font-size:0.7rem;">
-                                        <i class="fas fa-check me-1"></i>Answered
-                                    </span>
-                                }
-                            </div>
-                            <p class="mb-1 @(isAnswered ? "text-decoration-line-through text-muted" : "")">@q.Text</p>
-                            <span class="text-muted small">@GetRelativeTime(q.SubmittedAt)</span>
-                        </div>
+                            <article class="qna-item @(isAnswered ? "is-answered" : "")">
+                                <div class="qna-vote">
+                                    <span class="value">@q.UpvoteCount</span>
+                                    <i class="fas fa-thumbs-up"></i>
+                                </div>
 
-                        @* Mark as answered toggle *@
-                        <div class="flex-shrink-0">
-                            <button class="btn btn-sm @(isAnswered ? "btn-outline-secondary" : "btn-outline-success") px-2 py-1"
-                                    style="font-size:0.75rem; white-space:nowrap;"
-                                    @onclick="() => ToggleAnsweredAsync(q.ResponseId, !q.IsAnswered)"
-                                    title="@(isAnswered ? "Mark as unanswered" : "Mark as answered")">
-                                <i class="fas @(isAnswered ? "fa-rotate-left" : "fa-check") me-1"></i>
-                                @(isAnswered ? "Reopen" : "Answered")
+                                <div class="qna-body">
+                                    <div class="qna-meta">
+                                        <span class="qna-index">#@qIndex</span>
+                                        @if (q.IsAnonymous)
+                                        {
+                                            <span class="qna-meta-badge">Anonymous</span>
+                                        }
+                                        @if (isAnswered)
+                                        {
+                                            <span class="qna-meta-badge is-answered">
+                                                <i class="fas fa-check"></i>
+                                                Answered
+                                            </span>
+                                        }
+                                    </div>
+                                    <p class="qna-text">@q.Text</p>
+                                    <span class="qna-time">@GetRelativeTime(q.SubmittedAt)</span>
+                                </div>
+
+                                <div class="qna-actions">
+                                    <button class="qna-toggle-btn @(isAnswered ? "is-reopen" : "is-answer")"
+                                            @onclick="() => ToggleAnsweredAsync(q.ResponseId, !q.IsAnswered)"
+                                            title="@(isAnswered ? "Mark as unanswered" : "Mark as answered")">
+                                        <i class="fas @(isAnswered ? "fa-rotate-left" : "fa-check")"></i>
+                                        @(isAnswered ? "Reopen" : "Answered")
+                                    </button>
+                                </div>
+                            </article>
+                        }
+                    </div>
+
+                    @if (displayCount < dashboard.Questions.Count)
+                    {
+                        <div class="qna-load-more">
+                            <button class="qna-load-more-btn" @onclick="LoadMore">
+                                Show @(dashboard.Questions.Count - displayCount) more
                             </button>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="qna-empty-state">
+                        <i class="fas fa-lightbulb"></i>
+                        <div>
+                            <div class="fw-semibold">No questions yet</div>
+                            <div class="small text-muted">Participants can submit questions using the session code.</div>
                         </div>
                     </div>
                 }
-            </div>
+            </section>
 
-            @if (displayCount < dashboard.Questions.Count)
-            {
-                <div class="text-center mt-3">
-                    <button class="btn btn-outline-primary btn-sm" @onclick="LoadMore">
-                        Show @(dashboard.Questions.Count - displayCount) more
-                    </button>
+            <section class="qna-summary-card">
+                <div class="qna-section-head">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-chart-column me-2"></i>Session Snapshot
+                    </h6>
                 </div>
-            }
-        }
-        else
-        {
-            <div class="text-center py-5 text-muted">
-                <i class="fas fa-lightbulb fa-2x mb-3 d-block opacity-25"></i>
-                <p class="mb-1">No questions yet</p>
-                <p class="small mb-0">Participants can submit questions using the session code</p>
-            </div>
-        }
+                <div class="qna-metric-grid">
+                    <div class="qna-metric">
+                        <div class="value">@unansweredCount</div>
+                        <div class="label">Unanswered</div>
+                    </div>
+                    <div class="qna-metric">
+                        <div class="value">@answeredCount</div>
+                        <div class="label">Answered</div>
+                    </div>
+                    <div class="qna-metric">
+                        <div class="value">@avgVotesPerQuestion</div>
+                        <div class="label">Avg Votes / Q</div>
+                    </div>
+                </div>
+            </section>
+        </div>
     }
 </div>
+
+<style>
+    .qna-dashboard {
+        min-height: 380px;
+    }
+
+    .qna-dashboard .qna-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .qna-dashboard .qna-hero-card {
+        display: grid;
+        grid-template-columns: 1.4fr minmax(280px, 0.9fr);
+        gap: 1rem;
+        border-radius: 16px;
+        padding: 1.1rem;
+        border: 1px solid #d9e8eb;
+        background:
+            radial-gradient(1100px 260px at -10% -60%, rgba(59, 130, 246, 0.2), transparent 55%),
+            linear-gradient(135deg, #eff6ff 0%, #f4fcff 45%, #f7fbfd 100%);
+        box-shadow: 0 6px 20px rgba(15, 32, 39, 0.08);
+    }
+
+    .qna-dashboard .qna-hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.8rem;
+        min-width: 0;
+    }
+
+    .qna-dashboard .qna-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: fit-content;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #1d4ed8;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(59, 130, 246, 0.16);
+    }
+
+    .qna-dashboard .qna-hero-title {
+        margin: 0;
+        font-size: 1.5rem;
+        line-height: 1.25;
+        color: #16323a;
+        font-weight: 700;
+    }
+
+    .qna-dashboard .qna-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .qna-dashboard .qna-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        color: #3f6972;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid #d2e3e7;
+        padding: 0.28rem 0.65rem;
+    }
+
+    .qna-dashboard .qna-hero-pane {
+        border-radius: 14px;
+        border: 1px solid #d6e5e9;
+        background: white;
+        padding: 0.9rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+        justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .qna-dashboard .qna-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        width: fit-content;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #2563eb;
+        border: 1px solid rgba(59, 130, 246, 0.32);
+        background: rgba(59, 130, 246, 0.12);
+        border-radius: 999px;
+        padding: 0.22rem 0.56rem;
+        font-weight: 700;
+    }
+
+    .qna-dashboard .qna-live-badge i {
+        font-size: 0.5rem;
+    }
+
+    .qna-dashboard .qna-updated-at {
+        font-size: 0.8rem;
+        color: #5f8188;
+        font-weight: 600;
+    }
+
+    .qna-dashboard .qna-top-question {
+        border-radius: 10px;
+        border: 1px solid #d7e8ec;
+        background: #f8fcfd;
+        padding: 0.55rem 0.65rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .qna-dashboard .qna-top-question .label {
+        font-size: 0.68rem;
+        color: #6b8991;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+    }
+
+    .qna-dashboard .qna-top-question .value {
+        font-size: 0.96rem;
+        color: #1f3c44;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    .qna-dashboard .qna-top-question .meta {
+        font-size: 0.78rem;
+        color: #51747c;
+        font-weight: 600;
+    }
+
+    .qna-dashboard .qna-pane-muted {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px dashed #bfd5db;
+        background: rgba(255, 255, 255, 0.66);
+        color: #5f8188;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.8rem;
+        font-weight: 600;
+    }
+
+    .qna-dashboard .qna-questions-card,
+    .qna-dashboard .qna-summary-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.9rem 1rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+    }
+
+    .qna-dashboard .qna-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+        margin-bottom: 0.75rem;
+        color: #1f3c44;
+    }
+
+    .qna-dashboard .qna-sort-switch {
+        display: inline-flex;
+        gap: 0.35rem;
+        padding: 0.2rem;
+        border-radius: 999px;
+        border: 1px solid #d1e4e8;
+        background: #f5fafb;
+    }
+
+    .qna-dashboard .qna-sort-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 0.35rem 0.7rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #446f78;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.2s ease;
+    }
+
+    .qna-dashboard .qna-sort-btn.is-active {
+        color: #1d4ed8;
+        background: rgba(59, 130, 246, 0.16);
+        box-shadow: 0 1px 3px rgba(59, 130, 246, 0.2);
+    }
+
+    .qna-dashboard .qna-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .qna-dashboard .qna-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #f8fcfd;
+        padding: 0.8rem 0.9rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .qna-dashboard .qna-item.is-answered {
+        opacity: 0.66;
+    }
+
+    .qna-dashboard .qna-vote {
+        min-width: 50px;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1rem;
+        color: #1d4ed8;
+    }
+
+    .qna-dashboard .qna-vote .value {
+        font-size: 1.6rem;
+        line-height: 1;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .qna-dashboard .qna-vote i {
+        font-size: 0.8rem;
+    }
+
+    .qna-dashboard .qna-body {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .qna-dashboard .qna-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .qna-dashboard .qna-index,
+    .qna-dashboard .qna-meta-badge {
+        border-radius: 999px;
+        border: 1px solid #d1e4e8;
+        background: #fff;
+        color: #4f727a;
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 0.14rem 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .qna-dashboard .qna-meta-badge.is-answered {
+        color: #047857;
+        border-color: rgba(16, 185, 129, 0.34);
+        background: rgba(16, 185, 129, 0.12);
+    }
+
+    .qna-dashboard .qna-text {
+        margin: 0 0 0.25rem;
+        color: #365a63;
+        font-size: 0.92rem;
+        line-height: 1.56;
+    }
+
+    .qna-dashboard .qna-time {
+        font-size: 0.74rem;
+        color: #5f8188;
+        font-weight: 600;
+    }
+
+    .qna-dashboard .qna-actions {
+        flex-shrink: 0;
+    }
+
+    .qna-dashboard .qna-toggle-btn {
+        border: 1px solid #c7dde2;
+        border-radius: 999px;
+        background: white;
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 0.32rem 0.65rem;
+        color: #4f727a;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        white-space: nowrap;
+    }
+
+    .qna-dashboard .qna-toggle-btn.is-answer {
+        color: #047857;
+        border-color: rgba(16, 185, 129, 0.34);
+        background: rgba(16, 185, 129, 0.08);
+    }
+
+    .qna-dashboard .qna-load-more {
+        margin-top: 0.95rem;
+        text-align: center;
+    }
+
+    .qna-dashboard .qna-load-more-btn {
+        border: 1px solid #b9dbe4;
+        background: white;
+        color: #1d4ed8;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 0.42rem 1rem;
+    }
+
+    .qna-dashboard .qna-empty-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        color: #6b8991;
+        font-weight: 600;
+        text-align: center;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px dashed #c7dde2;
+        background: #f9fdfe;
+    }
+
+    .qna-dashboard .qna-empty-state i {
+        font-size: 1.2rem;
+        color: #3b82f6;
+    }
+
+    .qna-dashboard .qna-metric-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.65rem;
+    }
+
+    .qna-dashboard .qna-metric {
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #f8fcfd;
+        padding: 0.7rem 0.75rem;
+        text-align: center;
+    }
+
+    .qna-dashboard .qna-metric .value {
+        font-size: 1.55rem;
+        font-weight: 800;
+        line-height: 1;
+        color: #1d4ed8;
+        font-variant-numeric: tabular-nums;
+        margin-bottom: 0.2rem;
+    }
+
+    .qna-dashboard .qna-metric .label {
+        font-size: 0.74rem;
+        color: #5f8188;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 992px) {
+        .qna-dashboard .qna-hero-card {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .qna-dashboard .qna-section-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .qna-dashboard .qna-sort-switch {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .qna-dashboard .qna-sort-btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .qna-dashboard .qna-item {
+            flex-direction: column;
+        }
+
+        .qna-dashboard .qna-vote {
+            flex-direction: row;
+            min-width: 0;
+        }
+
+        .qna-dashboard .qna-actions {
+            width: 100%;
+        }
+
+        .qna-dashboard .qna-toggle-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .qna-dashboard .qna-metric-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 
 @code {
     [Parameter] public string SessionCode { get; set; } = string.Empty;
@@ -280,6 +781,24 @@
         {
             Logger.LogError(ex, "Failed to toggle answered state for question {QuestionId}", questionId);
         }
+    }
+
+    private int GetParticipationRate()
+    {
+        if (dashboard == null || dashboard.ParticipantCount == 0)
+            return 0;
+
+        return (int)Math.Round((double)dashboard.RespondedParticipants / dashboard.ParticipantCount * 100);
+    }
+
+    private static string GetPreviewText(string text, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        return text.Length <= maxLength
+            ? text
+            : $"{text[..maxLength].TrimEnd()}...";
     }
 
     private void LoadMore() => displayCount += 25;

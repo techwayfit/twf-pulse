@@ -29,297 +29,606 @@
     }
     else if (dashboard != null)
     {
-        <!-- Sort Controls -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">
-                <i class="fas fa-comments me-2"></i>All Responses
-            </h5>
-            <div class="btn-group shadow-sm">
-                <button class="btn btn-sm @(sortOrder == "recent" ? "btn-primary" : "btn-outline-secondary")" 
-                        @onclick='() => sortOrder = "recent"'>
-                    <i class="fas fa-clock me-1"></i>Most Recent
-                </button>
-                <button class="btn btn-sm @(sortOrder == "longest" ? "btn-primary" : "btn-outline-secondary")" 
-                        @onclick='() => sortOrder = "longest"'>
-                    <i class="fas fa-sort-amount-down me-1"></i>Longest First
-                </button>
-            </div>
-        </div>
+        var participationRate = GetParticipationRate();
+        var sortedResponses = GetSortedResponses().ToList();
+        var keywordStats = GetTopKeywords();
+        var topKeyword = keywordStats.FirstOrDefault();
+        var trendingWords = keywordStats.Take(10).ToList();
+        var latestFeedback = dashboard.Feedbacks
+            .OrderByDescending(f => f.CreatedAt)
+            .FirstOrDefault();
 
-        <!-- Feedback Responses -->
-        @if (dashboard.TotalResponses > 0)
-        {
-            <div class="feedback-list">
-                @{
-                    var responseIndex = 0;
-                }
-                @foreach (var feedback in GetSortedResponses())
-                {
-                    responseIndex++;
-                    var sentiment = GetSentimentFromCategory(feedback.Category);
-                    var keywords = ExtractKeywords(feedback.Content);
-                    
-                    <div class="feedback-card">
-                        <div class="feedback-card-header">
-                            <div class="d-flex align-items-start gap-3">
-                                <div class="participant-avatar">
-                                    P@(responseIndex)
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                        <span class="participant-label">Participant</span>
-                                        <span class="feedback-timestamp">
-                                            @GetRelativeTime(feedback.CreatedAt) · @feedback.WordCount words
-                                        </span>
-                                    </div>
-                                    @if (!string.IsNullOrEmpty(sentiment))
-                                    {
-                                        <span class="sentiment-badge sentiment-@sentiment.ToLower()">@sentiment</span>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="feedback-card-body">
-                            <p class="feedback-text">@feedback.Content</p>
-                            
-                            @if (keywords.Any())
-                            {
-                                <div class="feedback-tags">
-                                    @foreach (var keyword in keywords.Take(5))
-                                    {
-                                        <span class="feedback-tag">#@keyword</span>
-                                    }
-                                </div>
-                            }
-                        </div>
+        <div class="feedback-layout">
+            <section class="feedback-hero-card">
+                <div class="feedback-hero-copy">
+                    <div class="feedback-hero-kicker">
+                        <i class="fas fa-comments"></i>
+                        <span>Live Feedback</span>
                     </div>
-                }
-                
-                @if (displayCount < dashboard.Feedbacks.Count)
-                {
-                    <div class="text-center mt-4">
-                        <button class="btn btn-outline-primary px-5 py-2" @onclick="LoadMore">
-                            Load More (@(dashboard.Feedbacks.Count - displayCount) remaining)
+                    <h4 class="feedback-hero-title">@dashboard.ActivityTitle</h4>
+                    <div class="feedback-chip-row">
+                        <span class="feedback-chip">
+                            <i class="fas fa-reply"></i>
+                            @dashboard.TotalResponses responses
+                        </span>
+                        <span class="feedback-chip">
+                            <i class="fas fa-users"></i>
+                            @dashboard.RespondedParticipants/@dashboard.ParticipantCount participants
+                        </span>
+                        <span class="feedback-chip">
+                            <i class="fas fa-chart-line"></i>
+                            @participationRate% participation
+                        </span>
+                        <span class="feedback-chip">
+                            <i class="fas fa-font"></i>
+                            Avg @GetAverageWordCount() words
+                        </span>
+                    </div>
+                </div>
+
+                <div class="feedback-hero-pane">
+                    <div class="feedback-live-badge">
+                        <i class="fas fa-circle"></i>
+                        <span>Live Results</span>
+                    </div>
+                    <div class="feedback-updated-at">
+                        @if (dashboard.LastResponseAt.HasValue)
+                        {
+                            <span>Last updated: @dashboard.LastResponseAt.Value.ToString("HH:mm:ss")</span>
+                        }
+                        else
+                        {
+                            <span>No responses yet</span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(topKeyword.Word) && topKeyword.Count > 0)
+                    {
+                        <div class="feedback-highlight">
+                            <span class="label">Top keyword</span>
+                            <span class="value">#@topKeyword.Word</span>
+                            <span class="meta">@topKeyword.Count mentions</span>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="feedback-responses-card">
+                <div class="feedback-section-head">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-message me-2"></i>All Responses
+                    </h6>
+                    <div class="feedback-sort-switch" role="group" aria-label="Sort feedback responses">
+                        <button class="feedback-sort-btn @(sortOrder == "recent" ? "is-active" : "")"
+                                @onclick='() => sortOrder = "recent"'>
+                            <i class="fas fa-clock"></i>
+                            Most Recent
+                        </button>
+                        <button class="feedback-sort-btn @(sortOrder == "longest" ? "is-active" : "")"
+                                @onclick='() => sortOrder = "longest"'>
+                            <i class="fas fa-sort-amount-down"></i>
+                            Longest First
                         </button>
                     </div>
-                }
-            </div>
-        }
-        else
-        {
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-inbox"></i>
                 </div>
-                <h5 class="empty-title">No feedback yet</h5>
-                <p class="empty-text">Responses will appear here as participants share their thoughts</p>
-            </div>
-        }
 
-        <!-- Trending Keywords Section -->
-        @if (dashboard.TotalResponses > 0)
-        {
-            <div class="trending-section">
-                <h5 class="trending-title">Trending Keywords</h5>
-                <div class="trending-keywords">
-                    @{
-                        var trendingWords = GetTopKeywords().Take(10).ToList();
-                    }
-                    @foreach (var keyword in trendingWords)
+                @if (dashboard.TotalResponses > 0)
+                {
+                    <div class="feedback-list">
+                        @{
+                            var responseIndex = 0;
+                        }
+                        @foreach (var feedback in sortedResponses)
+                        {
+                            responseIndex++;
+                            var sentiment = GetSentimentFromCategory(feedback.Category);
+                            var keywords = ExtractKeywords(feedback.Content);
+
+                            <article class="feedback-card">
+                                <div class="feedback-card-header">
+                                    <div class="participant-avatar">P@(responseIndex)</div>
+                                    <div class="feedback-card-meta">
+                                        <div class="feedback-card-title-row">
+                                            <span class="participant-label">Participant</span>
+                                            <span class="feedback-timestamp">@GetRelativeTime(feedback.CreatedAt) · @feedback.WordCount words</span>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(sentiment))
+                                        {
+                                            <span class="feedback-sentiment @GetSentimentCssClass(sentiment)">@sentiment</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <p class="feedback-text">@feedback.Content</p>
+
+                                @if (keywords.Any())
+                                {
+                                    <div class="feedback-tags">
+                                        @foreach (var keyword in keywords.Take(5))
+                                        {
+                                            <span class="feedback-tag">#@keyword</span>
+                                        }
+                                    </div>
+                                }
+                            </article>
+                        }
+                    </div>
+
+                    @if (displayCount < dashboard.Feedbacks.Count)
                     {
-                        <span class="trending-badge">@keyword.Word</span>
+                        <div class="feedback-load-more">
+                            <button class="feedback-load-more-btn" @onclick="LoadMore">
+                                Load More (@(dashboard.Feedbacks.Count - displayCount) remaining)
+                            </button>
+                        </div>
                     }
-                </div>
-            </div>
-        }
+                }
+                else
+                {
+                    <div class="feedback-empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <div>
+                            <div class="fw-semibold">No feedback yet</div>
+                            <div class="small text-muted">Responses will appear here once participants start sharing.</div>
+                        </div>
+                    </div>
+                }
+            </section>
+
+            @if (dashboard.TotalResponses > 0)
+            {
+                <section class="feedback-trending-card">
+                    <div class="feedback-section-head">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-fire me-2"></i>Trending Keywords
+                        </h6>
+                        <span class="feedback-section-note">Top @trendingWords.Count</span>
+                    </div>
+
+                    @if (trendingWords.Any())
+                    {
+                        <div class="trending-keywords">
+                            @foreach (var keyword in trendingWords)
+                            {
+                                <span class="trending-badge">#@keyword.Word <small>@keyword.Count</small></span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="feedback-empty-state">
+                            <i class="fas fa-tags"></i>
+                            <span>Keywords will appear once responses are available.</span>
+                        </div>
+                    }
+                </section>
+            }
+        </div>
     }
 </div>
 
 <style>
-    /* Feedback List */
-    .feedback-list {
+    .feedback-dashboard {
+        min-height: 380px;
+    }
+
+    .feedback-dashboard .feedback-layout {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 1rem;
     }
 
-    /* Feedback Card */
-    .feedback-card {
+    .feedback-dashboard .feedback-hero-card {
+        display: grid;
+        grid-template-columns: 1.4fr minmax(280px, 0.9fr);
+        gap: 1rem;
+        border-radius: 16px;
+        padding: 1.1rem;
+        border: 1px solid #d9e8eb;
+        background:
+            radial-gradient(1100px 260px at -10% -60%, rgba(14, 165, 233, 0.2), transparent 55%),
+            linear-gradient(135deg, #ebf9ff 0%, #f4fcff 45%, #f7fbfd 100%);
+        box-shadow: 0 6px 20px rgba(15, 32, 39, 0.08);
+    }
+
+    .feedback-dashboard .feedback-hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.8rem;
+        min-width: 0;
+    }
+
+    .feedback-dashboard .feedback-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: fit-content;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #0369a1;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(14, 165, 233, 0.14);
+    }
+
+    .feedback-dashboard .feedback-hero-title {
+        margin: 0;
+        font-size: 1.5rem;
+        line-height: 1.25;
+        color: #16323a;
+        font-weight: 700;
+    }
+
+    .feedback-dashboard .feedback-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .feedback-dashboard .feedback-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        color: #3f6972;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid #d2e3e7;
+        padding: 0.28rem 0.65rem;
+    }
+
+    .feedback-dashboard .feedback-hero-pane {
+        border-radius: 14px;
+        border: 1px solid #d6e5e9;
         background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 16px;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 0.9rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+        justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
     }
 
-    .feedback-card:hover {
-        border-color: #d1d5db;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    .feedback-dashboard .feedback-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        width: fit-content;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #0284c7;
+        border: 1px solid rgba(14, 165, 233, 0.32);
+        background: rgba(14, 165, 233, 0.12);
+        border-radius: 999px;
+        padding: 0.22rem 0.56rem;
+        font-weight: 700;
     }
 
-    .feedback-card-header {
-        margin-bottom: 12px;
+    .feedback-dashboard .feedback-live-badge i {
+        font-size: 0.5rem;
     }
 
-    /* Participant Avatar */
-    .participant-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+    .feedback-dashboard .feedback-updated-at {
+        font-size: 0.8rem;
+        color: #5f8188;
+        font-weight: 600;
+    }
+
+    .feedback-dashboard .feedback-top-answer,
+    .feedback-dashboard .feedback-highlight {
+        border-radius: 10px;
+        border: 1px solid #d7e8ec;
+        background: #f8fcfd;
+        padding: 0.55rem 0.65rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .feedback-dashboard .feedback-top-answer .label,
+    .feedback-dashboard .feedback-highlight .label {
+        font-size: 0.68rem;
+        color: #6b8991;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+    }
+
+    .feedback-dashboard .feedback-top-answer .value,
+    .feedback-dashboard .feedback-highlight .value {
+        font-size: 0.96rem;
+        color: #1f3c44;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    .feedback-dashboard .feedback-top-answer .meta,
+    .feedback-dashboard .feedback-highlight .meta {
+        font-size: 0.78rem;
+        color: #51747c;
+        font-weight: 600;
+    }
+
+    .feedback-dashboard .feedback-pane-muted {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px dashed #bfd5db;
+        background: rgba(255, 255, 255, 0.66);
+        color: #5f8188;
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 0.45rem;
+        padding: 0.8rem;
+        font-weight: 600;
+    }
+
+    .feedback-dashboard .feedback-responses-card,
+    .feedback-dashboard .feedback-trending-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.9rem 1rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+    }
+
+    .feedback-dashboard .feedback-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+        margin-bottom: 0.75rem;
+        color: #1f3c44;
+    }
+
+    .feedback-dashboard .feedback-section-note {
+        font-size: 0.78rem;
+        color: #5f8188;
+        font-weight: 600;
+    }
+
+    .feedback-dashboard .feedback-sort-switch {
+        display: inline-flex;
+        gap: 0.35rem;
+        padding: 0.2rem;
+        border-radius: 999px;
+        border: 1px solid #d1e4e8;
+        background: #f5fafb;
+    }
+
+    .feedback-dashboard .feedback-sort-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 0.35rem 0.7rem;
+        font-size: 0.78rem;
         font-weight: 700;
-        font-size: 14px;
+        color: #446f78;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.2s ease;
+    }
+
+    .feedback-dashboard .feedback-sort-btn.is-active {
+        color: #075985;
+        background: rgba(14, 165, 233, 0.16);
+        box-shadow: 0 1px 3px rgba(14, 165, 233, 0.2);
+    }
+
+    .feedback-dashboard .feedback-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .feedback-dashboard .feedback-card {
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #f8fcfd;
+        padding: 0.8rem 0.9rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .feedback-dashboard .feedback-card-header {
+        display: flex;
+        gap: 0.65rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .feedback-dashboard .participant-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0369a1;
+        background: rgba(14, 165, 233, 0.14);
+        font-size: 0.72rem;
+        font-weight: 700;
         flex-shrink: 0;
     }
 
-    .participant-label {
-        font-weight: 600;
-        color: #1f2937;
-        font-size: 15px;
-    }
-
-    .feedback-timestamp {
-        color: #9ca3af;
-        font-size: 13px;
-    }
-
-    /* Sentiment Badges */
-    .sentiment-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: capitalize;
-    }
-
-    .sentiment-positive {
-        background: #d1fae5;
-        color: #065f46;
-    }
-
-    .sentiment-negative {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--pulse-danger);
-    }
-
-    .sentiment-neutral {
-        background: rgba(245, 158, 11, 0.1);
-        color: var(--pulse-warning);
-    }
-
-    .sentiment-new {
-        background: rgba(14, 165, 233, 0.1);
-        color: var(--pulse-info);
-    }
-
-    /* Feedback Body */
-    .feedback-card-body {
-        padding-left: 52px;
-    }
-
-    .feedback-text {
-        color: #374151;
-        font-size: 15px;
-        line-height: 1.6;
-        margin-bottom: 12px;
-    }
-
-    /* Feedback Tags */
-    .feedback-tags {
+    .feedback-dashboard .feedback-card-meta {
+        min-width: 0;
+        flex: 1;
         display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+        flex-direction: column;
+        gap: 0.35rem;
     }
 
-    .feedback-tag {
-        color: #6b7280;
-        font-size: 13px;
-        font-weight: 500;
-        padding: 4px 0;
-    }
-
-    .feedback-tag:hover {
-        color: #4b5563;
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-    }
-
-    .empty-icon {
-        width: 64px;
-        height: 64px;
-        margin: 0 auto 20px;
-        background: #f1f5f9;
-        border-radius: 50%;
+    .feedback-dashboard .feedback-card-title-row {
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 28px;
-        color: #94a3b8;
+        justify-content: space-between;
+        gap: 0.7rem;
     }
 
-    .empty-title {
-        color: #475569;
+    .feedback-dashboard .participant-label {
+        color: #1f3c44;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .feedback-dashboard .feedback-timestamp {
+        font-size: 0.75rem;
+        color: #5f8188;
         font-weight: 600;
-        margin-bottom: 8px;
     }
 
-    .empty-text {
-        color: #94a3b8;
+    .feedback-dashboard .feedback-sentiment {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        border-radius: 999px;
+        padding: 0.18rem 0.55rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .feedback-dashboard .feedback-sentiment.is-positive {
+        background: rgba(34, 197, 94, 0.14);
+        color: #15803d;
+    }
+
+    .feedback-dashboard .feedback-sentiment.is-negative {
+        background: rgba(239, 68, 68, 0.14);
+        color: #b91c1c;
+    }
+
+    .feedback-dashboard .feedback-sentiment.is-neutral {
+        background: rgba(245, 158, 11, 0.16);
+        color: #b45309;
+    }
+
+    .feedback-dashboard .feedback-sentiment.is-new {
+        background: rgba(14, 165, 233, 0.14);
+        color: #0369a1;
+    }
+
+    .feedback-dashboard .feedback-sentiment.is-generic {
+        background: rgba(100, 116, 139, 0.14);
+        color: #334155;
+    }
+
+    .feedback-dashboard .feedback-text {
+        color: #365a63;
+        font-size: 0.92rem;
+        line-height: 1.58;
         margin: 0;
     }
 
-    /* Trending Keywords Section */
-    .trending-section {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 24px;
-        margin-top: 20px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .trending-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 16px;
-    }
-
-    .trending-keywords {
+    .feedback-dashboard .feedback-tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 0.35rem;
+        margin-top: 0.55rem;
     }
 
-    .trending-badge {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 10px 20px;
-        border-radius: 25px;
-        font-size: 15px;
+    .feedback-dashboard .feedback-tag {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        border: 1px solid #d2e3e7;
+        background: white;
+        color: #4f727a;
+        font-size: 0.74rem;
         font-weight: 600;
-        transition: all 0.2s ease;
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        padding: 0.15rem 0.5rem;
     }
 
-    .trending-badge:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+    .feedback-dashboard .feedback-load-more {
+        margin-top: 0.95rem;
+        text-align: center;
+    }
+
+    .feedback-dashboard .feedback-load-more-btn {
+        border: 1px solid #b9dbe4;
+        background: white;
+        color: #0369a1;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 0.42rem 1rem;
+    }
+
+    .feedback-dashboard .feedback-empty-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        color: #6b8991;
+        font-weight: 600;
+        text-align: center;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px dashed #c7dde2;
+        background: #f9fdfe;
+    }
+
+    .feedback-dashboard .feedback-empty-state i {
+        font-size: 1.2rem;
+        color: #0ea5e9;
+    }
+
+    .feedback-dashboard .trending-keywords {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    .feedback-dashboard .trending-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.36rem 0.74rem;
+        border-radius: 999px;
+        border: 1px solid #cde5eb;
+        background: white;
+        color: #0f4e64;
+        font-size: 0.8rem;
+        font-weight: 700;
+        box-shadow: 0 1px 2px rgba(15, 32, 39, 0.05);
+    }
+
+    .feedback-dashboard .trending-badge small {
+        color: #5f8188;
+        font-size: 0.7rem;
+    }
+
+    @@media (max-width: 992px) {
+        .feedback-dashboard .feedback-hero-card {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .feedback-dashboard .feedback-section-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .feedback-dashboard .feedback-card-title-row {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .feedback-dashboard .feedback-sort-switch {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .feedback-dashboard .feedback-sort-btn {
+            flex: 1;
+            justify-content: center;
+        }
     }
 </style>
 
@@ -466,6 +775,14 @@
         return dashboard?.AverageWordCount ?? 0;
     }
 
+    private int GetParticipationRate()
+    {
+        if (dashboard == null || dashboard.ParticipantCount == 0)
+            return 0;
+
+        return (int)Math.Round((double)dashboard.RespondedParticipants / dashboard.ParticipantCount * 100);
+    }
+
     private List<(string Word, int Count)> GetTopKeywords()
     {
         if (dashboard?.TopKeywords == null || !dashboard.TopKeywords.Any())
@@ -482,6 +799,17 @@
     private void LoadMore()
     {
         displayCount += 20;
+    }
+
+    private string GetPreviewText(string content, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return string.Empty;
+
+        if (content.Length <= maxLength)
+            return content;
+
+        return $"{content[..maxLength].TrimEnd()}...";
     }
 
     private string GetSentimentFromCategory(string? category)
@@ -501,6 +829,19 @@
             return "New";
         
         return category;
+    }
+
+    private static string GetSentimentCssClass(string sentiment)
+    {
+        var normalized = sentiment.Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "positive" => "is-positive",
+            "negative" => "is-negative",
+            "neutral" => "is-neutral",
+            "new" => "is-new",
+            _ => "is-generic"
+        };
     }
 
     private string GetRelativeTime(DateTimeOffset timestamp)

@@ -13,174 +13,616 @@
 <div class="five-whys-dashboard">
     @if (isLoading)
     {
-        <div class="text-center py-4">
+        <div class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <div class="mt-2 small text-muted">Loading root cause analyses...</div>
+            <div class="mt-3">Loading root cause analyses...</div>
         </div>
     }
     else
     {
-        <!-- Stats -->
-        <div class="row g-3 mb-4">
-            <div class="col-4">
-                <div class="text-center p-3 bg-white border rounded-3">
-                    <div class="fw-bold fs-4 text-primary">@completedChains.Count</div>
-                    <div class="small text-muted">Completed</div>
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="text-center p-3 bg-white border rounded-3">
-                    <div class="fw-bold fs-4 text-warning">@inProgressCount</div>
-                    <div class="small text-muted">In Progress</div>
-                </div>
-            </div>
-            <div class="col-4">
-                <div class="text-center p-3 bg-white border rounded-3">
-                    <div class="fw-bold fs-4 text-success">@avgDepth</div>
-                    <div class="small text-muted">Avg Depth</div>
-                </div>
-            </div>
-        </div>
+        var totalAnalyses = completedChains.Count + inProgressCount;
+        var completionRate = totalAnalyses > 0
+            ? (int)Math.Round((double)completedChains.Count / totalAnalyses * 100)
+            : 0;
+        var deepestDepth = completedChains
+            .Concat(inProgressChains)
+            .Select(c => c.Chain.Count)
+            .DefaultIfEmpty(0)
+            .Max();
+        var leadCompletedChain = completedChains
+            .OrderByDescending(c => c.Chain.Count)
+            .FirstOrDefault();
 
-        @if (completedChains.Count == 0 && inProgressCount == 0)
-        {
-            <div class="text-center py-4 text-muted">
-                <i class="fas fa-search fa-2x mb-3 d-block opacity-50"></i>
-                <p class="mb-0">No analyses submitted yet. Participants are digging for root causes...</p>
-            </div>
-        }
-        else
-        {
-            <!-- Tab toggle -->
-            <div class="d-flex gap-2 mb-3">
-                <button class="btn btn-sm @(showCompleted ? "btn-danger" : "btn-outline-secondary")"
-                        @onclick="() => showCompleted = true">
-                    <i class="fas fa-bullseye me-1"></i>Root Causes (@completedChains.Count)
-                </button>
-                <button class="btn btn-sm @(!showCompleted ? "btn-primary" : "btn-outline-secondary")"
-                        @onclick="() => showCompleted = false">
-                    <i class="fas fa-hourglass-half me-1"></i>In Progress (@inProgressCount)
-                </button>
-            </div>
+        <div class="five-whys-layout">
+            <section class="five-whys-hero-card">
+                <div class="five-whys-hero-copy">
+                    <div class="five-whys-hero-kicker">
+                        <i class="fas fa-search"></i>
+                        <span>Root Cause Analysis</span>
+                    </div>
+                    <h4 class="five-whys-hero-title">5 Whys Dashboard</h4>
+                    <div class="five-whys-chip-row">
+                        <span class="five-whys-chip">
+                            <i class="fas fa-diagram-project"></i>
+                            @totalAnalyses analyses
+                        </span>
+                        <span class="five-whys-chip">
+                            <i class="fas fa-bullseye"></i>
+                            @completedChains.Count completed
+                        </span>
+                        <span class="five-whys-chip">
+                            <i class="fas fa-hourglass-half"></i>
+                            @inProgressCount in progress
+                        </span>
+                        <span class="five-whys-chip">
+                            <i class="fas fa-arrows-down-to-line"></i>
+                            Avg depth @avgDepth
+                        </span>
+                    </div>
+                </div>
 
-            @if (showCompleted)
-            {
-                <!-- Completed Root Cause Chains -->
-                @if (completedChains.Count == 0)
+                <div class="five-whys-hero-pane">
+                    <div class="five-whys-live-badge">
+                        <i class="fas fa-circle"></i>
+                        <span>Live Results</span>
+                    </div>
+                    <div class="five-whys-updated-at">Real-time updates are active for new responses.</div>
+
+
+                    <div class="five-whys-highlight">
+                        <span class="label">Progress snapshot</span>
+                        <span class="value">@completionRate% completed</span>
+                        <span class="meta">Deepest chain so far: @deepestDepth @(deepestDepth == 1 ? "why" : "whys")</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="five-whys-chains-card">
+                <div class="five-whys-section-head">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-stream me-2"></i>Analysis Chains
+                    </h6>
+                    <div class="five-whys-toggle-switch" role="group" aria-label="Toggle chain type">
+                        <button class="five-whys-toggle-btn @(showCompleted ? "is-active" : "")"
+                                @onclick="() => showCompleted = true">
+                            <i class="fas fa-bullseye"></i>
+                            Root Causes (@completedChains.Count)
+                        </button>
+                        <button class="five-whys-toggle-btn @(!showCompleted ? "is-active" : "")"
+                                @onclick="() => showCompleted = false">
+                            <i class="fas fa-hourglass-half"></i>
+                            In Progress (@inProgressCount)
+                        </button>
+                    </div>
+                </div>
+
+                @if (totalAnalyses == 0)
                 {
-                    <p class="text-muted small text-center py-3">No completed analyses yet.</p>
+                    <div class="five-whys-empty-state">
+                        <i class="fas fa-search"></i>
+                        <div>
+                            <div class="fw-semibold">No analyses submitted yet</div>
+                            <div class="small text-muted">Participants are still digging for root causes.</div>
+                        </div>
+                    </div>
                 }
-                else
+                else if (showCompleted)
                 {
-                    <div class="d-flex flex-column gap-3">
-                        @{int ci = 0;}
-                        @foreach (var entry in completedChains)
-                        {
-                            ci++;
-                            <div class="card border-0 shadow-sm">
-                                <div class="card-body p-3">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center fw-bold"
-                                                 style="width:32px;height:32px;font-size:.8rem;">@string.Format("P{0}", ci)</div>
-                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
-                                                <i class="fas fa-bullseye me-1"></i>Root Cause Found
+                    @if (completedChains.Count == 0)
+                    {
+                        <div class="five-whys-empty-state">
+                            <i class="fas fa-bullseye"></i>
+                            <span>No completed analyses yet.</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="five-whys-entry-list">
+                            @{ int completedIndex = 0; }
+                            @foreach (var entry in completedChains)
+                            {
+                                completedIndex++;
+                                <article class="five-whys-entry-card is-complete">
+                                    <div class="five-whys-entry-head">
+                                        <div class="five-whys-entry-meta">
+                                            <span class="five-whys-avatar">
+                                                @string.Format("P{0}", completedIndex)</span>
+                                            <span class="five-whys-entry-badge is-complete">
+                                                <i class="fas fa-bullseye"></i>
+                                                Root Cause Found
                                             </span>
                                         </div>
-                                        <span class="badge bg-light text-muted border">@entry.Chain.Count @(entry.Chain.Count == 1 ? "Why" : "Whys") deep</span>
+                                        <span class="five-whys-depth-badge">@entry.Chain.Count @(entry.Chain.Count == 1 ? "why" : "whys") deep</span>
                                     </div>
 
-                                    <!-- Mini chain -->
-                                    <div class="five-whys-mini-chain mb-3">
+                                    <div class="five-whys-mini-chain">
                                         @foreach (var exchange in entry.Chain)
                                         {
                                             <div class="mini-exchange">
-                                                <div class="mini-q text-muted small">
-                                                    <i class="fas fa-chevron-right me-1 text-primary" style="font-size:.7rem;"></i>
+                                                <div class="mini-q">
+                                                    <i class="fas fa-chevron-right"></i>
                                                     @TruncateText(exchange.Question, 80)
                                                 </div>
-                                                <div class="mini-a fw-medium small ps-3">
-                                                    @TruncateText(exchange.Answer, 100)
-                                                </div>
+                                                <div class="mini-a">@TruncateText(exchange.Answer, 100)</div>
                                             </div>
                                         }
                                     </div>
 
-                                    <!-- Root cause highlight -->
-                                    <div class="p-2 bg-danger bg-opacity-10 rounded-2 border-start border-danger border-3 ps-3 mb-2">
-                                        <div class="small text-muted fw-semibold mb-1">ROOT CAUSE</div>
-                                        <p class="mb-0 small fw-semibold">@entry.RootCause</p>
+                                    <div class="five-whys-root-cause">
+                                        <div class="label">Root Cause</div>
+                                        <p>@(entry.RootCause ?? "Root cause submitted")</p>
                                     </div>
 
                                     @if (!string.IsNullOrEmpty(entry.Insight))
                                     {
-                                        <div class="p-2 bg-light rounded-2 mt-2">
-                                            <div class="small text-muted fw-semibold mb-1">
-                                                <i class="fas fa-lightbulb text-warning me-1"></i>INSIGHT
+                                        <div class="five-whys-insight">
+                                            <div class="label">
+                                                <i class="fas fa-lightbulb"></i>
+                                                Insight
                                             </div>
-                                            <p class="mb-0 small text-muted">@entry.Insight</p>
+                                            <p>@entry.Insight</p>
                                         </div>
                                     }
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-            }
-            else
-            {
-                <!-- In-Progress Chains -->
-                @if (inProgressChains.Count == 0)
-                {
-                    <p class="text-muted small text-center py-3">No analyses in progress.</p>
+                                </article>
+                            }
+                        </div>
+                    }
                 }
                 else
                 {
-                    <div class="d-flex flex-column gap-3">
-                        @{int pi = 0;}
-                        @foreach (var entry in inProgressChains)
-                        {
-                            pi++;
-                            <div class="card border-0 shadow-sm opacity-75">
-                                <div class="card-body p-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center fw-bold"
-                                                 style="width:32px;height:32px;font-size:.8rem;">P@pi</div>
-                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">
-                                                <i class="fas fa-spinner fa-spin me-1"></i>Exploring
+                    @if (inProgressChains.Count == 0)
+                    {
+                        <div class="five-whys-empty-state">
+                            <i class="fas fa-hourglass-half"></i>
+                            <span>No analyses in progress right now.</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="five-whys-entry-list">
+                            @{ int progressIndex = 0; }
+                            @foreach (var entry in inProgressChains)
+                            {
+                                progressIndex++;
+                                <article class="five-whys-entry-card is-progress">
+                                    <div class="five-whys-entry-head">
+                                        <div class="five-whys-entry-meta">
+                                            <span class="five-whys-avatar is-progress">P@progressIndex</span>
+                                            <span class="five-whys-entry-badge is-progress">
+                                                <i class="fas fa-spinner fa-spin"></i>
+                                                Exploring
                                             </span>
                                         </div>
-                                        <span class="badge bg-light text-muted border">@entry.Chain.Count @(entry.Chain.Count == 1 ? "Why" : "Whys") so far</span>
+                                        <span class="five-whys-depth-badge">@entry.Chain.Count @(entry.Chain.Count == 1 ? "why" : "whys") so far</span>
                                     </div>
-                                    <div class="small text-muted">
-                                        Last answer: <span class="fw-medium text-dark">@TruncateText(entry.Chain.LastOrDefault()?.Answer ?? "—", 80)</span>
+
+                                    <div class="five-whys-last-answer">
+                                        <span class="label">Latest answer</span>
+                                        <p>@TruncateText(entry.Chain.LastOrDefault()?.Answer ?? "No answer yet", 120)</p>
                                     </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
+                                </article>
+                            }
+                        </div>
+                    }
                 }
-            }
-        }
+            </section>
+        </div>
     }
 </div>
 
 <style>
-    .five-whys-mini-chain {
-        border-left: 2px solid var(--bs-border-color);
-        padding-left: .75rem;
-        display: flex;
-        flex-direction: column;
-        gap: .4rem;
+    .five-whys-dashboard {
+        min-height: 380px;
     }
 
-    .mini-exchange {
+    .five-whys-dashboard .five-whys-layout {
         display: flex;
         flex-direction: column;
-        gap: .15rem;
+        gap: 1rem;
+    }
+
+    .five-whys-dashboard .five-whys-hero-card {
+        display: grid;
+        grid-template-columns: 1.4fr minmax(280px, 0.9fr);
+        gap: 1rem;
+        border-radius: 16px;
+        padding: 1.1rem;
+        border: 1px solid #d9e8eb;
+        background:
+            radial-gradient(1100px 260px at -10% -60%, rgba(239, 68, 68, 0.2), transparent 55%),
+            linear-gradient(135deg, #fff1f1 0%, #fff8f5 45%, #f7fbfd 100%);
+        box-shadow: 0 6px 20px rgba(15, 32, 39, 0.08);
+    }
+
+    .five-whys-dashboard .five-whys-hero-copy {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.8rem;
+        min-width: 0;
+    }
+
+    .five-whys-dashboard .five-whys-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        width: fit-content;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #b91c1c;
+        padding: 0.25rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(239, 68, 68, 0.16);
+    }
+
+    .five-whys-dashboard .five-whys-hero-title {
+        margin: 0;
+        font-size: 1.5rem;
+        line-height: 1.25;
+        color: #16323a;
+        font-weight: 700;
+    }
+
+    .five-whys-dashboard .five-whys-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .five-whys-dashboard .five-whys-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        color: #3f6972;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid #d2e3e7;
+        padding: 0.28rem 0.65rem;
+    }
+
+    .five-whys-dashboard .five-whys-hero-pane {
+        border-radius: 14px;
+        border: 1px solid #d6e5e9;
+        background: white;
+        padding: 0.9rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+        justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .five-whys-dashboard .five-whys-live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        width: fit-content;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.32);
+        background: rgba(239, 68, 68, 0.12);
+        border-radius: 999px;
+        padding: 0.22rem 0.56rem;
+        font-weight: 700;
+    }
+
+    .five-whys-dashboard .five-whys-live-badge i {
+        font-size: 0.5rem;
+    }
+
+    .five-whys-dashboard .five-whys-updated-at {
+        font-size: 0.8rem;
+        color: #5f8188;
+        font-weight: 600;
+    }
+
+    .five-whys-dashboard .five-whys-highlight {
+        border-radius: 10px;
+        border: 1px solid #d7e8ec;
+        background: #f8fcfd;
+        padding: 0.55rem 0.65rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .five-whys-dashboard .five-whys-highlight .label {
+        font-size: 0.68rem;
+        color: #6b8991;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+    }
+
+    .five-whys-dashboard .five-whys-highlight .value {
+        font-size: 0.96rem;
+        color: #1f3c44;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    .five-whys-dashboard .five-whys-highlight .meta {
+        font-size: 0.78rem;
+        color: #51747c;
+        font-weight: 600;
+    }
+
+    .five-whys-dashboard .five-whys-pane-muted {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px dashed #bfd5db;
+        background: rgba(255, 255, 255, 0.66);
+        color: #5f8188;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.8rem;
+        font-weight: 600;
+    }
+
+    .five-whys-dashboard .five-whys-chains-card {
+        border-radius: 16px;
+        border: 1px solid #d9e8eb;
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.9rem 1rem;
+        box-shadow: 0 4px 16px rgba(15, 32, 39, 0.06);
+    }
+
+    .five-whys-dashboard .five-whys-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.7rem;
+        margin-bottom: 0.75rem;
+        color: #1f3c44;
+    }
+
+    .five-whys-dashboard .five-whys-toggle-switch {
+        display: inline-flex;
+        gap: 0.35rem;
+        padding: 0.2rem;
+        border-radius: 999px;
+        border: 1px solid #d1e4e8;
+        background: #f5fafb;
+    }
+
+    .five-whys-dashboard .five-whys-toggle-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 0.35rem 0.7rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #446f78;
+        background: transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: all 0.2s ease;
+    }
+
+    .five-whys-dashboard .five-whys-toggle-btn.is-active {
+        color: #991b1b;
+        background: rgba(239, 68, 68, 0.15);
+        box-shadow: 0 1px 3px rgba(239, 68, 68, 0.2);
+    }
+
+    .five-whys-dashboard .five-whys-entry-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .five-whys-dashboard .five-whys-entry-card {
+        border-radius: 12px;
+        border: 1px solid #d6e5e9;
+        background: #f8fcfd;
+        padding: 0.8rem 0.9rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    .five-whys-dashboard .five-whys-entry-card.is-progress {
+        background: #fcfdff;
+    }
+
+    .five-whys-dashboard .five-whys-entry-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.65rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .five-whys-dashboard .five-whys-entry-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+
+    .five-whys-dashboard .five-whys-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #b91c1c;
+        background: rgba(239, 68, 68, 0.14);
+        font-size: 0.72rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .five-whys-dashboard .five-whys-avatar.is-progress {
+        color: #b45309;
+        background: rgba(245, 158, 11, 0.16);
+    }
+
+    .five-whys-dashboard .five-whys-entry-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        border-radius: 999px;
+        padding: 0.18rem 0.55rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .five-whys-dashboard .five-whys-entry-badge.is-complete {
+        color: #b91c1c;
+        border: 1px solid rgba(239, 68, 68, 0.28);
+        background: rgba(239, 68, 68, 0.12);
+    }
+
+    .five-whys-dashboard .five-whys-entry-badge.is-progress {
+        color: #b45309;
+        border: 1px solid rgba(245, 158, 11, 0.28);
+        background: rgba(245, 158, 11, 0.12);
+    }
+
+    .five-whys-dashboard .five-whys-depth-badge {
+        border-radius: 999px;
+        border: 1px solid #d1e4e8;
+        background: #fff;
+        color: #5f8188;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.2rem 0.55rem;
+    }
+
+    .five-whys-dashboard .five-whys-mini-chain {
+        border-left: 2px solid #d9e8eb;
+        padding-left: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        margin-bottom: 0.65rem;
+    }
+
+    .five-whys-dashboard .mini-exchange {
+        display: flex;
+        flex-direction: column;
+        gap: 0.18rem;
+    }
+
+    .five-whys-dashboard .mini-q {
+        color: #5f8188;
+        font-size: 0.78rem;
+        font-weight: 600;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+
+    .five-whys-dashboard .mini-q i {
+        margin-top: 0.17rem;
+        font-size: 0.62rem;
+        color: #0ea5e9;
+    }
+
+    .five-whys-dashboard .mini-a {
+        color: #365a63;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding-left: 1rem;
+        line-height: 1.5;
+    }
+
+    .five-whys-dashboard .five-whys-root-cause,
+    .five-whys-dashboard .five-whys-insight,
+    .five-whys-dashboard .five-whys-last-answer {
+        border-radius: 10px;
+        border: 1px solid #d7e8ec;
+        background: #fff;
+        padding: 0.55rem 0.65rem;
+    }
+
+    .five-whys-dashboard .five-whys-root-cause {
+        border-left: 3px solid #ef4444;
+        background: #fff7f7;
+    }
+
+    .five-whys-dashboard .five-whys-insight {
+        margin-top: 0.5rem;
+    }
+
+    .five-whys-dashboard .five-whys-root-cause .label,
+    .five-whys-dashboard .five-whys-insight .label,
+    .five-whys-dashboard .five-whys-last-answer .label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.68rem;
+        color: #6b8991;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+    }
+
+    .five-whys-dashboard .five-whys-root-cause p,
+    .five-whys-dashboard .five-whys-insight p,
+    .five-whys-dashboard .five-whys-last-answer p {
+        margin: 0.25rem 0 0;
+        color: #365a63;
+        font-size: 0.84rem;
+        line-height: 1.52;
+        font-weight: 600;
+    }
+
+    .five-whys-dashboard .five-whys-empty-state {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        color: #6b8991;
+        font-weight: 600;
+        text-align: center;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px dashed #c7dde2;
+        background: #f9fdfe;
+    }
+
+    .five-whys-dashboard .five-whys-empty-state i {
+        font-size: 1.2rem;
+        color: #ef4444;
+    }
+
+    @@media (max-width: 992px) {
+        .five-whys-dashboard .five-whys-hero-card {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .five-whys-dashboard .five-whys-section-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .five-whys-dashboard .five-whys-toggle-switch {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .five-whys-dashboard .five-whys-toggle-btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .five-whys-dashboard .five-whys-entry-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
     }
 </style>
 
