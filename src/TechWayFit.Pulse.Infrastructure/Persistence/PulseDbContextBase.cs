@@ -23,8 +23,10 @@ public DbSet<SessionRecord> Sessions => Set<SessionRecord>();
     public DbSet<LoginOtpRecord> LoginOtps => Set<LoginOtpRecord>();
     public DbSet<SessionGroupRecord> SessionGroups => Set<SessionGroupRecord>();
     public DbSet<SessionTemplateRecord> SessionTemplates => Set<SessionTemplateRecord>();
-    public DbSet<SessionActivityMetadataRecord> SessionActivityMetadata => Set<SessionActivityMetadataRecord>();
-
+public DbSet<SessionActivityMetadataRecord> SessionActivityMetadata => Set<SessionActivityMetadataRecord>();
+    public DbSet<SubscriptionPlanRecord> SubscriptionPlans => Set<SubscriptionPlanRecord>();
+    public DbSet<FacilitatorSubscriptionRecord> FacilitatorSubscriptions => Set<FacilitatorSubscriptionRecord>();
+    public DbSet<ActivityTypeDefinitionRecord> ActivityTypeDefinitions => Set<ActivityTypeDefinitionRecord>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Common entity configuration
@@ -84,6 +86,7 @@ public DbSet<SessionRecord> Sessions => Set<SessionRecord>();
   entity.HasKey(x => x.ParticipantId);
          entity.HasIndex(x => x.SessionId);
    });
+
 
 // FacilitatorUsers
         modelBuilder.Entity<FacilitatorUserRecord>(entity =>
@@ -150,6 +153,48 @@ public DbSet<SessionRecord> Sessions => Set<SessionRecord>();
             entity.HasIndex(x => new { x.SessionId, x.ActivityId, x.Key }).IsUnique();
             entity.HasIndex(x => new { x.SessionId, x.ActivityId });
         });
+
+        // SubscriptionPlans
+        modelBuilder.Entity<SubscriptionPlanRecord>(entity =>
+      {
+    entity.HasKey(x => x.Id);
+            entity.Property(x => x.PlanCode).HasMaxLength(50).IsRequired();
+      entity.Property(x => x.DisplayName).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(500);
+      entity.Property(x => x.PriceMonthly).HasColumnType("decimal(10,2)").IsRequired();
+  entity.Property(x => x.PriceYearly).HasColumnType("decimal(10,2)");
+entity.Property(x => x.FeaturesJson).IsRequired();
+      entity.HasIndex(x => x.PlanCode).IsUnique();
+         entity.HasIndex(x => new { x.IsActive, x.SortOrder });
+        });
+
+     // FacilitatorSubscriptions
+        modelBuilder.Entity<FacilitatorSubscriptionRecord>(entity =>
+        {
+            entity.HasKey(x => x.Id);
+   entity.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            entity.Property(x => x.PaymentProvider).HasMaxLength(50);
+     entity.Property(x => x.ExternalCustomerId).HasMaxLength(200);
+       entity.Property(x => x.ExternalSubscriptionId).HasMaxLength(200);
+      entity.HasIndex(x => new { x.FacilitatorUserId, x.Status });
+      entity.HasIndex(x => x.ExternalSubscriptionId);
+          entity.HasIndex(x => x.PlanId);
+        });
+
+        // ActivityTypeDefinitions
+        modelBuilder.Entity<ActivityTypeDefinitionRecord>(entity =>
+        {
+     entity.HasKey(x => x.Id);
+            entity.Property(x => x.DisplayName).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(500).IsRequired();
+  entity.Property(x => x.IconClass).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.ColorHex).HasMaxLength(7).IsRequired();
+          entity.Property(x => x.MinPlanCode).HasMaxLength(50);
+     entity.HasIndex(x => x.ActivityType).IsUnique();
+    entity.HasIndex(x => new { x.IsActive, x.SortOrder });
+     });
+
+
     }
 
  /// <summary>

@@ -81,6 +81,28 @@ public sealed class BackOfficeSqlServerDbContext : BackOfficeDbContext
             e.Property(x => x.ConfigJson).HasColumnType("NVARCHAR(MAX)").IsRequired();
         });
 
+        modelBuilder.Entity<I.SessionActivityMetadataRecord>(e =>
+        {
+            e.ToTable("SessionActivityMetadata", "pulse");
+            e.Property(x => x.Value).HasColumnType("NVARCHAR(MAX)").IsRequired();
+        });
+
+        modelBuilder.Entity<I.SubscriptionPlanRecord>(e =>
+        {
+            e.ToTable("SubscriptionPlans", "pulse");
+            e.Property(x => x.FeaturesJson).HasColumnType("NVARCHAR(MAX)").IsRequired();
+        });
+
+        modelBuilder.Entity<I.FacilitatorSubscriptionRecord>(e =>
+        {
+            e.ToTable("FacilitatorSubscriptions", "pulse");
+        });
+
+        modelBuilder.Entity<I.ActivityTypeDefinitionRecord>(e =>
+        {
+            e.ToTable("ActivityTypeDefinitions", "pulse");
+        });
+
         // ── BackOffice-exclusive tables (SQL Server types + pulse schema) ─────
 
         modelBuilder.Entity<AuditLogRecord>(entity =>

@@ -284,7 +284,7 @@ try
     var app = builder.Build();
 
     // Ensure database is created using provider-specific method
-    app.Services.EnsurePulseDatabase(builder.Configuration);
+    await app.Services.EnsurePulseDatabaseAsync(builder.Configuration);
 
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsDevelopment())

@@ -6,6 +6,7 @@ using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Infrastructure.Caching;
 using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
+using TechWayFit.Pulse.Infrastructure.Services;
 using SqlServerRepos = TechWayFit.Pulse.Infrastructure.Persistence.SqlServer.Repositories;
 using SqliteRepos = TechWayFit.Pulse.Infrastructure.Persistence.Sqlite.Repositories;
 using MariaDbRepos = TechWayFit.Pulse.Infrastructure.Persistence.MariaDb.Repositories;
@@ -24,37 +25,37 @@ public static class DatabaseServiceExtensions
     /// Adds TechWayFit Pulse database services based on configuration.
     /// </summary>
     public static IServiceCollection AddPulseDatabase(
-        this IServiceCollection services,
-        IConfiguration configuration)
+     this IServiceCollection services,
+   IConfiguration configuration)
     {
         var useInMemory = configuration.GetValue<bool>("Pulse:UseInMemory");
-      var databaseProvider = configuration.GetValue<string>("Pulse:DatabaseProvider") ?? "Sqlite";
+   var databaseProvider = configuration.GetValue<string>("Pulse:DatabaseProvider") ?? "Sqlite";
         var connectionString = configuration.GetConnectionString("PulseDb");
 
-        // IApplicationCache is provider-agnostic — register once here.
-        // MemoryApplicationCache wraps IMemoryCache (registered via AddMemoryCache in Program.cs).
-        // To switch to a distributed cache (Redis, etc.), replace this registration only.
-        services.AddSingleton<IApplicationCache, MemoryApplicationCache>();
+      // IApplicationCache is provider-agnostic — register once here.
+   // MemoryApplicationCache wraps IMemoryCache (registered via AddMemoryCache in Program.cs).
+  // To switch to a distributed cache (Redis, etc.), replace this registration only.
+   services.AddSingleton<IApplicationCache, MemoryApplicationCache>();
 
         if (useInMemory || string.IsNullOrWhiteSpace(connectionString))
         {
-     services.AddPulseInMemoryDatabase();
-     }
+            services.AddPulseInMemoryDatabase();
+        }
         else if (databaseProvider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
         {
-            services.AddPulseSqlServerDatabase(connectionString);
+  services.AddPulseSqlServerDatabase(connectionString);
+   }
+        else if (databaseProvider.Equals("MariaDB", StringComparison.OrdinalIgnoreCase) ||
+         databaseProvider.Equals("MySQL", StringComparison.OrdinalIgnoreCase))
+    {
+     services.AddPulseMariaDbDatabase(connectionString);
+   }
+        else
+    {
+            services.AddPulseSqliteDatabase(connectionString);
         }
-   else if (databaseProvider.Equals("MariaDB", StringComparison.OrdinalIgnoreCase) ||
-       databaseProvider.Equals("MySQL", StringComparison.OrdinalIgnoreCase))
-        {
- services.AddPulseMariaDbDatabase(connectionString);
- }
-      else
-        {
-  services.AddPulseSqliteDatabase(connectionString);
-}
 
-      return services;
+        return services;
     }
 
     /// <summary>
@@ -207,10 +208,10 @@ options.UseMySQL(connectionString, mySqlOptions =>
         services.AddScoped<SqlServerRepos.SessionRepository>();
         services.AddScoped<ISessionRepository>(sp => new CachingSessionRepository(
             sp.GetRequiredService<SqlServerRepos.SessionRepository>(),
-            sp.GetRequiredService<IApplicationCache>()));
+      sp.GetRequiredService<IApplicationCache>()));
         services.AddScoped<IResponseRepository, SqlServerRepos.ResponseRepository>();
         services.AddScoped<IParticipantRepository, SqlServerRepos.ParticipantRepository>();
-        services.AddScoped<ILoginOtpRepository, SqlServerRepos.LoginOtpRepository>();
+   services.AddScoped<ILoginOtpRepository, SqlServerRepos.LoginOtpRepository>();
         services.AddScoped<IFacilitatorUserRepository, SqlServerRepos.FacilitatorUserRepository>();
 
         services.AddScoped<ActivityRepository<PulseSqlServerDbContext>>();
@@ -282,27 +283,25 @@ options.UseMySQL(connectionString, mySqlOptions =>
 
     /// <summary>
     /// Ensures the database is created for the configured provider.
-    /// For SQLite: Creates database file if not exists.
-  /// For SQL Server: No action (must use manual scripts).
+    /// For SQLite: Creates database file if not exists and seeds commercialization data.
+    /// For SQL Server: No action (must use manual scripts).
     /// For MariaDB: No action (must use manual scripts).
-    /// For InMemory: No action needed.
-    /// </summary>
-    public static void EnsurePulseDatabase(this IServiceProvider serviceProvider, IConfiguration configuration)
- {
+    /// For InMemory: Seeds commercialization data.
+  /// </summary>
+    public static async Task EnsurePulseDatabaseAsync(this IServiceProvider serviceProvider, IConfiguration configuration)
+    {
         var useInMemory = configuration.GetValue<bool>("Pulse:UseInMemory");
-   var databaseProvider = configuration.GetValue<string>("Pulse:DatabaseProvider") ?? "Sqlite";
-
-        if (useInMemory)
-      {
-     return;
-        }
+        var databaseProvider = configuration.GetValue<string>("Pulse:DatabaseProvider") ?? "Sqlite";
 
         using var scope = serviceProvider.CreateScope();
 
-        if (databaseProvider.Equals("Sqlite", StringComparison.OrdinalIgnoreCase))
+        if (databaseProvider.Equals("Sqlite", StringComparison.OrdinalIgnoreCase) || useInMemory)
      {
-      var dbContext = scope.ServiceProvider.GetRequiredService<PulseSqlLiteDbContext>();
- dbContext.Database.EnsureCreated();
+            var dbContext = scope.ServiceProvider.GetRequiredService<PulseSqlLiteDbContext>();
+            dbContext.Database.EnsureCreated();
+         
+         // Seed commercialization data for SQLite and InMemory
+    await CommercializationSeedService.SeedAsync(serviceProvider);
         }
         // For SQL Server and MariaDB, tables must be created manually using provided scripts
     }

@@ -86,5 +86,21 @@ public sealed class PulseMariaDbContext : PulseDbContextBase
             entity.ToTable("SessionActivityMetadata");
             entity.Property(x => x.Value).HasColumnType("TEXT").IsRequired();
         });
+
+        modelBuilder.Entity<SubscriptionPlanRecord>(entity =>
+        {
+            entity.ToTable("SubscriptionPlans");
+  entity.Property(x => x.FeaturesJson).HasColumnType("TEXT").IsRequired();
+     });
+
+        modelBuilder.Entity<FacilitatorSubscriptionRecord>(entity =>
+{
+  entity.ToTable("FacilitatorSubscriptions");
+        });
+
+        modelBuilder.Entity<ActivityTypeDefinitionRecord>(entity =>
+        {
+      entity.ToTable("ActivityTypeDefinitions");
+        });
     }
 }

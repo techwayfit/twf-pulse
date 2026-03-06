@@ -97,5 +97,21 @@ entity.Property(x => x.Value).HasColumnType("NVARCHAR(MAX)").IsRequired();
             entity.ToTable("SessionActivityMetadata", "pulse");
             entity.Property(x => x.Value).HasColumnType("NVARCHAR(MAX)").IsRequired();
         });
+
+        modelBuilder.Entity<SubscriptionPlanRecord>(entity =>
+        {
+      entity.ToTable("SubscriptionPlans", "pulse");
+            entity.Property(x => x.FeaturesJson).HasColumnType("NVarchar(MAX)").IsRequired();
+  });
+
+     modelBuilder.Entity<FacilitatorSubscriptionRecord>(entity =>
+        {
+       entity.ToTable("FacilitatorSubscriptions", "pulse");
+        });
+
+   modelBuilder.Entity<ActivityTypeDefinitionRecord>(entity =>
+        {
+     entity.ToTable("ActivityTypeDefinitions", "pulse");
+  });
     }
 }

@@ -66,6 +66,21 @@ public interface IPulseDbContext : IDisposable
     DbSet<SessionActivityMetadataRecord> SessionActivityMetadata { get; }
 
     /// <summary>
+    /// Subscription plans (Free, Plan A, Plan B, etc.)
+    /// </summary>
+    DbSet<SubscriptionPlanRecord> SubscriptionPlans { get; }
+
+    /// <summary>
+    /// Facilitator subscriptions to plans (current and historical)
+    /// </summary>
+    DbSet<FacilitatorSubscriptionRecord> FacilitatorSubscriptions { get; }
+
+    /// <summary>
+    /// Activity type definitions (metadata and access rules)
+/// </summary>
+    DbSet<ActivityTypeDefinitionRecord> ActivityTypeDefinitions { get; }
+
+    /// <summary>
     /// Saves all changes made in this context to the database.
     /// </summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

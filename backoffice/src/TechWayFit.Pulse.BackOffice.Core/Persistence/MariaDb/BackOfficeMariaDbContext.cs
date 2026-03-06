@@ -72,6 +72,28 @@ public sealed class BackOfficeMariaDbContext : BackOfficeDbContext
             e.Property(x => x.ConfigJson).HasColumnType("LONGTEXT").IsRequired();
         });
 
+        modelBuilder.Entity<I.SessionActivityMetadataRecord>(e =>
+        {
+            e.ToTable("SessionActivityMetadata");
+            e.Property(x => x.Value).HasColumnType("LONGTEXT").IsRequired();
+        });
+
+        modelBuilder.Entity<I.SubscriptionPlanRecord>(e =>
+        {
+            e.ToTable("SubscriptionPlans");
+            e.Property(x => x.FeaturesJson).HasColumnType("LONGTEXT").IsRequired();
+        });
+
+        modelBuilder.Entity<I.FacilitatorSubscriptionRecord>(e =>
+        {
+            e.ToTable("FacilitatorSubscriptions");
+        });
+
+        modelBuilder.Entity<I.ActivityTypeDefinitionRecord>(e =>
+        {
+            e.ToTable("ActivityTypeDefinitions");
+        });
+
         // ── BackOffice-exclusive tables (MariaDB column types) ────────────────
 
         modelBuilder.Entity<AuditLogRecord>(entity =>
