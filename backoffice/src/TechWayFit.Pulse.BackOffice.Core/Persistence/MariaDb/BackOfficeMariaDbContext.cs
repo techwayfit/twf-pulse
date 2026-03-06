@@ -31,6 +31,8 @@ public sealed class BackOfficeMariaDbContext : DbContext
     public DbSet<I.SubscriptionPlanRecord> SubscriptionPlans => Set<I.SubscriptionPlanRecord>();
     public DbSet<I.FacilitatorSubscriptionRecord> FacilitatorSubscriptions => Set<I.FacilitatorSubscriptionRecord>();
     public DbSet<I.ActivityTypeDefinitionRecord> ActivityTypeDefinitions => Set<I.ActivityTypeDefinitionRecord>();
+    public DbSet<I.PromoCodeRecord> PromoCodes => Set<I.PromoCodeRecord>();
+    public DbSet<I.PromoCodeRedemptionRecord> PromoCodeRedemptions => Set<I.PromoCodeRedemptionRecord>();
 
     // ── BackOffice-exclusive tables ───────────────────────────────────────────
     public DbSet<AuditLogRecord> AuditLogs => Set<AuditLogRecord>();
@@ -204,6 +206,27 @@ public sealed class BackOfficeMariaDbContext : DbContext
             e.Property(x => x.ApplicablePlanIds).HasMaxLength(500);
             e.HasIndex(x => x.ActivityType).IsUnique();
             e.HasIndex(x => new { x.IsActive, x.SortOrder });
+        });
+
+        modelBuilder.Entity<I.PromoCodeRecord>(e =>
+        {
+            e.ToTable("PromoCodes");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Code).HasMaxLength(50).IsRequired();
+            e.HasIndex(x => x.Code).IsUnique();
+            e.HasIndex(x => new { x.IsActive, x.ValidFrom, x.ValidUntil });
+            e.HasIndex(x => x.TargetPlanId);
+        });
+
+        modelBuilder.Entity<I.PromoCodeRedemptionRecord>(e =>
+        {
+            e.ToTable("PromoCodeRedemptions");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.IpAddress).HasMaxLength(45).IsRequired();
+            e.HasIndex(x => new { x.PromoCodeId, x.FacilitatorUserId });
+            e.HasIndex(x => x.FacilitatorUserId);
+            e.HasIndex(x => x.SubscriptionId);
+            e.HasIndex(x => x.RedeemedAt);
         });
 
         // ── BackOffice-exclusive tables (MariaDB column types) ────────────────

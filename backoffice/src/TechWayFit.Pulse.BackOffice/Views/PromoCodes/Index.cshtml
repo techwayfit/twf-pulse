@@ -1,0 +1,101 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.PromoCodeSearchResult
+@{
+    ViewBag.Title = "Promo Codes";
+    ViewBag.ActiveNav = "promo-codes";
+}
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+    <div class="bo-page-icon purple"><i class="boi boi-lg boi-ticket"></i></div>
+        <div>
+            <div class="bo-page-title">Promo Codes</div>
+            <div class="bo-page-sub">Manage promotional campaigns and discounts</div>
+        </div>
+    </div>
+    <a asp-action="Create" class="bo-btn bo-btn-primary bo-btn-sm">+ New Promo Code</a>
+</div>
+
+<div class="bo-search-bar">
+    <form asp-action="Index" method="get">
+      <div class="bo-search-field" style="max-width:140px">
+ <label>Status</label>
+            <select name="isActive" class="bo-select" onchange="this.form.submit()">
+          <option value="">All</option>
+                <option value="true" selected="@(Context.Request.Query["isActive"] == "true")">Active</option>
+    <option value="false" selected="@(Context.Request.Query["isActive"] == "false")">Inactive</option>
+   </select>
+        </div>
+        <div class="bo-search-field" style="max-width:140px">
+         <label>Validity</label>
+            <select name="isExpired" class="bo-select" onchange="this.form.submit()">
+           <option value="">All</option>
+   <option value="false" selected="@(Context.Request.Query["isExpired"] == "false")">Valid</option>
+       <option value="true" selected="@(Context.Request.Query["isExpired"] == "true")">Expired</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<div class="bo-card">
+    <div class="bo-table-wrap">
+<table class="bo-table">
+            <thead>
+      <tr>
+ <th>Code</th>
+            <th>Target Plan</th>
+   <th>Duration</th>
+          <th>Max Uses</th>
+          <th>Used</th>
+             <th>Valid Until</th>
+     <th>Status</th>
+       <th>Actions</th>
+      </tr>
+            </thead>
+            <tbody>
+    @foreach (var promo in Model.Items)
+   {
+     <tr>
+     <td class="bo-td-mono"><strong>@promo.Code</strong></td>
+            <td>@promo.TargetPlanDisplayName</td>
+                <td class="bo-td-mono">@promo.DurationDays days</td>
+   <td class="bo-td-mono">@(promo.MaxRedemptions?.ToString() ?? "?")</td>
+          <td class="bo-td-mono">@promo.RedemptionsUsed</td>
+      <td class="bo-td-muted">@promo.ValidUntil.ToString("dd MMM yyyy")</td>
+              <td>
+                 <span class="bo-pill @(promo.Status == "Active" ? "active" : promo.Status == "Scheduled" ? "muted" : "inactive")">
+        @promo.Status
+        </span>
+   </td>
+   <td style="display:flex;gap:6px">
+ <a asp-action="Detail" asp-route-id="@promo.Id" class="bo-btn bo-btn-ghost bo-btn-sm">View</a>
+   <a asp-action="Edit" asp-route-id="@promo.Id" class="bo-btn bo-btn-ghost bo-btn-sm">Edit</a>
+   </td>
+     </tr>
+    }
+     </tbody>
+  </table>
+    </div>
+</div>
+
+@if (Model.TotalCount > Model.PageSize)
+{
+    <div class="bo-pagination">
+   @for (int i = 1; i <= Math.Ceiling((double)Model.TotalCount / Model.PageSize); i++)
+        {
+    <a asp-action="Index" asp-route-page="@i" 
+           asp-route-isActive="@Context.Request.Query["isActive"]" 
+   asp-route-isExpired="@Context.Request.Query["isExpired"]"
+   class="bo-page-link @(i == Model.Page ? "active" : "")">@i</a>
+   }
+    </div>
+}
+
+@if (!Model.Items.Any())
+{
+    <div class="bo-empty-state">
+        <div class="bo-empty-icon">???</div>
+   <div class="bo-empty-title">No promo codes found</div>
+        <div class="bo-empty-text">Create your first promotional campaign</div>
+        <a asp-action="Create" class="bo-btn bo-btn-primary bo-btn-sm">+ New Promo Code</a>
+    </div>
+}

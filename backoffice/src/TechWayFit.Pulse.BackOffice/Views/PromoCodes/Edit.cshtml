@@ -1,0 +1,118 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.PromoCodeDetail
+@{
+    ViewBag.Title = $"Edit · {Model.Code}";
+    ViewBag.ActiveNav = "promo-codes";
+    var plans = ViewBag.Plans as IReadOnlyList<TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.SubscriptionPlanSummary> ?? new List<TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.SubscriptionPlanSummary>();
+    var hasRedemptions = Model.RedemptionsUsed > 0;
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Promo Codes</a> / <a asp-action="Detail" asp-route-id="@Model.Id">@Model.Code</a> / Edit</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon purple"><i class="boi boi-lg boi-pen"></i></div>
+        <div>
+            <div class="bo-page-title">Edit Promo Code · @Model.Code</div>
+            <div class="bo-page-sub">Update promotional campaign configuration</div>
+        </div>
+    </div>
+    <a asp-action="Detail" asp-route-id="@Model.Id" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+</div>
+
+@if (hasRedemptions)
+{
+    <div class="bo-alert bo-alert-warning" style="margin-bottom:20px">
+        <strong>?? Restriction:</strong> This code has been redeemed @Model.RedemptionsUsed time(s).
+  You cannot change the target plan or duration. Create a new code if needed.
+    </div>
+}
+
+<div class="bo-card" style="max-width:600px">
+    <div class="bo-card-header">Promo Code Details</div>
+    <div class="bo-card-body">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            
+            <div style="margin-bottom:14px">
+ <label class="bo-field-label">Promo Code <span style="color:#e74c3c">*</span></label>
+                <input name="Code" class="bo-input" value="@Model.Code" required maxlength="50" 
+           style="text-transform:uppercase" placeholder="LAUNCH2025" />
+        <div class="bo-info-note" style="margin-top:4px">Uppercase letters, numbers, hyphens. Must be unique.</div>
+            </div>
+
+      <div style="margin-bottom:14px">
+     <label class="bo-field-label">Target Plan <span style="color:#e74c3c">*</span></label>
+   <select name="TargetPlanId" class="bo-select" required @(hasRedemptions ? "disabled" : "")>
+   @foreach (var plan in plans)
+             {
+             <option value="@plan.Id" selected="@(Model.TargetPlanId == plan.Id)">
+   @plan.DisplayName ($@plan.PriceMonthly.ToString("F2")/mo)
+       </option>
+            }
+           </select>
+   @if (hasRedemptions)
+    {
+              <input type="hidden" name="TargetPlanId" value="@Model.TargetPlanId" />
+           <div class="bo-info-note" style="margin-top:4px;color:#e74c3c">?? Cannot change (code already redeemed)</div>
+            }
+    else
+     {
+     <div class="bo-info-note" style="margin-top:4px">Plan users will receive when they redeem this code</div>
+     }
+    </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+   <label class="bo-field-label">Duration (Days) <span style="color:#e74c3c">*</span></label>
+         <input name="DurationDays" type="number" class="bo-input" value="@Model.DurationDays" 
+                required min="1" max="365" @(hasRedemptions ? "readonly" : "") />
+        @if (hasRedemptions)
+      {
+           <div class="bo-info-note" style="margin-top:4px;color:#e74c3c">?? Cannot change</div>
+        }
+             </div>
+   <div>
+          <label class="bo-field-label">Max Redemptions</label>
+    <input name="MaxRedemptions" type="number" class="bo-input" value="@Model.MaxRedemptions" 
+        min="@Model.RedemptionsUsed" placeholder="Unlimited" />
+           @if (hasRedemptions)
+        {
+        <div class="bo-info-note" style="margin-top:4px">Min: @Model.RedemptionsUsed (current usage)</div>
+  }
+            else
+          {
+      <div class="bo-info-note" style="margin-top:4px">Leave empty for unlimited</div>
+      }
+     </div>
+            </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+                <div>
+            <label class="bo-field-label">Valid From <span style="color:#e74c3c">*</span></label>
+   <input name="ValidFrom" type="datetime-local" class="bo-input" required
+     value="@Model.ValidFrom.ToString("yyyy-MM-ddTHH:mm")" />
+       </div>
+  <div>
+      <label class="bo-field-label">Valid Until <span style="color:#e74c3c">*</span></label>
+  <input name="ValidUntil" type="datetime-local" class="bo-input" required
+    value="@Model.ValidUntil.ToString("yyyy-MM-ddTHH:mm")" />
+       </div>
+ </div>
+
+            <div style="margin-bottom:14px">
+     <label class="bo-field-label">Status</label>
+   <select name="IsActive" class="bo-select">
+ <option value="true" selected="@Model.IsActive">Active</option>
+     <option value="false" selected="@(!Model.IsActive)">Inactive</option>
+   </select>
+     </div>
+
+      <div style="margin-bottom:18px">
+          <label class="bo-field-label">Reason for Change <span style="color:#e74c3c">*</span></label>
+      <input name="Reason" class="bo-input" placeholder="Explain the change for audit trail" required />
+         </div>
+
+      <button type="submit" class="bo-btn bo-btn-primary bo-btn-block"><i class="boi boi-sm boi-check boi-mr"></i>Save Changes</button>
+        </form>
+    </div>
+</div>

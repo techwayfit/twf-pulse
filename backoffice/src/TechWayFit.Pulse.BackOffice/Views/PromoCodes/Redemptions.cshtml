@@ -1,0 +1,61 @@
+@model IReadOnlyList<TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.PromoCodeRedemptionSummary>
+@{
+    var promoCode = ViewBag.PromoCode as TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.PromoCodeDetail;
+    ViewBag.Title = $"Redemption History · {promoCode?.Code ?? "Promo Code"}";
+    ViewBag.ActiveNav = "promo-codes";
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Promo Codes</a> / <a asp-action="Detail" asp-route-id="@promoCode?.Id">@(promoCode?.Code ?? "Code")</a> / Redemptions</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon purple"><i class="boi boi-lg boi-audit"></i></div>
+ <div>
+            <div class="bo-page-title">Redemption History</div>
+   <div class="bo-page-sub">@(promoCode?.Code ?? "Promo Code") · @Model.Count total redemption(s)</div>
+        </div>
+    </div>
+    <a asp-action="Detail" asp-route-id="@promoCode?.Id" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back to Promo Code</a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="bo-card">
+        <div class="bo-card-body" style="text-align:center;padding:40px;color:var(--text-muted)">
+    No redemptions found for this promo code.
+     </div>
+    </div>
+}
+else
+{
+    <div class="bo-card">
+<div class="bo-table-wrap">
+    <table class="bo-table">
+    <thead>
+        <tr>
+ <th>User Email</th>
+  <th>Subscription ID</th>
+ <th>Redeemed At</th>
+      <th>IP Address</th>
+            <th>Actions</th>
+    </tr>
+  </thead>
+    <tbody>
+@foreach (var redemption in Model.OrderByDescending(r => r.RedeemedAt))
+        {
+       <tr>
+   <td>@redemption.FacilitatorEmail</td>
+ <td class="bo-td-mono" style="font-size:11px">@redemption.SubscriptionId</td>
+    <td class="bo-td-muted">@redemption.RedeemedAt.ToString("dd MMM yyyy HH:mm")</td>
+                <td class="bo-td-mono" style="font-size:11px">@redemption.IpAddress</td>
+          <td>
+    <a asp-controller="Subscriptions" asp-action="Detail" asp-route-id="@redemption.SubscriptionId" 
+      class="bo-btn bo-btn-ghost bo-btn-sm">View Subscription</a>
+          </td>
+           </tr>
+       }
+  </tbody>
+          </table>
+  </div>
+ </div>
+}

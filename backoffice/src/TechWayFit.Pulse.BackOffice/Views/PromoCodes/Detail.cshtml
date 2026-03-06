@@ -1,0 +1,206 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.PromoCodeDetail
+@{
+    ViewBag.Title = $"Promo Code · {Model.Code}";
+ViewBag.ActiveNav = "promo-codes";
+    var now = DateTimeOffset.UtcNow;
+    var isExpired = Model.ValidUntil < now;
+    var isNotYetValid = Model.ValidFrom > now;
+    var isLimitReached = Model.MaxRedemptions.HasValue && Model.RedemptionsUsed >= Model.MaxRedemptions.Value;
+    var usagePercent = Model.MaxRedemptions.HasValue && Model.MaxRedemptions.Value > 0
+? (int)((double)Model.RedemptionsUsed / Model.MaxRedemptions.Value * 100)
+        : 0;
+    var canBeDeleted = Model.RedemptionsUsed == 0;
+    
+    var statusClass = "inactive";
+  var statusText = "Inactive";
+    if (Model.IsActive && !isExpired && !isNotYetValid && !isLimitReached)
+    {
+        statusClass = "active";
+        statusText = "Active";
+    }
+    else if (isExpired) { statusText = "Expired"; }
+    else if (isLimitReached) { statusText = "Limit Reached"; }
+ else if (isNotYetValid) 
+    { 
+        statusClass = "muted";
+   statusText = "Scheduled";
+    }
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Promo Codes</a> / @Model.Code</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon purple"><i class="boi boi-lg boi-ticket"></i></div>
+        <div>
+            <div class="bo-page-title">@Model.Code</div>
+            <div class="bo-page-sub">
+         <span class="bo-pill @statusClass">@statusText</span>
+         <span style="margin-left:8px">@Model.TargetPlanDisplayName · @Model.DurationDays days</span>
+            </div>
+      </div>
+    </div>
+<div style="display:flex;gap:8px">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="bo-btn bo-btn-primary bo-btn-sm">Edit Code</a>
+        <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="bo-alert bo-alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="bo-alert bo-alert-danger">@TempData["Error"]</div>
+}
+
+@if (isExpired || isNotYetValid || isLimitReached)
+{
+    <div style="margin-bottom:20px">
+        @if (isExpired)
+        {
+      <div class="bo-alert bo-alert-warning">
+           <strong>?? Code Expired</strong> &mdash; 
+ This code expired on @Model.ValidUntil.ToString("MMM dd, yyyy"). Edit to extend the validity period.
+   </div>
+     }
+   else if (isNotYetValid)
+        {
+  <div class="bo-alert bo-alert-info">
+       <strong>?? Scheduled Campaign</strong> &mdash; 
+             This code becomes active on @Model.ValidFrom.ToString("MMM dd, yyyy HH:mm").
+            </div>
+        }
+        else if (isLimitReached)
+        {
+      <div class="bo-alert bo-alert-warning">
+        <strong>?? Redemption Limit Reached</strong> &mdash; 
+   All @Model.MaxRedemptions redemptions have been used. Edit to increase the limit or deactivate the code.
+            </div>
+        }
+</div>
+}
+
+<div class="bo-card" style="margin-bottom:20px">
+    <div class="bo-card-header">Promo Code Details</div>
+    <div class="bo-card-body">
+        <div class="bo-info-grid cols3">
+            <div class="bo-info-item"><div class="lbl">Code</div><div class="val bo-td-mono" style="font-size:16px;font-weight:600;letter-spacing:1px">@Model.Code</div></div>
+            <div class="bo-info-item"><div class="lbl">Target Plan</div><div class="val">@Model.TargetPlanDisplayName <span class="bo-td-muted bo-td-mono" style="font-size:11px">(@Model.TargetPlanCode)</span></div></div>
+    <div class="bo-info-item"><div class="lbl">Access Duration</div><div class="val bo-td-mono">@Model.DurationDays days</div></div>
+            <div class="bo-info-item"><div class="lbl">Max Redemptions</div><div class="val bo-td-mono">@(Model.MaxRedemptions?.ToString() ?? "Unlimited")</div></div>
+            <div class="bo-info-item"><div class="lbl">Redemptions Used</div><div class="val bo-td-mono">@Model.RedemptionsUsed</div></div>
+ <div class="bo-info-item"><div class="lbl">Unique Users</div><div class="val bo-td-mono">@ViewBag.UniqueUsers</div></div>
+            <div class="bo-info-item"><div class="lbl">Valid From</div><div class="val bo-td-muted">@Model.ValidFrom.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+            <div class="bo-info-item"><div class="lbl">Valid Until</div><div class="val bo-td-muted">@Model.ValidUntil.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+            @if (Model.MaxRedemptions.HasValue)
+          {
+      <div class="bo-info-item"><div class="lbl">Redemption Rate</div><div class="val bo-td-mono">@usagePercent%</div></div>
+     }
+     <div class="bo-info-item"><div class="lbl">Created</div><div class="val bo-td-muted">@Model.CreatedAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+      <div class="bo-info-item"><div class="lbl">Updated</div><div class="val bo-td-muted">@Model.UpdatedAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+            <div class="bo-info-item"><div class="lbl">ID</div><div class="val bo-td-mono" style="font-size:11px">@Model.Id</div></div>
+        </div>
+
+        @if (Model.MaxRedemptions.HasValue)
+ {
+   <div style="margin-top:20px;padding-top:20px;border-top:1px solid #e5e7eb">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+   <span style="font-size:13px;color:#6b7280;font-weight:500">Campaign Progress</span>
+    <span style="font-size:13px;color:#6b7280">@Model.RedemptionsUsed of @Model.MaxRedemptions redemptions used</span>
+</div>
+   <div class="bo-progress">
+    <div class="bo-progress-bar" style="width:@usagePercent%"></div>
+ </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.RecentRedemptions.Any())
+{
+    <div class="bo-card" style="margin-bottom:20px">
+        <div class="bo-card-header">
+         Recent Redemptions
+      @if (Model.RedemptionsUsed > 5)
+{
+     <span style="margin-left:8px;color:var(--text-muted);font-weight:400">
+  &mdash; Showing 5 of @Model.RedemptionsUsed
+     </span>
+         }
+   </div>
+   <table class="bo-table">
+    <thead>
+      <tr>
+             <th>User Email</th>
+<th>Subscription ID</th>
+        <th>Redeemed At</th>
+     <th>IP Address</th>
+       </tr>
+            </thead>
+            <tbody>
+    @foreach (var redemption in Model.RecentRedemptions.Take(5))
+ {
+<tr>
+     <td>@redemption.FacilitatorEmail</td>
+<td class="bo-td-mono" style="font-size:11px">@redemption.SubscriptionId</td>
+   <td class="bo-td-muted">@redemption.RedeemedAt.ToString("dd MMM yyyy HH:mm")</td>
+  <td class="bo-td-mono" style="font-size:11px">@redemption.IpAddress</td>
+                </tr>
+      }
+   </tbody>
+        </table>
+        @if (Model.RedemptionsUsed > 5)
+        {
+ <div style="padding:12px;text-align:center;border-top:1px solid #e5e7eb;background:#f9fafb">
+     <a href="/promo-codes/@Model.Id/redemptions" class="bo-link">
+        View all @Model.RedemptionsUsed redemptions &rarr;
+       </a>
+   </div>
+   }
+    </div>
+}
+
+<div class="bo-section-header">Actions &mdash; <span style="color:var(--text-muted);font-weight:400">All changes are audited</span></div>
+<div class="bo-actions-grid cols2">
+
+    <div class="bo-action-card">
+  <div class="bo-action-title"><i class="boi boi-sm boi-@(Model.IsActive ? "warning" : "check") boi-mr"></i>@(Model.IsActive ? "Deactivate Code" : "Activate Code")</div>
+        <div class="bo-action-desc">@(Model.IsActive ? "Prevent users from redeeming this promo code." : "Allow users to redeem this promo code.")</div>
+      <form asp-action="ToggleActive" method="post" style="margin-top:12px">
+  @Html.AntiForgeryToken()
+       <input type="hidden" name="id" value="@Model.Id" />
+          <input type="hidden" name="isActive" value="@(!Model.IsActive)" />
+          <label class="bo-field-label">Reason</label>
+         <input type="text" name="reason" class="bo-input" placeholder="Required" required style="margin-bottom:10px" />
+      <button type="submit" class="bo-btn @(Model.IsActive ? "bo-btn-warning" : "bo-btn-success") bo-btn-sm">
+ @(Model.IsActive ? "Deactivate" : "Activate")
+</button>
+        </form>
+    </div>
+
+    @if (canBeDeleted)
+    {
+     <div class="bo-action-card">
+            <div class="bo-action-title"><i class="boi boi-sm boi-trash boi-mr"></i>Delete Promo Code</div>
+  <div class="bo-action-desc">Permanently remove this promo code. Cannot be undone.</div>
+            <form asp-action="Delete" method="post" style="margin-top:12px"
+     onsubmit="return confirm('?? Delete promo code @Model.Code?\n\nThis action cannot be undone.')">
+          @Html.AntiForgeryToken()
+              <input type="hidden" name="id" value="@Model.Id" />
+                <label class="bo-field-label">Reason</label>
+  <input type="text" name="reason" class="bo-input" placeholder="Required" required style="margin-bottom:10px" />
+             <button type="submit" class="bo-btn bo-btn-danger bo-btn-sm">Delete</button>
+            </form>
+      </div>
+    }
+  else
+    {
+        <div class="bo-action-card disabled">
+            <div class="bo-action-title"><i class="boi boi-sm boi-trash boi-mr"></i>Delete Promo Code</div>
+    <div class="bo-action-desc">This code has been redeemed @Model.RedemptionsUsed time(s) and cannot be deleted. Deactivate it instead to prevent future use.</div>
+   </div>
+    }
+
+</div>

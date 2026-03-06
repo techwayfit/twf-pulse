@@ -221,3 +221,82 @@ public sealed record ActivityTypeSearchResult(
     int TotalCount,
   int Page,
     int PageSize);
+
+// ???????????????????????????????????????????????????????????????????????????
+// Promo Code Models
+// ???????????????????????????????????????????????????????????????????????????
+
+/// <summary>Summary for promo code list view</summary>
+public sealed record PromoCodeSummary(
+    Guid Id,
+    string Code,
+ string TargetPlanDisplayName,
+    int DurationDays,
+    int? MaxRedemptions,
+    int RedemptionsUsed,
+    DateTimeOffset ValidFrom,
+    DateTimeOffset ValidUntil,
+    bool IsActive,
+    string Status); // "Active", "Expired", "Inactive", "Limit Reached"
+
+/// <summary>Detailed promo code information</summary>
+public sealed record PromoCodeDetail(
+Guid Id,
+    string Code,
+    Guid TargetPlanId,
+    string TargetPlanCode,
+    string TargetPlanDisplayName,
+    int DurationDays,
+    int? MaxRedemptions,
+    int RedemptionsUsed,
+    DateTimeOffset ValidFrom,
+    DateTimeOffset ValidUntil,
+    bool IsActive,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset UpdatedAt,
+    IReadOnlyList<PromoCodeRedemptionSummary> RecentRedemptions);
+
+/// <summary>Redemption record summary</summary>
+public sealed record PromoCodeRedemptionSummary(
+    Guid Id,
+    Guid FacilitatorUserId,
+    string FacilitatorEmail,
+    Guid SubscriptionId,
+    DateTimeOffset RedeemedAt,
+    string IpAddress);
+
+/// <summary>Request to create a new promo code</summary>
+public sealed record CreatePromoCodeRequest(
+    string Code,
+    Guid TargetPlanId,
+    int DurationDays,
+    int? MaxRedemptions,
+    DateTimeOffset ValidFrom,
+    DateTimeOffset ValidUntil,
+    bool IsActive);
+
+/// <summary>Request to update a promo code</summary>
+public sealed record UpdatePromoCodeRequest(
+    Guid Id,
+    string Code,
+    Guid TargetPlanId,
+    int DurationDays,
+    int? MaxRedemptions,
+    DateTimeOffset ValidFrom,
+  DateTimeOffset ValidUntil,
+    bool IsActive,
+    string Reason);
+
+/// <summary>Search query for promo codes</summary>
+public sealed record PromoCodeSearchQuery(
+    bool? IsActive,
+    bool? IsExpired,
+    int Page = 1,
+    int PageSize = 20);
+
+/// <summary>Search result for promo codes</summary>
+public sealed record PromoCodeSearchResult(
+IReadOnlyList<PromoCodeSummary> Items,
+    int TotalCount,
+    int Page,
+    int PageSize);

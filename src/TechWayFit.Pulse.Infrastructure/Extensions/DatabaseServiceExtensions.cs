@@ -77,14 +77,19 @@ maxRetryDelay: TimeSpan.FromSeconds(5),
     // Other repositories (no caching)
         services.AddScoped<IResponseRepository, ResponseRepository>();
         services.AddScoped<IParticipantRepository, ParticipantRepository>();
-     services.AddScoped<ILoginOtpRepository, LoginOtpRepository>();
-        services.AddScoped<IFacilitatorUserRepository, FacilitatorUserRepository>();
-     services.AddScoped<IContributionCounterRepository, ContributionCounterRepository<PulseMariaDbContext>>();
+        services.AddScoped<ILoginOtpRepository, LoginOtpRepository>();
+     services.AddScoped<IFacilitatorUserRepository, FacilitatorUserRepository>();
+        services.AddScoped<IContributionCounterRepository, ContributionCounterRepository<PulseMariaDbContext>>();
         services.AddScoped<IFacilitatorUserDataRepository, FacilitatorUserDataRepository<PulseMariaDbContext>>();
         services.AddScoped<ISessionGroupRepository, SessionGroupRepository<PulseMariaDbContext>>();
         services.AddScoped<ISessionTemplateRepository, SessionTemplateRepository<PulseMariaDbContext>>();
         services.AddScoped<ISessionActivityMetadataRepository, SessionActivityMetadataRepository<PulseMariaDbContext>>();
+        
+        // Commercialization repositories (TODO: implement subscription and plan repos)
+        services.AddScoped<IPromoCodeRepository, PromoCodeRepository>();
+        services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
+        services.AddScoped<IFacilitatorSubscriptionRepository, FacilitatorSubscriptionRepository>();
 
-        return services;
+     return services;
   }
 }

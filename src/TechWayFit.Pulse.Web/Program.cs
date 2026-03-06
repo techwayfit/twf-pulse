@@ -241,6 +241,9 @@ try
     builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
     builder.Services.AddScoped<ISessionGroupService, SessionGroupService>();
     builder.Services.AddScoped<ISessionTemplateService, TechWayFit.Pulse.Infrastructure.Services.SessionTemplateService>();
+    
+    // Commercialization services (NOTE: IPlanService not yet implemented - see commercialization-plan.md)
+    builder.Services.AddScoped<IPromoCodeService, PromoCodeService>();
 
     // Background service for template initialization (non-blocking startup)
     builder.Services.AddHostedService<TechWayFit.Pulse.Web.BackgroundServices.TemplateInitializationHostedService>();

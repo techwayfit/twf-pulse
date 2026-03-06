@@ -1,6 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <Compile Remove="Persistence\Sqlite\**" />
+    <Compile Remove="Persistence\SqlServer\**" />
+    <EmbeddedResource Remove="Persistence\Sqlite\**" />
+    <EmbeddedResource Remove="Persistence\SqlServer\**" />
+    <None Remove="Persistence\Sqlite\**" />
+    <None Remove="Persistence\SqlServer\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\TechWayFit.Pulse.Domain\TechWayFit.Pulse.Domain.csproj" />
     <ProjectReference Include="..\TechWayFit.Pulse.Contracts\TechWayFit.Pulse.Contracts.csproj" />
     <ProjectReference Include="..\TechWayFit.Pulse.Application\TechWayFit.Pulse.Application.csproj" />
@@ -17,8 +26,6 @@
 
   <ItemGroup>
     <Folder Include="Persistence\MariaDb\Repositories\" />
-    <Folder Include="Persistence\Sqlite\" />
-    <Folder Include="Persistence\SqlServer\Repositories\" />
     <Folder Include="Scripts\MSQL\V1.0\" />
     <Folder Include="Scripts\MSQL\V1.1\" />
   </ItemGroup>

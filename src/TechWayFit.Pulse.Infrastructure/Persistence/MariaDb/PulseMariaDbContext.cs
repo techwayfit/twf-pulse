@@ -28,6 +28,8 @@ public sealed class PulseMariaDbContext : DbContext, IPulseDbContext
     public DbSet<SubscriptionPlanRecord> SubscriptionPlans => Set<SubscriptionPlanRecord>();
     public DbSet<FacilitatorSubscriptionRecord> FacilitatorSubscriptions => Set<FacilitatorSubscriptionRecord>();
     public DbSet<ActivityTypeDefinitionRecord> ActivityTypeDefinitions => Set<ActivityTypeDefinitionRecord>();
+    public DbSet<PromoCodeRecord> PromoCodes => Set<PromoCodeRecord>();
+    public DbSet<PromoCodeRedemptionRecord> PromoCodeRedemptions => Set<PromoCodeRedemptionRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -208,7 +210,30 @@ entity.Property(x => x.PaymentProvider).HasMaxLength(50);
     entity.Property(x => x.ColorHex).HasMaxLength(7).IsRequired();
           entity.Property(x => x.ApplicablePlanIds).HasMaxLength(500);
        entity.HasIndex(x => x.ActivityType).IsUnique();
-   entity.HasIndex(x => new { x.IsActive, x.SortOrder });
-   });
+     entity.HasIndex(x => new { x.IsActive, x.SortOrder });
+        });
+
+        // ?? PromoCodes ??????????????????????????????????????????
+   modelBuilder.Entity<PromoCodeRecord>(entity =>
+        {
+     entity.ToTable("PromoCodes");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Code).HasMaxLength(50).IsRequired();
+  entity.HasIndex(x => x.Code).IsUnique();
+      entity.HasIndex(x => new { x.IsActive, x.ValidFrom, x.ValidUntil });
+            entity.HasIndex(x => x.TargetPlanId);
+        });
+
+        // ?? PromoCodeRedemptions ??????????????????????????????????????
+        modelBuilder.Entity<PromoCodeRedemptionRecord>(entity =>
+        {
+      entity.ToTable("PromoCodeRedemptions");
+       entity.HasKey(x => x.Id);
+   entity.Property(x => x.IpAddress).HasMaxLength(45).IsRequired();
+          entity.HasIndex(x => new { x.PromoCodeId, x.FacilitatorUserId });
+            entity.HasIndex(x => x.FacilitatorUserId);
+  entity.HasIndex(x => x.SubscriptionId);
+         entity.HasIndex(x => x.RedeemedAt);
+     });
     }
 }
