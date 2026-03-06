@@ -1,16 +1,16 @@
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.BackOffice.Core.Abstractions;
 using TechWayFit.Pulse.BackOffice.Core.Models.Audit;
-using TechWayFit.Pulse.BackOffice.Core.Persistence;
+using TechWayFit.Pulse.BackOffice.Core.Persistence.MariaDb;
 using TechWayFit.Pulse.BackOffice.Core.Persistence.Entities;
 
 namespace TechWayFit.Pulse.BackOffice.Core.Services;
 
 public sealed class AuditLogService : IAuditLogService
 {
-    private readonly BackOfficeDbContext _db;
+    private readonly BackOfficeMariaDbContext _db;
 
-    public AuditLogService(BackOfficeDbContext db)
+    public AuditLogService(BackOfficeMariaDbContext db)
     {
         _db = db;
     }

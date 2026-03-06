@@ -5,18 +5,18 @@ using TechWayFit.Pulse.BackOffice.Core.Abstractions;
 using TechWayFit.Pulse.BackOffice.Core.Entities;
 using TechWayFit.Pulse.BackOffice.Core.Models.Auth;
 using TechWayFit.Pulse.BackOffice.Core.Models.Audit;
-using TechWayFit.Pulse.BackOffice.Core.Persistence;
+using TechWayFit.Pulse.BackOffice.Core.Persistence.MariaDb;
 using TechWayFit.Pulse.BackOffice.Core.Persistence.Entities;
 
 namespace TechWayFit.Pulse.BackOffice.Core.Services;
 
 public sealed class BackOfficeAuthService : IBackOfficeAuthService
 {
-    private readonly BackOfficeDbContext _db;
+    private readonly BackOfficeMariaDbContext _db;
     private readonly IAuditLogService _audit;
     private readonly IConfiguration _configuration;
 
-    public BackOfficeAuthService(BackOfficeDbContext db, IAuditLogService audit, IConfiguration configuration)
+    public BackOfficeAuthService(BackOfficeMariaDbContext db, IAuditLogService audit, IConfiguration configuration)
     {
         _db = db;
         _audit = audit;

@@ -283,8 +283,8 @@ try
 
     var app = builder.Build();
 
-    // Ensure database is created using provider-specific method
-    await app.Services.EnsurePulseDatabaseAsync(builder.Configuration);
+    // Note: Database tables must be created manually using MariaDB migration scripts.
+    // See: src/TechWayFit.Pulse.Infrastructure/Scripts/MariaDB/
 
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsDevelopment())

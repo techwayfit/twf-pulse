@@ -88,26 +88,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Dashboard}/{action=Index}/{id?}");
 
-// ── Database initialise (SQLite only — SQL Server uses manual scripts) ──────────
-await InitialiseDatabaseAsync(app);
+// ── Database initialization (MariaDB - manual scripts required) ─────────────
+// Note: BackOffice tables must be created via SQL scripts.
+// See: backoffice/src/TechWayFit.Pulse.BackOffice.Core/Scripts/v1.0/MariaDB/
 
 app.Run();
-
-static async Task InitialiseDatabaseAsync(WebApplication app)
-{
-    using var scope = app.Services.CreateScope();
-    var db          = scope.ServiceProvider.GetRequiredService<BackOfficeDbContext>();
-    var logger      = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-
-    try
-    {
-        // For SQLite: auto-create BackOffice tables if they don’t exist yet.
-        // For SQL Server: tables must be created via Scripts/v1.0/SqlServer/.
-        if (db.Database.IsSqlite())
-            await db.Database.EnsureCreatedAsync();
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Database initialisation failed. Ensure BackOffice tables exist (see Scripts/v1.0/SqlServer/).");
-    }
-}

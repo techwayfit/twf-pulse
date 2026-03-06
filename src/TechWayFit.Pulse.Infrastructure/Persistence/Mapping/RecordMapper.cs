@@ -155,4 +155,52 @@ internal static class RecordMapper
             UpdatedAt = counter.UpdatedAt
         };
     }
+
+    internal static FacilitatorUser ToDomain(this FacilitatorUserRecord record)
+    {
+        return new FacilitatorUser(
+            record.Id,
+            record.Email,
+            record.DisplayName,
+            record.CreatedAt,
+            record.LastLoginAt);
+    }
+
+    internal static FacilitatorUserRecord ToRecord(this FacilitatorUser user)
+    {
+        return new FacilitatorUserRecord
+        {
+            Id = user.Id,
+            Email = user.Email,
+            DisplayName = user.DisplayName,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt
+        };
+    }
+
+    internal static LoginOtp ToDomain(this LoginOtpRecord record)
+    {
+        return new LoginOtp(
+            record.Id,
+            record.Email,
+            record.OtpCode,
+            record.CreatedAt,
+            record.ExpiresAt,
+            record.IsUsed,
+            record.UsedAt);
+    }
+
+    internal static LoginOtpRecord ToRecord(this LoginOtp otp)
+    {
+        return new LoginOtpRecord
+        {
+            Id = otp.Id,
+            Email = otp.Email,
+            OtpCode = otp.OtpCode,
+            CreatedAt = otp.CreatedAt,
+            ExpiresAt = otp.ExpiresAt,
+            IsUsed = otp.IsUsed,
+            UsedAt = otp.UsedAt
+        };
+    }
 }
