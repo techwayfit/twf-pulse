@@ -19,28 +19,77 @@ class CreateSessionForm {
     }
 
  init() {
-        console.log('Initializing Create Session Form...');
+  console.log('Initializing Create Session Form...');
    
-        // Cache DOM elements
+     // Cache DOM elements
         this.form = document.getElementById('sessionCreateForm');
         this.dropZone = document.getElementById('formDropZone');
         this.submitBtn = document.getElementById('submitBtn');
         
 if (!this.form || !this.dropZone || !this.submitBtn) {
-            console.error('Required form elements not found');
+  console.error('Required form elements not found');
             return;
     }
   
-        // Initialize components
+    // Initialize components
         this.initFormBuilder();
         this.initFormSubmission();
+        
+        // ✅ Phase 2: Load quota status on page load
+  this.loadQuotaStatus();
 
         // Expose methods globally for HTML onclick handlers
         window.removeFormField = (fieldId) => this.removeFormField(fieldId);
         window.updateFormFieldsInput = () => this.updateFormFieldsInput();
-        window.updateFieldName = (fieldId, value) => this.updateFieldName(fieldId, value);
+ window.updateFieldName = (fieldId, value) => this.updateFieldName(fieldId, value);
      
     console.log('Create Session Form initialized successfully');
+    }
+
+    /**
+  * ✅ Phase 2: Load quota status from API
+   */
+    async loadQuotaStatus() {
+        try {
+      const response = await fetch('/api/account/plan-status');
+  if (!response.ok) {
+             // User not authenticated or error - don't show quota banner
+  return;
+         }
+ 
+       const result = await response.json();
+    const status = result.data;
+  
+            if (!status) return;
+
+   // Update quota display
+    const quotaBanner = document.getElementById('quotaBanner');
+    const quotaWarning = document.getElementById('quotaWarning');
+        
+        if (quotaBanner) {
+       document.getElementById('sessionsUsed').textContent = status.sessionsUsed;
+     document.getElementById('sessionsAllowed').textContent = status.sessionsAllowed;
+    
+           // Format reset date
+     const resetDate = new Date(status.sessionsResetAt);
+document.getElementById('sessionsResetDate').textContent = resetDate.toLocaleDateString('en-US', {
+     month: 'short',
+  day: 'numeric'
+          });
+       
+        quotaBanner.classList.remove('d-none');
+  }
+
+   // Show warning if approaching limit (80% or more used)
+    if (quotaWarning && status.sessionsUsed >= status.sessionsAllowed * 0.8) {
+  document.getElementById('sessionsUsedWarning').textContent = status.sessionsUsed;
+     document.getElementById('sessionsAllowedWarning').textContent = status.sessionsAllowed;
+     quotaWarning.classList.remove('d-none');
+     }
+      } catch (error) {
+        console.error('Failed to load quota status:', error);
+            // Fail silently - don't block page load
+        }
     }
 
     /**
@@ -92,6 +141,26 @@ if (!this.form || !this.dropZone || !this.submitBtn) {
          }
   }
    });
+    }
+
+    /**
+     * Setup mobile add button (for adding fields on mobile)
+     */
+    setupMobileAddButton() {
+        const addBtn = document.getElementById('mobileAddFieldBtn');
+        const select = document.getElementById('mobileFieldTypeSelect');
+        
+        if (addBtn && select) {
+  addBtn.addEventListener('click', () => {
+  const fieldType = select.value;
+                if (fieldType) {
+            this.addFormField(fieldType);
+         select.value = ''; // Reset dropdown
+        } else {
+                this.showError('Please select a field type');
+ }
+          });
+        }
     }
 
     /**
@@ -289,7 +358,7 @@ if (!this.form || !this.dropZone || !this.submitBtn) {
     }
 
     /**
-     * Update field name in header as user types
+* Update field name in header as user types
      */
     updateFieldName(fieldId, value) {
      const nameLabel = document.querySelector(`[data-field-name="${fieldId}"]`);
@@ -300,7 +369,7 @@ if (nameLabel) {
  }
 
     /**
-     * Remove a form field
+   * Remove a form field
      */
     removeFormField(fieldId) {
         const field = document.querySelector(`[data-id="${fieldId}"]`);
@@ -383,36 +452,50 @@ if (nameLabel) {
      * Initialize form submission handling
      */
     initFormSubmission() {
-        const btnText = this.submitBtn.querySelector('.btn-text');
-        const btnLoading = this.submitBtn.querySelector('.btn-loading');
+    const btnText = this.submitBtn.querySelector('.btn-text');
+     const btnLoading = this.submitBtn.querySelector('.btn-loading');
 
         this.form.addEventListener('submit', async (e) => {
    e.preventDefault();
 
-            try {
+    try {
 // Show loading state
   btnText.style.display = 'none';
-            btnLoading.style.display = 'inline-flex';
+  btnLoading.style.display = 'inline-flex';
            this.submitBtn.disabled = true;
-          this.hideError();
+  this.hideError();
       
-                // Ensure form fields are up to date
+      // Ensure form fields are up to date
         this.updateFormFieldsInput();
           
    // Build session data
-              const formData = new FormData(this.form);
-           const sessionData = this.buildSessionData(formData);
-            
-                console.log('Submitting session data:', sessionData);
+       const formData = new FormData(this.form);
+      const sessionData = this.buildSessionData(formData);
+         
+      console.log('Submitting session data:', sessionData);
          
        // Submit to API
       const response = await fetch('/api/sessions', {
-     method: 'POST',
+method: 'POST',
          headers: { 'Content-Type': 'application/json' },
      body: JSON.stringify(sessionData)
            });
             
-    if (response.ok) {
+   // ✅ Phase 2: Handle 402 Payment Required (quota exceeded)
+    if (response.status === 402) {
+   const result = await response.json();
+          const error = result.errors?.[0];
+     
+   if (error) {
+          this.showUpgradeModal({
+         title: 'Session Limit Reached',
+       message: error.message
+  });
+    }
+      return;
+  }
+ 
+if (response.ok) {
         const result = await response.json();
       console.log('Session created successfully:', result);
         
@@ -420,25 +503,25 @@ if (nameLabel) {
  const sessionCode = result.data?.code || result.code;
  const sessionId = result.data?.sessionId || result.sessionId;
   
-        if (!sessionCode) {
-            console.error('No session code in response:', result);
+   if (!sessionCode) {
+ console.error('No session code in response:', result);
             this.showError('Session created but no code returned');
-            return;
-        }
+      return;
+   }
         
         // Check if templateId exists and append to redirect URL
         const templateIdInput = document.getElementById('templateId');
         const templateId = templateIdInput ? templateIdInput.value : null;
         
         let redirectUrl = `/facilitator/add-activities?code=${sessionCode}`;
-        if (templateId) {
-            redirectUrl += `&templateId=${templateId}`;
+  if (templateId) {
+redirectUrl += `&templateId=${templateId}`;
         }
-        
+  
         // Redirect to Add Activities page
         window.location.href = redirectUrl;
     } else {
-        const error = await response.json();
+     const error = await response.json();
         console.error('API error:', error);
         
   // Extract error message from wrapped response
@@ -447,8 +530,8 @@ if (nameLabel) {
     }
             } catch (error) {
     console.error('Submission error:', error);
-           this.showError(`Failed to create session: ${error.message}`);
-            } finally {
+        this.showError(`Failed to create session: ${error.message}`);
+    } finally {
           // Reset loading state
   btnText.style.display = 'inline';
           btnLoading.style.display = 'none';
@@ -457,120 +540,98 @@ if (nameLabel) {
         });
     }
 
-    /**
-     * Build session data object from form
-     */
+  /**
+     * Build session data from form inputs
+ */
     buildSessionData(formData) {
-      // Build context string from all AI context fields (for AI-generated sessions)
-        const contextParts = [];
-        if (formData.get('currentProcess')) contextParts.push(`Current Process: ${formData.get('currentProcess')}`);
-        if (formData.get('painPoints')) contextParts.push(`Pain Points: ${formData.get('painPoints')}`);
-  if (formData.get('technicalContext')) contextParts.push(`Technical Context: ${formData.get('technicalContext')}`);
-   if (formData.get('teamBackground')) contextParts.push(`Team Background: ${formData.get('teamBackground')}`);
-        if (formData.get('aiGoals')) contextParts.push(`AI Goals: ${formData.get('aiGoals')}`);
-        
-        // Use manual context if provided, otherwise use AI-generated context
-        const manualContext = formData.get('sessionContext');
-        const aiContext = contextParts.length > 0 ? contextParts.join(' | ') : null;
-
-    // Helper to convert Flatpickr date format to ISO
-    const convertToISODateTime = (dateStr) => {
-        if (!dateStr || dateStr.trim() === '') return null;
-        try {
-            const date = new Date(dateStr);
-            return isNaN(date.getTime()) ? null : date.toISOString();
-        } catch (e) {
-            console.error('Date conversion error:', e);
-            return null;
-        }
-    };
-
-  return {
-      // Let server generate the code - it will be unique and in XXX-XXX-XXX format
-       title: formData.get('sessionTitle'),
-    goal: formData.get('sessionGoal') || null,
-    context: manualContext || aiContext,
-    groupId: formData.get('groupId') || null,
-    sessionStart: convertToISODateTime(formData.get('sessionStart')),
-    sessionEnd: convertToISODateTime(formData.get('sessionEnd')),
-            settings: {
-   strictCurrentActivityOnly: true,
-        allowAnonymous: false,
-            ttlMinutes: 360
-      },
-         joinFormSchema: {
-      maxFields: 5,
-       fields: this.buildJoinFormFields(formData)
-          }
-    };
-    }
-
-    /**
-     * Build the final joinFormSchema fields array, prepending the displayName
-     * entry when the facilitator has marked it as required.
-     */
-    buildJoinFormFields(formData) {
-        const customFields = JSON.parse(formData.get('joinFormFields') || '[]');
+ // Parse join form fields
+      const joinFormFieldsJson = formData.get('joinFormFields') || '[]';
+        const joinFormFields = JSON.parse(joinFormFieldsJson);
+    
+  // Parse display name required flag
         const displayNameRequired = formData.get('displayNameRequiredFlag') === 'true';
-
-        if (!displayNameRequired) {
-            return customFields;
-        }
-
-        const displayNameField = {
-            id: 'displayName',
-            label: 'Display Name',
-            type: 'text',
-            required: true,
-            options: ''
-        };
-
-        return [displayNameField, ...customFields];
-    }
-
-    /**
-     * Setup mobile Add button for adding fields
-     */
-    setupMobileAddButton() {
-        const addBtn = document.getElementById('mobileAddFieldBtn');
-        const select = document.getElementById('mobileFieldTypeSelect');
         
-        if (addBtn && select) {
-            console.log('Setting up mobile add button');
-            addBtn.addEventListener('click', () => {
-                const fieldType = select.value;
-                if (fieldType) {
-                    console.log('Adding field from mobile:', fieldType);
-                    this.addFormField(fieldType);
-                    select.value = ''; // Reset dropdown
-                } else {
-                    this.showError('Please select a field type');
-                }
-            });
-        }
+     // Parse session dates if provided
+   const sessionStart = formData.get('sessionStart');
+  const sessionEnd = formData.get('sessionEnd');
+        
+        // Build session object
+        const sessionData = {
+            title: formData.get('sessionTitle'),
+            goal: formData.get('sessionGoal') || null,
+            context: formData.get('sessionContext') || null,
+         groupId: formData.get('groupId') || null,
+            sessionStart: sessionStart && sessionStart.trim() !== '' ? sessionStart : null,
+            sessionEnd: sessionEnd && sessionEnd.trim() !== '' ? sessionEnd : null,
+            settings: {
+         strictCurrentActivityOnly: true,
+    allowAnonymous: !displayNameRequired,
+            ttlMinutes: 360
+            },
+  joinFormSchema: {
+    maxFields: 5,
+            fields: joinFormFields.map(field => ({
+         id: field.id,
+         label: field.label,
+        type: this.capitalizeFirstLetter(field.type),
+         required: field.required,
+                options: field.options || '',
+             useInFilters: true
+      }))
+            }
+    };
+        
+  return sessionData;
+  }
+
+    /**
+     * Capitalize first letter of a string
+     */
+    capitalizeFirstLetter(str) {
+        if (!str) return str;
+        return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
     /**
-     * Show error message to user
-  */
+     * Show error message
+     */
     showError(message) {
-        const errorDiv = document.getElementById('errorMessage');
-     if (errorDiv) {
-      errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-  errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const errorDiv = document.getElementById('errorMessage');
+   if (errorDiv) {
+    errorDiv.textContent = message;
+       errorDiv.style.display = 'block';
+      errorDiv.classList.add('show');
+
+   // Auto-hide after 5 seconds
+    setTimeout(() => this.hideError(), 5000);
         }
     }
 
-    /**
+/**
      * Hide error message
      */
     hideError() {
-      const errorDiv = document.getElementById('errorMessage');
+        const errorDiv = document.getElementById('errorMessage');
         if (errorDiv) {
-  errorDiv.style.display = 'none';
-     }
- }
+          errorDiv.classList.remove('show');
+     setTimeout(() => {
+           errorDiv.style.display = 'none';
+            }, 150);
+        }
+    }
+
+    /**
+     * ✅ Phase 2: Show upgrade modal when quota limit reached
+     */
+    showUpgradeModal(options) {
+        // Use the global upgrade modal if it exists
+   if (typeof window.showUpgradeModal === 'function') {
+            window.showUpgradeModal(options);
+  } else {
+        // Fallback: show error message
+ this.showError(options.message);
+        }
+    }
 }
 
 

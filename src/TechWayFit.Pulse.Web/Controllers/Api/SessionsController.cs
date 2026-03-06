@@ -36,6 +36,7 @@ public sealed class SessionsController : ControllerBase
     private readonly ISessionGroupService _sessionGroups;
     private readonly TechWayFit.Pulse.Web.Services.IHubNotificationService _hubNotifications;
     private readonly ISessionActivityMetadataService _metadataService;
+    private readonly IPlanService _planService;
     private readonly ILogger<SessionsController> _logger;
 
     public SessionsController(
@@ -60,6 +61,7 @@ public sealed class SessionsController : ControllerBase
         ISessionGroupService sessionGroups,
         TechWayFit.Pulse.Web.Services.IHubNotificationService hubNotifications,
         ISessionActivityMetadataService metadataService,
+        IPlanService planService,
         ILogger<SessionsController> logger)
     {
         _sessions = sessions;
@@ -83,6 +85,7 @@ public sealed class SessionsController : ControllerBase
         _sessionGroups = sessionGroups;
         _hubNotifications = hubNotifications;
         _metadataService = metadataService;
+        _planService = planService;
         _logger = logger;
     }
 
@@ -96,12 +99,28 @@ public sealed class SessionsController : ControllerBase
             // Validate the request to catch options field issues
             ValidateJoinFormSchema(request.JoinFormSchema);
 
+            // Get facilitator user ID for quota checking
+            var facilitatorUserId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+
+            // ? Phase 2: Check session creation quota
+            if (facilitatorUserId.HasValue)
+            {
+                var canCreate = await _planService.CanCreateSessionAsync(facilitatorUserId.Value, cancellationToken);
+                if (!canCreate)
+                {
+                    var status = await _planService.GetPlanStatusAsync(facilitatorUserId.Value, cancellationToken);
+                    return StatusCode(402, Error<CreateSessionResponse>(
+                        "session_limit_reached",
+                        $"You've used all {status.SessionsAllowed} sessions this month. " +
+                        $"Resets on {status.SessionsResetAt:MMM dd}. Upgrade for more sessions."));
+                }
+            }
+
             // Always generate a unique code server-side
             var code = await _codeGenerator.GenerateUniqueCodeAsync(cancellationToken);
 
             var settings = ApiMapper.ToDomain(request.Settings);
             var joinFormSchema = ApiMapper.ToDomain(request.JoinFormSchema);
-            var facilitatorUserId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
 
             // If no group is specified, use the default group for this facilitator
             var groupId = request.GroupId;
@@ -122,6 +141,12 @@ public sealed class SessionsController : ControllerBase
                 facilitatorUserId,
                 groupId,
                 cancellationToken);
+
+            // ? Phase 2: Consume quota after successful creation
+            if (facilitatorUserId.HasValue)
+            {
+                await _planService.ConsumeSessionAsync(facilitatorUserId.Value, cancellationToken);
+            }
 
             return Ok(Wrap(new CreateSessionResponse(session.Id, session.Code)));
         }
@@ -158,55 +183,68 @@ public sealed class SessionsController : ControllerBase
     [HttpPost("{code}/generate-activities")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<AgendaActivityResponse>>>> GenerateActivitiesForSession(
         string code,
-        [FromBody] GenerateActivitiesRequest request,
-        CancellationToken cancellationToken)
+      [FromBody] GenerateActivitiesRequest request,
+   CancellationToken cancellationToken)
     {
         try
         {
-            // Get the session
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+   // Get the session
+         var session = await _sessions.GetByCodeAsync(code, cancellationToken);
             if (session is null)
             {
-                return NotFound(Error<IReadOnlyList<AgendaActivityResponse>>("not_found", "Session not found."));
-            }
+     return NotFound(Error<IReadOnlyList<AgendaActivityResponse>>("not_found", "Session not found."));
+       }
 
-            // Verify facilitator owns this session
-            var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
-            if (userId == null || session.FacilitatorUserId != userId)
-            {
-                return Forbid();
+          // Verify facilitator owns this session
+ var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+      if (userId == null || session.FacilitatorUserId != userId)
+      {
+           return Forbid();
+    }
+
+// ? Phase 3: Check AI Assist feature access
+      if (userId.HasValue)
+     {
+        var canUseAI = await _planService.CanUseFeatureAsync(userId.Value, "aiAssist", cancellationToken);
+           if (!canUseAI)
+       {
+      var status = await _planService.GetPlanStatusAsync(userId.Value, cancellationToken);
+  return StatusCode(402, Error<IReadOnlyList<AgendaActivityResponse>>(
+    "feature_locked",
+    $"AI Assist is not available on the {status.PlanDisplayName} plan. Upgrade to unlock this feature."));
+        }
             }
 
             // Build enhanced context from request parameters
-            var enhancedContext = BuildEnhancedContext(
-                request.AdditionalContext,
-                request.ParticipantCount,
-                request.ParticipantType);
+  var enhancedContext = BuildEnhancedContext(
+   request.AdditionalContext,
+         request.ParticipantCount,
+      request.ParticipantType);
 
             // Calculate target activity count based on duration (1 activity per 5-10 minutes)
-            // If duration provided, calculate as duration / 7 (average of 5-10 minutes)
+   // If duration provided, calculate as duration / 7 (average of 5-10 minutes)
             // If TargetActivityCount explicitly provided, use it (for backward compatibility)
-            // Otherwise default to 6 activities
-            var targetCount = request.TargetActivityCount
-                ?? (request.DurationMinutes.HasValue ? Math.Max(2, request.DurationMinutes.Value / 7) : 6);
+   // Otherwise default to 6 activities
+      var targetCount = request.TargetActivityCount
+    ?? (request.DurationMinutes.HasValue ? Math.Max(2, request.DurationMinutes.Value / 7) : 6);
 
-            // Generate and add activities to the session
+  // Generate and add activities to the session
             var generated = await _sessionAI.GenerateAndAddActivitiesToSessionAsync(
-                session,
-                enhancedContext,
-                request.WorkshopType,
-                targetCount,
-                request.DurationMinutes,
-                request.ExistingActivities,
+              session,
+        enhancedContext,
+        request.WorkshopType,
+       targetCount,
+     request.DurationMinutes,
+  request.ExistingActivities,
                 cancellationToken);
 
             return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(generated));
         }
         catch (InvalidOperationException ex) when (ex.Message.Contains("quota"))
         {
-            return StatusCode(429, Error<IReadOnlyList<AgendaActivityResponse>>("quota_exceeded", ex.Message));
+        return StatusCode(429, Error<IReadOnlyList<AgendaActivityResponse>>("quota_exceeded", ex.Message));
         }
-        catch (Exception ex)
+  catch (Exception ex)
         {
             return StatusCode(500, Error<IReadOnlyList<AgendaActivityResponse>>("generation_failed", $"Failed to generate activities: {ex.Message}"));
         }
@@ -806,9 +844,9 @@ item.Config,
 
             var updated = await _activities.ReorderAsync(session.Id, request.ActivityIds, cancellationToken);
             var response = updated
-     .OrderBy(activity => activity.Order)
-                  .Select(ApiMapper.ToAgenda)
-           .ToList();
+              .OrderBy(activity => activity.Order)
+         .Select(ApiMapper.ToAgenda)
+    .ToList();
             return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(response));
         }
         catch (ArgumentException ex)
@@ -941,27 +979,41 @@ item.Config,
     [HttpPost("{code}/activities/{activityId:guid}/generate-summary")]
     public async Task<ActionResult<ApiResponse<string>>> GenerateAiSummary(
         string code,
-        Guid activityId,
+  Guid activityId,
         CancellationToken cancellationToken)
     {
         try
         {
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+       var session = await _sessions.GetByCodeAsync(code, cancellationToken);
             if (session is null)
-                return NotFound(Error<string>("not_found", "Session not found."));
+           return NotFound(Error<string>("not_found", "Session not found."));
 
-            var authError = RequireFacilitatorToken<string>(session);
-            if (authError is not null)
-                return authError;
+       var authError = RequireFacilitatorToken<string>(session);
+       if (authError is not null)
+ return authError;
 
-            // Load the activity and verify it is an AiSummary type
+  // ? Phase 3: Check AI Summary feature access
+          var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+        if (userId.HasValue)
+    {
+             var canUseAI = await _planService.CanUseFeatureAsync(userId.Value, "aiSummary", cancellationToken);
+    if (!canUseAI)
+       {
+   var status = await _planService.GetPlanStatusAsync(userId.Value, cancellationToken);
+           return StatusCode(402, Error<string>(
+        "feature_locked",
+                 $"AI Summary is not available on the {status.PlanDisplayName} plan. Upgrade to unlock this feature."));
+             }
+            }
+
+  // Load the activity and verify it is an AiSummary type
             var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
             var activity = agenda.FirstOrDefault(a => a.Id == activityId);
-            if (activity is null)
-                return NotFound(Error<string>("not_found", "Activity not found."));
+        if (activity is null)
+    return NotFound(Error<string>("not_found", "Activity not found."));
 
             if (activity.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary)
-                return BadRequest(Error<string>("invalid_type", "Only AiSummary activities can generate a summary."));
+            return BadRequest(Error<string>("invalid_type", "Only AiSummary activities can generate a summary."));
 
             // Get completed activities (closed, excluding AiSummary and Break types)
             var completedActivities = agenda

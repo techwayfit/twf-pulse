@@ -10,6 +10,7 @@ class AddActivitiesManager {
         this.activities = [];
         this.templates = [];
         this.participantTypeSelect = null;
+        this.aiFeatureAvailable = true; // Track AI feature availability
         
         // Define all participant types organized by industry
         this.participantTypes = [
@@ -191,7 +192,7 @@ class AddActivitiesManager {
 
     async init() {
         console.log('Initializing Add Activities Manager...');
-        
+   
         // Get session data from hidden fields (already validated server-side)
         const hiddenCode = document.getElementById('hiddenSessionCode');
         const hiddenId = document.getElementById('hiddenSessionId');
@@ -201,21 +202,24 @@ class AddActivitiesManager {
             window.location.href = '/facilitator/dashboard';
             return;
         }
-        
+    
         this.sessionCode = hiddenCode.value;
         this.sessionId = hiddenId ? hiddenId.value : null;
         
-        // Initialize tab switching for pill buttons
+      // Initialize tab switching for pill buttons
         this.initializeTabSwitching();
         
-        // Load full session data from API
-        await this.loadSessionData();
+    // Load full session data from API
+  await this.loadSessionData();
         
+   // ✅ Phase 3: Check AI feature availability
+        await this.checkAIFeatureAccess();
+   
         // Initialize components
         this.initializeTemplates();
         this.initializeAIForm();
-        this.initializeTemplateModal();
-        
+   this.initializeTemplateModal();
+  
         // Setup global functions for HTML onclick handlers
         window.addActivity = (type) => this.addManualActivity(type);
         window.editActivity = (index) => this.editActivity(index);
@@ -330,52 +334,123 @@ class AddActivitiesManager {
 
     async loadActivities() {
         try {
-            const response = await fetch(`/api/sessions/${this.sessionCode}/activities`);
-            if (!response.ok) {
-                throw new Error('Failed to load activities');
+     const response = await fetch(`/api/sessions/${this.sessionCode}/activities`);
+          if (!response.ok) {
+      throw new Error('Failed to load activities');
             }
-            
-            const result = await response.json();
-            const activities = result.data || [];
+         
+      const result = await response.json();
+  const activities = result.data || [];
             
             // Map API activities to local format
             this.activities = activities.map(activity => ({
-                id: activity.activityId,
-                type: activity.type.toLowerCase(),
-                title: activity.title,
-                prompt: activity.prompt,
+      id: activity.activityId,
+      type: activity.type.toLowerCase(),
+          title: activity.title,
+     prompt: activity.prompt,
                 config: activity.config,
-                durationMinutes: activity.durationMinutes,
-                order: activity.order
-            }));
-            
+          durationMinutes: activity.durationMinutes,
+     order: activity.order
+       }));
+         
             this.updateActivityList();
-            
+   
             console.log(`Loaded ${this.activities.length} existing activities`);
         } catch (error) {
-            console.error('Error loading activities:', error);
-            // Don't fail - just start with empty activities
-            this.activities = [];
+   console.error('Error loading activities:', error);
+         // Don't fail - just start with empty activities
+  this.activities = [];
         }
     }
 
-    async initializeTemplates() {
-        try {
-            const response = await fetch('/api/templates');
-            if (!response.ok) {
-                throw new Error('Failed to load templates');
-            }
-            
-            const result = await response.json();
-            this.templates = result.templates || [];
-            
-            this.renderTemplates();
-            this.initializeTemplateFilters();
-        } catch (error) {
-            console.error('Error loading templates:', error);
-            document.getElementById('templateList').innerHTML = 
-                '<div class="col-12 text-center text-danger py-4">Failed to load templates. Please try again.</div>';
+    async checkAIFeatureAccess() {
+      try {
+   const response = await fetch('/api/account/plan-status');
+     if (!response.ok) {
+        console.warn('Failed to load plan status, assuming AI available');
+    this.aiFeatureAvailable = true;
+        return;
         }
+        
+       const result = await response.json();
+        const planStatus = result.data;
+     
+            // Check if AI Assist is available
+            this.aiFeatureAvailable = planStatus?.features?.aiAssist === true;
+   
+            console.log(`AI Feature Access: ${this.aiFeatureAvailable ? 'Available' : 'Locked'}`);
+     
+       // Update UI based on AI availability
+  this.updateAITabUI();
+      
+   } catch (error) {
+            console.error('Error checking AI feature access:', error);
+            // Default to available to avoid blocking users if check fails
+          this.aiFeatureAvailable = true;
+        }
+    }
+
+    updateAITabUI() {
+        const aiPanel = document.getElementById('ai-panel');
+        const aiGenerateBtn = document.getElementById('aiGenerateBtn');
+  
+        if (!this.aiFeatureAvailable) {
+// Show locked message at top of AI panel
+ const lockedBanner = document.createElement('div');
+            lockedBanner.className = 'alert alert-warning border-0 mb-4';
+      lockedBanner.innerHTML = `
+       <div class="d-flex align-items-start gap-3">
+        <i class="ics ics-lock ic-lg"></i>
+    <div class="flex-grow-1">
+        <h6 class="alert-heading mb-2">AI Assist Locked</h6>
+                <p class="mb-2">AI activity generation is not available on your current plan.</p>
+             <button type="button" class="btn btn-sm btn-primary" onclick="window.showUpgradeModal('aiAssist')">
+   <i class="ics ics-sparkles ic-xs ic-mr"></i>Upgrade to Unlock AI
+            </button>
+         </div>
+  </div>
+            `;
+ 
+       // Insert banner at the top of the AI panel content
+          const aiPanelContent = aiPanel.querySelector('.py-4');
+          if (aiPanelContent) {
+             aiPanelContent.insertBefore(lockedBanner, aiPanelContent.firstChild);
+      }
+
+     // Disable the generate button
+            if (aiGenerateBtn) {
+         aiGenerateBtn.disabled = true;
+                aiGenerateBtn.title = 'Upgrade required to use AI Assist';
+      }
+
+   // Disable all form inputs in AI tab
+       const aiForm = document.getElementById('aiGenerateForm');
+     if (aiForm) {
+     const inputs = aiForm.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+          input.disabled = true;
+                });
+            }
+   }
+    }
+
+    async initializeTemplates() {
+try {
+   const response = await fetch('/api/templates');
+        if (!response.ok) {
+         throw new Error('Failed to load templates');
+       }
+      
+   const result = await response.json();
+       this.templates = result.templates || [];
+            
+       this.renderTemplates();
+  this.initializeTemplateFilters();
+        } catch (error) {
+    console.error('Error loading templates:', error);
+       document.getElementById('templateList').innerHTML = 
+    '<div class="col-12 text-center text-danger py-4">Failed to load templates. Please try again.</div>';
+   }
     }
 
     initializeTemplateFilters() {
@@ -1134,13 +1209,33 @@ class AddActivitiesManager {
                 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    
-                    // Handle quota exceeded error
-                    if (response.status === 429) {
-                        throw new Error(errorData.error?.message || 'AI generation quota exceeded. Please add your own API key in settings.');
-                    }
-                    
-                    throw new Error(errorData.error?.message || 'AI generation failed');
+         
+         // ✅ Phase 3: Handle feature locked error (402)
+           if (response.status === 402) {
+        statusMessage.innerHTML = `
+       <div class="alert alert-warning border-0">
+      <div class="d-flex align-items-start gap-3">
+    <i class="ics ics-lock ic-lg"></i>
+                 <div class="flex-grow-1">
+    <h6 class="alert-heading mb-2">AI Assist Locked</h6>
+   <p class="mb-2">${this.escapeHtml(errorData.error?.message || 'AI features require a plan upgrade.')}</p>
+  <button type="button" class="btn btn-sm btn-primary" onclick="window.showUpgradeModal('aiAssist')">
+       <i class="ics ics-sparkles ic-xs ic-mr"></i>Upgrade Now
+       </button>
+        </div>
+</div>
+           </div>
+        `;
+     statusMessage.classList.remove('d-none');
+      return;
+        }
+    
+      // Handle quota exceeded error
+           if (response.status === 429) {
+   throw new Error(errorData.error?.message || 'AI generation quota exceeded. Please add your own API key in settings.');
+          }
+          
+  throw new Error(errorData.error?.message || 'AI generation failed');
                 }
                 
                 const result = await response.json();

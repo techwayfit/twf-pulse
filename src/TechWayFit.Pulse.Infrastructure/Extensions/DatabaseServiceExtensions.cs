@@ -72,7 +72,7 @@ maxRetryDelay: TimeSpan.FromSeconds(5),
     services.AddScoped<ActivityRepository<PulseMariaDbContext>>();
         services.AddScoped<IActivityRepository>(sp => new CachingActivityRepository(
    sp.GetRequiredService<ActivityRepository<PulseMariaDbContext>>(),
-            sp.GetRequiredService<IApplicationCache>()));
+ sp.GetRequiredService<IApplicationCache>()));
 
     // Other repositories (no caching)
         services.AddScoped<IResponseRepository, ResponseRepository>();
@@ -85,10 +85,11 @@ maxRetryDelay: TimeSpan.FromSeconds(5),
         services.AddScoped<ISessionTemplateRepository, SessionTemplateRepository<PulseMariaDbContext>>();
         services.AddScoped<ISessionActivityMetadataRepository, SessionActivityMetadataRepository<PulseMariaDbContext>>();
         
-        // Commercialization repositories (TODO: implement subscription and plan repos)
-        services.AddScoped<IPromoCodeRepository, PromoCodeRepository>();
+        // Commercialization repositories
+  services.AddScoped<IPromoCodeRepository, PromoCodeRepository>();
         services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
         services.AddScoped<IFacilitatorSubscriptionRepository, FacilitatorSubscriptionRepository>();
+        services.AddScoped<IActivityTypeDefinitionRepository, ActivityTypeDefinitionRepository>();
 
      return services;
   }

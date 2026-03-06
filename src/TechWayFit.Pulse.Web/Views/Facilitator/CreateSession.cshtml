@@ -19,7 +19,34 @@
             <span class="badge bg-white text-dark border px-3 py-2">TTL: <strong>6h</strong></span>
         </div>
 
-   
+        <!-- Session Quota Banner -->
+        <div id="quotaBanner" class="alert alert-info border-0 shadow-sm mb-4 d-none">
+            <div class="d-flex align-items-center gap-3">
+                <i class="fas fa-info-circle fs-5"></i>
+                <div class="flex-grow-1">
+                    <strong>Session Quota</strong>
+                    <p class="mb-0">
+                        <span id="sessionsUsed">-</span> of <span id="sessionsAllowed">-</span> sessions used this month.
+                        Resets on <span id="sessionsResetDate">-</span>.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quota Warning (when approaching limit) -->
+        <div id="quotaWarning" class="alert alert-warning border-0 shadow-sm mb-4 d-none">
+            <div class="d-flex align-items-center gap-3">
+                <i class="fas fa-exclamation-triangle fs-5"></i>
+                <div class="flex-grow-1">
+                    <strong>Running Low on Sessions</strong>
+                    <p class="mb-0">
+                        You've used <span id="sessionsUsedWarning">-</span> of <span id="sessionsAllowedWarning">-</span> sessions.
+                        Consider upgrading for more sessions.
+                    </p>
+                </div>
+                <a href="/account/billing" class="btn btn-sm btn-warning">View Plans</a>
+            </div>
+        </div>
 
         <!-- Form -->
         <form id="sessionCreateForm" action="/api/sessions" method="post">
@@ -28,7 +55,7 @@
             {
                 <input type="hidden" id="templateId" value="@ViewData["TemplateId"]" />
             }
-            
+
             <!-- Session Context Card -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
@@ -43,7 +70,7 @@
                             var groups = ViewData["Groups"] as IReadOnlyCollection<TechWayFit.Pulse.Domain.Entities.SessionGroup> ?? new List<TechWayFit.Pulse.Domain.Entities.SessionGroup>();
                             var selectedGroupId = ViewData["SelectedGroupId"] as Guid?;
                             var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
-                            
+
                             foreach (TechWayFit.Pulse.Domain.Entities.SessionGroup group in groups)
                             {
                                 treeItems.Add(new TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem
@@ -74,7 +101,7 @@
                         else
                         {
                             <div class="form-text">
-                                Optional: Organize your session into a group · 
+                                Optional: Organize your session into a group ·
                                 <a href="@Url.Action("Groups", "Facilitator", new { returnUrl = Url.Action("CreateSession", "Facilitator") })">Manage Groups</a>
                             </div>
                         }
@@ -109,7 +136,7 @@
                                     <span class="text-muted fs-7" id="contextCharCount">0 / 2000</span>
                                 </div>
                             </div>
-                            
+
                             <!-- Session Schedule -->
                             <div class="row">
                                 <div class="col-md-6 mb-4">
@@ -172,9 +199,9 @@
 
                     <!-- Optional: Additional Fields Toggle -->
                     <div class="form-check mb-3">
-                        <input type="checkbox" 
-                               class="form-check-input" 
-                               id="needMoreInfoToggle" 
+                        <input type="checkbox"
+                               class="form-check-input"
+                               id="needMoreInfoToggle"
                                onchange="document.getElementById('additionalFieldsSection').style.display = this.checked ? 'block' : 'none';" />
                         <label class="form-check-label fw-medium" for="needMoreInfoToggle">
                             Need more info from participants before they join
@@ -185,7 +212,7 @@
                     <!-- Additional Fields Section (Hidden by Default) -->
                     <div id="additionalFieldsSection" style="display: none;">
                         <hr class="my-4" />
-                        
+
                         <h6 class="small text-uppercase text-muted mb-3">Custom Fields Builder</h6>
                         <p class="text-muted small mb-3">Add up to 5 custom fields. This data helps filter and group responses.</p>
 
@@ -196,7 +223,7 @@
                                 <div class="d-flex align-items-center mb-3">
                                     <h6 class="fw-semibold mb-0 text-uppercase small text-muted">Available Field Types</h6>
                                 </div>
-                                
+
                                 <!-- Mobile: Dropdown + Add Button -->
                                 <div class="mobile-field-selector d-none">
                                     <div class="d-flex gap-2">
@@ -213,7 +240,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Desktop: Draggable Field Types -->
                                 <div class="d-flex flex-column gap-2" id="fieldTypes">
                                     <div class="field-type" draggable="true" data-type="text">
@@ -298,12 +325,12 @@
                         <label for="groupName" class="form-label">Group Name *</label>
                         <input type="text" class="form-control" id="groupName" name="name" required maxlength="200">
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="groupDescription" class="form-label">Description</label>
                         <textarea class="form-control" id="groupDescription" name="description" rows="2" maxlength="1000" placeholder="Optional description"></textarea>
                     </div>
-                    
+
                     <input type="hidden" name="level" value="1">
                     <input type="hidden" name="parentGroupId" value="">
                 </div>
@@ -329,7 +356,7 @@
             if (input && counter) {
                 const currentLength = input.value.length;
                 counter.textContent = `${currentLength} / ${maxLength}`;
-                
+
                 // Change color when approaching limit
                 if (currentLength > maxLength * 0.9) {
                     counter.classList.add('text-warning');
@@ -346,17 +373,17 @@
             const titleInput = document.getElementById('sessionTitle');
             const goalInput = document.getElementById('sessionGoal');
             const contextInput = document.getElementById('sessionContext');
-            
+
             if (titleInput) {
                 titleInput.addEventListener('input', () => updateCharCount('sessionTitle', 'titleCharCount', 150));
                 updateCharCount('sessionTitle', 'titleCharCount', 150); // Initial update
             }
-            
+
             if (goalInput) {
                 goalInput.addEventListener('input', () => updateCharCount('sessionGoal', 'goalCharCount', 250));
                 updateCharCount('sessionGoal', 'goalCharCount', 250); // Initial update
             }
-            
+
             if (contextInput) {
                 contextInput.addEventListener('input', () => updateCharCount('sessionContext', 'contextCharCount', 2000));
                 updateCharCount('sessionContext', 'contextCharCount', 2000); // Initial update
@@ -369,7 +396,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         // Initialize Tree Dropdown
         initializeTreeDropdown();
-        
+
         function initializeTreeDropdown() {
             // Handle tree toggle clicks first with capture phase
             document.addEventListener('click', function(e) {
@@ -379,7 +406,7 @@
                     const targetId = toggle.getAttribute('data-target');
                     const target = document.getElementById(targetId);
                     const icon = toggle.querySelector('i');
-                    
+
                     if (target) {
                         target.classList.toggle('show');
                         if (target.classList.contains('show')) {
@@ -388,14 +415,14 @@
                             icon.className = 'fas fa-chevron-right';
                         }
                     }
-                    
+
                     e.preventDefault();
                     e.stopPropagation();
                     e.stopImmediatePropagation();
                     return false;
                 }
             }, true); // Use capture phase
-            
+
             // Handle tree item selection in normal phase
             document.addEventListener('click', function(e) {
                 // Only handle tree item selection if not clicking on toggle
@@ -406,25 +433,25 @@
                     const dropdown = treeItem.closest('.tree-dropdown');
                     const hiddenInput = dropdown.querySelector('input[type="hidden"]');
                     const dropdownText = dropdown.querySelector('.dropdown-text');
-                    
+
                     // Update value
                     hiddenInput.value = value;
                     dropdownText.textContent = value ? text : 'No group (ungrouped)';
-                    
+
                     // Close dropdown only when selecting an item
                     const dropdownElement = new bootstrap.Dropdown(dropdown.querySelector('[data-bs-toggle="dropdown"]'));
                     dropdownElement.hide();
-                    
+
                     // Remove selected class from all items
                     dropdown.querySelectorAll('.tree-item').forEach(item => {
                         item.classList.remove('selected');
                     });
-                    
+
                     // Add selected class to clicked item
                     if (value) {
                         treeItem.classList.add('selected');
                     }
-                    
+
                     e.preventDefault();
                     e.stopPropagation();
                 }
@@ -436,13 +463,13 @@
         if (createGroupForm) {
             createGroupForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
+
                 const formData = new FormData(this);
                 const data = Object.fromEntries(formData.entries());
-                
+
                 data.level = 1; // Always create top-level groups from this modal
                 data.parentGroupId = null;
-                
+
                 try {
                     const response = await fetch('/api/session-groups', {
                         method: 'POST',
@@ -451,7 +478,7 @@
                         },
                         body: JSON.stringify(data)
                     });
-                    
+
                     if (response.ok) {
                         location.reload();
                     } else {
@@ -463,7 +490,7 @@
                 }
             });
         }
-        
+
         // Initialize Flatpickr for datetime inputs
         flatpickr('#sessionStart', {
             enableTime: true,
@@ -471,7 +498,7 @@
             time_24hr: false,
             allowInput: true
         });
-        
+
         flatpickr('#sessionEnd', {
             enableTime: true,
             dateFormat: 'Y-m-d h:i K',

@@ -1,0 +1,58 @@
+<!-- Reusable Upgrade Modal -->
+<div class="modal fade" id="upgradeModal" tabindex="-1" aria-labelledby="upgradeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+     <div class="modal-content">
+   <div class="modal-header border-0 pb-0">
+         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+   <div class="modal-body text-center py-4">
+        <div class="mb-3">
+     <i class="fas fa-lock" style="font-size: 3rem; color: #f59e0b;"></i>
+        </div>
+      <h5 class="fw-bold mb-2" id="upgradeModalTitle">Feature Locked</h5>
+   <p class="text-muted mb-4" id="upgradeModalMessage">This feature requires a premium plan.</p>
+    
+          <div class="d-grid gap-2">
+<a href="/account/billing" class="btn btn-primary btn-lg">
+          <i class="fas fa-star me-2"></i>
+      View Upgrade Options
+        </a>
+     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+         Maybe Later
+          </button>
+         </div>
+  </div>
+   </div>
+    </div>
+</div>
+
+<script>
+// Show upgrade modal with custom context
+// context - Feature being accessed (e.g., 'aiAssist', 'aiSummary', 'fiveWhys')
+window.showUpgradeModal = function(context) {
+    const messages = {
+    'aiAssist': {
+title: 'AI Assist Locked',
+            message: 'AI activity generation is only available on paid plans. Upgrade to unlock intelligent workshop design powered by AI.'
+      },
+        'aiSummary': {
+     title: 'AI Summary Locked',
+  message: 'AI session summaries are only available on paid plans. Upgrade to unlock automated summary generation.'
+        },
+      'sessionLimit': {
+   title: 'Session Limit Reached',
+            message: 'You\'ve reached your monthly session limit. Upgrade to create more sessions this month.'
+        }
+    };
+
+    const config = messages[context] || {
+   title: 'Feature Locked',
+        message: 'This feature requires a premium plan.'
+  };
+
+    const modal = new bootstrap.Modal(document.getElementById('upgradeModal'));
+document.getElementById('upgradeModalTitle').textContent = config.title;
+    document.getElementById('upgradeModalMessage').textContent = config.message;
+ modal.show();
+};
+</script>
