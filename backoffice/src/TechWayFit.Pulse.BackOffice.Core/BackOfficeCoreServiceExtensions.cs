@@ -37,7 +37,12 @@ services.AddScoped<IAuditLogService, AuditLogService>();
       services.AddScoped<IBackOfficeSessionService, BackOfficeSessionService>();
     services.AddScoped<IBackOfficeAuthService, BackOfficeAuthService>();
 
-        // Cache management — calls main app's internal API via named HttpClient.
+        // Commercialization services
+      services.AddScoped<IBackOfficePlanService, BackOfficePlanService>();
+     services.AddScoped<IBackOfficeSubscriptionService, BackOfficeSubscriptionService>();
+      services.AddScoped<IBackOfficeActivityTypeService, BackOfficeActivityTypeService>();
+
+      // Cache management — calls main app's internal API via named HttpClient.
         // Requires MainApp:BaseUrl and MainApp:BackOfficeApiToken in appsettings.
    services.AddHttpClient(BackOfficeCacheService.HttpClientName, (sp, client) =>
         {

@@ -1,0 +1,106 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.ActivityTypeDefinitionDetail
+@{
+    ViewBag.Title = $"Activity Type — {Model.DisplayName}";
+ ViewBag.ActiveNav = "activity-types";
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Activity Types</a> / @Model.DisplayName</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+  <div class="bo-page-icon purple"><i class="boi boi-lg boi-settings"></i></div>
+        <div>
+   <div class="bo-page-title">@Model.DisplayName</div>
+       <div class="bo-page-sub">
+     <span class="bo-pill @(Model.IsActive ? "active" : "inactive")">@(Model.IsActive ? "Active" : "Inactive")</span>
+      <span class="bo-pill" style="margin-left:8px">@(Model.RequiresPremium ? "Premium" : "Free")</span>
+      </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="bo-btn bo-btn-primary bo-btn-sm">Edit</a>
+        <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+  </div>
+</div>
+
+<div class="bo-card" style="margin-bottom:20px">
+    <div class="bo-card-header">Activity Type Details</div>
+  <div class="bo-card-body">
+        <div class="bo-info-grid cols3">
+   <div class="bo-info-item"><div class="lbl">Activity Type (Enum)</div><div class="val bo-td-mono">@Model.ActivityType (@Model.ActivityTypeName)</div></div>
+            <div class="bo-info-item"><div class="lbl">Display Name</div><div class="val">@Model.DisplayName</div></div>
+   <div class="bo-info-item"><div class="lbl">Icon Class</div><div class="val bo-td-mono">@Model.IconClass</div></div>
+    <div class="bo-info-item"><div class="lbl">Color Hex</div><div class="val"><span style="background:@Model.ColorHex;color:white;padding:4px 10px;border-radius:4px">@Model.ColorHex</span></div></div>
+            <div class="bo-info-item"><div class="lbl">Sort Order</div><div class="val bo-td-mono">@Model.SortOrder</div></div>
+      <div class="bo-info-item"><div class="lbl">Requires Premium</div><div class="val">@(Model.RequiresPremium ? "Yes" : "No")</div></div>
+<div class="bo-info-item"><div class="lbl">Available To All Plans</div><div class="val">@(Model.IsAvailableToAllPlans ? "Yes" : "No")</div></div>
+      <div class="bo-info-item" style="grid-column:1/-1"><div class="lbl">Applicable Plan IDs</div><div class="val bo-td-mono" style="font-size:11px;word-break:break-all">@(Model.ApplicablePlanIds ?? "?")</div></div>
+      <div class="bo-info-item"><div class="lbl">Created</div><div class="val bo-td-muted">@Model.CreatedAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+         <div class="bo-info-item"><div class="lbl">Updated</div><div class="val bo-td-muted">@Model.UpdatedAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+      @if (!string.IsNullOrWhiteSpace(Model.Description))
+         {
+      <div class="bo-info-item" style="grid-column:1/-1"><div class="lbl">Description</div><div class="val">@Model.Description</div></div>
+        }
+    <div class="bo-info-item" style="grid-column:1/-1"><div class="lbl">ID</div><div class="val bo-td-mono" style="font-size:11px">@Model.Id</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="bo-card" style="margin-bottom:20px">
+    <div class="bo-card-header">Preview</div>
+    <div class="bo-card-body" style="padding:20px">
+ <span style="background:@Model.ColorHex;color:white;padding:8px 16px;border-radius:6px;font-size:14px;display:inline-block">
+    <i class="@Model.IconClass"></i> @Model.DisplayName
+        </span>
+    </div>
+</div>
+
+<div class="bo-section-header">Actions &mdash; <span style="color:var(--text-muted);font-weight:400">All changes are audited</span></div>
+<div class="bo-actions-grid cols2">
+
+    <div class="bo-action-card">
+  <div class="bo-action-title"><i class="boi boi-sm boi-@(Model.RequiresPremium ? "check" : "warning") boi-mr"></i>@(Model.RequiresPremium ? "Make Free" : "Make Premium")</div>
+     <div class="bo-action-desc">@(Model.RequiresPremium ? "Allow all users to use this activity type." : "Restrict this activity to paid plans only.")</div>
+    <form asp-action="TogglePremium" method="post" style="margin-top:12px">
+   @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.Id" />
+       <input type="hidden" name="requiresPremium" value="@(!Model.RequiresPremium)" />
+  @if (!Model.RequiresPremium)
+   {
+  <label class="bo-field-label">Applicable Plan IDs</label>
+  <input type="text" name="applicablePlanIds" class="bo-input" placeholder="guid1|guid2|guid3" style="margin-bottom:8px" />
+            <label class="bo-field-label">Available To All Plans</label>
+            <select name="isAvailableToAllPlans" class="bo-select" style="margin-bottom:8px">
+     <option value="false">No (Specific plans only)</option>
+      <option value="true">Yes (All plans)</option>
+          </select>
+     }
+ else
+      {
+         <input type="hidden" name="applicablePlanIds" value="" />
+        <input type="hidden" name="isAvailableToAllPlans" value="true" />
+  }
+         <label class="bo-field-label">Reason</label>
+       <input type="text" name="reason" class="bo-input" placeholder="Required" required style="margin-bottom:10px" />
+   <button type="submit" class="bo-btn @(Model.RequiresPremium ? "bo-btn-success" : "bo-btn-warning") bo-btn-sm">
+  @(Model.RequiresPremium ? "Make Free" : "Make Premium")
+  </button>
+  </form>
+    </div>
+
+    <div class="bo-action-card">
+   <div class="bo-action-title"><i class="boi boi-sm boi-@(Model.IsActive ? "warning" : "check") boi-mr"></i>@(Model.IsActive ? "Deactivate" : "Activate")</div>
+        <div class="bo-action-desc">@(Model.IsActive ? "Hide from activity picker." : "Show in activity picker.")</div>
+        <form asp-action="ToggleActive" method="post" style="margin-top:12px">
+@Html.AntiForgeryToken()
+   <input type="hidden" name="id" value="@Model.Id" />
+     <input type="hidden" name="isActive" value="@(!Model.IsActive)" />
+  <label class="bo-field-label">Reason</label>
+            <input type="text" name="reason" class="bo-input" placeholder="Required" required style="margin-bottom:10px" />
+          <button type="submit" class="bo-btn @(Model.IsActive ? "bo-btn-warning" : "bo-btn-success") bo-btn-sm">
+  @(Model.IsActive ? "Deactivate" : "Activate")
+    </button>
+  </form>
+    </div>
+
+</div>

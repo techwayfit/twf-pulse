@@ -1,0 +1,77 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.SubscriptionPlanDetail
+@{
+    ViewBag.Title = $"Plan — {Model.DisplayName}";
+    ViewBag.ActiveNav = "plans";
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Plans</a> / @Model.DisplayName</div>
+
+<div class="bo-page-header">
+ <div class="bo-page-title-row">
+    <div class="bo-page-icon green"><i class="boi boi-lg boi-settings"></i></div>
+        <div>
+ <div class="bo-page-title">@Model.DisplayName</div>
+ <div class="bo-page-sub">
+     <span class="bo-pill @(Model.IsActive ? "active" : "inactive")">@(Model.IsActive ? "Active" : "Inactive")</span>
+      <span class="bo-td-mono" style="margin-left:8px">@Model.PlanCode</span>
+  </div>
+        </div>
+    </div>
+    <div style="display:flex;gap:8px">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="bo-btn bo-btn-primary bo-btn-sm">Edit Plan</a>
+        <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+    </div>
+</div>
+
+<div class="bo-card" style="margin-bottom:20px">
+    <div class="bo-card-header">Plan Details</div>
+    <div class="bo-card-body">
+      <div class="bo-info-grid cols3">
+      <div class="bo-info-item"><div class="lbl">Plan Code</div><div class="val bo-td-mono">@Model.PlanCode</div></div>
+            <div class="bo-info-item"><div class="lbl">Display Name</div><div class="val">@Model.DisplayName</div></div>
+  <div class="bo-info-item"><div class="lbl">Monthly Price</div><div class="val bo-td-mono">$@Model.PriceMonthly.ToString("F2")</div></div>
+       @if (Model.PriceYearly.HasValue)
+    {
+     <div class="bo-info-item"><div class="lbl">Yearly Price</div><div class="val bo-td-mono">$@Model.PriceYearly.Value.ToString("F2")</div></div>
+}
+       <div class="bo-info-item"><div class="lbl">Sessions/Month</div><div class="val bo-td-mono">@Model.MaxSessionsPerMonth</div></div>
+            <div class="bo-info-item"><div class="lbl">Sort Order</div><div class="val bo-td-mono">@Model.SortOrder</div></div>
+        <div class="bo-info-item"><div class="lbl">Active Subscriptions</div><div class="val bo-td-mono">@Model.ActiveSubscriptionCount</div></div>
+            <div class="bo-info-item"><div class="lbl">Total Subscriptions</div><div class="val bo-td-mono">@Model.TotalSubscriptionCount</div></div>
+       <div class="bo-info-item"><div class="lbl">Created</div><div class="val bo-td-muted">@Model.CreatedAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+       <div class="bo-info-item"><div class="lbl">Updated</div><div class="val bo-td-muted">@Model.UpdatedAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+   @if (!string.IsNullOrWhiteSpace(Model.Description))
+       {
+     <div class="bo-info-item" style="grid-column:1/-1"><div class="lbl">Description</div><div class="val">@Model.Description</div></div>
+            }
+            <div class="bo-info-item" style="grid-column:1/-1"><div class="lbl">ID</div><div class="val bo-td-mono" style="font-size:11px">@Model.Id</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="bo-card" style="margin-bottom:20px">
+    <div class="bo-card-header">Features (JSON)</div>
+    <div class="bo-card-body">
+        <pre style="background:#f8f9fa;padding:12px;border-radius:6px;overflow:auto;font-size:13px;font-family:monospace">@Model.FeaturesJson</pre>
+    </div>
+</div>
+
+<div class="bo-section-header">Actions &mdash; <span style="color:var(--text-muted);font-weight:400">All changes are audited</span></div>
+<div class="bo-actions-grid cols2">
+
+    <div class="bo-action-card">
+    <div class="bo-action-title"><i class="boi boi-sm boi-@(Model.IsActive ? "warning" : "check") boi-mr"></i>@(Model.IsActive ? "Deactivate Plan" : "Activate Plan")</div>
+  <div class="bo-action-desc">@(Model.IsActive ? "Hide from pricing page and prevent new subscriptions." : "Show on pricing page and allow new subscriptions.")</div>
+        <form asp-action="ToggleActive" method="post" style="margin-top:12px">
+        @Html.AntiForgeryToken()
+ <input type="hidden" name="id" value="@Model.Id" />
+            <input type="hidden" name="isActive" value="@(!Model.IsActive)" />
+  <label class="bo-field-label">Reason</label>
+         <input type="text" name="reason" class="bo-input" placeholder="Required" required style="margin-bottom:10px" />
+  <button type="submit" class="bo-btn @(Model.IsActive ? "bo-btn-warning" : "bo-btn-success") bo-btn-sm">
+     @(Model.IsActive ? "Deactivate" : "Activate")
+       </button>
+   </form>
+    </div>
+
+</div>

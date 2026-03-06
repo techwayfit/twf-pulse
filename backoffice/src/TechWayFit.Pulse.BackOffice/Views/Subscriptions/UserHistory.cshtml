@@ -1,0 +1,74 @@
+@model IReadOnlyList<TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.FacilitatorSubscriptionSummary>
+@{
+    var facilitatorUserId = Context.Request.Query["facilitatorUserId"].ToString();
+  var firstSub = Model.FirstOrDefault();
+    var email = firstSub?.FacilitatorEmail ?? "User";
+    ViewBag.Title = $"Subscription History — {email}";
+    ViewBag.ActiveNav = "subscriptions";
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Subscriptions</a> / History</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon blue"><i class="boi boi-lg boi-audit"></i></div>
+        <div>
+   <div class="bo-page-title">Subscription History</div>
+    <div class="bo-page-sub">@email</div>
+   </div>
+    </div>
+    <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back to Subscriptions</a>
+</div>
+
+@if (!Model.Any())
+{
+  <div class="bo-card">
+   <div class="bo-card-body" style="text-align:center;padding:40px;color:var(--text-muted)">
+   No subscription history found for this user.
+ </div>
+ </div>
+}
+else
+{
+    <div class="bo-card">
+   <div class="bo-table-wrap">
+    <table class="bo-table">
+     <thead>
+     <tr>
+   <th>Plan</th>
+  <th>Status</th>
+     <th>Sessions Used</th>
+         <th>Started</th>
+     <th>Expires/Expired</th>
+       <th>Canceled</th>
+     <th>Actions</th>
+        </tr>
+        </thead>
+       <tbody>
+      @foreach (var sub in Model.OrderByDescending(s => s.StartsAt))
+  {
+        var statusPill = sub.Status.ToLower() switch
+     {
+      "active" => "active",
+    "canceled" => "inactive",
+         "expired" => "inactive",
+       "trial" => "operator",
+  _ => ""
+     };
+ <tr>
+    <td><span class="bo-pill">@sub.PlanDisplayName</span></td>
+    <td><span class="bo-pill @statusPill">@sub.Status</span></td>
+         <td class="bo-td-mono">@sub.SessionsUsed / @sub.SessionsAllowed</td>
+  <td class="bo-td-muted">@sub.StartsAt.ToString("dd MMM yyyy")</td>
+  <td class="bo-td-muted">@(sub.ExpiresAt?.ToString("dd MMM yyyy") ?? "—")</td>
+      <td class="bo-td-muted">@(sub.CanceledAt?.ToString("dd MMM yyyy") ?? "—")</td>
+     <td>
+      <a asp-action="Detail" asp-route-id="@sub.Id" class="bo-btn bo-btn-ghost bo-btn-sm">View</a>
+     </td>
+</tr>
+      }
+  </tbody>
+     </table>
+        </div>
+    </div>
+}

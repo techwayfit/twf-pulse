@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechWayFit.Pulse.BackOffice.Authorization;
 using TechWayFit.Pulse.BackOffice.Core.Persistence;
+using TechWayFit.Pulse.BackOffice.Core.Persistence.MariaDb;
 using Microsoft.EntityFrameworkCore;
 
 namespace TechWayFit.Pulse.BackOffice.Controllers;
@@ -9,9 +10,9 @@ namespace TechWayFit.Pulse.BackOffice.Controllers;
 [Authorize(Policy = PolicyNames.OperatorOrAbove)]
 public sealed class DashboardController : Controller
 {
-    private readonly BackOfficeDbContext _db;
+    private readonly BackOfficeMariaDbContext _db;
 
-    public DashboardController(BackOfficeDbContext db)
+    public DashboardController(BackOfficeMariaDbContext db)
     {
         _db = db;
     }

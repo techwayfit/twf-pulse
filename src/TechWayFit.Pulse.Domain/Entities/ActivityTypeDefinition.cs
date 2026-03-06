@@ -17,20 +17,21 @@ Guid id,
    string iconClass,
         string colorHex,
         bool requiresPremium,
-        string? minPlanCode,
+   string? applicablePlanIds,
+      bool isAvailableToAllPlans,
         bool isActive,
         int sortOrder,
     DateTimeOffset createdAt,
-        DateTimeOffset updatedAt)
+  DateTimeOffset updatedAt)
     {
  if (string.IsNullOrWhiteSpace(displayName))
    throw new ArgumentException("Display name is required.", nameof(displayName));
     if (string.IsNullOrWhiteSpace(description))
       throw new ArgumentException("Description is required.", nameof(description));
         if (string.IsNullOrWhiteSpace(iconClass))
-            throw new ArgumentException("Icon class is required.", nameof(iconClass));
+         throw new ArgumentException("Icon class is required.", nameof(iconClass));
 if (string.IsNullOrWhiteSpace(colorHex))
-      throw new ArgumentException("Color hex is required.", nameof(colorHex));
+  throw new ArgumentException("Color hex is required.", nameof(colorHex));
 
         Id = id;
         ActivityType = activityType;
@@ -38,8 +39,9 @@ if (string.IsNullOrWhiteSpace(colorHex))
 Description = description;
   IconClass = iconClass;
      ColorHex = colorHex;
-        RequiresPremium = requiresPremium;
-   MinPlanCode = minPlanCode?.ToLowerInvariant();
+    RequiresPremium = requiresPremium;
+ApplicablePlanIds = applicablePlanIds;
+        IsAvailableToAllPlans = isAvailableToAllPlans;
    IsActive = isActive;
   SortOrder = sortOrder;
       CreatedAt = createdAt;
@@ -66,7 +68,7 @@ Description = description;
     /// <summary>
     /// CSS icon class (e.g., "ics ics-question ic-sm" or "fas fa-robot")
     /// </summary>
-    public string IconClass { get; private set; }
+public string IconClass { get; private set; }
 
     /// <summary>
     /// Hex color for badge/card background (e.g., "#6C5CE7")
@@ -80,10 +82,17 @@ Description = description;
     public bool RequiresPremium { get; private set; }
 
     /// <summary>
-    /// Minimum plan code required (e.g., 'plan-a', 'plan-b')
-    /// Null = available to all plans (including free)
+    /// Pipe-separated list of plan IDs that can access this activity.
+    /// Example: "guid1|guid2|guid3"
+ /// Null if IsAvailableToAllPlans = true
     /// </summary>
-    public string? MinPlanCode { get; private set; }
+    public string? ApplicablePlanIds { get; private set; }
+
+    /// <summary>
+    /// If true, all plans (including free) can use this activity.
+    /// If false, check ApplicablePlanIds for access control.
+    /// </summary>
+    public bool IsAvailableToAllPlans { get; private set; }
 
     /// <summary>
     /// Whether this activity type is active and visible in UI
@@ -105,8 +114,9 @@ Description = description;
    string description,
   string iconClass,
      string colorHex,
-        bool requiresPremium,
-     string? minPlanCode,
+bool requiresPremium,
+        string? applicablePlanIds,
+        bool isAvailableToAllPlans,
   bool isActive,
      int sortOrder,
   DateTimeOffset updatedAt)
@@ -120,14 +130,15 @@ Description = description;
         if (string.IsNullOrWhiteSpace(colorHex))
           throw new ArgumentException("Color hex is required.", nameof(colorHex));
 
-    DisplayName = displayName;
+        DisplayName = displayName;
         Description = description;
         IconClass = iconClass;
         ColorHex = colorHex;
         RequiresPremium = requiresPremium;
-   MinPlanCode = minPlanCode?.ToLowerInvariant();
-        IsActive = isActive;
-   SortOrder = sortOrder;
+     ApplicablePlanIds = applicablePlanIds;
+        IsAvailableToAllPlans = isAvailableToAllPlans;
+    IsActive = isActive;
+SortOrder = sortOrder;
     UpdatedAt = updatedAt;
   }
 }

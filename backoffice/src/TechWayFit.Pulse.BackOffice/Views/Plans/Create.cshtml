@@ -1,0 +1,81 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.CreateSubscriptionPlanRequest
+@{
+    ViewBag.Title = "New Plan";
+    ViewBag.ActiveNav = "plans";
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Plans</a> / New</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon green"><i class="boi boi-lg boi-settings"></i></div>
+        <div>
+ <div class="bo-page-title">Create Subscription Plan</div>
+    <div class="bo-page-sub">Add a new pricing tier</div>
+        </div>
+    </div>
+    <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+</div>
+
+<div class="bo-card" style="max-width:600px">
+    <div class="bo-card-header">Plan Details</div>
+    <div class="bo-card-body">
+        <form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+   
+            <div style="margin-bottom:14px">
+ <label class="bo-field-label">Plan Code <span style="color:#e74c3c">*</span></label>
+      <input asp-for="PlanCode" class="bo-input" required placeholder="e.g., plan-a, enterprise" />
+                <div class="bo-info-note" style="margin-top:4px">Lowercase, no spaces. Used in API/URLs.</div>
+            </div>
+     
+            <div style="margin-bottom:14px">
+        <label class="bo-field-label">Display Name <span style="color:#e74c3c">*</span></label>
+       <input asp-for="DisplayName" class="bo-input" required placeholder="e.g., Plan A" />
+      </div>
+   
+   <div style="margin-bottom:14px">
+   <label class="bo-field-label">Description</label>
+       <textarea asp-for="Description" class="bo-input" rows="3" placeholder="Marketing description..."></textarea>
+  </div>
+            
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+           <div>
+     <label class="bo-field-label">Monthly Price (USD) <span style="color:#e74c3c">*</span></label>
+   <input asp-for="PriceMonthly" type="number" step="0.01" class="bo-input" required />
+     </div>
+         <div>
+<label class="bo-field-label">Yearly Price (USD)</label>
+       <input asp-for="PriceYearly" type="number" step="0.01" class="bo-input" />
+    </div>
+            </div>
+     
+   <div style="margin-bottom:14px">
+            <label class="bo-field-label">Max Sessions Per Month <span style="color:#e74c3c">*</span></label>
+         <input asp-for="MaxSessionsPerMonth" type="number" class="bo-input" required />
+    </div>
+     
+  <div style="margin-bottom:14px">
+                <label class="bo-field-label">Features (JSON) <span style="color:#e74c3c">*</span></label>
+      <textarea asp-for="FeaturesJson" class="bo-input" rows="6" required style="font-family:monospace;font-size:13px">{"aiAssist": false, "fiveWhys": false, "aiSummary": false}</textarea>
+            <div class="bo-info-note" style="margin-top:4px">Valid JSON object with feature flags.</div>
+     </div>
+  
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+             <div>
+         <label class="bo-field-label">Sort Order</label>
+           <input asp-for="SortOrder" type="number" class="bo-input" value="0" />
+             </div>
+       <div>
+       <label class="bo-field-label">Status</label>
+   <select asp-for="IsActive" class="bo-select">
+            <option value="true">Active</option>
+     <option value="false">Inactive</option>
+       </select>
+         </div>
+          </div>
+    
+            <button type="submit" class="bo-btn bo-btn-primary bo-btn-block"><i class="boi boi-sm boi-check boi-mr"></i>Create Plan</button>
+        </form>
+    </div>
+</div>

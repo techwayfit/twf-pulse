@@ -206,9 +206,9 @@ entity.Property(x => x.PaymentProvider).HasMaxLength(50);
      entity.Property(x => x.Description).HasMaxLength(500).IsRequired();
          entity.Property(x => x.IconClass).HasMaxLength(100).IsRequired();
     entity.Property(x => x.ColorHex).HasMaxLength(7).IsRequired();
-            entity.Property(x => x.MinPlanCode).HasMaxLength(50);
+          entity.Property(x => x.ApplicablePlanIds).HasMaxLength(500);
        entity.HasIndex(x => x.ActivityType).IsUnique();
-          entity.HasIndex(x => new { x.IsActive, x.SortOrder });
+   entity.HasIndex(x => new { x.IsActive, x.SortOrder });
    });
     }
 }

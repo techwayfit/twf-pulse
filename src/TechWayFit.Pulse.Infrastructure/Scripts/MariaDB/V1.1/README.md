@@ -10,13 +10,19 @@ This directory contains MariaDB/MySQL schema scripts for **Version 1.1 - Commerc
 
 1. **SubscriptionPlans** - Defines pricing tiers (Free, Plan A, Plan B)
 2. **FacilitatorSubscriptions** - Tracks user subscriptions (current and historical)
-3. **ActivityTypeDefinitions** - Activity metadata and premium access rules
+3. **ActivityTypeDefinitions** - Activity metadata and premium access rules with flexible plan-based access control
 
 ### Seed Data
 
 - **3 plans**: Free (2 sessions/month), Plan A ($10/month, 5 sessions), Plan B ($20/month, 15 sessions)
 - **9 activity types**: Poll, WordCloud, Quadrant, FiveWhys, Rating, Feedback, Q&A, AI Summary, Break
-- **Premium activities**: FiveWhys and AI Summary require Plan A or higher
+- **Premium activities**: FiveWhys and AI Summary require Plan A or Plan B (configurable via `ApplicablePlanIds`)
+
+### Key Features
+
+- **Flexible plan assignment**: Activities can be assigned to any combination of plans via pipe-separated GUIDs in `ApplicablePlanIds`
+- **No rigid tier hierarchy**: Mix and match which activities are available on which plans
+- **Zero-code configuration**: Change activity availability without code deployment
 
 ## Files in This Directory
 
@@ -84,7 +90,7 @@ SELECT PlanCode, DisplayName, MaxSessionsPerMonth, PriceMonthly
 FROM SubscriptionPlans 
 ORDER BY SortOrder;
 
-SELECT ActivityType, DisplayName, RequiresPremium, MinPlanCode 
+SELECT ActivityType, DisplayName, RequiresPremium, IsAvailableToAllPlans, ApplicablePlanIds
 FROM ActivityTypeDefinitions 
 WHERE IsActive = 1
 ORDER BY SortOrder;
@@ -103,19 +109,18 @@ plan-b   | Plan B      | 15         | 20.00
 
 **ActivityTypeDefinitions:**
 ```
-ActivityType | DisplayName  | RequiresPremium | MinPlanCode
--------------|--------------|-----------------|------------
-0            | Poll      | 0          | NULL
-2| Word Cloud   | 0 | NULL
-5      | Quadrant     | 0               | NULL
-6  | Five Whys  | 1        | plan-a
-4      | Rating       | 0        | NULL
-7            | Feedback     | 0    | NULL
-3    | Q&A        | 0 | NULL
-8         | AI Summary   | 1| plan-a
-9| Break        | 0           | NULL
+ActivityType | DisplayName  | RequiresPremium | IsAvailableToAllPlans | ApplicablePlanIds
+-------------|--------------|-----------------|----------------------|-------------------
+0   | Poll         | 0       | 1            | NULL
+2            | Word Cloud   | 0   | 1   | NULL
+5            | Quadrant     | 0               | 1      | NULL
+6            | Five Whys    | 1        | 0    | plan-a|plan-b GUIDs
+4      | Rating   | 0            | 1           | NULL
+7         | Feedback     | 0 | 1             | NULL
+3         | Q&A          | 0               | 1     | NULL
+8     | AI Summary   | 1               | 0     | plan-a|plan-b GUIDs
+9            | Break | 0               | 1           | NULL
 ```
-
 ## Impact on Existing Data
 
 ### ? Safe

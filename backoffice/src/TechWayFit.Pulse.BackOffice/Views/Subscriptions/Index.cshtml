@@ -1,0 +1,95 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.SubscriptionSearchResult
+@{
+    ViewBag.Title = "Facilitator Subscriptions";
+    ViewBag.ActiveNav = "subscriptions";
+}
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+      <div class="bo-page-icon blue"><i class="boi boi-lg boi-users"></i></div>
+     <div>
+       <div class="bo-page-title">Facilitator Subscriptions</div>
+  <div class="bo-page-sub">Manage user plan assignments</div>
+        </div>
+    </div>
+    <a asp-action="Assign" class="bo-btn bo-btn-primary bo-btn-sm">+ Assign Plan</a>
+</div>
+
+<form asp-action="Index" method="get" class="bo-search-bar">
+    <div class="bo-search-field">
+        <label>Email</label>
+      <input type="text" name="facilitatorEmail" class="bo-input" placeholder="Search by email..." value="@Context.Request.Query["facilitatorEmail"]" />
+  </div>
+    <div class="bo-search-field" style="max-width:150px">
+        <label>Plan</label>
+        <input type="text" name="planCode" class="bo-input" placeholder="e.g., free" value="@Context.Request.Query["planCode"]" />
+    </div>
+    <div class="bo-search-field" style="max-width:140px">
+        <label>Status</label>
+        <select name="status" class="bo-select">
+            <option value="">All</option>
+            <option value="Active" selected="@(Context.Request.Query["status"] == "Active")">Active</option>
+  <option value="Canceled" selected="@(Context.Request.Query["status"] == "Canceled")">Canceled</option>
+            <option value="Expired" selected="@(Context.Request.Query["status"] == "Expired")">Expired</option>
+            <option value="Trial" selected="@(Context.Request.Query["status"] == "Trial")">Trial</option>
+        </select>
+    </div>
+    <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm"><i class="boi boi-sm boi-search boi-mr"></i>Search</button>
+    <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">Clear</a>
+</form>
+
+<div class="bo-card">
+    <div class="bo-table-wrap">
+        <table class="bo-table">
+            <thead>
+       <tr>
+   <th>Facilitator</th>
+           <th>Plan</th>
+         <th>Status</th>
+       <th>Sessions Used</th>
+         <th>Started</th>
+  <th>Expires</th>
+     <th>Actions</th>
+         </tr>
+ </thead>
+          <tbody>
+    @foreach (var sub in Model.Items)
+    {
+         var statusPill = sub.Status.ToLower() switch
+        {
+      "active" => "active",
+            "canceled" => "inactive",
+     "expired" => "inactive",
+       "trial" => "operator",
+  _ => ""
+           };
+      <tr>
+           <td class="bo-td-mono">@sub.FacilitatorEmail</td>
+         <td><span class="bo-pill">@sub.PlanDisplayName</span></td>
+      <td><span class="bo-pill @statusPill">@sub.Status</span></td>
+     <td class="bo-td-mono">@sub.SessionsUsed / @sub.SessionsAllowed</td>
+   <td class="bo-td-muted">@sub.StartsAt.ToString("dd MMM yyyy")</td>
+      <td class="bo-td-muted">@(sub.ExpiresAt?.ToString("dd MMM yyyy") ?? "—")</td>
+     <td>
+   <a asp-action="Detail" asp-route-id="@sub.Id" class="bo-btn bo-btn-ghost bo-btn-sm">View</a>
+     </td>
+        </tr>
+    }
+    </tbody>
+  </table>
+    </div>
+</div>
+
+@if (Model.TotalCount > Model.PageSize)
+{
+ <div class="bo-pagination">
+  @for (int i = 1; i <= Math.Ceiling((double)Model.TotalCount / Model.PageSize); i++)
+        {
+  <a asp-action="Index" asp-route-page="@i" 
+      asp-route-facilitatorEmail="@Context.Request.Query["facilitatorEmail"]"
+      asp-route-planCode="@Context.Request.Query["planCode"]"
+     asp-route-status="@Context.Request.Query["status"]"
+     class="bo-page-link @(i == Model.Page ? "active" : "")">@i</a>
+        }
+    </div>
+}

@@ -1,14 +1,53 @@
 # GitHub Copilot Instructions for TechWayFit Pulse
 
 ## Project Overview
-TechWayFit Pulse is a .NET 8 Blazor Server application for running interactive workshops with real-time activities like polls, word clouds, and quadrant matrices.
+TechWayFit Pulse is a .NET 10 Blazor Server application for running interactive workshops with real-time activities like polls, word clouds, and quadrant matrices.
 
 ## Technology Stack
-- **Backend**: .NET 8, ASP.NET Core, Blazor Server
-- **Database**: SQLite (with in-memory option for development)
+- **Backend**: .NET 10, ASP.NET Core, Blazor Server
+- **Database**: MariaDB 10.11+ (manual SQL scripts, no EF migrations)
 - **Frontend**: Blazor Server, Bootstrap 5.3, Vanilla JavaScript
 - **Real-time**: SignalR
 - **Architecture**: Clean Architecture (Domain, Application, Infrastructure, Web)
+
+## Database Architecture
+
+**?? IMPORTANT: MariaDB-Only**
+
+- **Single provider**: MariaDB/MySQL only (SQLite and SQL Server removed)
+- **No EF Migrations**: Schema changes via manual SQL scripts in `/Scripts/MariaDB/`
+- **No InMemory database**: Use Docker MariaDB for local development
+- **Context**: `PulseMariaDbContext` (no base class, no provider abstraction)
+- **Repositories**: Flat structure in `/Persistence/Repositories/` (no base classes)
+
+### Local Development Setup
+
+```bash
+# Start MariaDB via Docker
+docker-compose -f docker-compose.dev.yml up -d
+
+# Apply schema
+mysql -h 127.0.0.1 -P 3306 -u root -pdevpassword pulse_dev < src/TechWayFit.Pulse.Infrastructure/Scripts/MariaDB/V1.0/00_MasterSetup.sql
+mysql -h 127.0.0.1 -P 3306 -u root -pdevpassword pulse_dev < src/TechWayFit.Pulse.Infrastructure/Scripts/MariaDB/V1.1/00_CommercializationSchema.sql
+```
+
+See: [Local Development Guide](docs/local-development-mariadb-setup.md)
+
+### Database Configuration
+
+**Connection String (only setting needed):**
+```json
+{
+  "ConnectionStrings": {
+    "PulseDb": "Server=localhost;Port=3306;Database=pulse_dev;Uid=root;Pwd=devpassword;"
+  }
+}
+```
+
+**? REMOVED SETTINGS:**
+- `Pulse:UseInMemory` - gone
+- `Pulse:DatabaseProvider` - gone
+- Provider selection logic - gone
 
 ## Coding Standards & Best Practices
 

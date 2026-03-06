@@ -1,0 +1,85 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.SubscriptionPlanDetail
+@{
+    ViewBag.Title = $"Edit — {Model.DisplayName}";
+    ViewBag.ActiveNav = "plans";
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Plans</a> / <a asp-action="Detail" asp-route-id="@Model.Id">@Model.DisplayName</a> / Edit</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+ <div class="bo-page-icon green"><i class="boi boi-lg boi-pen"></i></div>
+    <div>
+   <div class="bo-page-title">Edit Plan — @Model.DisplayName</div>
+   <div class="bo-page-sub">Update pricing tier configuration</div>
+ </div>
+    </div>
+    <a asp-action="Detail" asp-route-id="@Model.Id" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+</div>
+
+<div class="bo-card" style="max-width:600px">
+    <div class="bo-card-header">Plan Details</div>
+    <div class="bo-card-body">
+        <form asp-action="Edit" method="post">
+      @Html.AntiForgeryToken()
+  <input type="hidden" name="PlanId" value="@Model.Id" />
+   
+     <div style="margin-bottom:14px">
+          <label class="bo-field-label">Plan Code (Read-Only)</label>
+         <input type="text" class="bo-input" value="@Model.PlanCode" disabled />
+            </div>
+
+       <div style="margin-bottom:14px">
+ <label class="bo-field-label">Display Name <span style="color:#e74c3c">*</span></label>
+    <input name="DisplayName" class="bo-input" value="@Model.DisplayName" required />
+ </div>
+            
+            <div style="margin-bottom:14px">
+   <label class="bo-field-label">Description</label>
+        <textarea name="Description" class="bo-input" rows="3">@Model.Description</textarea>
+            </div>
+        
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div>
+         <label class="bo-field-label">Monthly Price (USD) <span style="color:#e74c3c">*</span></label>
+     <input name="PriceMonthly" type="number" step="0.01" class="bo-input" value="@Model.PriceMonthly" required />
+       </div>
+           <div>
+   <label class="bo-field-label">Yearly Price (USD)</label>
+  <input name="PriceYearly" type="number" step="0.01" class="bo-input" value="@Model.PriceYearly" />
+    </div>
+</div>
+     
+       <div style="margin-bottom:14px">
+        <label class="bo-field-label">Max Sessions Per Month <span style="color:#e74c3c">*</span></label>
+   <input name="MaxSessionsPerMonth" type="number" class="bo-input" value="@Model.MaxSessionsPerMonth" required />
+         </div>
+     
+ <div style="margin-bottom:14px">
+  <label class="bo-field-label">Features (JSON) <span style="color:#e74c3c">*</span></label>
+          <textarea name="FeaturesJson" class="bo-input" rows="6" required style="font-family:monospace;font-size:13px">@Model.FeaturesJson</textarea>
+        </div>
+  
+         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+     <div>
+     <label class="bo-field-label">Sort Order</label>
+     <input name="SortOrder" type="number" class="bo-input" value="@Model.SortOrder" />
+  </div>
+   <div>
+      <label class="bo-field-label">Status</label>
+     <select name="IsActive" class="bo-select">
+             <option value="true" selected="@Model.IsActive">Active</option>
+         <option value="false" selected="@(!Model.IsActive)">Inactive</option>
+     </select>
+    </div>
+            </div>
+   
+    <div style="margin-bottom:18px">
+            <label class="bo-field-label">Reason for Change <span style="color:#e74c3c">*</span></label>
+       <input name="Reason" class="bo-input" placeholder="Explain the change for audit trail" required />
+   </div>
+       
+   <button type="submit" class="bo-btn bo-btn-primary bo-btn-block"><i class="boi boi-sm boi-check boi-mr"></i>Save Changes</button>
+        </form>
+    </div>
+</div>

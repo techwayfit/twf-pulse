@@ -91,19 +91,15 @@ CREATE TABLE IF NOT EXISTS `ActivityTypeDefinitions` (
     `IconClass` VARCHAR(100) NOT NULL,
     `ColorHex` VARCHAR(7) NOT NULL,
 `RequiresPremium` TINYINT(1) NOT NULL DEFAULT 0,
-    `MinPlanCode` VARCHAR(50) NULL,
+    `ApplicablePlanIds` VARCHAR(500) NULL,
+    `IsAvailableToAllPlans` TINYINT(1) NOT NULL DEFAULT 0,
     `IsActive` TINYINT(1) NOT NULL DEFAULT 1,
     `SortOrder` INT NOT NULL DEFAULT 0,
     `CreatedAt` DATETIME(6) NOT NULL,
     `UpdatedAt` DATETIME(6) NOT NULL,
     
     UNIQUE KEY `UQ_ActivityTypeDefinitions_ActivityType` (`ActivityType`),
-  KEY `IX_ActivityTypeDefinitions_IsActive_SortOrder` (`IsActive`, `SortOrder`),
-    
-    CONSTRAINT `FK_ActivityTypeDefinitions_MinPlanCode`
-        FOREIGN KEY (`MinPlanCode`)
-        REFERENCES `SubscriptionPlans`(`PlanCode`)
-        ON UPDATE CASCADE
+  KEY `IX_ActivityTypeDefinitions_IsActive_SortOrder` (`IsActive`, `SortOrder`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SELECT '? ActivityTypeDefinitions table created/verified' AS '';
@@ -148,49 +144,49 @@ SELECT '' AS '';
 SELECT 'Seeding ActivityTypeDefinitions...' AS '';
 
 INSERT IGNORE INTO `ActivityTypeDefinitions` VALUES
-    ('10000000-0000-0000-0000-000000000001', 0, 'Poll',
+    ('0EE242F4-33EF-4F1F-B551-958EBA091628', 0, 'Poll',
    'Multiple choice questions with single or multiple selection',
-     'ics ics-chart ic-sm', '#3B82F6', 0, NULL, 1, 1, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
+     'ics ics-chart ic-sm', '#3B82F6', 0, NULL, 1, 1, 1, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
 
 INSERT IGNORE INTO `ActivityTypeDefinitions` VALUES
-    ('10000000-0000-0000-0000-000000000002', 2, 'Word Cloud',
+    ('EFC43AED-6F02-4A7F-AD7D-A2412F924A90', 2, 'Word Cloud',
      'Collect words or short phrases from participants',
-     'ics ics-thought-balloon ic-sm', '#10B981', 0, NULL, 1, 2, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
+     'ics ics-thought-balloon ic-sm', '#10B981', 0, NULL, 1, 1, 2, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
 
 INSERT IGNORE INTO `ActivityTypeDefinitions` VALUES
-    ('10000000-0000-0000-0000-000000000003', 5, 'Quadrant',
+    ('28DA5F62-FD42-42DA-A8F1-3B36AB3CD3A9', 5, 'Quadrant',
      'Item scoring with bubble chart visualization',
-     'ics ics-chart-increasing ic-sm', '#8B5CF6', 0, NULL, 1, 3, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
+     'ics ics-chart-increasing ic-sm', '#8B5CF6', 0, NULL, 1, 1, 3, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
 
 INSERT IGNORE INTO `ActivityTypeDefinitions` VALUES
-    ('10000000-0000-0000-0000-000000000004', 6, 'Five Whys',
-     'AI-powered root cause analysis for problem-solving',
-     'ics ics-question ic-sm', '#F59E0B', 1, 'plan-a', 1, 4, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
+    ('50E80B08-8E61-4839-B5C7-7DA225E8FCEC', 6, 'Five Whys',
+  'AI-powered root cause analysis for problem-solving',
+   'ics ics-question ic-sm', '#F59E0B', 1, '00000000-0000-0000-0000-000000000002|00000000-0000-0000-0000-000000000003', 0, 1, 4, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
 
 INSERT IGNORE INTO `ActivityTypeDefinitions` VALUES
-    ('10000000-0000-0000-0000-000000000005', 4, 'Rating',
+    ('A441AEBA-4CD7-4AD8-BFD0-4820E5144CEC', 4, 'Rating',
      'Star or numeric ratings with optional comments',
-     'ics ics-star ic-sm', '#EF4444', 0, NULL, 1, 5, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
+     'ics ics-star ic-sm', '#EF4444', 0, NULL, 1, 1, 5, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
 
 INSERT IGNORE INTO `ActivityTypeDefinitions` VALUES
-    ('10000000-0000-0000-0000-000000000006', 7, 'Feedback',
+    ('CF4281DF-2838-4049-863F-D423A9CA9A8E', 7, 'Feedback',
      'Open-ended feedback collection from participants',
-     'ics ics-chat ic-sm', '#06B6D4', 0, NULL, 1, 6, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
+     'ics ics-chat ic-sm', '#06B6D4', 0, NULL, 1, 1, 6, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
 
 INSERT IGNORE INTO `ActivityTypeDefinitions` VALUES
-    ('10000000-0000-0000-0000-000000000007', 3, 'Q&A',
+    ('BE761574-C3A1-48D3-9B65-9038ACC64167', 3, 'Q&A',
    'Live Q&A with upvoting and moderation',
-     'fas fa-lightbulb ic-sm', '#F97316', 0, NULL, 1, 7, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
+ 'fas fa-lightbulb ic-sm', '#F97316', 0, NULL, 1, 1, 7, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
 
 INSERT IGNORE INTO `ActivityTypeDefinitions` VALUES
-    ('10000000-0000-0000-0000-000000000008', 8, 'AI Summary',
+    ('1A37B0BC-2745-45DE-910D-7ACDB9590350', 8, 'AI Summary',
      'AI-generated comprehensive session summary',
-   'fas fa-robot ic-sm', '#EC4899', 1, 'plan-a', 1, 8, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
+   'fas fa-robot ic-sm', '#EC4899', 1, '00000000-0000-0000-0000-000000000002|00000000-0000-0000-0000-000000000003', 0, 1, 8, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
 
 INSERT IGNORE INTO `ActivityTypeDefinitions` VALUES
-    ('10000000-0000-0000-0000-000000000009', 9, 'Break',
+    ('E9132460-506C-44FB-86ED-9B008E17EA4A', 9, 'Break',
      'Timed break with countdown and ready signal',
-     'fas fa-coffee', '#6B7280', 0, NULL, 1, 9, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
+     'fas fa-coffee', '#6B7280', 0, NULL, 1, 1, 9, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
 
 SELECT '  ? Seeded activity type definitions' AS '';
 

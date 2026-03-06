@@ -1,0 +1,77 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.PlanSearchResult
+@{
+    ViewBag.Title = "Subscription Plans";
+    ViewBag.ActiveNav = "plans";
+}
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon green"><i class="boi boi-lg boi-settings"></i></div>
+        <div>
+            <div class="bo-page-title">Subscription Plans</div>
+            <div class="bo-page-sub">Manage pricing tiers and features</div>
+        </div>
+</div>
+    <a asp-action="Create" class="bo-btn bo-btn-primary bo-btn-sm">+ New Plan</a>
+</div>
+
+<div class="bo-search-bar">
+    <form asp-action="Index" method="get">
+        <div class="bo-search-field" style="max-width:140px">
+        <label>Status</label>
+ <select name="isActive" class="bo-select" onchange="this.form.submit()">
+    <option value="">All</option>
+        <option value="true" selected="@(Context.Request.Query["isActive"] == "true")">Active</option>
+          <option value="false" selected="@(Context.Request.Query["isActive"] == "false")">Inactive</option>
+ </select>
+        </div>
+    </form>
+</div>
+
+<div class="bo-card">
+  <div class="bo-table-wrap">
+        <table class="bo-table">
+            <thead>
+             <tr>
+    <th>Plan Code</th>
+  <th>Display Name</th>
+        <th>Price (Monthly)</th>
+            <th>Sessions/Month</th>
+            <th>Active Subscriptions</th>
+  <th>Status</th>
+ <th>Order</th>
+       <th>Actions</th>
+                </tr>
+            </thead>
+     <tbody>
+    @foreach (var plan in Model.Items.OrderBy(p => p.SortOrder))
+     {
+<tr>
+         <td class="bo-td-mono">@plan.PlanCode</td>
+    <td><strong>@plan.DisplayName</strong></td>
+         <td class="bo-td-mono">$@plan.PriceMonthly.ToString("F2")</td>
+      <td class="bo-td-mono">@plan.MaxSessionsPerMonth</td>
+             <td class="bo-td-mono">@plan.ActiveSubscriptionCount</td>
+  <td><span class="bo-pill @(plan.IsActive ? "active" : "inactive")">@(plan.IsActive ? "Active" : "Inactive")</span></td>
+      <td class="bo-td-muted">@plan.SortOrder</td>
+                <td style="display:flex;gap:6px">
+ <a asp-action="Detail" asp-route-id="@plan.Id" class="bo-btn bo-btn-ghost bo-btn-sm">View</a>
+           <a asp-action="Edit" asp-route-id="@plan.Id" class="bo-btn bo-btn-ghost bo-btn-sm">Edit</a>
+         </td>
+      </tr>
+       }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.TotalCount > Model.PageSize)
+{
+    <div class="bo-pagination">
+        @for (int i = 1; i <= Math.Ceiling((double)Model.TotalCount / Model.PageSize); i++)
+   {
+            <a asp-action="Index" asp-route-page="@i" asp-route-isActive="@Context.Request.Query["isActive"]" 
+    class="bo-page-link @(i == Model.Page ? "active" : "")">@i</a>
+     }
+    </div>
+}

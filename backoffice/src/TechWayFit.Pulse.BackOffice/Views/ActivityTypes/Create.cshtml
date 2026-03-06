@@ -1,0 +1,140 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.CreateActivityTypeDefinitionRequest
+@{
+ ViewBag.Title = "New Activity Type";
+    ViewBag.ActiveNav = "activity-types";
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Activity Types</a> / New</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon purple"><i class="boi boi-lg boi-settings"></i></div>
+        <div>
+     <div class="bo-page-title">Create Activity Type Definition</div>
+   <div class="bo-page-sub">Define a new activity type</div>
+        </div>
+    </div>
+    <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+</div>
+
+<div class="bo-card" style="max-width:600px">
+ <div class="bo-card-header">Activity Type Details</div>
+    <div class="bo-card-body">
+        <form asp-action="Create" method="post">
+   @Html.AntiForgeryToken()
+
+   <div style="margin-bottom:14px">
+    <label class="bo-field-label">Activity Type (Enum Value) <span style="color:#e74c3c">*</span></label>
+    <input asp-for="ActivityType" type="number" class="bo-input" required placeholder="e.g., 7" />
+        <div class="bo-info-note" style="margin-top:4px">Integer matching the ActivityType enum in code.</div>
+      </div>
+   
+   <div style="margin-bottom:14px">
+    <label class="bo-field-label">Display Name <span style="color:#e74c3c">*</span></label>
+       <input asp-for="DisplayName" class="bo-input" required placeholder="e.g., 5 Whys Analysis" />
+    </div>
+            
+      <div style="margin-bottom:14px">
+    <label class="bo-field-label">Description <span style="color:#e74c3c">*</span></label>
+     <textarea asp-for="Description" class="bo-input" rows="3" required placeholder="Brief description for operators..."></textarea>
+   </div>
+          
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+  <div>
+       <label class="bo-field-label">Icon Class <span style="color:#e74c3c">*</span></label>
+     <input asp-for="IconClass" class="bo-input" required placeholder="e.g., ics ics-question" />
+    </div>
+           <div>
+       <label class="bo-field-label">Color Hex <span style="color:#e74c3c">*</span></label>
+  <input asp-for="ColorHex" class="bo-input" required placeholder="e.g., #F59E0B" />
+    </div>
+   </div>
+     
+   <div style="margin-bottom:14px">
+     <label class="bo-field-label">Requires Premium</label>
+       <select asp-for="RequiresPremium" class="bo-select">
+        <option value="false">No (Free for all)</option>
+         <option value="true">Yes (Paid plans only)</option>
+     </select>
+   </div>
+   
+    <div style="margin-bottom:14px">
+  <label class="bo-field-label">Available To All Plans</label>
+      <select asp-for="IsAvailableToAllPlans" class="bo-select" onchange="togglePlanSelection(this)">
+        <option value="true">Yes (All plans including free)</option>
+         <option value="false">No (Specific plans only)</option>
+     </select>
+ <div class="bo-info-note" style="margin-top:4px">If 'No', specify applicable plans below.</div>
+   </div>
+   
+    <div id="planSelectionSection" style="margin-bottom:14px;display:none">
+  <label class="bo-field-label">Select Applicable Plans</label>
+   <div class="bo-info-note" style="margin-bottom:8px">Check the plans that can access this activity type</div>
+  
+ <div style="display:flex;flex-direction:column;gap:8px;padding:12px;background:#f8f9fa;border-radius:6px">
+         @{
+       var availablePlans = ViewBag.AvailablePlans as IReadOnlyList<TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.SubscriptionPlanSummary> 
+          ?? new List<TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.SubscriptionPlanSummary>();
+   }
+    
+ @foreach (var plan in availablePlans)
+    {
+  <label class="bo-checkbox-label">
+                <input type="checkbox" name="SelectedPlanIds" value="@plan.Id" class="bo-checkbox" />
+   <span>@plan.DisplayName - @plan.PriceMonthly.ToString("C")/month, @plan.MaxSessionsPerMonth sessions</span>
+    </label>
+  }
+    
+            @if (!availablePlans.Any())
+    {
+         <div class="bo-info-note" style="color:#e74c3c">?? No active plans found. Please create plans first.</div>
+     }
+  </div>
+     
+  @* Hidden field to store the pipe-separated GUIDs *@
+  <input asp-for="ApplicablePlanIds" type="hidden" id="ApplicablePlanIdsHidden" />
+  </div>
+   
+   <script>
+ function togglePlanSelection(select) {
+       const planSection = document.getElementById('planSelectionSection');
+   const isAvailableToAll = select.value === 'true';
+    planSection.style.display = isAvailableToAll ? 'none' : 'block';
+       
+       if (isAvailableToAll) {
+  // Uncheck all plans and clear hidden field
+      document.querySelectorAll('input[name="SelectedPlanIds"]').forEach(cb => cb.checked = false);
+    document.getElementById('ApplicablePlanIdsHidden').value = '';
+       }
+}
+   
+   // Update hidden field when checkboxes change
+   document.addEventListener('DOMContentLoaded', function() {
+       document.querySelectorAll('input[name="SelectedPlanIds"]').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+    const checkedBoxes = document.querySelectorAll('input[name="SelectedPlanIds"]:checked');
+    const guids = Array.from(checkedBoxes).map(cb => cb.value);
+  document.getElementById('ApplicablePlanIdsHidden').value = guids.join('|');
+     });
+  });
+   });
+   </script>
+ 
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+     <div>
+     <label class="bo-field-label">Sort Order</label>
+    <input asp-for="SortOrder" type="number" class="bo-input" value="0" />
+    </div>
+         <div>
+    <label class="bo-field-label">Status</label>
+     <select asp-for="IsActive" class="bo-select">
+    <option value="true">Active</option>
+       <option value="false">Inactive</option>
+         </select>
+     </div>
+ </div>
+
+   <button type="submit" class="bo-btn bo-btn-primary bo-btn-block"><i class="boi boi-sm boi-check boi-mr"></i>Create Activity Type</button>
+        </form>
+    </div>
+</div>

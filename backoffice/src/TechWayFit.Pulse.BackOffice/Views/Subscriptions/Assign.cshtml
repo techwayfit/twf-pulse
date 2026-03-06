@@ -1,0 +1,77 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.AssignPlanRequest
+@{
+    ViewBag.Title = "Assign Plan";
+    ViewBag.ActiveNav = "subscriptions";
+    var plans = ViewBag.Plans as IReadOnlyList<TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.SubscriptionPlanSummary>;
+    var facilitatorUserId = ViewBag.FacilitatorUserId as Guid?;
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Subscriptions</a> / Assign Plan</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon blue"><i class="boi boi-lg boi-users"></i></div>
+  <div>
+     <div class="bo-page-title">Assign Plan to Facilitator</div>
+   <div class="bo-page-sub">Manually assign a subscription (SuperAdmin only)</div>
+     </div>
+  </div>
+    <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+</div>
+
+<div class="bo-card" style="max-width:600px">
+    <div class="bo-card-header">Assignment Details</div>
+    <div class="bo-card-body">
+  <form asp-action="Assign" method="post">
+   @Html.AntiForgeryToken()
+       
+     <div style="margin-bottom:14px">
+    <label class="bo-field-label">Facilitator User ID <span style="color:#e74c3c">*</span></label>
+      <input name="FacilitatorUserId" type="text" class="bo-input" value="@facilitatorUserId" required placeholder="Enter user GUID" />
+    <div class="bo-info-note" style="margin-top:4px">Find this in the Users section.</div>
+   </div>
+   
+      <div style="margin-bottom:14px">
+       <label class="bo-field-label">Plan <span style="color:#e74c3c">*</span></label>
+     <select name="PlanCode" class="bo-select" required>
+ <option value="">Select a plan...</option>
+       @if (plans != null)
+     {
+     foreach (var plan in plans.OrderBy(p => p.SortOrder))
+           {
+       <option value="@plan.PlanCode">@plan.DisplayName — @plan.MaxSessionsPerMonth sessions/month ($@plan.PriceMonthly/mo)</option>
+       }
+       }
+    </select>
+    </div>
+   
+  <div style="margin-bottom:14px">
+       <label class="bo-field-label">Status <span style="color:#e74c3c">*</span></label>
+     <select name="Status" class="bo-select" required>
+         <option value="Active">Active</option>
+    <option value="Trial">Trial</option>
+     <option value="Canceled">Canceled</option>
+       <option value="Expired">Expired</option>
+      </select>
+   </div>
+            
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+     <div>
+      <label class="bo-field-label">Start Date <span style="color:#e74c3c">*</span></label>
+       <input name="StartsAt" type="datetime-local" class="bo-input" value="@DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm")" required />
+     </div>
+         <div>
+ <label class="bo-field-label">Expiry Date</label>
+   <input name="ExpiresAt" type="datetime-local" class="bo-input" />
+ </div>
+  </div>
+   
+    <div style="margin-bottom:18px">
+     <label class="bo-field-label">Reason <span style="color:#e74c3c">*</span></label>
+      <input name="Reason" class="bo-input" placeholder="Why are you assigning this plan?" required />
+ </div>
+   
+     <button type="submit" class="bo-btn bo-btn-primary bo-btn-block"><i class="boi boi-sm boi-check boi-mr"></i>Assign Plan</button>
+      </form>
+    </div>
+</div>

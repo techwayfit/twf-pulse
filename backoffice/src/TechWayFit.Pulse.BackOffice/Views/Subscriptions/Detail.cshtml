@@ -1,0 +1,94 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.FacilitatorSubscriptionDetail
+@{
+    ViewBag.Title = $"Subscription — {Model.FacilitatorEmail}";
+    ViewBag.ActiveNav = "subscriptions";
+    bool isSuperAdmin = User.IsInRole("SuperAdmin");
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Subscriptions</a> / @Model.FacilitatorEmail</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon blue"><i class="boi boi-lg boi-users"></i></div>
+     <div>
+      <div class="bo-page-title">@Model.FacilitatorEmail</div>
+         <div class="bo-page-sub">
+           <span class="bo-pill @(Model.Status == "Active" ? "active" : "inactive")">@Model.Status</span>
+    <span class="bo-pill" style="margin-left:8px">@Model.PlanDisplayName</span>
+  </div>
+  </div>
+    </div>
+    <div style="display:flex;gap:8px">
+  <a asp-action="UserHistory" asp-route-facilitatorUserId="@Model.FacilitatorUserId" class="bo-btn bo-btn-ghost bo-btn-sm">View History</a>
+      <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+    </div>
+</div>
+
+<div class="bo-card" style="margin-bottom:20px">
+    <div class="bo-card-header">Subscription Details</div>
+    <div class="bo-card-body">
+        <div class="bo-info-grid cols3">
+  <div class="bo-info-item"><div class="lbl">Facilitator Email</div><div class="val bo-td-mono">@Model.FacilitatorEmail</div></div>
+   <div class="bo-info-item"><div class="lbl">Plan</div><div class="val">@Model.PlanDisplayName (@Model.PlanCode)</div></div>
+     <div class="bo-info-item"><div class="lbl">Status</div><div class="val">@Model.Status</div></div>
+   <div class="bo-info-item"><div class="lbl">Sessions Used</div><div class="val bo-td-mono">@Model.SessionsUsed</div></div>
+   <div class="bo-info-item"><div class="lbl">Sessions Reset</div><div class="val bo-td-muted">@Model.SessionsResetAt.ToString("dd MMM yyyy")</div></div>
+            <div class="bo-info-item"><div class="lbl">Started</div><div class="val bo-td-muted">@Model.StartsAt.ToString("dd MMM yyyy")</div></div>
+      <div class="bo-info-item"><div class="lbl">Expires</div><div class="val bo-td-muted">@(Model.ExpiresAt?.ToString("dd MMM yyyy") ?? "—")</div></div>
+    @if (Model.CanceledAt.HasValue)
+ {
+    <div class="bo-info-item"><div class="lbl">Canceled</div><div class="val bo-td-muted">@Model.CanceledAt.Value.ToString("dd MMM yyyy")</div></div>
+            }
+   @if (!string.IsNullOrWhiteSpace(Model.PaymentProvider))
+        {
+    <div class="bo-info-item"><div class="lbl">Payment Provider</div><div class="val">@Model.PaymentProvider</div></div>
+ }
+   @if (!string.IsNullOrWhiteSpace(Model.ExternalCustomerId))
+   {
+        <div class="bo-info-item"><div class="lbl">External Customer ID</div><div class="val bo-td-mono" style="font-size:11px">@Model.ExternalCustomerId</div></div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.ExternalSubscriptionId))
+ {
+         <div class="bo-info-item"><div class="lbl">External Subscription ID</div><div class="val bo-td-mono" style="font-size:11px">@Model.ExternalSubscriptionId</div></div>
+   }
+    <div class="bo-info-item"><div class="lbl">Created</div><div class="val bo-td-muted">@Model.CreatedAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+     <div class="bo-info-item"><div class="lbl">Updated</div><div class="val bo-td-muted">@Model.UpdatedAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+       <div class="bo-info-item" style="grid-column:1/-1"><div class="lbl">ID</div><div class="val bo-td-mono" style="font-size:11px">@Model.Id</div></div>
+     </div>
+    </div>
+</div>
+
+@if (isSuperAdmin)
+{
+    <div class="bo-section-header">SuperAdmin Actions &mdash; <span style="color:var(--text-muted);font-weight:400">All changes are audited</span></div>
+    <div class="bo-actions-grid cols2">
+
+        @if (Model.Status == "Active")
+        {
+   <div class="bo-action-card">
+       <div class="bo-action-title"><i class="boi boi-sm boi-warning boi-mr"></i>Cancel Subscription</div>
+         <div class="bo-action-desc">Mark this subscription as canceled. User will lose access.</div>
+       <form asp-action="Cancel" method="post" style="margin-top:12px">
+    @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+  <label class="bo-field-label">Reason</label>
+           <input type="text" name="reason" class="bo-input" placeholder="Required" required style="margin-bottom:10px" />
+    <button type="submit" class="bo-btn bo-btn-warning bo-btn-sm">Cancel Subscription</button>
+    </form>
+   </div>
+
+      <div class="bo-action-card">
+  <div class="bo-action-title"><i class="boi boi-sm boi-check boi-mr"></i>Reset Quota</div>
+     <div class="bo-action-desc">Reset sessions used to 0 and set next reset date to next month.</div>
+  <form asp-action="ResetQuota" method="post" style="margin-top:12px">
+       @Html.AntiForgeryToken()
+   <input type="hidden" name="id" value="@Model.Id" />
+<label class="bo-field-label">Reason</label>
+   <input type="text" name="reason" class="bo-input" placeholder="Required" required style="margin-bottom:10px" />
+    <button type="submit" class="bo-btn bo-btn-success bo-btn-sm">Reset Quota</button>
+ </form>
+            </div>
+      }
+
+    </div>
+}

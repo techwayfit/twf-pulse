@@ -201,7 +201,7 @@ public sealed class BackOfficeMariaDbContext : DbContext
             e.Property(x => x.Description).HasMaxLength(500).IsRequired();
             e.Property(x => x.IconClass).HasMaxLength(100).IsRequired();
             e.Property(x => x.ColorHex).HasMaxLength(7).IsRequired();
-            e.Property(x => x.MinPlanCode).HasMaxLength(50);
+            e.Property(x => x.ApplicablePlanIds).HasMaxLength(500);
             e.HasIndex(x => x.ActivityType).IsUnique();
             e.HasIndex(x => new { x.IsActive, x.SortOrder });
         });
@@ -212,27 +212,26 @@ public sealed class BackOfficeMariaDbContext : DbContext
         {
             entity.ToTable("AuditLogs");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.TableName).HasMaxLength(100).IsRequired();
-            entity.Property(x => x.RecordId).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.EntityType).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.EntityId).HasMaxLength(100).IsRequired();
             entity.Property(x => x.Action).HasMaxLength(50).IsRequired();
             entity.Property(x => x.OldValue).HasColumnType("LONGTEXT");
             entity.Property(x => x.NewValue).HasColumnType("LONGTEXT");
             entity.Property(x => x.Reason).HasColumnType("LONGTEXT");
-            entity.Property(x => x.PerformedBy).HasMaxLength(256).IsRequired();
-            entity.HasIndex(x => new { x.TableName, x.RecordId });
-            entity.HasIndex(x => x.PerformedAt);
-            entity.HasIndex(x => x.PerformedBy);
+            entity.Property(x => x.OperatorId).HasMaxLength(256).IsRequired();
+            entity.HasIndex(x => new { x.EntityType, x.EntityId });
+            entity.HasIndex(x => x.OccurredAt);
+            entity.HasIndex(x => x.OperatorId);
         });
 
         modelBuilder.Entity<BackOfficeUserRecord>(entity =>
         {
             entity.ToTable("BackOfficeUsers");
             entity.HasKey(x => x.Id);
-            entity.Property(x => x.Email).HasMaxLength(256).IsRequired();
-            entity.Property(x => x.DisplayName).HasMaxLength(120).IsRequired();
+            entity.Property(x => x.Username).HasMaxLength(256).IsRequired();
             entity.Property(x => x.PasswordHash).HasMaxLength(256).IsRequired();
             entity.Property(x => x.Role).HasMaxLength(50).IsRequired();
-            entity.HasIndex(x => x.Email).IsUnique();
+            entity.HasIndex(x => x.Username).IsUnique();
             entity.HasIndex(x => x.Role);
             entity.HasIndex(x => x.IsActive);
         });

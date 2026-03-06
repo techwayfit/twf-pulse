@@ -1,0 +1,147 @@
+﻿@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.ActivityTypeDefinitionDetail
+@{
+    ViewBag.Title = $"Edit — {Model.DisplayName}";
+    ViewBag.ActiveNav = "activity-types";
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Activity Types</a> / <a asp-action="Detail" asp-route-id="@Model.Id">@Model.DisplayName</a> / Edit</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+     <div class="bo-page-icon purple"><i class="boi boi-lg boi-pen"></i></div>
+     <div>
+    <div class="bo-page-title">Edit Activity Type — @Model.DisplayName</div>
+       <div class="bo-page-sub">Update activity type configuration</div>
+        </div>
+    </div>
+ <a asp-action="Detail" asp-route-id="@Model.Id" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+</div>
+
+<div class="bo-card" style="max-width:600px">
+ <div class="bo-card-header">Activity Type Details</div>
+    <div class="bo-card-body">
+        <form asp-action="Edit" method="post">
+   @Html.AntiForgeryToken()
+    <input type="hidden" name="Id" value="@Model.Id" />
+
+ <div style="margin-bottom:14px">
+     <label class="bo-field-label">Activity Type (Read-Only)</label>
+     <input type="text" class="bo-input" value="@Model.ActivityType (@Model.ActivityTypeName)" disabled />
+   </div>
+   
+  <div style="margin-bottom:14px">
+   <label class="bo-field-label">Display Name <span style="color:#e74c3c">*</span></label>
+     <input name="DisplayName" class="bo-input" value="@Model.DisplayName" required />
+    </div>
+   
+   <div style="margin-bottom:14px">
+    <label class="bo-field-label">Description <span style="color:#e74c3c">*</span></label>
+      <textarea name="Description" class="bo-input" rows="3" required>@Model.Description</textarea>
+  </div>
+       
+     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+   <div>
+       <label class="bo-field-label">Icon Class <span style="color:#e74c3c">*</span></label>
+       <input name="IconClass" class="bo-input" value="@Model.IconClass" required />
+       </div>
+   <div>
+      <label class="bo-field-label">Color Hex <span style="color:#e74c3c">*</span></label>
+  <input name="ColorHex" class="bo-input" value="@Model.ColorHex" required />
+ </div>
+   </div>
+      
+       <div style="margin-bottom:14px">
+        <label class="bo-field-label">Requires Premium</label>
+    <select name="RequiresPremium" class="bo-select">
+         <option value="false" selected="@(!Model.RequiresPremium)">No (Free for all)</option>
+      <option value="true" selected="@Model.RequiresPremium">Yes (Paid plans only)</option>
+    </select>
+  </div>
+
+  <div style="margin-bottom:14px">
+      <label class="bo-field-label">Available To All Plans</label>
+    <select name="IsAvailableToAllPlans" class="bo-select" onchange="togglePlanSelection(this)">
+         <option value="true" selected="@Model.IsAvailableToAllPlans">Yes (All plans including free)</option>
+      <option value="false" selected="@(!Model.IsAvailableToAllPlans)">No (Specific plans only)</option>
+ </select>
+  </div>
+
+  <div id="planSelectionSection" style="margin-bottom:14px;display:@(Model.IsAvailableToAllPlans ? "none" : "block")">
+        <label class="bo-field-label">Select Applicable Plans</label>
+        <div class="bo-info-note" style="margin-bottom:8px">Check the plans that can access this activity type</div>
+
+                <div style="display:flex;flex-direction:column;gap:5px;padding:10px;border-radius:6px">
+        @{
+  var selectedPlanIds = (Model.ApplicablePlanIds ?? "").Split('|', StringSplitOptions.RemoveEmptyEntries);
+       var availablePlans = ViewBag.AvailablePlans as IReadOnlyList<TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.SubscriptionPlanSummary> 
+      ?? new List<TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.SubscriptionPlanSummary>();
+            }
+ 
+ @foreach (var plan in availablePlans)
+       {
+  var isSelected = selectedPlanIds.Contains(plan.Id.ToString());
+     <label class="bo-checkbox-label">
+      <input type="checkbox" name="SelectedPlanIds" value="@plan.Id" 
+  checked="@isSelected" class="bo-checkbox" />
+    <span>@plan.DisplayName - @plan.PriceMonthly.ToString("C")/month, @plan.MaxSessionsPerMonth sessions</span>
+       </label>
+  }
+    
+     @if (!availablePlans.Any())
+      {
+         <div class="bo-info-note" style="color:#e74c3c">⚠️ No active plans found. Please create plans first.</div>
+  }
+ </div>
+   
+    @* Hidden field to store the pipe-separated GUIDs *@
+   <input type="hidden" name="ApplicablePlanIds" id="ApplicablePlanIdsHidden" value="@Model.ApplicablePlanIds" />
+      </div>
+   
+   <script>
+ function togglePlanSelection(select) {
+       const planSection = document.getElementById('planSelectionSection');
+       const isAvailableToAll = select.value === 'true';
+       planSection.style.display = isAvailableToAll ? 'none' : 'block';
+       
+       if (isAvailableToAll) {
+           // Uncheck all plans and clear hidden field
+   document.querySelectorAll('input[name="SelectedPlanIds"]').forEach(cb => cb.checked = false);
+           document.getElementById('ApplicablePlanIdsHidden').value = '';
+     }
+   }
+   
+   // Update hidden field when checkboxes change
+   document.addEventListener('DOMContentLoaded', function() {
+       document.querySelectorAll('input[name="SelectedPlanIds"]').forEach(checkbox => {
+     checkbox.addEventListener('change', function() {
+               const checkedBoxes = document.querySelectorAll('input[name="SelectedPlanIds"]:checked');
+        const guids = Array.from(checkedBoxes).map(cb => cb.value);
+       document.getElementById('ApplicablePlanIdsHidden').value = guids.join('|');
+    });
+     });
+   });
+   </script>
+   
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+   <label class="bo-field-label">Sort Order</label>
+   <input name="SortOrder" type="number" class="bo-input" value="@Model.SortOrder" />
+  </div>
+ <div>
+      <label class="bo-field-label">Status</label>
+    <select name="IsActive" class="bo-select">
+         <option value="true" selected="@Model.IsActive">Active</option>
+      <option value="false" selected="@(!Model.IsActive)">Inactive</option>
+     </select>
+    </div>
+  </div>
+    
+    <div style="margin-bottom:18px">
+    <label class="bo-field-label">Reason for Change <span style="color:#e74c3c">*</span></label>
+   <input name="Reason" class="bo-input" placeholder="Explain the change for audit trail" required />
+  </div>
+
+<button type="submit" class="bo-btn bo-btn-primary bo-btn-block"><i class="boi boi-sm boi-check boi-mr"></i>Save Changes</button>
+      </form>
+    </div>
+</div>

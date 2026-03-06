@@ -1,0 +1,92 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Commercialization.ActivityTypeSearchResult
+@{
+    ViewBag.Title = "Activity Type Definitions";
+    ViewBag.ActiveNav = "activity-types";
+}
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+<div class="bo-page-icon purple"><i class="boi boi-lg boi-settings"></i></div>
+        <div>
+            <div class="bo-page-title">Activity Type Definitions</div>
+  <div class="bo-page-sub">Manage activity metadata and premium access</div>
+  </div>
+    </div>
+  <a asp-action="Create" class="bo-btn bo-btn-primary bo-btn-sm">+ New Activity Type</a>
+</div>
+
+<form asp-action="Index" method="get" class="bo-search-bar">
+    <div class="bo-search-field" style="max-width:140px">
+ <label>Status</label>
+   <select name="isActive" class="bo-select" onchange="this.form.submit()">
+ <option value="">All</option>
+        <option value="true" selected="@(Context.Request.Query["isActive"] == "true")">Active</option>
+            <option value="false" selected="@(Context.Request.Query["isActive"] == "false")">Inactive</option>
+        </select>
+    </div>
+    <div class="bo-search-field" style="max-width:160px">
+        <label>Access</label>
+ <select name="requiresPremium" class="bo-select" onchange="this.form.submit()">
+   <option value="">All</option>
+            <option value="true" selected="@(Context.Request.Query["requiresPremium"] == "true")">Premium Only</option>
+<option value="false" selected="@(Context.Request.Query["requiresPremium"] == "false")">Free</option>
+        </select>
+    </div>
+</form>
+
+<div class="bo-card">
+ <div class="bo-table-wrap">
+   <table class="bo-table">
+  <thead>
+       <tr>
+    <th>Type</th>
+    <th>Display Name</th>
+          <th>Icon</th>
+        <th>Access</th>
+    <th>Status</th>
+  <th>Order</th>
+    <th>Actions</th>
+       </tr>
+   </thead>
+      <tbody>
+    @foreach (var type in Model.Items.OrderBy(t => t.SortOrder))
+      {
+  <tr>
+     <td class="bo-td-mono">@type.ActivityTypeName (@type.ActivityType)</td>
+     <td><strong>@type.DisplayName</strong></td>
+      <td><span style="background:@type.ColorHex;color:white;padding:4px 8px;border-radius:4px;font-size:12px"><i class="@type.IconClass"></i> @type.DisplayName</span></td>
+   <td>
+                @if (type.IsAvailableToAllPlans)
+         {
+       <span class="bo-pill success">All Plans</span>
+      }
+     else
+                {
+           <span class="bo-pill premium">Premium</span>
+  }
+     </td>
+       <td><span class="bo-pill @(type.IsActive ? "active" : "inactive")">@(type.IsActive ? "Active" : "Inactive")</span></td>
+       <td class="bo-td-muted">@type.SortOrder</td>
+   <td style="display:flex;gap:6px">
+       <a asp-action="Detail" asp-route-id="@type.Id" class="bo-btn bo-btn-ghost bo-btn-sm">View</a>
+  <a asp-action="Edit" asp-route-id="@type.Id" class="bo-btn bo-btn-ghost bo-btn-sm">Edit</a>
+  </td>
+           </tr>
+    }
+     </tbody>
+  </table>
+    </div>
+</div>
+
+@if (Model.TotalCount > Model.PageSize)
+{
+    <div class="bo-pagination">
+        @for (int i = 1; i <= Math.Ceiling((double)Model.TotalCount / Model.PageSize); i++)
+   {
+      <a asp-action="Index" asp-route-page="@i" 
+      asp-route-isActive="@Context.Request.Query["isActive"]"
+    asp-route-requiresPremium="@Context.Request.Query["requiresPremium"]"
+       class="bo-page-link @(i == Model.Page ? "active" : "")">@i</a>
+   }
+    </div>
+}

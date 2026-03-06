@@ -1,0 +1,62 @@
+@model IReadOnlyList<(string PlanCode, int UserCount, decimal MonthlyRevenue)>
+@{
+    ViewBag.Title = "Revenue Summary";
+    ViewBag.ActiveNav = "plans";
+    var totalUsers = Model.Sum(x => x.UserCount);
+    var totalRevenue = Model.Sum(x => x.MonthlyRevenue);
+}
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+  <div class="bo-page-icon green"><i class="boi boi-lg boi-dashboard"></i></div>
+        <div>
+      <div class="bo-page-title">Revenue Summary</div>
+            <div class="bo-page-sub">Active subscriptions by plan</div>
+    </div>
+    </div>
+    <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back to Plans</a>
+</div>
+
+<div class="bo-card" style="margin-bottom:20px">
+    <div class="bo-card-header">Overview</div>
+    <div class="bo-card-body">
+        <div class="bo-info-grid cols3">
+  <div class="bo-info-item"><div class="lbl">Total Active Users</div><div class="val bo-td-mono">@totalUsers</div></div>
+            <div class="bo-info-item"><div class="lbl">Monthly Recurring Revenue</div><div class="val bo-td-mono">$@totalRevenue.ToString("F2")</div></div>
+            <div class="bo-info-item"><div class="lbl">Annual Run Rate</div><div class="val bo-td-mono">$@((totalRevenue * 12).ToString("F2"))</div></div>
+   </div>
+    </div>
+</div>
+
+<div class="bo-card">
+<div class="bo-card-header">By Plan</div>
+    <div class="bo-table-wrap">
+    <table class="bo-table">
+    <thead>
+      <tr>
+              <th>Plan Code</th>
+      <th>Active Users</th>
+            <th>Monthly Revenue</th>
+        <th>Annual Revenue</th>
+        <th>% of Users</th>
+    <th>% of Revenue</th>
+    </tr>
+            </thead>
+            <tbody>
+     @foreach (var row in Model.OrderByDescending(x => x.MonthlyRevenue))
+              {
+    var userPercent = totalUsers > 0 ? (row.UserCount * 100.0 / totalUsers) : 0;
+           var revenuePercent = totalRevenue > 0 ? (decimal)(row.MonthlyRevenue * 100 / totalRevenue) : 0;
+     <tr>
+               <td class="bo-td-mono"><strong>@row.PlanCode</strong></td>
+ <td class="bo-td-mono">@row.UserCount</td>
+             <td class="bo-td-mono">$@row.MonthlyRevenue.ToString("F2")</td>
+   <td class="bo-td-mono">$@((row.MonthlyRevenue * 12).ToString("F2"))</td>
+            <td class="bo-td-muted">@userPercent.ToString("F1")%</td>
+              <td class="bo-td-muted">@revenuePercent.ToString("F1")%</td>
+  </tr>
+     }
+</tbody>
+        </table>
+    </div>
+</div>
