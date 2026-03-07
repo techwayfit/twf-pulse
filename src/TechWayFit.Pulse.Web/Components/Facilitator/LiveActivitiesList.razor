@@ -80,6 +80,8 @@
 </div>
 
 <!-- Add activity footer -->
+@if (!IsSessionEnded)
+{
 <div class="live-sidebar-add">
     <div class="live-sidebar-add-label">Add Activity</div>
     <div class="live-add-activity-grid">
@@ -121,6 +123,7 @@
         </button>
     </div>
 </div>
+}
 
 @code {
     [Parameter, EditorRequired]
@@ -131,6 +134,9 @@
 
     [Parameter, EditorRequired]
     public EventCallback<Guid> OnSelectActivity { get; set; }
+
+    [Parameter]
+    public bool IsSessionEnded { get; set; }
 
     [Parameter]
     public EventCallback<string> OnAddActivity { get; set; }

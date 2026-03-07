@@ -50,6 +50,7 @@ else if (session != null)
             <aside class="live-sidebar @(_sidebarCollapsed ? "live-sidebar--collapsed" : "") @(_sidebarMobileOpen ? "live-sidebar--open" : "")">
                 <LiveActivitiesList Activities="@activities"
                                     SelectedActivityId="@selectedActivityId"
+                                    IsSessionEnded="@(session.Status == SessionStatus.Ended || session.Status == SessionStatus.Expired)"
                                     OnSelectActivity="@SelectActivity"
                                     OnAddActivity="@ShowAddActivityModal" />
             </aside>
@@ -120,7 +121,7 @@ else if (session != null)
                                          HasPrevious="@HasPreviousActivity()"
                                          HasNext="@HasNextActivity()"
                                          ShowCurrentControls="@showCurrentControls"
-                                         CanStart="@(currentActivity == null && displayedActivity.Status == ActivityStatus.Pending)"
+                                         CanStart="@(currentActivity == null && displayedActivity.Status == ActivityStatus.Pending && session.Status != SessionStatus.Ended && session.Status != SessionStatus.Expired)"
                                          IsSessionEnded="@(session.Status == SessionStatus.Ended || session.Status == SessionStatus.Expired)"
                                          OnClose="@CloseCurrentActivity"
                                          OnGoBack="@GoBack"

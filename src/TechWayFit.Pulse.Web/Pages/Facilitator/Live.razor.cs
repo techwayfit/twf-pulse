@@ -625,7 +625,8 @@ public partial class Live : IAsyncDisposable
             return;
         }
 
-        selectedActivityId = currentActivity?.ActivityId;
+        // If there's a live activity, select it; otherwise default to the first activity in the list
+        selectedActivityId = currentActivity?.ActivityId ?? activities.FirstOrDefault()?.ActivityId;
     }
 
     private bool HasPreviousActivity()

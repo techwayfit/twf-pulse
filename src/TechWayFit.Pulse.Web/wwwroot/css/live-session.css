@@ -572,6 +572,7 @@ body:has(.live-page-shell) > main {
         left: 0;
         top: 0;
         height: 100vh;
+        height: 100dvh;
         z-index: 200;
         box-shadow: 4px 0 20px rgba(0, 0, 0, 0.14);
         transform: translateX(-100%);
@@ -587,6 +588,11 @@ body:has(.live-page-shell) > main {
     /* Sidebar-collapsed on desktop resets to hidden on mobile */
     .live-sidebar.live-sidebar--collapsed {
         transform: translateX(-100%);
+    }
+
+    /* When both collapsed and open are present (toggled on mobile), open wins */
+    .live-sidebar.live-sidebar--collapsed.live-sidebar--open {
+        transform: translateX(0);
     }
 
     .live-stage-floating-metrics {
