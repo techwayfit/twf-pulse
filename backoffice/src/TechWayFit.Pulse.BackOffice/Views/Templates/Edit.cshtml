@@ -1,0 +1,138 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Templates.SaveTemplateRequest
+@using TechWayFit.Pulse.Domain.Enums
+@{
+    var templateId = (Guid)ViewBag.TemplateId;
+    ViewBag.Title = "Edit Template";
+    ViewBag.ActiveNav = "templates";
+    var categories = ViewBag.Categories as TemplateCategory[];
+}
+
+<div class="bo-breadcrumb">
+    <a asp-action="Index">Templates</a> /
+    <a asp-action="Detail" asp-route-id="@templateId">@Model.Name</a> /
+    Edit
+</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon yellow"><i class="boi boi-lg boi-templates"></i></div>
+        <div>
+            <div class="bo-page-title">Edit Template</div>
+            <div class="bo-page-sub">@Model.Name</div>
+        </div>
+    </div>
+    <a asp-action="Detail" asp-route-id="@templateId" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+</div>
+
+<div class="bo-card" style="max-width:860px">
+    <div class="bo-card-header">Template Details</div>
+    <div class="bo-card-body">
+        <form asp-action="Edit" asp-route-id="@templateId" method="post">
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new { @class = "bo-validation-summary" })
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+                <div>
+                    <label class="bo-field-label">Name <span style="color:var(--accent)">*</span></label>
+                    <input asp-for="Name" class="bo-input" required maxlength="200" />
+                    <span asp-validation-for="Name" class="bo-field-error"></span>
+                </div>
+                <div>
+                    <label class="bo-field-label">Icon Emoji <span style="color:var(--accent)">*</span></label>
+                    @await Component.InvokeAsync("EmojiPicker", new { inputName = "IconEmoji", currentValue = Model.IconEmoji, inputId = "IconEmoji" })
+                    <span asp-validation-for="IconEmoji" class="bo-field-error"></span>
+                </div>
+            </div>
+
+            <div style="margin-bottom:14px">
+                <label class="bo-field-label">Description <span style="color:var(--accent)">*</span></label>
+                <input asp-for="Description" class="bo-input" required maxlength="500" />
+                <span asp-validation-for="Description" class="bo-field-error"></span>
+            </div>
+
+            <div style="margin-bottom:18px;max-width:280px">
+                <label class="bo-field-label">Category <span style="color:var(--accent)">*</span></label>
+                <select asp-for="Category" class="bo-select" required>
+                    @foreach (var cat in categories!)
+                    {
+                        <option value="@((int)cat)" selected="@(Model.Category == cat)">@cat</option>
+                    }
+                </select>
+                <span asp-validation-for="Category" class="bo-field-error"></span>
+            </div>
+
+            <div style="margin-bottom:18px">
+                <label class="bo-field-label">Config JSON <span style="color:var(--accent)">*</span></label>
+                <div class="json-editor-toolbar">
+                    <button type="button" class="bo-btn bo-btn-ghost bo-btn-sm" onclick="jeFormat()"><i class="boi boi-sm boi-settings boi-mr"></i>Format</button>
+                    <button type="button" class="bo-btn bo-btn-ghost bo-btn-sm" onclick="jeCopy()">Copy JSON</button>
+                    <span id="je-parse-error" style="display:none;color:var(--accent);font-size:11px;margin-left:auto;font-family:var(--mono)"></span>
+                </div>
+                <div id="je-mount" class="json-editor-mount"></div>
+                <textarea id="ConfigJson" name="ConfigJson" style="display:none">@Model.ConfigJson</textarea>
+                <span asp-validation-for="ConfigJson" class="bo-field-error"></span>
+            </div>
+
+            <div style="display:flex;gap:10px">
+                <button type="submit" class="bo-btn bo-btn-primary"><i class="boi boi-sm boi-save boi-mr"></i>Save Changes</button>
+                <a asp-action="Detail" asp-route-id="@templateId" class="bo-btn bo-btn-ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@@0.50.0/min/vs/loader.js"></script>
+<script>
+(function () {
+    var initial = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ConfigJson ?? ""));
+    var _editor;
+    require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs' } });
+    require(['vs/editor/editor.main'], function () {
+        var value = initial;
+        try { value = JSON.stringify(JSON.parse(initial || '{}'), null, 2); } catch (e) { value = initial || '{\n\n}'; }
+        _editor = monaco.editor.create(document.getElementById('je-mount'), {
+            value: value,
+            language: 'json',
+            theme: 'vs-dark',
+            fontSize: 13,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            tabSize: 2,
+            lineNumbers: 'on',
+            renderLineHighlight: 'all',
+            scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 }
+        });
+        // Sync initial value so submit works even without editing
+        document.getElementById('ConfigJson').value = _editor.getValue();
+        _editor.onDidChangeModelContent(function () {
+            // Always keep hidden textarea in sync so the form POST always has latest value
+            var v = _editor.getValue();
+            document.getElementById('ConfigJson').value = v;
+            var err = document.getElementById('je-parse-error');
+            try { JSON.parse(v); err.style.display = 'none'; }
+            catch (e) { err.textContent = '\u26a0 ' + e.message; err.style.display = ''; }
+        });
+    });
+    window.jeFormat = function () { _editor && _editor.getAction('editor.action.formatDocument').run(); };
+    window.jeCopy   = function () {
+        navigator.clipboard.writeText(_editor ? _editor.getValue() : '').then(function () { boShowToast('Copied!', 'success'); });
+    };
+    document.querySelector('form').addEventListener('submit', function (e) {
+        // Final sync in case submit fires before onDidChangeModelContent (e.g. programmatic changes)
+        var val = _editor ? _editor.getValue() : document.getElementById('ConfigJson').value;
+        document.getElementById('ConfigJson').value = val;
+        if (!val || !val.trim()) {
+            e.preventDefault();
+            boShowToast('Config JSON cannot be empty', 'error');
+            return;
+        }
+        try { JSON.parse(val); } catch (ex) {
+            e.preventDefault();
+            boShowToast('Invalid JSON \u2014 fix syntax errors before saving', 'error');
+        }
+    });
+}());
+</script>
+}

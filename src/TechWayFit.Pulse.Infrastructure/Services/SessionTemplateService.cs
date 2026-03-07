@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
@@ -11,6 +12,13 @@ namespace TechWayFit.Pulse.Infrastructure.Services;
 
 public sealed class SessionTemplateService : ISessionTemplateService
 {
+    /// <summary>Shared options for reading template JSON — case-insensitive so property names in any casing are accepted.</summary>
+    private static readonly JsonSerializerOptions _readOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: true) }
+    };
+
     private readonly ISessionTemplateRepository _templateRepository;
     private readonly ISessionService _sessionService;
     private readonly IActivityService _activityService;
@@ -56,7 +64,7 @@ public sealed class SessionTemplateService : ISessionTemplateService
 
         try
         {
-            return JsonSerializer.Deserialize<SessionTemplateConfig>(template.ConfigJson);
+            return JsonSerializer.Deserialize<SessionTemplateConfig>(template.ConfigJson, _readOptions);
         }
         catch (JsonException ex)
         {
@@ -308,8 +316,10 @@ public sealed class SessionTemplateService : ISessionTemplateService
         Directory.CreateDirectory(templatesPath);
         Directory.CreateDirectory(installedPath);
 
-        // Get all JSON template files
-        var templateFiles = Directory.GetFiles(templatesPath, "*.json", SearchOption.TopDirectoryOnly);
+        // Get all JSON template files from root and category subfolders (exclude installed/)
+        var templateFiles = Directory.GetFiles(templatesPath, "*.json", SearchOption.AllDirectories)
+            .Where(f => !f.StartsWith(installedPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
         
         if (templateFiles.Length == 0)
         {

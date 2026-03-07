@@ -55,6 +55,7 @@ public static class BackOfficeCoreServiceExtensions
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IBackOfficeUserService, BackOfficeUserService>();
         services.AddScoped<IBackOfficeSessionService, BackOfficeSessionService>();
+        services.AddScoped<IBackOfficeTemplateService, BackOfficeTemplateService>();
         services.AddScoped<IBackOfficeAuthService, BackOfficeAuthService>();
 
         // Cache management — calls main app's internal API via named HttpClient.

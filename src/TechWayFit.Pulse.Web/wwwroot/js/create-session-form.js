@@ -34,6 +34,7 @@ if (!this.form || !this.dropZone || !this.submitBtn) {
         // Initialize components
         this.initFormBuilder();
         this.initFormSubmission();
+        this.prefillFromTemplate();
 
         // Expose methods globally for HTML onclick handlers
         window.removeFormField = (fieldId) => this.removeFormField(fieldId);
@@ -41,6 +42,93 @@ if (!this.form || !this.dropZone || !this.submitBtn) {
         window.updateFieldName = (fieldId, value) => this.updateFieldName(fieldId, value);
      
     console.log('Create Session Form initialized successfully');
+    }
+
+    /**
+     * Pre-fill join form and settings from template config (window.__templateConfig).
+     * Called once during init when a templateId is present on the page.
+     */
+    prefillFromTemplate() {
+        const config = window.__templateConfig;
+        if (!config) return;
+
+        // --- Display-name required toggle ---
+        const schema = config.joinFormSchema;
+        if (schema && Array.isArray(schema.fields)) {
+            const displayNameField = schema.fields.find(
+                f => (f.name || f.id || '').toLowerCase() === 'displayname'
+            );
+            if (displayNameField && displayNameField.required) {
+                const toggle = document.getElementById('displayNameRequired');
+                const flag = document.getElementById('displayNameRequiredFlag');
+                if (toggle) {
+                    toggle.checked = true;
+                    // Trigger hint text update (function defined inline in the view)
+                    if (typeof onDisplayNameRequiredChanged === 'function') {
+                        onDisplayNameRequiredChanged(true);
+                    }
+                }
+                if (flag) flag.value = 'true';
+            }
+
+            // --- Custom join form fields (everything except displayName) ---
+            const customFields = schema.fields.filter(
+                f => (f.name || f.id || '').toLowerCase() !== 'displayname'
+            );
+
+            if (customFields.length > 0) {
+                // Show the additional fields section
+                const toggleEl = document.getElementById('needMoreInfoToggle');
+                const sectionEl = document.getElementById('additionalFieldsSection');
+                if (toggleEl) toggleEl.checked = true;
+                if (sectionEl) sectionEl.style.display = 'block';
+
+                // Map template field types to builder types
+                const typeMap = {
+                    'text': 'text',
+                    'number': 'text',
+                    'select': 'dropdown',
+                    'dropdown': 'dropdown',
+                    'multiselect': 'dropdown',
+                    'boolean': 'checkbox',
+                    'checkbox': 'checkbox'
+                };
+
+                for (const field of customFields) {
+                    if (this.fieldCounter >= this.maxFields) break;
+
+                    const builderType = typeMap[(field.type || 'text').toLowerCase()] || 'text';
+                    this.addFormField(builderType);
+
+                    const fieldId = `field_${this.fieldCounter}`;
+                    const fieldEl = this.dropZone.querySelector(`[data-id="${fieldId}"]`);
+                    if (!fieldEl) continue;
+
+                    // Fill label
+                    const labelInput = fieldEl.querySelector('.field-label');
+                    if (labelInput) {
+                        labelInput.value = field.label || '';
+                        this.updateFieldName(fieldId, field.label || '');
+                    }
+
+                    // Fill required
+                    const requiredInput = fieldEl.querySelector('.field-required');
+                    if (requiredInput) requiredInput.checked = field.required === true;
+
+                    // Fill options for dropdown types
+                    if (builderType === 'dropdown') {
+                        const optionsInput = fieldEl.querySelector('.field-options');
+                        if (optionsInput && Array.isArray(field.options) && field.options.length > 0) {
+                            optionsInput.value = field.options.join(', ');
+                        }
+                    }
+                }
+
+                this.updateFormFieldsInput();
+            }
+        }
+
+        console.log('Pre-filled form from template config');
     }
 
     /**

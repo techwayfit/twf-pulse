@@ -265,9 +265,23 @@ ISessionRepository sessionRepository,
             var template = await _sessionTemplateService.GetTemplateByIdAsync(templateId.Value, cancellationToken);
             if (template != null)
             {
-                _logger.LogInformation("Template found: {Name}, {Description}", template.Name, template.Description);
-                ViewData["TemplateName"] = template.Name;
-                ViewData["TemplateDescription"] = template.Description;
+                _logger.LogInformation("Template found: {Name}", template.Name);
+                var config = await _sessionTemplateService.GetTemplateConfigAsync(templateId.Value, cancellationToken);
+                if (config != null)
+                {
+                    ViewData["TemplateName"] = config.Title;
+                    ViewData["TemplateDescription"] = config.Goal;
+                    ViewData["TemplateContext"] = config.Context;
+                    ViewData["TemplateConfigJson"] = System.Text.Json.JsonSerializer.Serialize(config, new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                    });
+                }
+                else
+                {
+                    ViewData["TemplateName"] = template.Name;
+                    ViewData["TemplateDescription"] = template.Description;
+                }
             }
             else
             {

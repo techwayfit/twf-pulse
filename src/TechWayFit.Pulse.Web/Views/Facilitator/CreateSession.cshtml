@@ -104,7 +104,7 @@
                                 <label class="form-label fw-medium" for="sessionContext">Context</label>
                                 <textarea class="form-control" name="sessionContext" id="sessionContext" rows="4"
                                           maxlength="2000"
-                                          placeholder="Provide detailed context to help AI generate relevant session content and activities (1000-2000 characters recommended)..."></textarea>
+                                          placeholder="Provide detailed context to help AI generate relevant session content and activities (1000-2000 characters recommended)...">@(ViewData["TemplateContext"] ?? "")</textarea>
                                 <div class="text-end">
                                     <span class="text-muted fs-7" id="contextCharCount">0 / 2000</span>
                                 </div>
@@ -317,6 +317,13 @@
 </div>
 
 @section Scripts {
+    <!-- Template config for pre-filling (set before main script so it is available on init) -->
+    @if (ViewData["TemplateConfigJson"] != null)
+    {
+        <script>
+            window.__templateConfig = @Html.Raw(ViewData["TemplateConfigJson"]);
+        </script>
+    }
     <!-- External JavaScript -->
     <script src="~/js/create-session-form.js" asp-append-version="true"></script>
 

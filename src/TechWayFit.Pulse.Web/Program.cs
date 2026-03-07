@@ -242,9 +242,6 @@ try
     builder.Services.AddScoped<ISessionGroupService, SessionGroupService>();
     builder.Services.AddScoped<ISessionTemplateService, TechWayFit.Pulse.Infrastructure.Services.SessionTemplateService>();
 
-    // Background service for template initialization (non-blocking startup)
-    builder.Services.AddHostedService<TechWayFit.Pulse.Web.BackgroundServices.TemplateInitializationHostedService>();
-
     // Token Services
     builder.Services.AddSingleton<IFacilitatorTokenService, FacilitatorTokenService>();
     builder.Services.AddScoped<IClientTokenService, ClientTokenService>();
@@ -362,9 +359,6 @@ try
 
     // Blazor pages fallback (only for routes that need interactivity)
     app.MapFallbackToPage("/_Host");
-
-    // Note: Template initialization now happens in background via TemplateInitializationHostedService
-    // This ensures fast app startup without blocking
 
     Log.Information("TechWayFit Pulse application started successfully");
     app.Run();

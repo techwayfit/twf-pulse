@@ -31,8 +31,7 @@
         <div class="bo-nav-links">
             <a class="bo-nav-link @(activeNav=="dashboard"?"active":"")" asp-controller="Dashboard" asp-action="Index"><i class="boi boi-sm boi-dashboard boi-mr"></i>Dashboard</a>
             <a class="bo-nav-link @(activeNav=="users"?"active":"")"     asp-controller="Users"     asp-action="Index"><i class="boi boi-sm boi-users boi-mr"></i>Users</a>
-            <a class="bo-nav-link @(activeNav=="sessions"?"active":"")" asp-controller="Sessions" asp-action="Index"><i class="boi boi-sm boi-sessions boi-mr"></i>Sessions</a>
-            <a class="bo-nav-link @(activeNav=="audit"?"active":"")"    asp-controller="Audit"    asp-action="Index"><i class="boi boi-sm boi-audit boi-mr"></i>Audit Log</a>
+            <a class="bo-nav-link @(activeNav=="sessions"?"active":"")" asp-controller="Sessions" asp-action="Index"><i class="boi boi-sm boi-sessions boi-mr"></i>Sessions</a>            <a class="bo-nav-link @(activeNav=="templates"?"active":"")" asp-controller="Templates" asp-action="Index"><i class="boi boi-sm boi-templates boi-mr"></i>Templates</a>            <a class="bo-nav-link @(activeNav=="audit"?"active":"")"    asp-controller="Audit"    asp-action="Index"><i class="boi boi-sm boi-audit boi-mr"></i>Audit Log</a>
             @if (isSA)
             {
                 <a class="bo-nav-link @(activeNav=="operators"?"active":"")" asp-controller="BackOfficeUsers" asp-action="Index"><i class="boi boi-sm boi-settings boi-mr"></i>Operators</a>
@@ -54,6 +53,7 @@
             <a class="bo-sidebar-item @(activeNav=="dashboard"?"active":"")" asp-controller="Dashboard" asp-action="Index"><span class="bo-sicon"><i class="boi boi-sm boi-dashboard"></i></span> Dashboard</a>
             <a class="bo-sidebar-item @(activeNav=="users"?"active":"")"     asp-controller="Users"     asp-action="Index"><span class="bo-sicon"><i class="boi boi-sm boi-users"></i></span> Users</a>
             <a class="bo-sidebar-item @(activeNav=="sessions"?"active":"")" asp-controller="Sessions" asp-action="Index"><span class="bo-sicon"><i class="boi boi-sm boi-sessions"></i></span> Sessions</a>
+            <a class="bo-sidebar-item @(activeNav=="templates"?"active":"")" asp-controller="Templates" asp-action="Index"><span class="bo-sicon"><i class="boi boi-sm boi-templates"></i></span> Templates</a>
             <div class="bo-sidebar-section">Admin</div>
             <a class="bo-sidebar-item @(activeNav=="audit"?"active":"")" asp-controller="Audit" asp-action="Index"><span class="bo-sicon"><i class="boi boi-sm boi-audit"></i></span> Audit Log</a>
             @if (isSA)
@@ -78,5 +78,6 @@ else
 {
     <script>boInitToasts('@Html.Raw(successMsg?.Replace("'","\\'"))', '@Html.Raw(errorMsg?.Replace("'","\\'"))');</script>
 }
+@RenderSection("Scripts", required: false)
 </body>
 </html>

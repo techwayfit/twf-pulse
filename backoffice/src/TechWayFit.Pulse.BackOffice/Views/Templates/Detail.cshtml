@@ -1,0 +1,104 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Templates.TemplateDetailViewModel
+@using TechWayFit.Pulse.Domain.Enums
+@{
+    ViewBag.Title = $"Template — {Model.Name}";
+    ViewBag.ActiveNav = "templates";
+    bool isSuperAdmin = User.IsInRole("SuperAdmin");
+}
+
+<div class="bo-breadcrumb"><a asp-action="Index">Templates</a> / @Model.Name</div>
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon yellow" style="font-size:22px;display:flex;align-items:center;justify-content:center">@Model.IconEmoji</div>
+        <div>
+            <div class="bo-page-title">@Model.Name</div>
+            <div class="bo-page-sub">
+                <span class="bo-pill pending">@Model.Category</span>
+                @if (Model.IsSystemTemplate)
+                {
+                    <span class="bo-pill live" style="margin-left:6px">System</span>
+                }
+                else
+                {
+                    <span class="bo-pill draft" style="margin-left:6px">Custom</span>
+                }
+            </div>
+        </div>
+    </div>
+    <div style="display:flex;gap:8px">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="bo-btn bo-btn-primary bo-btn-sm"><i class="boi boi-sm boi-pen boi-mr"></i>Edit</a>
+        <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">&larr; Back</a>
+    </div>
+</div>
+
+<div class="bo-two-col">
+    <div class="bo-card">
+        <div class="bo-card-header">Template Info</div>
+        <div class="bo-card-body">
+            <div class="bo-info-grid cols2">
+                <div class="bo-info-item" style="grid-column:1/-1">
+                    <div class="lbl">Description</div>
+                    <div class="val">@Model.Description</div>
+                </div>
+                <div class="bo-info-item"><div class="lbl">Category</div><div class="val">@Model.Category</div></div>
+                <div class="bo-info-item"><div class="lbl">Icon</div><div class="val" style="font-size:20px">@Model.IconEmoji</div></div>
+                <div class="bo-info-item"><div class="lbl">Created</div><div class="val bo-td-muted">@Model.CreatedAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+                <div class="bo-info-item"><div class="lbl">Updated</div><div class="val bo-td-muted">@Model.UpdatedAt.ToString("dd MMM yyyy HH:mm") UTC</div></div>
+                <div class="bo-info-item" style="grid-column:1/-1"><div class="lbl">ID</div><div class="val bo-td-mono" style="font-size:11px">@Model.Id</div></div>
+            </div>
+        </div>
+    </div>
+
+    @if (isSuperAdmin)
+    {
+        <div class="bo-card" style="border-color:var(--accent)">
+            <div class="bo-card-header" style="color:var(--accent)">Danger Zone</div>
+            <div class="bo-card-body">
+                <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px">Deleting a template is permanent and cannot be undone.</p>
+                <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Delete template \'@Model.Name\'? This cannot be undone.')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="bo-btn bo-btn-danger bo-btn-sm"><i class="boi boi-sm boi-trash boi-mr"></i>Delete Template</button>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="bo-card" style="margin-top:16px">
+    <div class="bo-card-header" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Config JSON</span>
+        <button type="button" class="bo-btn bo-btn-ghost bo-btn-sm" onclick="jeCopyDetail()">Copy JSON</button>
+    </div>
+    <div id="je-detail-mount" class="json-editor-mount readonly"></div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@@0.50.0/min/vs/loader.js"></script>
+<script>
+(function () {
+    var raw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ConfigJson ?? "{}" ));
+    var value = raw;
+    try { value = JSON.stringify(JSON.parse(raw), null, 2); } catch (e) {}
+    require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/min/vs' } });
+    require(['vs/editor/editor.main'], function () {
+        var ed = monaco.editor.create(document.getElementById('je-detail-mount'), {
+            value: value,
+            language: 'json',
+            theme: 'vs-dark',
+            readOnly: true,
+            fontSize: 13,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            lineNumbers: 'on',
+            renderLineHighlight: 'none',
+            scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 }
+        });
+        window.jeCopyDetail = function () {
+            navigator.clipboard.writeText(ed.getValue()).then(function () { boShowToast('Copied!', 'success'); });
+        };
+    });
+}());
+</script>
+}

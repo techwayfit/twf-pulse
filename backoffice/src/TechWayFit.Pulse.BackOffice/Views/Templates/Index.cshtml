@@ -1,0 +1,114 @@
+@model TechWayFit.Pulse.BackOffice.Core.Models.Templates.TemplateSearchResult
+@using TechWayFit.Pulse.Domain.Enums
+@{
+    ViewBag.Title = "Templates";
+    ViewBag.ActiveNav = "templates";
+    var query = ViewBag.Query as TechWayFit.Pulse.BackOffice.Core.Models.Templates.TemplateSearchQuery;
+    var categories = ViewBag.Categories as TemplateCategory[];
+    bool isSuperAdmin = User.IsInRole("SuperAdmin");
+}
+
+<div class="bo-page-header">
+    <div class="bo-page-title-row">
+        <div class="bo-page-icon yellow"><i class="boi boi-lg boi-templates"></i></div>
+        <div>
+            <div class="bo-page-title">Templates</div>
+            <div class="bo-page-sub">Session templates available to facilitators</div>
+        </div>
+    </div>
+    <a asp-action="Create" class="bo-btn bo-btn-primary bo-btn-sm"><i class="boi boi-sm boi-check boi-mr"></i>New Template</a>
+</div>
+
+<form method="get" class="bo-search-bar">
+    <div class="bo-search-field">
+        <label>Name</label>
+        <input type="text" name="name" class="bo-input" value="@query?.NameContains" placeholder="Search by name…" />
+    </div>
+    <div class="bo-search-field" style="max-width:200px">
+        <label>Category</label>
+        <select name="category" class="bo-select">
+            <option value="">All categories</option>
+            @foreach (var cat in categories!)
+            {
+                <option value="@((int)cat)" selected="@(query?.Category == cat)">@cat</option>
+            }
+        </select>
+    </div>
+    <div class="bo-search-field" style="max-width:150px">
+        <label>Type</label>
+        <select name="isSystem" class="bo-select">
+            <option value="">All</option>
+            <option value="true" selected="@(query?.IsSystem == true)">System</option>
+            <option value="false" selected="@(query?.IsSystem == false)">Custom</option>
+        </select>
+    </div>
+    <button type="submit" class="bo-btn bo-btn-primary bo-btn-sm"><i class="boi boi-sm boi-search boi-mr"></i>Search</button>
+    <a asp-action="Index" class="bo-btn bo-btn-ghost bo-btn-sm">Reset</a>
+</form>
+
+<div class="bo-card">
+    <div class="bo-table-wrap">
+        <table class="bo-table">
+            <thead>
+                <tr>
+                    <th style="width:40px"></th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Updated</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model.Items)
+                {
+                    <tr class="clickable" onclick="location.href='@Url.Action("Detail", "Templates", new { id = t.Id })'">
+                        <td style="font-size:20px;text-align:center">@t.IconEmoji</td>
+                        <td>
+                            <div class="bo-td-primary">@t.Name</div>
+                            <div class="bo-td-muted" style="font-size:11px;margin-top:2px">@t.Description</div>
+                        </td>
+                        <td><span class="bo-pill pending">@t.Category</span></td>
+                        <td>
+                            @if (t.IsSystemTemplate)
+                            {
+                                <span class="bo-pill live">System</span>
+                            }
+                            else
+                            {
+                                <span class="bo-pill draft">Custom</span>
+                            }
+                        </td>
+                        <td class="bo-td-muted">@t.UpdatedAt.ToString("dd MMM yyyy")</td>
+                        <td><a class="bo-link-btn" asp-action="Detail" asp-route-id="@t.Id">View →</a></td>
+                    </tr>
+                }
+                @if (!Model.Items.Any())
+                {
+                    <tr>
+                        <td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px">No templates found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.TotalCount > Model.PageSize)
+{
+    var totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;flex-wrap:wrap;gap:8px">
+        <span style="font-size:12px;color:var(--text-muted);font-family:var(--mono)">Page @Model.Page of @totalPages &mdash; @Model.TotalCount result(s)</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+            @for (var p = 1; p <= totalPages; p++)
+            {
+                <a class="bo-btn @(p == Model.Page ? "bo-btn-primary" : "bo-btn-ghost") bo-btn-sm"
+                   asp-action="Index"
+                   asp-route-name="@query?.NameContains"
+                   asp-route-category="@((int?)query?.Category)"
+                   asp-route-isSystem="@query?.IsSystem"
+                   asp-route-page="@p">@p</a>
+            }
+        </div>
+    </div>
+}
