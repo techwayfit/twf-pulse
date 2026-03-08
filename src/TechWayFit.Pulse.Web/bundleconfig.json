@@ -1,0 +1,55 @@
+[
+  {
+    "outputFileName": "wwwroot/css/pulse-bundle.min.css",
+    "inputFiles": [
+      "wwwroot/css/pulse.css",
+      "wwwroot/css/pulse-icons.css",
+      "wwwroot/css/pulse-components.css",
+      "wwwroot/css/custom.css",
+      "wwwroot/css/mobile.css",
+      "wwwroot/css/fullscreen-mode.css",
+      "wwwroot/css/live-session.css"
+    ],
+    "minify": {
+      "enabled": false
+    }
+  },
+  {
+    "outputFileName": "wwwroot/js/pulse-core.min.js",
+    "inputFiles": [
+      "wwwroot/js/qrcodegen.js",
+      "wwwroot/js/qrcode.js",
+      "wwwroot/js/fullscreen-mode.js",
+      "wwwroot/js/participant-session.js",
+      "wwwroot/js/qr-scanner.js",
+      "wwwroot/js/clipboard-helper.js"
+    ],
+    "minify": {
+      "enabled": false
+    }
+  },
+  {
+    "outputFileName": "wwwroot/js/pulse-dashboard.min.js",
+    "inputFiles": [
+      "wwwroot/js/poll-dashboard.js",
+      "wwwroot/js/wordcloud-dashboard.js",
+      "wwwroot/js/quadrant-dashboard.js"
+    ],
+    "minify": {
+      "enabled": false
+    }
+  },
+  {
+    "outputFileName": "wwwroot/js/pulse-activities.min.js",
+    "inputFiles": [
+      "wwwroot/js/csv-helper.js",
+      "wwwroot/js/activity-modals.js",
+      "wwwroot/js/live-activity-manager.js",
+      "wwwroot/js/break-timer.js",
+      "wwwroot/js/icon-helper.js"
+    ],
+    "minify": {
+      "enabled": false
+    }
+  }
+]

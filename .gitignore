@@ -423,3 +423,8 @@ FodyWeavers.xsd
 
 # Data Protection keys directory
 **/keys/
+
+# Bundled and minified CSS/JS files (generated at build time)
+**/wwwroot/css/*-bundle.min.css
+**/wwwroot/js/*-bundle.min.js
+**/wwwroot/js/pulse-*.min.js

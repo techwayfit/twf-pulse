@@ -15,14 +15,8 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-    <!-- Pulse Design System (Bootstrap Overrides) -->
-    <link rel="stylesheet" href="~/css/pulse.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/pulse-icons.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/pulse-components.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/custom.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/mobile.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/fullscreen-mode.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/live-session.css" asp-append-version="true" />
+    <!-- Pulse Design System Bundle (All CSS combined and minified) -->
+    <link rel="stylesheet" href="~/css/pulse-bundle.min.css" asp-append-version="true" />
     <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
 
     <!-- Page-specific styles -->
@@ -54,7 +48,7 @@
 
             <!-- Collapsible Navigation -->
             <div class="collapse navbar-collapse" id="navbarNav">
-                <nav class="navbar-nav ms-auto align-items-lg-center gap-2 py-3 py-lg-0">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-2 py-3 py-lg-0">
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <li class="nav-item dropdown">
@@ -150,7 +144,7 @@
                             </a>
                         </li>
                     }
-                </nav>
+                </ul>
             </div>
         </div>
     </nav>
@@ -183,41 +177,18 @@
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- QR Code Libraries - MUST load before blazor.server.js -->
-    <script src="js/qrcodegen.js"></script>
-    <script src="js/qrcode.js"></script>
-
-    <!-- Full-screen Mode -->
-    <script src="js/fullscreen-mode.js"></script>
-
-  <!-- Participant Session Management -->
-    <script src="js/participant-session.js"></script>
-
-    <!-- QR Code Scanner -->
-    <script src="js/qr-scanner.js"></script>
-
-    <!-- Clipboard Helper -->
-    <script src="js/clipboard-helper.js"></script>
+    <!-- Pulse Core Scripts Bundle (QR Code, Fullscreen, Session Management, etc.) -->
+    <script src="~/js/pulse-core.min.js" asp-append-version="true"></script>
 
     <!-- Chart.js for dashboard charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-wordcloud@4.3.0/build/index.umd.min.js"></script>
     
-    <!-- Dashboard Scripts -->
-    <script src="js/poll-dashboard.js"></script>
-    <script src="js/wordcloud-dashboard.js"></script>
-    <script src="js/quadrant-dashboard.js"></script>
+    <!-- Pulse Dashboard Scripts Bundle -->
+  <script src="~/js/pulse-dashboard.min.js" asp-append-version="true"></script>
     
-    <!-- CSV / TSV paste helper (reusable) -->
-    <script src="js/csv-helper.js"></script>
-
-    <!-- Activity Form Modals -->
-    <script src="js/activity-modals.js"></script>
-    <script src="js/live-activity-manager.js"></script>
-    <script src="js/break-timer.js"></script>
-
-    <!-- Icon Helper (emoji to Font Awesome conversion) -->
-    <script src="js/icon-helper.js"></script>
+    <!-- Pulse Activity Scripts Bundle -->
+    <script src="~/js/pulse-activities.min.js" asp-append-version="true"></script>
 
     <!-- Page-specific scripts -->
     @await RenderSectionAsync("Scripts", required: false)
