@@ -27,8 +27,8 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.File(
         path: Path.Combine("App_Data", "logs", "pulse-.txt"),
         rollingInterval: RollingInterval.Day,
-        retainedFileCountLimit: 30,
-    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+  retainedFileCountLimit: 30,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
 try
@@ -45,7 +45,7 @@ try
     // Explicitly load user secrets (needed for VS Code debugging)
     if (builder.Environment.IsDevelopment())
     {
-        builder.Configuration.AddUserSecrets<Program>();
+ builder.Configuration.AddUserSecrets<Program>();
     }
 
     // Configure activity defaults
@@ -66,26 +66,26 @@ try
 
     // Add authentication services
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-        .AddCookie(options =>
-     {
-         options.LoginPath = "/account/login";
-         options.LogoutPath = "/account/logout";
-         options.AccessDeniedPath = "/account/login";
-         options.ExpireTimeSpan = TimeSpan.FromHours(8); // 8 hours of inactivity
-         options.SlidingExpiration = true; // Extends timeout on activity
-         options.Cookie.Name = "TechWayFit.Pulse.Auth";
-         options.Cookie.HttpOnly = true;
-         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-         options.Cookie.SameSite = SameSiteMode.Lax;
-     });
+  .AddCookie(options =>
+      {
+        options.LoginPath = "/account/login";
+    options.LogoutPath = "/account/logout";
+            options.AccessDeniedPath = "/account/login";
+            options.ExpireTimeSpan = TimeSpan.FromHours(8); // 8 hours of inactivity
+  options.SlidingExpiration = true; // Extends timeout on activity
+    options.Cookie.Name = "TechWayFit.Pulse.Auth";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+  });
 
-    builder.Services.AddAuthorization();
+builder.Services.AddAuthorization();
 
     // Add Data Protection with custom file-based key storage
     var keysPath = Path.Combine(builder.Environment.ContentRootPath, "keys");
     var loggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
     var customRepo = new CustomFileSystemXmlRepository(
-        new DirectoryInfo(keysPath),
+     new DirectoryInfo(keysPath),
         loggerFactory.CreateLogger<CustomFileSystemXmlRepository>());
 
     builder.Services.AddSingleton<IXmlRepository>(customRepo);
@@ -96,10 +96,10 @@ try
     // Add services to the container.
     builder.Services.AddRazorPages();
     builder.Services.AddControllersWithViews()
-     .AddJsonOptions(options =>
+  .AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+  options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         });
 
     // Add Blazor Server for interactive pages only
@@ -108,23 +108,31 @@ try
         // Optimize Blazor Server for workshop scenarios
         options.DetailedErrors = builder.Environment.IsDevelopment();
         options.DisconnectedCircuitMaxRetained = 10; // Limit retained circuits
-        options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(3); // Reduce retention time
-        options.JSInteropDefaultCallTimeout = TimeSpan.FromSeconds(30);
-        options.MaxBufferedUnacknowledgedRenderBatches = 10; // Reduce memory usage
+      options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(3); // Reduce retention time
+   options.JSInteropDefaultCallTimeout = TimeSpan.FromSeconds(30);
+ options.MaxBufferedUnacknowledgedRenderBatches = 10; // Reduce memory usage
     });
 
     // Add session support for token storage
     builder.Services.AddSession(options =>
     {
-        options.IdleTimeout = TimeSpan.FromHours(2);
-        options.Cookie.HttpOnly = true;
-        options.Cookie.IsEssential = true;
+     options.IdleTimeout = TimeSpan.FromHours(2);
+     options.Cookie.HttpOnly = true;
+   options.Cookie.IsEssential = true;
     });
 
     // Add HttpContextAccessor for session access
     builder.Services.AddHttpContextAccessor();
-    builder.Services.AddMemoryCache();
- 
+    
+    // Add Memory Cache for content caching (cache tag helper)
+    // Configure with size limit for content-only caching
+    builder.Services.AddMemoryCache(options =>
+    {
+        options.SizeLimit = 100 * 1024 * 1024; // 100MB total cache size
+        options.CompactionPercentage = 0.25; // Compact by 25% when limit reached
+        options.ExpirationScanFrequency = TimeSpan.FromMinutes(5); // Check for expired entries every 5 min
+    });
+
     builder.Services.AddSingleton<IFacilitatorTokenStore, FacilitatorTokenStore>();
     builder.Services.AddSingleton<IParticipantTokenStore, ParticipantTokenStore>();
 
@@ -139,18 +147,18 @@ try
         if (!string.IsNullOrWhiteSpace(openAiBase))
         {
             client.BaseAddress = new Uri(openAiBase);
-            Log.Information("OpenAI HttpClient BaseAddress set to: {BaseAddress}", openAiBase);
+       Log.Information("OpenAI HttpClient BaseAddress set to: {BaseAddress}", openAiBase);
         }
-        else
-        {
-            Log.Warning("OpenAI endpoint not configured in settings");
+     else
+{
+ Log.Warning("OpenAI endpoint not configured in settings");
         }
         client.Timeout = TimeSpan.FromSeconds(90); // Increased for retry attempts
     })
     .AddStandardResilienceHandler(options =>
     {
         // Configure retry with exponential backoff
-        options.Retry.MaxRetryAttempts = 2;
+options.Retry.MaxRetryAttempts = 2;
         options.Retry.Delay = TimeSpan.FromSeconds(2);
         options.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
         options.Retry.UseJitter = true;
@@ -158,14 +166,14 @@ try
         // Configure circuit breaker
         options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(120);
         options.CircuitBreaker.FailureRatio = 0.7;
-        options.CircuitBreaker.MinimumThroughput = 5;
+      options.CircuitBreaker.MinimumThroughput = 5;
 
         // Configure timeout per attempt - increased for OpenAI
         options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(60);
 
-        // Configure total timeout - increased for retries
+      // Configure total timeout - increased for retries
         options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
-    });
+});
 
     // Shared HTTP client for all OpenAI/Azure OpenAI calls (singleton — stateless)
     builder.Services.AddSingleton<TechWayFit.Pulse.AI.Http.OpenAIApiClient>();
@@ -187,28 +195,28 @@ try
     if (aiEnabled && !string.IsNullOrWhiteSpace(openAiApiKey) && aiProvider.Equals("OpenAI", StringComparison.OrdinalIgnoreCase))
     {
         Log.Information("Registering REAL AI services (OpenAI API enabled)");
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.ParticipantAIService>();
+    builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.ParticipantAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.FacilitatorAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.SessionAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.FiveWhysAIService>();
     }
     else if (aiProvider.Equals("MLNet", StringComparison.OrdinalIgnoreCase))
     {
-        Log.Information("Registering ML.NET AI services (Microsoft ML.NET machine learning)");
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
+ Log.Information("Registering ML.NET AI services (Microsoft ML.NET machine learning)");
+   builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
+ builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.MLNetSessionAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.MockFiveWhysAIService>();
     }
-    else if (aiProvider.Equals("Intelligent", StringComparison.OrdinalIgnoreCase))
+ else if (aiProvider.Equals("Intelligent", StringComparison.OrdinalIgnoreCase))
     {
         Log.Information("Registering INTELLIGENT AI services (NLP-inspired keyword-based generation)");
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
+     builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.IntelligentSessionAIService>();
         builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.MockFiveWhysAIService>();
     }
-    builder.Services.AddKeyedScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.IntelligentSessionAIService>("Intelligent");
+  builder.Services.AddKeyedScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.IntelligentSessionAIService>("Intelligent");
 
     // Ensure IFiveWhysAIService always has a fallback registration (mock if not already registered by a provider above)
     builder.Services.TryAddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.MockFiveWhysAIService>();
@@ -231,7 +239,7 @@ try
     builder.Services.AddScoped<IDashboardService, DashboardService>();
     builder.Services.AddScoped<IAiQuotaService, AiQuotaService>();
     builder.Services.AddScoped<IPollDashboardService, PollDashboardService>();
-    builder.Services.AddScoped<IWordCloudDashboardService, WordCloudDashboardService>();
+  builder.Services.AddScoped<IWordCloudDashboardService, WordCloudDashboardService>();
     builder.Services.AddScoped<IRatingDashboardService, RatingDashboardService>();
     builder.Services.AddScoped<IGeneralFeedbackDashboardService, GeneralFeedbackDashboardService>();
     builder.Services.AddScoped<IQnADashboardService, QnADashboardService>();
@@ -260,7 +268,7 @@ try
     var emailProvider = builder.Configuration.GetValue<string>("Email:Provider");
     if (emailProvider?.Equals("Smtp", StringComparison.OrdinalIgnoreCase) == true)
     {
-        builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+    builder.Services.AddScoped<IEmailService, SmtpEmailService>();
     }
     else
     {
@@ -273,7 +281,7 @@ try
     {
         // Optimize SignalR for workshop scenarios
         options.KeepAliveInterval = TimeSpan.FromSeconds(15);
-        options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
         options.HandshakeTimeout = TimeSpan.FromSeconds(15);
         options.MaximumReceiveMessageSize = 32 * 1024; // 32KB limit
     });
@@ -305,12 +313,12 @@ try
     {
         OnPrepareResponse = ctx =>
     {
-        // Add cache headers for better performance
-        if (ctx.File.Name.EndsWith(".css") || ctx.File.Name.EndsWith(".js"))
-        {
-            ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=600");
+         // Add cache headers for better performance
+if (ctx.File.Name.EndsWith(".css") || ctx.File.Name.EndsWith(".js"))
+ {
+    ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=600");
+       }
         }
-    }
     });
 
     // Add Serilog request logging middleware
@@ -318,9 +326,9 @@ try
     {
         options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
         options.GetLevel = (httpContext, elapsed, ex) => ex != null
-            ? LogEventLevel.Error
-            : httpContext.Response.StatusCode > 499
-       ? LogEventLevel.Error
+        ? LogEventLevel.Error
+    : httpContext.Response.StatusCode > 499
+         ? LogEventLevel.Error
         : LogEventLevel.Information;
     });
 
@@ -346,13 +354,13 @@ try
     // Map SignalR hub for real-time features
     app.MapHub<TechWayFit.Pulse.Web.Hubs.WorkshopHub>("/hubs/workshop");
 
-    // Map Blazor Hub (only for interactive pages)
+ // Map Blazor Hub (only for interactive pages)
     app.MapBlazorHub();
 
     // Map MVC routes for static pages (no WebSocket)
     app.MapControllerRoute(
         name: "default",
-        pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
     // Map Razor Pages (for Blazor interactive components only)
     app.MapRazorPages();
@@ -361,7 +369,7 @@ try
     app.MapFallbackToPage("/_Host");
 
     Log.Information("TechWayFit Pulse application started successfully");
-    app.Run();
+ app.Run();
 }
 catch (Exception ex)
 {

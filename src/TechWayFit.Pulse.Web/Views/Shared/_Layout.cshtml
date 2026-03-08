@@ -24,154 +24,47 @@
     
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <!-- Navigation Header - Modern Mobile-Friendly -->
-    <nav class="navbar navbar-expand-lg sticky-top pulse-navbar">
-        <div class="container container-wide">
-            <!-- Brand -->
-            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-                <span class="brand-badge" aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 12h4l2-5 4 10 2-5h6" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </span>
-                <div class="lh-sm">
-                    <div class="brand-title">Pulse</div>
-                    <span class="brand-sub">by TechWayFit</span>
-                </div>
-            </a>
-
-            <!-- Mobile Hamburger Toggle -->
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- Collapsible Navigation -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-lg-center gap-2 py-3 py-lg-0">
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        <li class="nav-item dropdown">
-                            <a class="nav-link nav-link-animated d-flex align-items-center" href="#" id="mySessionsDropdown" 
-                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span>My Sessions</span>
-                                <i class="fas fa-chevron-down ms-2"></i>
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="mySessionsDropdown">
-                                <li>
-                                    <a class="dropdown-item" href="/facilitator/dashboard">
-                                        <i class="fas fa-th-large me-2"></i>Dashboard
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="/facilitator/groups">
-                                        <i class="fas fa-folder me-2"></i>Manage Groups
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item" href="/facilitator/create-session">
-                                        <i class="fas fa-plus-circle me-2"></i>Create New Session
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        
-                        <!-- User Account Dropdown -->
-                        <li class="nav-item dropdown ms-lg-2">
-                            <button class="btn btn-primary btn-sm d-flex align-items-center gap-2 w-100 w-lg-auto justify-content-between" 
-                                    type="button" 
-                                    id="userMenuDropdown" 
-                                    data-bs-toggle="dropdown" 
-                                    aria-expanded="false">
-                                <div class="user-initials-badge">
-                                    @{
-                                        var displayName = User.Identity.Name ?? "User";
-                                        var initials = string.Join("", displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => w[0]));
-                                    }
-                                    @initials.ToUpper()
-                                </div>
-                                <span>@displayName</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
-                                </svg>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userMenuDropdown">
-                                <li>
-                                    <a class="dropdown-item" href="/account/profile">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
-                                            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664z"/>
-                                        </svg>
-                                        Profile
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="/facilitator/dashboard">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
-                                            <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5zM1.5 1a.5.5 0 0 0-.5.5V5h4V1zM5 6H1v4h4zm1 4h4V6H6zm-1 1H1v3.5a.5.5 0 0 0 .5.5H5zm1 0v4h4v-4zm5 0v4h3.5a.5.5 0 0 0 .5-.5V11zm0-1h4V6h-4zm0-5h4V1.5a.5.5 0 0 0-.5-.5H11zm-1 0V1H6v4z"/>
-                                        </svg>
-                                        My Sessions
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form method="post" action="/account/logout" class="px-3">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
-                                                <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
-                                                <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-                                            </svg>
-                                            Sign Out
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    }
-                    else
-                    {
-                        <li class="nav-item">
-                            <a class="btn btn-outline-primary px-4 d-inline-flex align-items-center gap-2" href="/account/login">
-                                <i class="fas fa-user"></i>
-                                <span>Sign In</span>
-                            </a>
-                        </li>
-                        <li class="nav-item ms-lg-2">
-                            <a class="btn btn-primary px-4 d-inline-flex align-items-center gap-2" href="/participant/join">
-                                <i class="fas fa-users"></i>
-                                <span>Join Workshop</span>
-                            </a>
-                        </li>
-                    }
-                </ul>
-            </div>
-        </div>
-    </nav>
+  <!-- Navigation - Always dynamic, never cached -->
+    @await Html.PartialAsync("_Navigation")
 
     <main class="flex-grow-1">
+        @* 
+            Cache only the main content area using the <cache> tag helper.
+            This allows navigation to be dynamic while caching the page content.
+        All users (authenticated and anonymous) share the same cached content.
+        *@
+        @if (ViewData["CacheDuration"] != null)
+        {
+       var cacheDuration = (int)ViewData["CacheDuration"];
+            <cache expires-after="@TimeSpan.FromSeconds(cacheDuration)" vary-by="@Context.Request.Path">
+ @RenderBody()
+    </cache>
+        }
+  else
+        {
         @RenderBody()
+    }
     </main>
 
     <!-- Footer - Dark Theme -->
     <footer class="footer-dark">
         <div class="container container-wide">
-            <div class="footer-grid">
+    <div class="footer-grid">
                 <div class="footer-copyright">&copy; @DateTime.Now.Year TechWayFit Pulse. All rights reserved.</div>
-                <div class="footer-links">
-                    <a href="/home/privacy" class="text-decoration-none">Privacy</a>
-                    <a href="/home/terms" class="text-decoration-none">Terms</a>
-                    <a href="/home/support" class="text-decoration-none">Support</a>
-                </div>
+      <div class="footer-links">
+           <a href="/home/privacy" class="text-decoration-none">Privacy</a>
+           <a href="/home/terms" class="text-decoration-none">Terms</a>
+         <a href="/home/support" class="text-decoration-none">Support</a>
+    </div>
             </div>
-        </div>
+      </div>
     </footer>
 
     <!-- Blazor Error UI (for Blazor pages only) -->
     <div id="blazor-error-ui" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: lightyellow; color: black; padding: 10px; text-align: center; z-index: 9999;">
         An unhandled error has occurred.
         <a href="" class="reload" style="margin-left: 10px;">Reload</a>
-        <a class="dismiss" style="margin-left: 10px; cursor: pointer;"><i class="fas fa-xmark"></i></a>
+      <a class="dismiss" style="margin-left: 10px; cursor: pointer;"><i class="fas fa-xmark"></i></a>
     </div>
 
     <!-- Bootstrap JS Bundle -->
@@ -182,10 +75,10 @@
 
     <!-- Chart.js for dashboard charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-wordcloud@4.3.0/build/index.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-wordcloud@4.3.0/build/index.umd.min.js"></script>
     
     <!-- Pulse Dashboard Scripts Bundle -->
-  <script src="~/js/pulse-dashboard.min.js" asp-append-version="true"></script>
+    <script src="~/js/pulse-dashboard.min.js" asp-append-version="true"></script>
     
     <!-- Pulse Activity Scripts Bundle -->
     <script src="~/js/pulse-activities.min.js" asp-append-version="true"></script>

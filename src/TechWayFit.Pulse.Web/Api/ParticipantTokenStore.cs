@@ -111,7 +111,8 @@ public sealed class ParticipantTokenStore : IParticipantTokenStore
         var cacheKey = GetCacheKey(sessionId, participantId);
         _cache.Set(cacheKey, auth, new MemoryCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = CacheDuration
+            AbsoluteExpirationRelativeToNow = CacheDuration,
+            Size = 1 // Required when SizeLimit is configured on MemoryCache
         });
     }
 }

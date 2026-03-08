@@ -10,9 +10,11 @@ public class HomeController : Controller
     /// <summary>
     /// Homepage - renders as pure HTML without Blazor/WebSocket overhead
     /// </summary>
-    public IActionResult Index()
+  public IActionResult Index()
     {
- return View();
+        // Cache duration passed to view for <cache> tag helper
+    ViewData["CacheDuration"] = 300; // 5 minutes in seconds
+        return View();
     }
 
     /// <summary>
@@ -20,6 +22,7 @@ public class HomeController : Controller
     /// </summary>
     public IActionResult Privacy()
     {
+        ViewData["CacheDuration"] = 3600; // 1 hour
         return View();
     }
 
@@ -28,23 +31,26 @@ public class HomeController : Controller
     /// </summary>
     public IActionResult Terms()
     {
+ ViewData["CacheDuration"] = 3600; // 1 hour
         return View();
-    }
+  }
 
     /// <summary>
     /// Support page
     /// </summary>
-    public IActionResult Support()
+  public IActionResult Support()
     {
-        return View();
+        ViewData["CacheDuration"] = 1800; // 30 minutes
+     return View();
     }
 
     /// <summary>
-    /// Getting Started guide
+/// Getting Started guide
     /// </summary>
     public IActionResult GettingStarted()
     {
-        return View();
+ViewData["CacheDuration"] = 1800; // 30 minutes
+  return View();
     }
 
     /// <summary>
@@ -52,11 +58,16 @@ public class HomeController : Controller
     /// </summary>
     public IActionResult ActivityTypes()
     {
-        return View();
+      ViewData["CacheDuration"] = 1800; // 30 minutes
+  return View();
     }
 
+    /// <summary>
+    /// Participant Guide documentation
+    /// </summary>
     public IActionResult ParticipantGuide()
     {
+        ViewData["CacheDuration"] = 1800; // 30 minutes
         return View();
     }
 
@@ -64,7 +75,8 @@ public class HomeController : Controller
     /// Managing Sessions documentation
     /// </summary>
     public IActionResult ManagingSessions()
-    {
+{
+        ViewData["CacheDuration"] = 1800; // 30 minutes
         return View();
     }
 
@@ -73,15 +85,17 @@ public class HomeController : Controller
     /// </summary>
     public IActionResult AiFeatures()
     {
+        ViewData["CacheDuration"] = 1800; // 30 minutes
         return View();
     }
 
     /// <summary>
     /// Create from Template documentation
-    /// </summary>
+ /// </summary>
     public IActionResult CreateFromTemplate()
     {
-        return View();
+ViewData["CacheDuration"] = 1800; // 30 minutes
+  return View();
     }
 
     /// <summary>
@@ -89,6 +103,7 @@ public class HomeController : Controller
     /// </summary>
     public IActionResult Components()
     {
-        return View();
+        ViewData["CacheDuration"] = 1800; // 30 minutes
+    return View();
     }
 }

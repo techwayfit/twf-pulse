@@ -48,17 +48,19 @@ public sealed class FileService : IFileService
 
             var content = await File.ReadAllTextAsync(filePath, cancellationToken);
 
-            // Cache the content
+            // Cache the content with Size property for SizeLimit configuration
             var cacheOptions = new MemoryCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = DefaultCacheDuration,
                 SlidingExpiration = TimeSpan.FromMinutes(30),
-                Priority = CacheItemPriority.Normal
+                Priority = CacheItemPriority.Normal,
+                Size = content.Length // Required when SizeLimit is configured
             };
 
             _cache.Set(cacheKey, content, cacheOptions);
 
-            _logger.LogInformation("File read and cached successfully: {FilePath}", filePath);
+            _logger.LogInformation("File read and cached successfully: {FilePath}, size: {Size} bytes",
+                filePath, content.Length);
 
             return content;
         }

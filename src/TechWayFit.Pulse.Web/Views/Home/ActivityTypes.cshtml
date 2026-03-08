@@ -3,11 +3,17 @@
 }
 
 <main class="py-5">
-    <div class="container container-medium">
+    <div class="container">
         <!-- Header -->
         <div class="mb-5">
             <h1 class="display-5 fw-bold mb-3">Activity Types</h1>
-            <p class="lead text-muted">Choose the right activity type for your workshop goals</p>
+            <p class="lead text-muted">Choose from 10 interactive and utility activities to engage your workshop participants</p>
+        </div>
+
+        <!-- Activity Types Grid -->
+        <div class="mb-4">
+            <h2 class="h4 fw-semibold mb-3">Interactive Activities</h2>
+            <p class="text-muted mb-4">Collect real-time responses and feedback from participants</p>
         </div>
 
         <!-- Polls -->
@@ -19,20 +25,20 @@
                     </div>
                     <div>
                         <h2 class="h3 mb-1">Polls</h2>
-                        <p class="text-muted mb-0">Single or multiple choice questions with real-time voting</p>
+                        <p class="text-muted mb-0">Single or multiple choice voting with real-time results</p>
                     </div>
                 </div>
 
                 <h6 class="fw-semibold mb-2">Best For:</h6>
                 <ul class="text-muted mb-3">
-                    <li>Quick consensus gathering</li>
-                    <li>Decision making with defined options</li>
-                    <li>Team preferences and priorities</li>
-                    <li>Anonymous voting on sensitive topics</li>
+                    <li>Quick consensus gathering and decision making</li>
+                    <li>Team preferences and priority voting</li>
+                    <li>Anonymous opinions on sensitive topics</li>
+                    <li>Gauging group sentiment or understanding</li>
                 </ul>
 
                 <h6 class="fw-semibold mb-2">Features:</h6>
-                <div class="row g-3 mb-3">
+                <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
@@ -46,8 +52,8 @@
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Real-Time Charts</strong>
-                                <small class="text-muted">Bar charts update as votes come in</small>
+                                <strong class="d-block">Real-Time Bar Charts</strong>
+                                <small class="text-muted">Live vote counts and percentages</small>
                             </div>
                         </div>
                     </div>
@@ -55,8 +61,8 @@
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Percentage Display</strong>
-                                <small class="text-muted">See vote distribution at a glance</small>
+                                <strong class="d-block">Custom Option Descriptions</strong>
+                                <small class="text-muted">Add context to each choice</small>
                             </div>
                         </div>
                     </div>
@@ -71,9 +77,41 @@
                     </div>
                 </div>
 
-                <div class="alert alert-info border-0 mb-0">
-                    <i class="fas fa-image me-2"></i>
-                    <small><strong>Screenshot:</strong> Poll activity with bar chart results (to be added)</small>
+                <div class="alert alert-light border mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-user me-2"></i><strong>Participant View:</strong></div>
+                            <div class="border rounded p-2 bg-white">
+                                <div class="small text-muted mb-2">Select your choice:</div>
+                                <div class="border rounded p-2 mb-1 bg-primary bg-opacity-10 border-primary">✓ Option A</div>
+                                <div class="border rounded p-2 mb-1">Option B</div>
+                                <div class="border rounded p-2 mb-1">Option C</div>
+                                <button class="btn btn-sm btn-primary w-100 mt-2">Submit Response</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-chalkboard-teacher me-2"></i><strong>Facilitator View:</strong></div>
+                            <div class="border rounded p-2 bg-white">
+                                <div class="small fw-semibold mb-2">Results (12 votes)</div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center small mb-1">
+                                        <span>Option A</span><span class="text-primary fw-semibold">58.3%</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar" style="width: 58.3%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between align-items-center small mb-1">
+                                        <span>Option B</span><span class="text-muted">25.0%</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-secondary" style="width: 25%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -87,26 +125,26 @@
                     </div>
                     <div>
                         <h2 class="h3 mb-1">Word Clouds</h2>
-                        <p class="text-muted mb-0">Collect and visualize keywords from participants</p>
+                        <p class="text-muted mb-0">Collect and visualize keywords or short phrases</p>
                     </div>
                 </div>
 
                 <h6 class="fw-semibold mb-2">Best For:</h6>
                 <ul class="text-muted mb-3">
-                    <li>Brainstorming sessions</li>
-                    <li>Identifying common themes</li>
+                    <li>Brainstorming sessions and idea generation</li>
+                    <li>Identifying common themes across responses</li>
                     <li>Quick feedback rounds ("What's one word to describe...")</li>
                     <li>Energizing workshops with visual impact</li>
                 </ul>
 
                 <h6 class="fw-semibold mb-2">Features:</h6>
-                <div class="row g-3 mb-3">
+                <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Interactive Visualization</strong>
-                                <small class="text-muted">Words appear larger based on frequency</small>
+                                <strong class="d-block">Dynamic Visualization</strong>
+                                <small class="text-muted">Words scale by frequency automatically</small>
                             </div>
                         </div>
                     </div>
@@ -115,7 +153,7 @@
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
                                 <strong class="d-block">Live Updates</strong>
-                                <small class="text-muted">Cloud grows as participants submit words</small>
+                                <small class="text-muted">Cloud grows as participants submit</small>
                             </div>
                         </div>
                     </div>
@@ -123,8 +161,8 @@
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Color Coded</strong>
-                                <small class="text-muted">Visual appeal with automatic color schemes</small>
+                                <strong class="d-block">Multi-Word Support</strong>
+                                <small class="text-muted">Configure max words per submission (1-10)</small>
                             </div>
                         </div>
                     </div>
@@ -132,16 +170,35 @@
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Presentation Mode</strong>
-                                <small class="text-muted">Full-screen display for workshops</small>
+                                <strong class="d-block">Multiple Submissions</strong>
+                                <small class="text-muted">Optional: allow participants to submit more than once</small>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="alert alert-info border-0 mb-0">
-                    <i class="fas fa-image me-2"></i>
-                    <small><strong>Screenshot:</strong> Word cloud visualization with live submissions (to be added)</small>
+                <div class="alert alert-light border mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-user me-2"></i><strong>Participant View:</strong></div>
+                            <div class="border rounded p-3 bg-white">
+                                <div class="small text-muted mb-2">Enter up to 3 words:</div>
+                                <input type="text" class="form-control form-control-sm mb-2" placeholder="innovation" disabled />
+                                <button class="btn btn-sm btn-primary w-100">Submit Words</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-chalkboard-teacher me-2"></i><strong>Facilitator View:</strong></div>
+                            <div class="border rounded p-3 bg-gradient" style="background: linear-gradient(135deg, #f8f9fa 0%, #e0f2fe 100%);">
+                                <div class="text-center">
+                                    <span class="badge bg-primary me-1" style="font-size: 1.4em;">Innovation</span>
+                                    <span class="badge bg-success" style="font-size: 1.1em;">Collaboration</span>
+                                    <span class="badge bg-info me-1" style="font-size: 0.9em;">Agile</span>
+                                    <span class="badge bg-warning" style="font-size: 0.8em;">Speed</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -151,30 +208,30 @@
             <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-center mb-4">
                     <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
-                        <i class="fas fa-th fs-2 text-success"></i>
+                        <i class="fas fa-chart-scatter fs-2 text-success"></i>
                     </div>
                     <div>
-                        <h2 class="h3 mb-1">Quadrant Matrix (2x2)</h2>
-                        <p class="text-muted mb-0">Position items on a 2x2 grid for prioritization</p>
+                        <h2 class="h3 mb-1">Quadrant Matrix (Item Scoring)</h2>
+                        <p class="text-muted mb-0">Score items on two dimensions with bubble chart visualization</p>
                     </div>
                 </div>
 
                 <h6 class="fw-semibold mb-2">Best For:</h6>
                 <ul class="text-muted mb-3">
-                    <li>Priority mapping (Urgent/Important matrix)</li>
-                    <li>Effort vs. Impact analysis</li>
+                    <li>Priority mapping (e.g., Impact vs Effort analysis)</li>
                     <li>Risk vs. Reward assessment</li>
-                    <li>Any 2-dimensional evaluation</li>
+                    <li>Complexity vs. Business Value evaluation</li>
+                    <li>Any 2-dimensional item evaluation</li>
                 </ul>
 
                 <h6 class="fw-semibold mb-2">Features:</h6>
-                <div class="row g-3 mb-3">
+                <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
                                 <strong class="d-block">Custom Axis Labels</strong>
-                                <small class="text-muted">Define your own quadrant criteria</small>
+                                <small class="text-muted">Define your own scoring dimensions</small>
                             </div>
                         </div>
                     </div>
@@ -182,8 +239,8 @@
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Drag & Drop</strong>
-                                <small class="text-muted">Participants position items interactively</small>
+                                <strong class="d-block">Flexible Scoring Options</strong>
+                                <small class="text-muted">Use numeric (1-10), Fibonacci, or custom scales</small>
                             </div>
                         </div>
                     </div>
@@ -191,8 +248,8 @@
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Aggregated View</strong>
-                                <small class="text-muted">See all participant placements overlaid</small>
+                                <strong class="d-block">Bubble Chart Visualization</strong>
+                                <small class="text-muted">See aggregated positions with size by response count</small>
                             </div>
                         </div>
                     </div>
@@ -200,16 +257,172 @@
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Quadrant Analysis</strong>
-                                <small class="text-muted">See which quadrant has most items</small>
+                                <strong class="d-block">CSV Import</strong>
+                                <small class="text-muted">Bulk import up to 200 items</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Optional Notes</strong>
+                                <small class="text-muted">Let participants add context to their scores</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Dropdown Selection</strong>
+                                <small class="text-muted">Easy-to-use dropdowns for both axes</small>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="alert alert-info border-0 mb-0">
-                    <i class="fas fa-image me-2"></i>
-                    <small><strong>Screenshot:</strong> Quadrant matrix with positioned items (to be added)</small>
+                <div class="alert alert-light border mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-user me-2"></i><strong>Participant View:</strong></div>
+                            <div class="border rounded p-2 bg-white">
+                                <div class="small fw-semibold mb-2">Score: Deploy Automation</div>
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">Complexity</label>
+                                    <select class="form-select form-select-sm">
+                                        <option>Select score...</option>
+                                        <option selected>8 - High</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label small mb-1">Effort</label>
+                                    <select class="form-select form-select-sm">
+                                        <option selected>5 - Medium</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-sm btn-success w-100">Submit Score</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-chalkboard-teacher me-2"></i><strong>Facilitator View:</strong></div>
+                            <div class="border rounded p-2 bg-white position-relative" style="height: 180px;">
+                                <div class="position-absolute" style="top: 10px; right: 10px; font-size: 0.65rem; color: #94a3b8;">High Effort</div>
+                                <div class="position-absolute" style="bottom: 10px; right: 10px; font-size: 0.65rem; color: #94a3b8;">High Complexity →</div>
+                                <svg width="100%" height="100%">
+                                    <line x1="50%" y1="0" x2="50%" y2="100%" stroke="#e5e7eb" stroke-width="1" />
+                                    <line x1="0" y1="50%" x2="100%" y2="50%" stroke="#e5e7eb" stroke-width="1" />
+                                    <circle cx="70%" cy="35%" r="16" fill="#3b82f6" opacity="0.6" />
+                                    <circle cx="35%" cy="65%" r="12" fill="#10b981" opacity="0.6" />
+                                    <circle cx="60%" cy="60%" r="20" fill="#f59e0b" opacity="0.6" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Q&A -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="fas fa-lightbulb fs-2 text-warning"></i>
+                    </div>
+                    <div>
+                        <h2 class="h3 mb-1">Q&A (Questions & Answers)</h2>
+                        <p class="text-muted mb-0">Live question submission with upvoting and facilitator responses</p>
+                    </div>
+                </div>
+
+                <h6 class="fw-semibold mb-2">Best For:</h6>
+                <ul class="text-muted mb-3">
+                    <li>Open Q&A sessions and panel discussions</li>
+                    <li>Collecting questions during presentations</li>
+                    <li>Prioritizing which questions to answer first</li>
+                    <li>Capturing anonymous concerns or inquiries</li>
+                </ul>
+
+                <h6 class="fw-semibold mb-2">Features:</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Upvoting System</strong>
+                                <small class="text-muted">Participants upvote most important questions</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Anonymous Submissions</strong>
+                                <small class="text-muted">Optional anonymous mode for sensitive topics</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Mark as Answered</strong>
+                                <small class="text-muted">Facilitator can track which questions are addressed</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Question Limits</strong>
+                                <small class="text-muted">Control max questions per participant</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-user me-2"></i><strong>Participant View:</strong></div>
+                            <div class="border rounded p-2 bg-white">
+                                <textarea class="form-control form-control-sm mb-2" rows="2" placeholder="Type your question here..." disabled></textarea>
+                                <div class="form-check form-check-sm mb-2">
+                                    <input class="form-check-input" type="checkbox" id="anonCheck" />
+                                    <label class="form-check-label small" for="anonCheck">Submit anonymously</label>
+                                </div>
+                                <button class="btn btn-sm btn-primary w-100">Submit Question</button>
+                                <hr class="my-2" />
+                                <div class="small">
+                                    <div class="d-flex justify-content-between align-items-center p-1 border-start border-primary border-3 ps-2 mb-1">
+                                        <span>How do we reduce tech debt?</span>
+                                        <span class="badge bg-primary">↑ 12</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-chalkboard-teacher me-2"></i><strong>Facilitator View:</strong></div>
+                            <div class="border rounded p-2 bg-white">
+                                <div class="small fw-semibold mb-2">Questions (23 total)</div>
+                                <div class="border-start border-primary border-3 p-2 mb-1 bg-primary bg-opacity-10">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <span class="small flex-grow-1">How do we reduce tech debt?</span>
+                                        <span class="badge bg-primary ms-2">↑ 12</span>
+                                    </div>
+                                </div>
+                                <div class="border-start border-3 p-2 mb-1 text-muted" style="border-color: #e5e7eb !important; text-decoration: line-through;">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <span class="small flex-grow-1">What's the release timeline?</span>
+                                        <span class="badge bg-success-subtle text-success ms-2">✓ 8</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -218,31 +431,31 @@
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-center mb-4">
-                    <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
-                        <i class="fas fa-search fs-2 text-warning"></i>
+                    <div class="bg-danger bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="fas fa-search fs-2 text-danger"></i>
                     </div>
                     <div>
                         <h2 class="h3 mb-1">5 Whys Analysis</h2>
-                        <p class="text-muted mb-0">Guided root cause analysis with structured questioning</p>
+                        <p class="text-muted mb-0">AI-driven root cause analysis with structured questioning</p>
                     </div>
                 </div>
 
                 <h6 class="fw-semibold mb-2">Best For:</h6>
                 <ul class="text-muted mb-3">
-                    <li>Root cause analysis</li>
-                    <li>Problem-solving workshops</li>
-                    <li>Post-mortems and retrospectives</li>
-                    <li>Incident analysis</li>
+                    <li>Root cause analysis and problem-solving</li>
+                    <li>Post-mortems and incident retrospectives</li>
+                    <li>Deep-dive investigations into recurring issues</li>
+                    <li>Collaborative discovery of underlying causes</li>
                 </ul>
 
                 <h6 class="fw-semibold mb-2">Features:</h6>
-                <div class="row g-3 mb-3">
+                <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Guided Flow</strong>
-                                <small class="text-muted">Step-by-step questioning process</small>
+                                <strong class="d-block">AI-Powered Follow-Ups</strong>
+                                <small class="text-muted">Personalized "Why?" questions based on each answer</small>
                             </div>
                         </div>
                     </div>
@@ -250,8 +463,8 @@
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Tree Visualization</strong>
-                                <small class="text-muted">See the analysis chain clearly</small>
+                                <strong class="d-block">Configurable Depth</strong>
+                                <small class="text-muted">3-7 levels of "Why?" questioning</small>
                             </div>
                         </div>
                     </div>
@@ -259,8 +472,8 @@
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Structured Output</strong>
-                                <small class="text-muted">Export complete analysis chain</small>
+                                <strong class="d-block">Root Cause Identification</strong>
+                                <small class="text-muted">AI extracts and highlights discovered root causes</small>
                             </div>
                         </div>
                     </div>
@@ -268,64 +481,838 @@
                         <div class="d-flex align-items-start">
                             <i class="fas fa-check-circle text-success me-2 mt-1"></i>
                             <div>
-                                <strong class="d-block">Collaborative</strong>
-                                <small class="text-muted">Team can build on each other's insights</small>
+                                <strong class="d-block">Contextual Questions</strong>
+                                <small class="text-muted">Provide background context to guide AI questioning</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-user me-2"></i><strong>Participant View:</strong></div>
+                            <div class="border rounded p-2 bg-white">
+                                <div class="badge bg-danger-subtle text-danger mb-2">Question 3 of 5</div>
+                                <div class="small fw-semibold mb-2">Why was the deployment process not tested?</div>
+                                <textarea class="form-control form-control-sm mb-2" rows="2" placeholder="Type your answer..." disabled></textarea>
+                                <button class="btn btn-sm btn-primary w-100">Submit Answer</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-chalkboard-teacher me-2"></i><strong>Facilitator View:</strong></div>
+                            <div class="border rounded p-2 bg-white">
+                                <div class="small fw-semibold mb-2">Root Causes Found (8 participants)</div>
+                                <div class="border-start border-danger border-3 p-2 mb-1 bg-danger bg-opacity-10">
+                                    <div class="small fw-semibold">Lack of staging environment</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">Found by 5 participants</div>
+                                </div>
+                                <div class="border-start border-danger border-3 p-2 mb-1 bg-danger bg-opacity-10">
+                                    <div class="small fw-semibold">Insufficient testing resources</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">Found by 3 participants</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="fas fa-star fs-2 text-warning"></i>
+                    </div>
+                    <div>
+                        <h2 class="h3 mb-1">Rating Activities</h2>
+                        <p class="text-muted mb-0">Star or numeric ratings with distribution analysis</p>
+                    </div>
+                </div>
+
+                <h6 class="fw-semibold mb-2">Best For:</h6>
+                <ul class="text-muted mb-3">
+                    <li>Satisfaction surveys and feedback collection</li>
+                    <li>Likelihood-to-recommend (NPS) measurements</li>
+                    <li>Agreement scales and confidence ratings</li>
+                    <li>Evaluating multiple items or statements</li>
+                </ul>
+
+                <h6 class="fw-semibold mb-2">Features:</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Flexible Scales</strong>
+                                <small class="text-muted">1-5 or 1-10 scale options</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Custom Labels</strong>
+                                <small class="text-muted">Define low and high anchor labels</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Average Calculation</strong>
+                                <small class="text-muted">Real-time mean score display</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Distribution Charts</strong>
+                                <small class="text-muted">See breakdown by rating value</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-user me-2"></i><strong>Participant View:</strong></div>
+                            <div class="border rounded p-2 bg-white text-center">
+                                <div class="small text-muted mb-2">Rate your satisfaction:</div>
+                                <div class="mb-2">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="far fa-star text-muted"></i>
+                                </div>
+                                <div class="d-flex justify-content-between text-muted" style="font-size: 0.7rem;">
+                                    <span>Not at all</span>
+                                    <span>Extremely</span>
+                                </div>
+                                <button class="btn btn-sm btn-primary w-100 mt-2">Submit Rating</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-chalkboard-teacher me-2"></i><strong>Facilitator View:</strong></div>
+                            <div class="border rounded p-2 bg-white text-center">
+                                <div class="display-6 fw-bold text-primary mb-1">4.2</div>
+                                <div class="small text-muted mb-2">Average (18 responses)</div>
+                                <div class="d-flex justify-content-center gap-1">
+                                    <div style="width: 20%;">
+                                        <div class="bg-primary" style="height: 30px; border-radius: 4px 4px 0 0;"></div>
+                                        <div class="small">1</div>
+                                    </div>
+                                    <div style="width: 20%;">
+                                        <div class="bg-primary" style="height: 45px; border-radius: 4px 4px 0 0;"></div>
+                                        <div class="small">2</div>
+                                    </div>
+                                    <div style="width: 20%;">
+                                        <div class="bg-primary" style="height: 60px; border-radius: 4px 4px 0 0;"></div>
+                                        <div class="small">3</div>
+                                    </div>
+                                    <div style="width: 20%;">
+                                        <div class="bg-primary" style="height: 90px; border-radius: 4px 4px 0 0;"></div>
+                                        <div class="small">4</div>
+                                    </div>
+                                    <div style="width: 20%;">
+                                        <div class="bg-primary" style="height: 55px; border-radius: 4px 4px 0 0;"></div>
+                                        <div class="small">5</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- General Feedback -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-secondary bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="fas fa-comment fs-2 text-secondary"></i>
+                    </div>
+                    <div>
+                        <h2 class="h3 mb-1">General Feedback</h2>
+                        <p class="text-muted mb-0">Open-ended text responses for detailed qualitative feedback</p>
+                    </div>
+                </div>
+
+                <h6 class="fw-semibold mb-2">Best For:</h6>
+                <ul class="text-muted mb-3">
+                    <li>Open-ended feedback and suggestions</li>
+                    <li>Reflections and learning insights</li>
+                    <li>Detailed comments that don't fit structured activities</li>
+                    <li>Collecting diverse perspectives and ideas</li>
+                </ul>
+
+                <h6 class="fw-semibold mb-2">Features:</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Free-Form Text Input</strong>
+                                <small class="text-muted">No character limits or restrictions</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Multiple Submissions</strong>
+                                <small class="text-muted">Configure max responses per participant</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Real-Time Display</strong>
+                                <small class="text-muted">Feedback appears instantly for facilitator</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Timestamped Responses</strong>
+                                <small class="text-muted">Track when feedback was submitted</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-user me-2"></i><strong>Participant View:</strong></div>
+                            <div class="border rounded p-2 bg-white">
+                                <div class="small text-muted mb-2">Share your thoughts:</div>
+                                <textarea class="form-control form-control-sm mb-2" rows="3" placeholder="Type your feedback here..." disabled></textarea>
+                                <button class="btn btn-sm btn-primary w-100">Submit Feedback</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-chalkboard-teacher me-2"></i><strong>Facilitator View:</strong></div>
+                            <div class="border rounded p-2 bg-white">
+                                <div class="small fw-semibold mb-2">Recent Feedback (15 total)</div>
+                                <div class="border rounded p-2 mb-1 bg-light">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <span class="small fw-semibold">Sarah K.</span>
+                                        <span class="text-muted" style="font-size: 0.65rem;">2m ago</span>
+                                    </div>
+                                    <div class="small text-muted">Great session! Would love more hands-on exercises.</div>
+                                </div>
+                                <div class="border rounded p-2 mb-1 bg-light">
+                                    <div class="d-flex justify-content-between align-items-start mb-1">
+                                        <span class="small fw-semibold">Anonymous</span>
+                                        <span class="text-muted" style="font-size: 0.65rem;">5m ago</span>
+                                    </div>
+                                    <div class="small text-muted">The pacing was too fast for beginners.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Utility Activities -->
+        <div class="mb-4 mt-5 text-center">
+            <h2 class="h4 fw-semibold mb-3">Utility Activities</h2>
+            <p class="text-muted mb-4">Special activities for session management and insights</p>
+        </div>
+
+        <!-- AI Summary -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="fas fa-robot fs-2 text-primary"></i>
+                    </div>
+                    <div>
+                        <h2 class="h3 mb-1">AI Summary</h2>
+                        <p class="text-muted mb-0">Automatically generate session summaries with AI</p>
+                    </div>
+                </div>
+
+                <h6 class="fw-semibold mb-2">Best For:</h6>
+                <ul class="text-muted mb-3">
+                    <li>Mid-session recaps and progress updates</li>
+                    <li>End-of-workshop summaries</li>
+                    <li>Identifying key themes and takeaways</li>
+                    <li>Generating shareable session reports</li>
+                </ul>
+
+                <h6 class="fw-semibold mb-2">Features:</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Automatic Generation</strong>
+                                <small class="text-muted">AI reads all completed activities and responses</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Custom Instructions</strong>
+                                <small class="text-muted">Guide AI focus (e.g., "highlight action items")</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Activity Breakdown</strong>
+                                <small class="text-muted">Optional detailed summary per activity</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Read-Only Display</strong>
+                                <small class="text-muted">Participants view summary without input</small>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="alert alert-info border-0 mb-0">
-                    <i class="fas fa-image me-2"></i>
-                    <small><strong>Screenshot:</strong> 5 Whys interface with questioning flow (to be added)</small>
+                    <i class="fas fa-info-circle me-2"></i>
+                    <small><strong>Note:</strong> AI Summary activities are excluded from AI-generated agendas and require OpenAI API key configuration.</small>
                 </div>
             </div>
         </div>
 
-        <!-- Rating & Feedback -->
+        <!-- Break -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="fas fa-coffee fs-2 text-success"></i>
+                    </div>
+                    <div>
+                        <h2 class="h3 mb-1">Break</h2>
+                        <p class="text-muted mb-0">Scheduled breaks with countdown timer and ready signals</p>
+                    </div>
+                </div>
+
+                <h6 class="fw-semibold mb-2">Best For:</h6>
+                <ul class="text-muted mb-3">
+                    <li>Scheduled rest periods in long workshops</li>
+                    <li>Transition time between major sections</li>
+                    <li>Lunch or coffee breaks</li>
+                    <li>Managing workshop pacing and energy</li>
+                </ul>
+
+                <h6 class="fw-semibold mb-2">Features:</h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Countdown Timer</strong>
+                                <small class="text-muted">Visual countdown for participants</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Ready Signal</strong>
+                                <small class="text-muted">Participants can mark themselves as back</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Custom Messages</strong>
+                                <small class="text-muted">Personalize break instructions</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Facilitator Dashboard</strong>
+                                <small class="text-muted">See how many participants are back</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-user me-2"></i><strong>Participant View:</strong></div>
+                            <div class="border rounded p-3 bg-white text-center">
+                                <div class="mb-2"><i class="fas fa-coffee fs-1 text-success"></i></div>
+                                <div class="h5 mb-2">Break Time</div>
+                                <div class="small text-muted mb-3">Take a short break. We'll resume shortly!</div>
+                                <div class="display-6 fw-bold text-primary mb-2">12:45</div>
+                                <div class="small text-muted mb-3">Time Remaining</div>
+                                <button class="btn btn-sm btn-success">I'm Back!</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-muted small mb-2"><i class="fas fa-chalkboard-teacher me-2"></i><strong>Facilitator View:</strong></div>
+                            <div class="border rounded p-2 bg-white">
+                                <div class="row g-2 text-center">
+                                    <div class="col-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body p-2">
+                                                <div class="h4 mb-0 text-primary">23</div>
+                                                <div style="font-size: 0.65rem;" class="text-muted">TOTAL</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="card bg-success-subtle">
+                                            <div class="card-body p-2">
+                                                <div class="h4 mb-0 text-success">18</div>
+                                                <div style="font-size: 0.65rem;" class="text-muted">BACK</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="card bg-warning-subtle">
+                                            <div class="card-body p-2">
+                                                <div class="h4 mb-0 text-warning">5</div>
+                                                <div style="font-size: 0.65rem;" class="text-muted">AWAY</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info border-0 mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <small><strong>Note:</strong> Break activities are excluded from AI-generated agendas and must be added manually.</small>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Tips for Choosing Activities -->
+        <div class="card border-0 shadow-sm bg-primary-subtle mb-4">
+            <div class="card-body p-4 p-md-5">
+                <h2 class="h4 fw-semibold mb-4">
+                    <i class="fas fa-lightbulb text-warning me-2"></i>Tips for Choosing Activities
+                </h2>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-bullseye text-primary me-3 mt-1 fs-4"></i>
+                            <div>
+                                <h6 class="fw-semibold mb-2">Match Your Goal</h6>
+                                <p class="text-muted small mb-0">
+                                    Need quick decisions? Use <strong>Polls</strong>.
+                                    Want deep insights? Try <strong>5 Whys</strong> or <strong>General Feedback</strong>.
+                                    Prioritizing features? Choose <strong>Quadrant Matrix</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-clock text-success me-3 mt-1 fs-4"></i>
+                            <div>
+                                <h6 class="fw-semibold mb-2">Consider Time</h6>
+                                <p class="text-muted small mb-0">
+                                    Short on time? <strong>Polls</strong> and <strong>Word Clouds</strong> are quick (2-5 min).
+                                    Need deeper analysis? <strong>5 Whys</strong> and <strong>Quadrant</strong> take 10-15 min.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-users text-info me-3 mt-1 fs-4"></i>
+                            <div>
+                                <h6 class="fw-semibold mb-2">Group Size Matters</h6>
+                                <p class="text-muted small mb-0">
+                                    Large groups? <strong>Polls</strong> and <strong>Word Clouds</strong> work well.
+                                    Smaller teams? <strong>Q&A</strong> and <strong>5 Whys</strong> enable deeper discussion.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-layer-group text-warning me-3 mt-1 fs-4"></i>
+                            <div>
+                                <h6 class="fw-semibold mb-2">Mix and Match</h6>
+                                <p class="text-muted small mb-0">
+                                    Combine multiple activity types in one session. Start with <strong>Word Cloud</strong>
+                                    for ideation, use <strong>Quadrant</strong> for prioritization, end with <strong>Rating</strong> for feedback.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-robot text-primary me-3 mt-1 fs-4"></i>
+                            <div>
+                                <h6 class="fw-semibold mb-2">Use AI to Help</h6>
+                                <p class="text-muted small mb-0">
+                                    Not sure what to use? Try <strong>AI-Generated Agendas</strong> when creating your session.
+                                    AI will suggest appropriate activities based on your workshop goals.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-break text-success me-3 mt-1 fs-4"></i>
+                            <div>
+                                <h6 class="fw-semibold mb-2">Don't Forget Breaks</h6>
+                                <p class="text-muted small mb-0">
+                                    For workshops over 90 minutes, add <strong>Break</strong> activities
+                                    to maintain energy and engagement. Participants appreciate the pacing!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Coming Soon Activities -->
+        <div class="mb-4 mt-5 text-center">
+            <h2 class="h4 fw-semibold mb-3">Coming Soon</h2>
+            <p class="text-muted mb-4">Exciting new features and activities in development</p>
+        </div>
+
+        <!-- New Activity Types -->
         <div class="row g-4 mb-4">
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100">
+            <!-- Quiz -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100 opacity-75">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-info bg-opacity-10 rounded-3 p-3 me-3">
+                                <i class="fas fa-question-circle fs-4 text-info"></i>
+                            </div>
+                            <div>
+                                <h3 class="h5 mb-0">Quiz</h3>
+                                <span class="badge bg-info-subtle text-info small">In Development</span>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            Knowledge testing with correct/incorrect answers, scoring, and leaderboards.
+                        </p>
+                        <ul class="small text-muted mb-0">
+                            <li>Multiple choice with correct answers</li>
+                            <li>Individual scoring and leaderboards</li>
+                            <li>Time limits per question</li>
+                            <li>Instant feedback on answers</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Builder -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100 opacity-75">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                                <i class="fas fa-file-alt fs-4 text-primary"></i>
+                            </div>
+                            <div>
+                                <h3 class="h5 mb-0">Custom Forms</h3>
+                                <span class="badge bg-primary-subtle text-primary small">Planned</span>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            Build custom forms with multiple field types for data collection.
+                        </p>
+                        <ul class="small text-muted mb-0">
+                            <li>Drag-and-drop form builder</li>
+                            <li>Text, number, date, dropdown fields</li>
+                            <li>Conditional logic and validation</li>
+                            <li>Export to CSV/Excel</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Survey -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100 opacity-75">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                                <i class="fas fa-clipboard-list fs-4 text-success"></i>
+                            </div>
+                            <div>
+                                <h3 class="h5 mb-0">Multi-Question Survey</h3>
+                                <span class="badge bg-success-subtle text-success small">Planned</span>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            Comprehensive surveys with multiple question types and logic branching.
+                        </p>
+                        <ul class="small text-muted mb-0">
+                            <li>Mix polls, ratings, and text fields</li>
+                            <li>Skip logic based on responses</li>
+                            <li>Progress tracking for participants</li>
+                            <li>Detailed analytics dashboard</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trivia Showdown -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100 opacity-75">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                                <i class="fas fa-trophy fs-4 text-warning"></i>
+                            </div>
+                            <div>
+                                <h3 class="h5 mb-0">Trivia Showdown</h3>
+                                <span class="badge bg-warning-subtle text-warning small">Planned</span>
+                            </div>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            Fast-paced competitive trivia with live leaderboard and point multipliers.
+                        </p>
+                        <ul class="small text-muted mb-0">
+                            <li>Speed-based bonus points</li>
+                            <li>Real-time leaderboard updates</li>
+                            <li>Streak multipliers</li>
+                            <li>Team or individual mode</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estimation Game -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100 opacity-75">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
                             <div class="bg-danger bg-opacity-10 rounded-3 p-3 me-3">
-                                <i class="fas fa-star fs-4 text-danger"></i>
+                                <i class="fas fa-hand-point-up fs-4 text-danger"></i>
                             </div>
-                            <h3 class="h5 mb-0">Rating Activities</h3>
+                            <div>
+                                <h3 class="h5 mb-0">Estimation Game</h3>
+                                <span class="badge bg-danger-subtle text-danger small">Planned</span>
+                            </div>
                         </div>
-                        <p class="text-muted mb-3">
-                            Star or numeric ratings for satisfaction, likelihood, or agreement scales.
+                        <p class="text-muted small mb-3">
+                            Agile planning poker with simultaneous reveals and consensus tracking.
                         </p>
                         <ul class="small text-muted mb-0">
-                            <li>1-5 star ratings</li>
-                            <li>Average score calculation</li>
-                            <li>Distribution charts</li>
+                            <li>Story point estimation (Fibonacci)</li>
+                            <li>Simultaneous reveal animation</li>
+                            <li>Outlier highlighting</li>
+                            <li>Discussion prompts for disagreement</li>
                         </ul>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card border-0 shadow-sm h-100">
+
+            <!-- Team Battle -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100 opacity-75">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div class="bg-secondary bg-opacity-10 rounded-3 p-3 me-3">
-                                <i class="fas fa-comment fs-4 text-secondary"></i>
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                                <i class="fas fa-users-between-lines fs-4 text-primary"></i>
                             </div>
-                            <h3 class="h5 mb-0">General Feedback</h3>
+                            <div>
+                                <h3 class="h5 mb-0">Team Battle</h3>
+                                <span class="badge bg-primary-subtle text-primary small">Planned</span>
+                            </div>
                         </div>
-                        <p class="text-muted mb-3">
-                            Open-ended text responses for qualitative feedback and insights.
+                        <p class="text-muted small mb-3">
+                            Divide participants into teams for competitive challenges and activities.
                         </p>
                         <ul class="small text-muted mb-0">
-                            <li>Free-form text input</li>
-                            <li>Anonymous submissions</li>
-                            <li>Word count tracking</li>
+                            <li>Auto or manual team assignment</li>
+                            <li>Team points and rankings</li>
+                            <li>Head-to-head challenges</li>
+                            <li>Victory animations and badges</li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Platform Enhancements -->
+        <div class="card border-0 shadow-sm bg-light mb-4">
+            <div class="card-body p-4 p-md-5">
+                <h3 class="h4 fw-semibold mb-4">
+                    <i class="fas fa-sparkles text-primary me-2"></i>Platform Enhancements
+                </h3>
+
+                <div class="row g-4">
+                    <!-- Visual Analytics -->
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="fas fa-chart-pie text-info"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-semibold mb-2">Enhanced Visualizations</h6>
+                                <p class="text-muted small mb-2">More chart types for richer data insights:</p>
+                                <ul class="small text-muted mb-0">
+                                    <li>Donut and pie charts</li>
+                                    <li>Line graphs for trends</li>
+                                    <li>Heat maps for matrix data</li>
+                                    <li>Interactive hover tooltips</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Features -->
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="fas fa-brain text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-semibold mb-2">Advanced AI Features</h6>
+                                <p class="text-muted small mb-2">Smarter AI-powered capabilities:</p>
+                                <ul class="small text-muted mb-0">
+                                    <li>Sentiment analysis on feedback</li>
+                                    <li>Automatic theme clustering</li>
+                                    <li>Smart activity suggestions</li>
+                                    <li>Real-time translation support</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export Options -->
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="fas fa-download text-success"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-semibold mb-2">More Export Options</h6>
+                                <p class="text-muted small mb-2">Enhanced data export capabilities:</p>
+                                <ul class="small text-muted mb-0">
+                                    <li>PDF reports with branded templates</li>
+                                    <li>PowerPoint slide decks</li>
+                                    <li>JSON/XML API exports</li>
+                                    <li>Scheduled email reports</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Private Sessions -->
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="fas fa-lock text-warning"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-semibold mb-2">Private Sessions</h6>
+                                <p class="text-muted small mb-2">Control access with invitations:</p>
+                                <ul class="small text-muted mb-0">
+                                    <li>Invitation-only sessions</li>
+                                    <li>Email-based participant approval</li>
+                                    <li>Whitelist/blacklist management</li>
+                                    <li>Session passwords</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Integrations -->
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="fas fa-plug text-danger"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-semibold mb-2">Integrations</h6>
+                                <p class="text-muted small mb-2">Connect with your favorite tools:</p>
+                                <ul class="small text-muted mb-0">
+                                    <li>Microsoft Teams integration</li>
+                                    <li>Slack notifications</li>
+                                    <li>Google Calendar sync</li>
+                                    <li>Zoom/Teams meeting links</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gamification -->
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <div class="bg-secondary bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="fas fa-gamepad text-secondary"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-semibold mb-2">Gamification Features</h6>
+                                <p class="text-muted small mb-2">Make workshops more engaging:</p>
+                                <ul class="small text-muted mb-0">
+                                    <li>Achievement badges and rewards</li>
+                                    <li>Participation streaks</li>
+                                    <li>XP points and levels</li>
+                                    <li>Custom avatars and profiles</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-primary border-0 mt-4 mb-0">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-rocket fs-4 me-3 mt-1"></i>
+                        <div>
+                            <h6 class="fw-semibold mb-2">Want to influence our roadmap?</h6>
+                            <p class="small mb-0">
+                                We'd love to hear what features matter most to you!
+                                Share your ideas and vote on upcoming features at
+                                <a href="mailto:support@techwayfit.com" class="alert-link">support@techwayfit.com</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Back to Support -->
         <div class="text-center mt-4">
             <a href="/home/support" class="btn btn-lg btn-outline-secondary d-inline-flex align-items-center gap-2">

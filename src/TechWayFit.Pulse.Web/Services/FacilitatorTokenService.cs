@@ -37,8 +37,15 @@ public class FacilitatorTokenService : IFacilitatorTokenService
         var expiration = DateTimeOffset.UtcNow.Add(_tokenExpiry);
 
         // Store both directions for efficient lookup
-        _cache.Set(cacheKey, token, expiration);
-        _cache.Set($"token_user_{token}", facilitatorUserId, expiration);
+        // Set Size property for MemoryCache with SizeLimit
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpiration = expiration,
+            Size = 1 // Required when SizeLimit is configured
+        };
+
+        _cache.Set(cacheKey, token, cacheOptions);
+        _cache.Set($"token_user_{token}", facilitatorUserId, cacheOptions);
 
         _logger.LogInformation("Generated new facilitator token for user {UserId}", facilitatorUserId);
         
