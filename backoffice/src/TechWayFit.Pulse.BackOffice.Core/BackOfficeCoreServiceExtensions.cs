@@ -44,13 +44,7 @@ public static class BackOfficeCoreServiceExtensions
 
             services.AddScoped<BackOfficeDbContext>(sp => sp.GetRequiredService<BackOfficeMariaDbContext>());
         }
-        else
-        {
-            services.AddDbContext<BackOfficeSqliteDbContext>(options =>
-                options.UseSqlite(connectionString));
-
-            services.AddScoped<BackOfficeDbContext>(sp => sp.GetRequiredService<BackOfficeSqliteDbContext>());
-        }
+        
 
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IBackOfficeUserService, BackOfficeUserService>();
