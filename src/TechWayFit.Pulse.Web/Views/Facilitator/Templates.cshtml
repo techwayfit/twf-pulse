@@ -4,9 +4,18 @@
     ViewData["Title"] = "Session Templates - TechWayFit Pulse";
     var userEmail = ViewData["UserEmail"] as string;
     var userName = ViewData["UserName"] as string;
+
+    // Get selected category from query string
+    var selectedCategory = Context.Request.Query["category"].ToString();
+    if (string.IsNullOrWhiteSpace(selectedCategory))
+    {
+        selectedCategory = "all";
+    }
 }
 
-<div class="container container-wide">
+<!-- Full-width colored background -->
+<div class="bg-gradient-to-br from-gray-50 to-blue-50" >
+    <div class="container container-wide py-5">
         <!-- Header -->
         <div class="mb-4">
             <h2 class="mb-2">Session Templates</h2>
@@ -14,13 +23,13 @@
         </div>
 
         <!-- Alternative Creation Methods -->
-        <div class="alert alert-light border d-flex align-items-center gap-3 mb-4">
+        <div class="alert alert-light border d-flex align-items-center gap-3 mb-4 bg-gradient">
             <div class="flex-grow-1">
                 <div class="fw-semibold mb-1">Looking for other ways to create a session?</div>
-                <small class="text-muted">Create a session manually with custom activities</small>
+                <small class="text-white">Create a session manually with custom activities</small>
             </div>
             <div class="d-flex gap-2 flex-wrap">
-                <a href="@Url.Action("Create", "Facilitator")" class="btn btn-sm btn-outline-primary">
+                <a href="@Url.Action("Create", "Facilitator")" class="btn btn-sm btn-secondary">
                     <i class="fas fa-pencil me-1"></i>Create Manually
                 </a>
             </div>
@@ -30,50 +39,46 @@
         <div class="mb-4">
             <!-- Mobile: Dropdown -->
             <select class="form-select d-md-none" id="categoryFilterMobile" aria-label="Filter templates by category">
-                <option value="all">All Templates</option>
-                <option value="Retrospective">Retrospective</option>
-                <option value="ProductDiscovery">Product Discovery</option>
-                <option value="IncidentReview">Incident Review</option>
-                <option value="TeamBuilding">Team Building</option>
-                <option value="Training">Training</option>
+            <option value="all" selected="@(selectedCategory == "all")">All Templates</option>
+            <option value="Retrospective" selected="@(selectedCategory == "Retrospective")">Retrospective</option>
+            <option value="ProductDiscovery" selected="@(selectedCategory == "ProductDiscovery")">Product Discovery</option>
+            <option value="IncidentReview" selected="@(selectedCategory == "IncidentReview")">Incident Review</option>
+            <option value="TeamBuilding" selected="@(selectedCategory == "TeamBuilding")">Team Building</option>
+            <option value="Training" selected="@(selectedCategory == "Training")">Training</option>
             </select>
-            
+
             <!-- Desktop: Buttons -->
             <div class="d-none d-md-flex flex-wrap gap-2" role="group" aria-label="Filter templates by category">
-                <button type="button" class="btn btn-sm btn-outline-secondary active" data-filter="all">
+                <button type="button" class="btn btn-sm btn-outline-secondary @(selectedCategory == "all" ? "active" : "")" data-filter="all">
                     All Templates
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="Retrospective">
+                <button type="button" class="btn btn-sm btn-outline-secondary @(selectedCategory == "Retrospective" ? "active" : "")" data-filter="Retrospective">
                     <i class="fas fa-rotate me-1"></i>Retrospective
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="ProductDiscovery">
+                <button type="button" class="btn btn-sm btn-outline-secondary @(selectedCategory == "ProductDiscovery" ? "active" : "")" data-filter="ProductDiscovery">
                     <i class="fas fa-lightbulb me-1"></i>Product Discovery
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="IncidentReview">
+                <button type="button" class="btn btn-sm btn-outline-secondary @(selectedCategory == "IncidentReview" ? "active" : "")" data-filter="IncidentReview">
                     <i class="fas fa-triangle-exclamation me-1"></i>Incident Review
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="TeamBuilding">
+                <button type="button" class="btn btn-sm btn-outline-secondary @(selectedCategory == "TeamBuilding" ? "active" : "")" data-filter="TeamBuilding">
                     <i class="fas fa-handshake me-1"></i>Team Building
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-filter="Training">
+                <button type="button" class="btn btn-sm btn-outline-secondary @(selectedCategory == "Training" ? "active" : "")" data-filter="Training">
                     <i class="fas fa-book me-1"></i>Training
                 </button>
             </div>
         </div>
 
-        <!-- System Templates -->
-        @if (Model.Any(t => t.IsSystemTemplate))
+        <!-- All Templates (Alphabetically) -->
+        @if (Model.Any())
         {
             <div class="mb-5">
-                <h3 class="h5 mb-3 fw-semibold">
-                    <i class="fas fa-star text-primary me-2"></i>
-                    System Templates
-                </h3>
                 <div class="row g-3 g-md-4">
-                    @foreach (var template in Model.Where(t => t.IsSystemTemplate).OrderBy(t => t.Name))
+                    @foreach (var template in Model.OrderBy(t => t.Name))
                     {
                         <div class="col-12 col-sm-6 col-lg-4 template-card" data-category="@template.Category">
-                            <div class="card h-100 shadow-sm template-card-item position-relative">
+                            <div class="card h-100 template-card-item position-relative" style="border: 2.5px solid #7a9da3; transition: all 0.25s ease; box-shadow: 0 6px 16px rgba(13, 107, 114, 0.12);">
                                 <div class="card-body">
                                     <div class="d-flex align-items-start mb-3">
                                         <div class="template-icon-display fs-1 me-3" data-icon="@template.IconEmoji"></div>
@@ -83,21 +88,21 @@
                                         </div>
                                     </div>
                                     <p class="card-text text-muted">@template.Description</p>
-                                    
+
                                     @{
                                         var config = System.Text.Json.JsonSerializer.Deserialize<TechWayFit.Pulse.Domain.Models.SessionTemplateConfig>(template.ConfigJson);
                                         var activityCount = config?.Activities?.Count ?? 0;
                                     }
-                                    
+
                                     <div class="d-flex align-items-center text-muted small mb-3">
                                         <i class="bi bi-list-task me-1"></i>
                                         @activityCount @(activityCount == 1 ? "Activity" : "Activities")
                                     </div>
                                 </div>
-                                
+
                                 <!-- Desktop: Hover Overlay | Mobile: Always Visible Footer -->
                                 <div class="template-card-overlay">
-                                    <a href="@Url.Action("Create", "Facilitator", new { templateId = template.Id })" 
+                                    <a href="@Url.Action("Create", "Facilitator", new { templateId = template.Id })"
                                        class="btn btn-primary w-100">
                                         Use Template
                                     </a>
@@ -108,58 +113,9 @@
                 </div>
             </div>
         }
-
-        <!-- Custom Templates -->
-        @if (Model.Any(t => !t.IsSystemTemplate))
+        else
         {
-            <div class="mb-5">
-                <h3 class="h5 mb-3 fw-semibold">
-                    <i class="fas fa-pen text-success me-2"></i>
-                    Custom Templates
-                </h3>
-                <div class="row g-3 g-md-4">
-                    @foreach (var template in Model.Where(t => !t.IsSystemTemplate).OrderBy(t => t.Name))
-                    {
-                        <div class="col-12 col-sm-6 col-lg-4 template-card" data-category="@template.Category">
-                            <div class="card h-100 shadow-sm template-card-item position-relative">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-start mb-3">
-                                        <div class="template-icon-display fs-1 me-3" data-icon="@template.IconEmoji"></div>
-                                        <div class="flex-grow-1">
-                                            <h5 class="card-title mb-1">@template.Name</h5>
-                                            <span class="badge bg-secondary-subtle text-secondary">@template.Category</span>
-                                        </div>
-                                    </div>
-                                    <p class="card-text text-muted">@template.Description</p>
-                                    
-                                    @{
-                                        var config = System.Text.Json.JsonSerializer.Deserialize<TechWayFit.Pulse.Domain.Models.SessionTemplateConfig>(template.ConfigJson);
-                                        var activityCount = config?.Activities?.Count ?? 0;
-                                    }
-                                    
-                                    <div class="d-flex align-items-center text-muted small mb-3">
-                                        <i class="bi bi-list-task me-1"></i>
-                                        @activityCount @(activityCount == 1 ? "Activity" : "Activities")
-                                    </div>
-                                </div>
-                                
-                                <!-- Desktop: Hover Overlay | Mobile: Always Visible Footer -->
-                                <div class="template-card-overlay">
-                                    <a href="@Url.Action("Create", "Facilitator", new { templateId = template.Id })" 
-                                       class="btn btn-primary w-100">
-                                        Use Template
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-        }
-
-        <!-- No Templates Found -->
-        @if (!Model.Any())
-        {
+            <!-- No Templates Found -->
             <div class="text-center py-5">
                 <div class="fs-1 mb-3"><i class="fas fa-file-lines"></i></div>
                 <h5 class="text-muted">No templates available</h5>
@@ -167,51 +123,80 @@
             </div>
         }
     </div>
+</div>
 
 @section Scripts {
     <script>
         // Render template icons using IconHelper
         document.addEventListener('DOMContentLoaded', function() {
-            if (window.IconHelper) {
-                const iconElements = document.querySelectorAll('.template-icon-display[data-icon]');
-                iconElements.forEach(element => {
-                    const iconValue = element.getAttribute('data-icon');
-                    if (iconValue) {
-                        element.innerHTML = IconHelper.toFontAwesome(iconValue);
-                    }
-                });
+      if (window.IconHelper) {
+       const iconElements = document.querySelectorAll('.template-icon-display[data-icon]');
+     iconElements.forEach(element => {
+      const iconValue = element.getAttribute('data-icon');
+            if (iconValue) {
+     element.innerHTML = IconHelper.toFontAwesome(iconValue);
+      }
+   });
             }
-        });
+
+       // Auto-filter on page load if category is in URL
+     const urlParams = new URLSearchParams(window.location.search);
+        const categoryParam = urlParams.get('category');
+ if (categoryParam && categoryParam !== 'all') {
+         filterTemplates(categoryParam);
+            }
+});
 
         // Template filtering function
         function filterTemplates(filterValue) {
-            const cards = document.querySelectorAll('.template-card');
+         const cards = document.querySelectorAll('.template-card');
             cards.forEach(card => {
                 if (filterValue === 'all' || card.dataset.category === filterValue) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
+ card.style.display = '';
+   } else {
+        card.style.display = 'none';
+  }
+        });
+      }
 
         // Desktop: Button filtering
         document.querySelectorAll('[data-filter]').forEach(button => {
-            button.addEventListener('click', function() {
-                // Update active button
-                document.querySelectorAll('[data-filter]').forEach(btn => btn.classList.remove('active'));
+     button.addEventListener('click', function() {
+      // Update active button
+          document.querySelectorAll('[data-filter]').forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
-                
-                filterTemplates(this.dataset.filter);
+
+      // Update URL without page reload
+  const category = this.dataset.filter;
+      const url = new URL(window.location);
+              if (category === 'all') {
+        url.searchParams.delete('category');
+     } else {
+          url.searchParams.set('category', category);
+     }
+       window.history.pushState({}, '', url);
+
+          filterTemplates(category);
             });
         });
 
         // Mobile: Dropdown filtering
         const mobileSelect = document.getElementById('categoryFilterMobile');
         if (mobileSelect) {
-            mobileSelect.addEventListener('change', function() {
-                filterTemplates(this.value);
-            });
+       mobileSelect.addEventListener('change', function() {
+        const category = this.value;
+
+    // Update URL without page reload
+    const url = new URL(window.location);
+    if (category === 'all') {
+     url.searchParams.delete('category');
+    } else {
+       url.searchParams.set('category', category);
+   }
+       window.history.pushState({}, '', url);
+
+       filterTemplates(category);
+       });
         }
     </script>
 }

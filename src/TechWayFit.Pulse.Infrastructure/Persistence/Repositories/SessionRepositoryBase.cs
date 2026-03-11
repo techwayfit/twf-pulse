@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
+using TechWayFit.Pulse.Application.DTOs;
 using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Mapping;
@@ -120,6 +121,38 @@ public abstract class SessionRepositoryBase<TContext> : ISessionRepository
 
         var records = await query.ToListAsync(cancellationToken);
         return records.Select(r => r.ToDomain()).ToList();
+    }
+
+    /// <summary>
+    /// Gets lightweight session summaries for a facilitator.
+    /// Optimized for dashboard widgets - only projects essential fields, avoiding heavy navigation properties.
+    /// This reduces memory usage and network transfer compared to loading full Session entities.
+    /// </summary>
+    public virtual async Task<IReadOnlyList<SessionSummaryDto>> GetSessionSummariesByFacilitatorAsync(
+        Guid facilitatorUserId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var dbContext = await CreateDbContextAsync(cancellationToken);
+
+        // Project directly to DTO - EF Core translates this to SELECT Id, Code, Title, Status, UpdatedAt, SessionStart, SessionEnd
+        // This avoids loading Settings JSON, JoinFormSchema JSON, and other heavy fields
+        var summaries = await dbContext.Sessions
+            .AsNoTracking()
+            .Where(x => x.FacilitatorUserId == facilitatorUserId)
+            .OrderByDescending(x => x.CreatedAt)
+            .Select(x => new SessionSummaryDto
+            {
+                Id = x.Id,
+                Code = x.Code,
+                Title = x.Title,
+                Status = (Domain.Enums.SessionStatus)x.Status,
+                UpdatedAt = x.UpdatedAt,
+                SessionStart = x.SessionStart,
+                SessionEnd = x.SessionEnd
+            })
+            .ToListAsync(cancellationToken);
+
+        return summaries;
     }
 
     /// <summary>

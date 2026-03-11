@@ -2,86 +2,104 @@
 @{
     ViewData["Title"] = "TechWayFit Pulse — Home";
 }
-<!-- Hero Section -->
-<section class="py-5">
-    <div class="container container-wide">
-        <div class="row align-items-center">
-            <div class="col-lg-7">
-                <!-- Badge -->
-                <div class="mb-4">
-                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
-                        <i class="ics ics-bolt ic-xs" aria-hidden="true"></i>
-                        Workshop Engagement Engine
-                    </span>
+
+@* ═══════════════════════════════════════════════════════════════════════
+   PERSONALIZED HEADER SECTION (NOT Cached)
+   User-specific dashboard widget shown only for logged-in users
+   ═══════════════════════════════════════════════════════════════════════ *@
+@{
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
+@section HeroHeader {
+    <!-- Hero Section -->
+    <section class="py-5">
+        <div class="container container-wide">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <!-- Badge -->
+                    <div class="mb-4">
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2">
+                            <i class="ics ics-bolt ic-xs" aria-hidden="true"></i>
+                            Workshop Engagement Engine
+                        </span>
+                    </div>
+
+                    <!-- Title -->
+                    <h1 class="display-4 fw-bold mb-4 lh-sm">
+                        Run engaging workshops—<span class="hero-title-accent">without losing the data</span>.
+                    </h1>
+
+                    <!-- Description -->
+                    <p class="lead text-muted mb-4">
+                        Polls, word clouds, 4-quadrant matrices, and guided 5-Whys—designed to help people open up,
+                        and help you leave with measurable outcomes.
+                    </p>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex flex-wrap gap-3 mb-4">
+                        <a class="btn btn-primary btn-lg px-4 py-3" href="/facilitator/dashboard">
+                            <i class="fas fa-chart-bar me-2"></i>Manage Your Session
+                        </a>
+                        <a class="btn btn-outline-primary btn-lg px-4 py-3" href="/participant/join">
+                            <i class="fas fa-users me-2"></i>Join as Participant
+                        </a>
+                    </div>
+
+                    <!-- Feature Pills -->
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-white text-dark border px-3 py-2">
+                            <i class="ics ics-check-mark ic-xs ic-mr"></i>Anonymous optional
+                        </span>
+                        <span class="badge bg-white text-dark border px-3 py-2">
+                            <i class="ics ics-chart ic-xs ic-mr"></i>Real-time dashboards
+                        </span>
+                        <span class="badge bg-white text-dark border px-3 py-2">
+                            <i class="ics ics-target ic-xs ic-mr"></i>"5 Whys" output
+                        </span>
+                        <span class="badge bg-white text-dark border px-3 py-2">
+                            <i class="ics ics-bolt ic-xs ic-mr"></i>AI-powered sessions
+                        </span>
+                    </div>
                 </div>
 
-                <!-- Title -->
-                <h1 class="display-4 fw-bold mb-4 lh-sm">
-                    Run engaging workshops—<span class="hero-title-accent">without losing the data</span>.
-                </h1>
-
-                <!-- Description -->
-                <p class="lead text-muted mb-4">
-                    Polls, word clouds, 4-quadrant matrices, and guided 5-Whys—designed to help people open up,
-                    and help you leave with measurable outcomes.
-                </p>
-
-                <!-- Action Buttons -->
-                <div class="d-flex flex-wrap gap-3 mb-4">
-                    <a class="btn btn-primary btn-lg px-4 py-3" href="/facilitator/dashboard">
-                        <i class="fas fa-chart-bar me-2"></i>Manage Your Session
-                    </a>
-                    <a class="btn btn-outline-primary btn-lg px-4 py-3" href="/participant/join">
-                        <i class="fas fa-users me-2"></i>Join as Participant
-                    </a>
-                </div>
-
-                <!-- Feature Pills -->
-                <div class="d-flex flex-wrap gap-2">
-                    <span class="badge bg-white text-dark border px-3 py-2">
-                        <i class="ics ics-check-mark ic-xs ic-mr"></i>Anonymous optional
-                    </span>
-                    <span class="badge bg-white text-dark border px-3 py-2">
-                        <i class="ics ics-chart ic-xs ic-mr"></i>Real-time dashboards
-                    </span>
-                    <span class="badge bg-white text-dark border px-3 py-2">
-                        <i class="ics ics-target ic-xs ic-mr"></i>"5 Whys" output
-                    </span>
-                    <span class="badge bg-white text-dark border px-3 py-2">
-                        <i class="ics ics-bolt ic-xs ic-mr"></i>AI-powered sessions
-                    </span>
-                </div>
-            </div>
-
-            <!-- Hero Visual -->
-            <div class="col-lg-5 d-none d-lg-flex justify-content-center align-items-center">
-                <div class="hero-visual-wrap">
-                    <div class="gradient-orb">
-                        <svg class="pulse-overlay" viewBox="0 0 200 80" width="200" height="80">
-                            <polyline points="0,40 30,40 40,20 50,60 60,30 70,50 80,40 200,40"
-                                      fill="none"
-                                      stroke="white"
-                                      stroke-width="3"
-                                      class="animated-pulse-line" />
-                        </svg>
-                    </div>
-                    <div class="hero-float-stat s1">
-                        <div class="hero-float-n">94%</div>
-                        Engagement
-                    </div>
-                    <div class="hero-float-stat s2">
-                        <div class="hero-float-n">Live</div>
-                        Real-time sync
-                    </div>
-                    <div class="hero-float-stat s3">
-                        <div class="hero-float-n">2.4k</div>
-                        Sessions Run
+                <!-- Hero Visual -->
+                <div class="col-lg-5 d-none d-lg-flex justify-content-center align-items-center">
+                    <div class="hero-visual-wrap">
+                        <div class="gradient-orb">
+                            <svg class="pulse-overlay" viewBox="0 0 200 80" width="200" height="80">
+                                <polyline points="0,40 30,40 40,20 50,60 60,30 70,50 80,40 200,40"
+                                          fill="none"
+                                          stroke="white"
+                                          stroke-width="3"
+                                          class="animated-pulse-line" />
+                            </svg>
+                        </div>
+                        <div class="hero-float-stat s1">
+                            <div class="hero-float-n">94%</div>
+                            Engagement
+                        </div>
+                        <div class="hero-float-stat s2">
+                            <div class="hero-float-n">Live</div>
+                            Real-time sync
+                        </div>
+                        <div class="hero-float-stat s3">
+                            <div class="hero-float-n">2.4k</div>
+                            Sessions Run
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+}
+
+@section PersonalizedHeader {
+    @if (isAuthenticated)
+    {
+        @* ❌ NOT cached - user-specific, always fresh *@
+        @await Component.InvokeAsync("PersonalizedDashboard")
+    }
+}
 
 <!-- AI Capability Promotion Banner -->
 <section class="py-5">
@@ -163,38 +181,6 @@
     </div>
 </section>
 
-<section class="py-5">
-    <div class="container container-wide">
-    @await Component.InvokeAsync("FeatureHighlights", new
-    {
-        model = new FeatureHighlightsViewModel
-        {
-            Items = new[]
-        {
-        new FeatureHighlightItemViewModel
-        {
-        Icon = "target.svg",
-        Title = "Real-Time Engagement",
-        Description = "See responses as they happen with live dashboards."
-        },
-        new FeatureHighlightItemViewModel
-        {
-        Icon = "robot.svg",
-        Title = "AI-Powered Sessions",
-        Description = "Generate workshops automatically based on your goals."
-        },
-        new FeatureHighlightItemViewModel
-        {
-        Icon = "chart.svg",
-        Title = "Export Data",
-        Description = "Download all responses and analytics in multiple formats."
-        }
-        }
-        }
-        })
-    </div>
-</section>
-
 <!-- Templates Section -->
 <section class="py-5">
     <div class="container container-wide">
@@ -208,7 +194,7 @@
             <!-- Templates Grid -->
             <div class="row g-3 g-lg-4">
                 <div class="col-6 col-lg-3">
-                    <a href="/facilitator/templates" class="template-item">
+                    <a href="/facilitator/templates?category=Retrospective" class="template-item">
                         <div class="template-emoji">&#x1F680;</div>
                         <h5 class="template-name">Retro Sprint Review</h5>
                         <p class="template-desc">Quick pulse + themes + actions</p>
@@ -216,7 +202,7 @@
                 </div>
 
                 <div class="col-6 col-lg-3">
-                    <a href="/facilitator/templates" class="template-item">
+                    <a href="/facilitator/templates?category=IncidentReview" class="template-item">
                         <div class="template-emoji">&#x2699;&#xFE0F;</div>
                         <h5 class="template-name">Ops Pain Points</h5>
                         <p class="template-desc">Impact/Effort + 5-Whys</p>
@@ -224,7 +210,7 @@
                 </div>
 
                 <div class="col-6 col-lg-3">
-                    <a href="/facilitator/templates" class="template-item">
+                    <a href="/facilitator/templates?category=ProductDiscovery" class="template-item">
                         <div class="template-emoji">&#x1F4A1;</div>
                         <h5 class="template-name">Product Discovery</h5>
                         <p class="template-desc">Idea cloud + prioritization</p>
@@ -232,277 +218,13 @@
                 </div>
 
                 <div class="col-6 col-lg-3">
-                    <a href="/facilitator/templates" class="template-item">
-                        <div class="template-emoji">&#x26A0;&#xFE0F;</div>
-                        <h5 class="template-name">Incident Review</h5>
-                        <p class="template-desc">Root cause ladder + fixes</p>
+                    <a href="/facilitator/templates?category=TeamBuilding" class="template-item">
+                        <div class="template-emoji">&#x1F91D;</div>
+                        <h5 class="template-name">Team Building</h5>
+                        <p class="template-desc">Icebreakers + team activities</p>
                     </a>
                 </div>
             </div>
         </div>
     </div>
 </section>
-@section Styles {
-    <style>
-        /* Hero title accent underline */
-        .hero-title-accent {
-            color: var(--pulse-teal, #0e9e9a);
-            position: relative;
-            display: inline;
-        }
-
-            .hero-title-accent::after {
-                content: '';
-                position: absolute;
-                left: 0;
-                bottom: -4px;
-                right: 0;
-                height: 3px;
-                background: linear-gradient(90deg, #12c4b8, #2ee8ce);
-                border-radius: 2px;
-                display: block;
-            }
-
-        /* Hero visual wrapper with floating stats */
-        .hero-visual-wrap {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            min-height: 320px;
-        }
-
-        .hero-float-stat {
-            position: absolute;
-            background: #fff;
-            border-radius: 12px;
-            padding: 10px 14px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-            border: 1px solid #dde8ea;
-            font-size: 12px;
-            font-weight: 600;
-            color: #3d5a60;
-            white-space: nowrap;
-            animation: heroFloat 4s ease-in-out infinite;
-        }
-
-        .hero-float-n {
-            font-size: 20px;
-            font-weight: 800;
-            color: #0d6b72;
-            line-height: 1;
-            margin-bottom: 2px;
-        }
-
-        .hero-float-stat.s1 {
-            top: 30px;
-            right: -10px;
-            animation-delay: 0.5s;
-        }
-
-        .hero-float-stat.s2 {
-            bottom: 50px;
-            left: -10px;
-            animation-delay: 1.2s;
-        }
-
-        .hero-float-stat.s3 {
-            top: 50%;
-            right: -20px;
-            animation-delay: 0.8s;
-            transform: translateY(-50%);
-        }
-
-        @@keyframes heroFloat {
-            0%, 100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        /* AI Section Mockup */
-        .ai-mockup-area {
-            height: 100%;
-            min-height: 340px;
-            background: linear-gradient(135deg, #e8f6f6 0%, #d4eff0 100%);
-            border-radius: 0 16px 16px 0;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 14px;
-            padding: 28px;
-        }
-
-        .mockup-card {
-            background: #fff;
-            border-radius: 12px;
-            border: 1px solid rgba(14,158,154,0.15);
-            box-shadow: 0 8px 28px rgba(13,107,114,0.14);
-            padding: 16px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .mockup-poll {
-            grid-column: 1;
-            grid-row: 1 / 3;
-            transform: rotate(-1deg);
-        }
-
-        .mockup-swot {
-            grid-column: 2;
-            grid-row: 1;
-            transform: rotate(1deg);
-        }
-
-        .mockup-cloud {
-            grid-column: 2;
-            grid-row: 2;
-            transform: rotate(1.5deg);
-        }
-
-        .mc-label {
-            font-size: 8px;
-            font-weight: 700;
-            letter-spacing: 0.07em;
-            text-transform: uppercase;
-            color: #7a9da3;
-            margin-bottom: 7px;
-        }
-
-        .mc-title {
-            font-size: 10px;
-            font-weight: 700;
-            color: #0f2027;
-            margin-bottom: 9px;
-        }
-
-        .mc-bar-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 9px;
-            color: #64748b;
-            margin-bottom: 2px;
-        }
-
-        .mc-pct {
-            font-weight: 700;
-        }
-
-            .mc-pct.teal {
-                color: #0e9e9a;
-            }
-
-            .mc-pct.blue {
-                color: #3b82f6;
-            }
-
-            .mc-pct.amber {
-                color: #f59e0b;
-            }
-
-        .mc-bar {
-            height: 6px;
-            border-radius: 4px;
-            margin-bottom: 5px;
-            background: linear-gradient(90deg, #0e9e9a, #2ee8ce);
-        }
-
-        .mc-bar-blue {
-            background: linear-gradient(90deg, #3b82f6, #60a5fa);
-        }
-
-        .mc-bar-amber {
-            background: linear-gradient(90deg, #f59e0b, #fbbf24);
-        }
-
-        .mc-words {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            align-items: center;
-        }
-
-        .mc-swot {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3px;
-        }
-
-        .mc-swot-cell {
-            padding: 5px;
-            border-radius: 4px;
-            font-size: 8px;
-            font-weight: 600;
-        }
-
-            .mc-swot-cell.s {
-                background: #dcfce7;
-                color: #166534;
-            }
-
-            .mc-swot-cell.w {
-                background: #fee2e2;
-                color: #991b1b;
-            }
-
-            .mc-swot-cell.o {
-                background: #dbeafe;
-                color: #1e40af;
-            }
-
-            .mc-swot-cell.t {
-                background: #fef9c3;
-                color: #854d0e;
-            }
-
-        /* Template Items */
-        .template-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 28px 16px;
-            background: #f0f7f8;
-            border: 1.5px solid #dde8ea;
-            border-radius: 14px;
-            cursor: pointer;
-            transition: all 0.22s;
-            text-decoration: none;
-            height: 100%;
-        }
-
-            .template-item:hover {
-                background: #fff;
-                border-color: #0e9e9a;
-                box-shadow: 0 6px 20px rgba(14,158,154,0.13);
-                transform: translateY(-3px);
-                text-decoration: none;
-            }
-
-        .template-emoji {
-            font-size: 34px;
-            margin-bottom: 12px;
-            line-height: 1;
-        }
-
-        .template-name {
-            font-size: 14px;
-            font-weight: 700;
-            color: #0f2027;
-            margin-bottom: 5px;
-            letter-spacing: -0.01em;
-        }
-
-        .template-desc {
-            font-size: 11px;
-            color: #7a9da3;
-            font-weight: 500;
-            margin: 0;
-        }
-    </style>
-}

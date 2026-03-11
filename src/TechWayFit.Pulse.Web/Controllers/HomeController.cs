@@ -10,10 +10,10 @@ public class HomeController : Controller
     /// <summary>
     /// Homepage - renders as pure HTML without Blazor/WebSocket overhead
     /// </summary>
-  public IActionResult Index()
+    public IActionResult Index()
     {
         // Cache duration passed to view for <cache> tag helper
-    ViewData["CacheDuration"] = 300; // 5 minutes in seconds
+        ViewData["CacheDuration"] = 300; // 5 minutes in seconds
         return View();
     }
 
@@ -31,26 +31,26 @@ public class HomeController : Controller
     /// </summary>
     public IActionResult Terms()
     {
- ViewData["CacheDuration"] = 3600; // 1 hour
+        ViewData["CacheDuration"] = 3600; // 1 hour
         return View();
-  }
+    }
 
     /// <summary>
     /// Support page
     /// </summary>
-  public IActionResult Support()
+    public IActionResult Support()
     {
         ViewData["CacheDuration"] = 1800; // 30 minutes
-     return View();
+        return View();
     }
 
     /// <summary>
-/// Getting Started guide
+    /// Getting Started guide
     /// </summary>
     public IActionResult GettingStarted()
     {
-ViewData["CacheDuration"] = 1800; // 30 minutes
-  return View();
+        ViewData["CacheDuration"] = 1800; // 30 minutes
+        return View();
     }
 
     /// <summary>
@@ -58,8 +58,8 @@ ViewData["CacheDuration"] = 1800; // 30 minutes
     /// </summary>
     public IActionResult ActivityTypes()
     {
-      ViewData["CacheDuration"] = 1800; // 30 minutes
-  return View();
+        ViewData["CacheDuration"] = 1800; // 30 minutes
+        return View();
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ ViewData["CacheDuration"] = 1800; // 30 minutes
     /// Managing Sessions documentation
     /// </summary>
     public IActionResult ManagingSessions()
-{
+    {
         ViewData["CacheDuration"] = 1800; // 30 minutes
         return View();
     }
@@ -91,11 +91,11 @@ ViewData["CacheDuration"] = 1800; // 30 minutes
 
     /// <summary>
     /// Create from Template documentation
- /// </summary>
+    /// </summary>
     public IActionResult CreateFromTemplate()
     {
-ViewData["CacheDuration"] = 1800; // 30 minutes
-  return View();
+        ViewData["CacheDuration"] = 1800; // 30 minutes
+        return View();
     }
 
     /// <summary>
@@ -104,6 +104,6 @@ ViewData["CacheDuration"] = 1800; // 30 minutes
     public IActionResult Components()
     {
         ViewData["CacheDuration"] = 1800; // 30 minutes
-    return View();
+        return View();
     }
 }

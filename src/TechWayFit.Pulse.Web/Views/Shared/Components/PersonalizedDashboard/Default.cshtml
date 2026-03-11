@@ -1,0 +1,254 @@
+@model TechWayFit.Pulse.Web.Models.PersonalizedDashboardViewModel
+
+<section class="py-4 bg-gradient">
+    <div class="container container-wide">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h2 class="h4 fw-bold mb-2">
+                    <i class="fas fa-wave-hand me-2 text-primary"></i>
+                    Welcome back, @Model.UserDisplayName!
+                </h2>
+                <p class="text-white mb-0">Ready to create engaging workshops?</p>
+            </div>
+            <div class="col-lg-4 text-lg-end text-white mt-3 mt-lg-0">
+                <a href="/facilitator/create-session" class="btn btn-secondary">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Session
+                </a>
+            </div>
+        </div>
+
+        <!-- Quick Stats Cards -->
+        <div class="row g-3 mt-3">
+            <!-- Active Sessions Card -->
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="flex-shrink-0">
+                                <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                                    <i class="fas fa-bolt text-primary fa-lg"></i>
+                                </div>
+                            </div>
+                            <div class="ms-3">
+                                <h5 class="mb-0 fw-bold">@Model.ActiveSessionsCount</h5>
+                                <small class="text-muted">Active Session@(Model.ActiveSessionsCount != 1 ? "s" : "")</small>
+                            </div>
+                        </div>
+                        <a href="/facilitator/dashboard" class="btn btn-sm btn-outline-primary w-100">
+                            View Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Groups Card -->
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="flex-shrink-0">
+                                <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                                    <i class="fas fa-folder text-success fa-lg"></i>
+                                </div>
+                            </div>
+                            <div class="ms-3">
+                                <h5 class="mb-0 fw-bold">@Model.TotalGroups</h5>
+                                <small class="text-muted">Groups</small>
+                            </div>
+                        </div>
+                        <a href="/facilitator/groups" class="btn btn-sm btn-outline-success w-100">
+                            Manage Groups
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Templates Card -->
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="flex-shrink-0">
+                                <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                                    <i class="fas fa-file-alt text-info fa-lg"></i>
+                                </div>
+                            </div>
+                            <div class="ms-3">
+                                <h5 class="mb-0 fw-bold">12</h5>
+                                <small class="text-muted">Templates</small>
+                            </div>
+                        </div>
+                        <a href="/facilitator/templates" class="btn btn-sm btn-outline-info w-100">
+                            Browse Templates
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Session Card - Shows different content based on user's session state -->
+            <div class="col-md-3">
+                @switch (Model.SessionCard.State)
+                    {
+                    case SessionCardState.ActiveSession:
+                        <!-- Active Session: Show link to live session -->
+                        <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                                            <i class="fas fa-broadcast-tower text-success fa-lg"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <span class="badge bg-success mb-1">
+                                            <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>Live Now
+                                        </span>
+                                        <small class="text-muted d-block text-truncate"
+                                            title="@Model.SessionCard.SessionTitle">
+                                            @Model.SessionCard.SessionTitle
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-users me-1"></i>@Model.SessionCard.ParticipantCount participant@(Model.SessionCard.ParticipantCount != 1 ? "s" : "")
+                                    </small>
+                                    <span class="badge bg-light text-dark font-monospace">@Model.SessionCard.SessionCode
+                                    </span>
+                                </div>
+                                <a href="/facilitator/session/@Model.SessionCard.SessionCode"
+                                    class="btn btn-sm btn-success w-100">
+                                    <i class="fas fa-arrow-right me-1"></i>Go to Session
+                                </a>
+                            </div>
+                        </div>
+                        break;
+
+                    case SessionCardState.UpcomingSession:
+                        <!-- Upcoming Session: Show scheduled session -->
+                        <div class="card border-0 shadow-sm h-100 border-start border-info border-4">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-info bg-opacity-10 rounded-3 p-3">
+                                            <i class="fas fa-calendar-clock text-info fa-lg"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <span class="badge bg-info mb-1">
+                                            <i class="fas fa-clock me-1"></i>Upcoming
+                                        </span>
+                                        <small class="text-muted d-block text-truncate"
+                                            title="@Model.SessionCard.SessionTitle">
+                                            @Model.SessionCard.SessionTitle
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        @if (Model.SessionCard.StartTime.HasValue)
+                                            {
+                                            var startTime = Model.SessionCard.StartTime.Value;
+                                            var isToday = startTime.Date == DateTime.UtcNow.Date;
+                                            @if (isToday)
+                                                {
+                                                <text>Today at @startTime.ToString("h:mm tt")</text>
+                                                }
+                                            else
+                                                {
+                                                <text>@startTime.ToString("MMM d, h:mm tt")</text>
+                                                }
+                                            }
+                                    </small>
+                                </div>
+                                <a href="/facilitator/session/@Model.SessionCard.SessionCode" class="btn btn-sm btn-info w-100">
+                                    <i class="fas fa-eye me-1"></i>View Session
+                                </a>
+                            </div>
+                        </div>
+                        break;
+
+                    case SessionCardState.RecentlyCompleted:
+                        <!-- Recently Completed: Show link to report -->
+                        <div class="card border-0 shadow-sm h-100 border-start border-secondary border-4">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-secondary bg-opacity-10 rounded-3 p-3">
+                                            <i class="fas fa-check-circle text-secondary fa-lg"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <span class="badge bg-secondary mb-1">
+                                            <i class="fas fa-flag-checkered me-1"></i>Completed
+                                        </span>
+                                        <small class="text-muted d-block text-truncate"
+                                            title="@Model.SessionCard.SessionTitle">
+                                            @Model.SessionCard.SessionTitle
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        @if (Model.SessionCard.EndTime.HasValue)
+                                            {
+                                            var endTime = Model.SessionCard.EndTime.Value;
+                                            var hoursAgo = (DateTime.UtcNow - endTime).TotalHours;
+                                            @if (hoursAgo < 1)
+                                                {
+                                                <text>Just now</text>
+                                                }
+                                            else if (hoursAgo < 24)
+                                                {
+                                                <text>@((int)hoursAgo) hour@((int)hoursAgo != 1 ? "s" : "") ago</text>
+                                                }
+                                            else
+                                                {
+                                                <text>@endTime.ToString("MMM d, h:mm tt")</text>
+                                                }
+                                            }
+                                    </small>
+                                </div>
+                                <a href="/facilitator/session/@Model.SessionCard.SessionCode/report"
+                                    class="btn btn-sm btn-secondary w-100">
+                                    <i class="fas fa-chart-line me-1"></i>View Report
+                                </a>
+                            </div>
+                        </div>
+                        break;
+
+                    case SessionCardState.NoSessions:
+                    default:
+                        <!-- No Sessions: Show create session CTA -->
+                        <div class="card border-0 shadow-sm h-100 border-start border-primary border-4">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                                            <i class="fas fa-rocket text-primary fa-lg"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <span class="badge bg-primary mb-1">
+                                            <i class="fas fa-sparkles me-1"></i>Get Started
+                                        </span>
+                                        <small class="text-muted d-block">Create your first session</small>
+                                    </div>
+                                </div>
+                                <p class="text-muted small mb-2">
+                                    Launch a workshop in minutes with AI-powered templates
+                                </p>
+                                <a href="/facilitator/create-session" class="btn btn-sm btn-primary w-100">
+                                    <i class="fas fa-plus-circle me-1"></i>Create Session
+                                </a>
+                            </div>
+                        </div>
+                        break;
+                    }
+            </div>
+        </div>
+
+    </div>
+</section>

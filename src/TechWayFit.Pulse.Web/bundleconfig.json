@@ -7,7 +7,6 @@
       "wwwroot/css/pulse-components.css",
       "wwwroot/css/custom.css",
       "wwwroot/css/mobile.css",
-      "wwwroot/css/fullscreen-mode.css",
       "wwwroot/css/live-session.css"
     ],
     "minify": {

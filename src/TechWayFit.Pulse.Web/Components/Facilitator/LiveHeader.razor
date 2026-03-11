@@ -1,90 +1,152 @@
 @using TechWayFit.Pulse.Contracts.Enums
 @using TechWayFit.Pulse.Contracts.Responses
 @inject NavigationManager Navigation
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 
-<!-- Slim top bar -->
+<!-- Slim top bar with integrated branding and user info -->
 <div class="live-top-bar">
 
+    <!-- Logo (left) -->
+    <a href="/" class="d-flex align-items-center text-decoration-none me-2" style="gap: 0.5rem;">
+        <span class="brand-badge" aria-hidden="true" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--pulse-gradient); border-radius: var(--pulse-radius-md);">
+       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M3 12h4l2-5 4 10 2-5h6" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+        </span>
+  <div class="lh-sm d-none d-md-block">
+   <div class="fw-bold" style="font-size: 0.9rem; color: var(--pulse-text-dark);">Pulse</div>
+<span style="font-size: 0.65rem; color: var(--pulse-text-mid);">by TechWayFit</span>
+    </div>
+    </a>
+
+ <div class="live-top-bar-divider d-none d-lg-block"></div>
+
     <!-- Sidebar toggle -->
-    <button class="live-sidebar-toggle" @onclick="OnToggleSidebar" title="@(IsSidebarCollapsed ? "Show activities" : "Hide activities")">
+  <button class="live-sidebar-toggle" @onclick="OnToggleSidebar" title="@(IsSidebarCollapsed ? "Show activities" : "Hide activities")">
         <i class="fas fa-bars"></i>
     </button>
 
-    <div class="live-top-bar-divider d-none d-md-block"></div>
-
     <!-- Breadcrumb + title -->
     <div class="d-flex flex-column justify-content-center" style="min-width:0;">
-        <a href="/facilitator/dashboard" class="text-muted small text-decoration-none d-none d-md-block"
-           style="font-size: 0.68rem; line-height: 1;">
-            <i class="fas fa-th-large me-1"></i>Dashboard
-        </a>
-        <span class="live-top-bar-title">@Session.Title</span>
+ 
+    <span class="live-top-bar-title">@Session.Title</span>
     </div>
 
-    <!-- Join code pill -->
+  <!-- Join code pill -->
     <span class="badge d-none d-md-inline-flex align-items-center gap-1"
-          style="background: var(--pulse-gradient); color: white; font-size: 0.75rem; font-family: var(--pulse-font-mono); letter-spacing: 0.05em; padding: 0.3rem 0.7rem; border-radius: 999px; flex-shrink: 0;">
+       style="background: var(--pulse-gradient); color: white; font-size: 0.75rem; font-family: var(--pulse-font-mono); letter-spacing: 0.05em; padding: 0.3rem 0.7rem; border-radius: 999px; flex-shrink: 0;">
         <i class="fas fa-link" style="font-size: 0.65rem;"></i>
-        @SessionCode
+ @SessionCode
     </span>
 
     @if (CurrentActivity != null)
     {
-        <div class="live-top-bar-current d-none d-xl-flex">
-            <span class="badge flex-shrink-0" style="@GetActivityTypeBadgeStyle(CurrentActivity.Type); padding: 0.25rem 0.55rem; font-size: 0.7rem;">
-                @CurrentActivity.Type
-            </span>
-            <span class="badge bg-light text-dark flex-shrink-0" style="font-size: 0.7rem;">#@CurrentActivity.Order</span>
-            <span class="live-top-bar-current-title">@CurrentActivity.Title</span>
-        </div>
+ <div class="live-top-bar-current d-none d-xl-flex">
+    <span class="badge flex-shrink-0" style="@GetActivityTypeBadgeStyle(CurrentActivity.Type); padding: 0.25rem 0.55rem; font-size: 0.7rem;">
+        @CurrentActivity.Type
+        </span>
+    <span class="badge bg-light text-dark flex-shrink-0" style="font-size: 0.7rem;">#@CurrentActivity.Order</span>
+  <span class="live-top-bar-current-title">@CurrentActivity.Title</span>
+  </div>
     }
 
     <!-- Action buttons -->
     <div class="live-top-bar-actions">
         @if (CurrentActivity != null)
         {
-            @if (!IsSessionEnded)
-            {
-                <button class="btn btn-sm btn-primary d-none d-lg-inline-flex align-items-center gap-1" @onclick="NavigateToPresenterMode"
-                        title="Present Activity Full-Screen">
-                    <i class="fas fa-tv"></i>
-                    <span class="d-none d-xl-inline">Presenter</span>
-                </button>
-            }
-        }
-
-        @if (!IsSessionEnded)
+      @if (!IsSessionEnded)
         {
-            <button class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex align-items-center gap-1" @onclick="OnShowEditSession">
-                <i class="fas fa-edit"></i>
-                <span class="d-none d-lg-inline">Edit</span>
-            </button>
-            <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" @onclick="OnShowQRModal">
-                <i class="fas fa-qrcode"></i>
-                <span class="d-none d-sm-inline">Join</span>
-            </button>
+             <button class="btn btn-sm btn-primary d-none d-lg-inline-flex align-items-center gap-1" @onclick="NavigateToPresenterMode"
+          title="Present Activity Full-Screen">
+ <i class="fas fa-tv"></i>
+     <span class="d-none d-xl-inline">Presenter</span>
+    </button>
+    }
+    }
+
+      @if (!IsSessionEnded)
+   {
+   <button class="btn btn-sm btn-outline-secondary d-none d-md-inline-flex align-items-center gap-1" @onclick="OnShowEditSession">
+ <i class="fas fa-edit"></i>
+       <span class="d-none d-lg-inline">Edit</span>
+    </button>
+  <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" @onclick="OnShowQRModal">
+  <i class="fas fa-qrcode"></i>
+     <span class="d-none d-sm-inline">Join</span>
+ </button>
         }
         else
-        {
-            <button class="btn btn-sm btn-outline-info d-none d-md-inline-flex align-items-center gap-1" @onclick="NavigateToReport">
-                <i class="fas fa-file-lines"></i>
-                <span class="d-none d-lg-inline">Report</span>
-            </button>
-        }
+  {
+          <button class="btn btn-sm btn-outline-info d-none d-md-inline-flex align-items-center gap-1" @onclick="NavigateToReport">
+        <i class="fas fa-file-lines"></i>
+     <span class="d-none d-lg-inline">Report</span>
+        </button>
+  }
         @if (Session.Status == SessionStatus.Live)
-        {
-            <button class="btn btn-sm btn-danger" @onclick="OnEndSession" disabled="@IsPerformingAction">
-                <i class="fas fa-stop me-1 d-none d-sm-inline"></i>
-                @(IsPerformingAction ? "Ending..." : "End")
-            </button>
+{
+    <button class="btn btn-sm btn-danger" @onclick="OnEndSession" disabled="@IsPerformingAction">
+    <i class="fas fa-stop me-1 d-none d-sm-inline"></i>
+    @(IsPerformingAction ? "Ending..." : "End")
+     </button>
         }
-        else if (Session.Status == SessionStatus.Draft)
+  else if (Session.Status == SessionStatus.Draft)
         {
-            <button class="btn btn-sm btn-success" @onclick="OnStartSession" disabled="@IsPerformingAction">
-                <i class="fas fa-play me-1 d-none d-sm-inline"></i>
-                @(IsPerformingAction ? "Starting..." : "Start")
-            </button>
-        }
+   <button class="btn btn-sm btn-success" @onclick="OnStartSession" disabled="@IsPerformingAction">
+      <i class="fas fa-play me-1 d-none d-sm-inline"></i>
+      @(IsPerformingAction ? "Starting..." : "Start")
+       </button>
+  }
+
+     <!-- User dropdown (right) -->
+     <div class="dropdown d-none d-md-block">
+      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2" 
+type="button" 
+  id="liveUserMenu" 
+        data-bs-toggle="dropdown" 
+   aria-expanded="false"
+       style="padding: 0.35rem 0.65rem;">
+     @{
+ var httpContext = HttpContextAccessor.HttpContext;
+   var user = httpContext?.User;
+          var displayName = user?.Identity?.Name ?? "User";
+       var initials = string.Join("", displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => w[0]));
+   }
+   <div class="user-initials-badge" style="font-size: 0.7rem;">
+   @initials.ToUpper()
+ </div>
+ <i class="fas fa-chevron-down" style="font-size: 0.65rem;"></i>
+   </button>
+   <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="liveUserMenu" style="min-width: 200px;">
+      <li class="px-3 py-2 border-bottom">
+      <div class="small text-muted">Signed in as</div>
+       <div class="fw-semibold">@displayName</div>
+ </li>
+     <li>
+         <a class="dropdown-item" href="/account/profile">
+<i class="fas fa-user me-2"></i>Profile
+     </a>
+   </li>
+       <li>
+    <a class="dropdown-item" href="/facilitator/dashboard">
+    <i class="fas fa-th-large me-2"></i>My Sessions
+  </a>
+   </li>
+   <li><hr class="dropdown-divider"></li>
+    <li>
+  <form method="post" action="/account/logout">
+ @if (httpContext != null)
+       {
+    var tokenSet = Antiforgery.GetAndStoreTokens(httpContext);
+  <input type="hidden" name="@tokenSet.FormFieldName" value="@tokenSet.RequestToken" />
+           }
+       <button type="submit" class="dropdown-item text-danger">
+  <i class="fas fa-sign-out-alt me-2"></i>Sign Out
+    </button>
+        </form>
+        </li>
+ </ul>
+ </div>
     </div>
 </div>
 
@@ -92,16 +154,16 @@
     [Parameter, EditorRequired]
     public SessionSummaryResponse Session { get; set; } = default!;
 
-    [Parameter, EditorRequired]
+  [Parameter, EditorRequired]
     public string SessionCode { get; set; } = default!;
 
-    [Parameter]
+ [Parameter]
     public int ParticipantCount { get; set; }
 
     [Parameter]
     public AgendaActivityResponse? CurrentActivity { get; set; }
 
-    [Parameter, EditorRequired]
+ [Parameter, EditorRequired]
     public List<AgendaActivityResponse> Activities { get; set; } = new();
 
     [Parameter]
@@ -132,11 +194,11 @@
 
     private void NavigateToPresenterMode()
     {
-        Navigation.NavigateTo($"/facilitator/live/presentation?code={SessionCode}", true);
+     Navigation.NavigateTo($"/facilitator/live/presentation?code={SessionCode}", true);
     }
 
     private string GetActivityTypeBadgeStyle(ActivityType type) => type switch
-    {
+  {
         ActivityType.Poll => "background: var(--pulse-gradient); color: white;",
         ActivityType.WordCloud => "background: var(--pulse-blue); color: white;",
         ActivityType.Quadrant => "background: var(--pulse-blue-dark); color: white;",
@@ -145,9 +207,9 @@
         ActivityType.GeneralFeedback => "background: var(--pulse-success); color: white;",
         ActivityType.Quiz => "background: var(--pulse-danger); color: white;",
         ActivityType.QnA => "background: var(--pulse-info); color: white;",
-        ActivityType.AiSummary => "background: #7c3aed; color: white;",
-        ActivityType.Break => "background: var(--pulse-warning); color: white;",
-        _ => "background: var(--pulse-gray-400); color: white;"
+      ActivityType.AiSummary => "background: #7c3aed; color: white;",
+   ActivityType.Break => "background: var(--pulse-warning); color: white;",
+     _ => "background: var(--pulse-gray-400); color: white;"
     };
 
     private bool IsSessionEnded => Session.Status == SessionStatus.Ended;

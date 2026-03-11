@@ -8,10 +8,10 @@
 
     <!-- Fonts - Plus Jakarta Sans + DM Mono (Design System) -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    
+
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
@@ -21,50 +21,54 @@
 
     <!-- Page-specific styles -->
     @await RenderSectionAsync("Styles", required: false)
-    
+
 </head>
 <body class="d-flex flex-column min-vh-100">
-  <!-- Navigation - Always dynamic, never cached -->
+    @* ═══════════════════════════════════════════════════════════════════════
+  NAVIGATION - Always dynamic, never cached
+    Shows user-specific menu items
+       ═══════════════════════════════════════════════════════════════════════ *@
     @await Html.PartialAsync("_Navigation")
 
     <main class="flex-grow-1">
-        @* 
-            Cache only the main content area using the <cache> tag helper.
-            This allows navigation to be dynamic while caching the page content.
-        All users (authenticated and anonymous) share the same cached content.
-        *@
+        @await RenderSectionAsync("HeroHeader", required: false)
+        @await RenderSectionAsync("PersonalizedHeader", required: false)
+
         @if (ViewData["CacheDuration"] != null)
         {
-       var cacheDuration = (int)ViewData["CacheDuration"];
+            var cacheDuration = (int)ViewData["CacheDuration"];
             <cache expires-after="@TimeSpan.FromSeconds(cacheDuration)" vary-by="@Context.Request.Path">
- @RenderBody()
-    </cache>
+                @RenderBody()
+            </cache>
         }
-  else
+        else
         {
-        @RenderBody()
-    }
+            @RenderBody()
+        }
+         
+        @await RenderSectionAsync("PersonalizedAfterBody", required: false)         
+        @await RenderSectionAsync("PreFooter", required: false)
     </main>
 
     <!-- Footer - Dark Theme -->
     <footer class="footer-dark">
         <div class="container container-wide">
-    <div class="footer-grid">
+            <div class="footer-grid">
                 <div class="footer-copyright">&copy; @DateTime.Now.Year TechWayFit Pulse. All rights reserved.</div>
-      <div class="footer-links">
-           <a href="/home/privacy" class="text-decoration-none">Privacy</a>
-           <a href="/home/terms" class="text-decoration-none">Terms</a>
-         <a href="/home/support" class="text-decoration-none">Support</a>
-    </div>
+                <div class="footer-links">
+                    <a href="/home/privacy" class="text-decoration-none">Privacy</a>
+                    <a href="/home/terms" class="text-decoration-none">Terms</a>
+                    <a href="/home/support" class="text-decoration-none">Support</a>
+                </div>
             </div>
-      </div>
+        </div>
     </footer>
 
     <!-- Blazor Error UI (for Blazor pages only) -->
     <div id="blazor-error-ui" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: lightyellow; color: black; padding: 10px; text-align: center; z-index: 9999;">
         An unhandled error has occurred.
         <a href="" class="reload" style="margin-left: 10px;">Reload</a>
-      <a class="dismiss" style="margin-left: 10px; cursor: pointer;"><i class="fas fa-xmark"></i></a>
+        <a class="dismiss" style="margin-left: 10px; cursor: pointer;"><i class="fas fa-xmark"></i></a>
     </div>
 
     <!-- Bootstrap JS Bundle -->
@@ -75,11 +79,11 @@
 
     <!-- Chart.js for dashboard charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-wordcloud@4.3.0/build/index.umd.min.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-wordcloud@4.3.0/build/index.umd.min.js"></script>
+
     <!-- Pulse Dashboard Scripts Bundle -->
     <script src="~/js/pulse-dashboard.min.js" asp-append-version="true"></script>
-    
+
     <!-- Pulse Activity Scripts Bundle -->
     <script src="~/js/pulse-activities.min.js" asp-append-version="true"></script>
 

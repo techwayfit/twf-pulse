@@ -1,5 +1,6 @@
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.DTOs;
 using TechWayFit.Pulse.Domain.Entities;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
@@ -26,10 +27,13 @@ public sealed class CachingSessionRepository : ISessionRepository
     // List reads (facilitator dashboard pages — tolerate short staleness)
     private static readonly TimeSpan ListTtl = TimeSpan.FromMinutes(2);
 
+  // Summary reads (lightweight dashboard widgets — short TTL for freshness)
+    private static readonly TimeSpan SummaryTtl = TimeSpan.FromMinutes(1);
+
     public CachingSessionRepository(ISessionRepository inner, IApplicationCache cache)
     {
         _inner = inner;
-        _cache = cache;
+     _cache = cache;
     }
 
     // -------------------------------------------------------------------------
@@ -39,17 +43,17 @@ public sealed class CachingSessionRepository : ISessionRepository
     public async Task<Session?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var key = CacheKeys.ById(id);
-        var cached = await _cache.GetAsync<Session>(key, cancellationToken);
+      var cached = await _cache.GetAsync<Session>(key, cancellationToken);
         if (cached is not null)
-        {
-            return cached;
+ {
+      return cached;
         }
 
-        var session = await _inner.GetByIdAsync(id, cancellationToken);
+   var session = await _inner.GetByIdAsync(id, cancellationToken);
         if (session is not null)
         {
-            await _cache.SetAsync(key, session, SingleEntityTtl, cancellationToken);
-        }
+        await _cache.SetAsync(key, session, SingleEntityTtl, cancellationToken);
+    }
 
         return session;
     }
@@ -57,46 +61,46 @@ public sealed class CachingSessionRepository : ISessionRepository
     public async Task<Session?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
         var key = CacheKeys.ByCode(code);
-        var cached = await _cache.GetAsync<Session>(key, cancellationToken);
+   var cached = await _cache.GetAsync<Session>(key, cancellationToken);
         if (cached is not null)
         {
-            return cached;
+    return cached;
         }
 
-        var session = await _inner.GetByCodeAsync(code, cancellationToken);
+      var session = await _inner.GetByCodeAsync(code, cancellationToken);
         if (session is not null)
         {
             await _cache.SetAsync(key, session, SingleEntityTtl, cancellationToken);
         }
 
-        return session;
+    return session;
     }
 
     public async Task<IReadOnlyList<Session>> GetByFacilitatorUserIdAsync(
-        Guid facilitatorUserId,
+   Guid facilitatorUserId,
         CancellationToken cancellationToken = default)
     {
         var key = CacheKeys.ByFacilitator(facilitatorUserId);
         var cached = await _cache.GetAsync<CachedList<Session>>(key, cancellationToken);
         if (cached is not null)
         {
-            return cached.Items;
-        }
+    return cached.Items;
+  }
 
         var sessions = await _inner.GetByFacilitatorUserIdAsync(facilitatorUserId, cancellationToken);
-        await _cache.SetAsync(key, new CachedList<Session>(sessions), ListTtl, cancellationToken);
+ await _cache.SetAsync(key, new CachedList<Session>(sessions), ListTtl, cancellationToken);
         return sessions;
     }
 
     public async Task<(IReadOnlyList<Session> Sessions, int TotalCount)> GetByFacilitatorUserIdPaginatedAsync(
         Guid facilitatorUserId,
-        int page,
+   int page,
         int pageSize,
-        CancellationToken cancellationToken = default)
+ CancellationToken cancellationToken = default)
     {
         var key = CacheKeys.ByFacilitatorPaged(facilitatorUserId, page, pageSize);
-        var cached = await _cache.GetAsync<CachedPage<Session>>(key, cancellationToken);
-        if (cached is not null)
+var cached = await _cache.GetAsync<CachedPage<Session>>(key, cancellationToken);
+ if (cached is not null)
         {
             return (cached.Items, cached.TotalCount);
         }
@@ -110,20 +114,36 @@ public sealed class CachingSessionRepository : ISessionRepository
 
     public async Task<IReadOnlyCollection<Session>> GetByGroupAsync(
         Guid? groupId,
-        Guid facilitatorUserId,
+  Guid facilitatorUserId,
         CancellationToken cancellationToken = default)
-    {
-        var key = CacheKeys.ByGroup(groupId, facilitatorUserId);
+ {
+      var key = CacheKeys.ByGroup(groupId, facilitatorUserId);
         var cached = await _cache.GetAsync<CachedList<Session>>(key, cancellationToken);
-        if (cached is not null)
+      if (cached is not null)
         {
             return cached.Items;
         }
 
-        var sessions = await _inner.GetByGroupAsync(groupId, facilitatorUserId, cancellationToken);
-        await _cache.SetAsync(key, new CachedList<Session>((IReadOnlyList<Session>)sessions), ListTtl, cancellationToken);
+   var sessions = await _inner.GetByGroupAsync(groupId, facilitatorUserId, cancellationToken);
+     await _cache.SetAsync(key, new CachedList<Session>((IReadOnlyList<Session>)sessions), ListTtl, cancellationToken);
         return sessions;
     }
+
+    public async Task<IReadOnlyList<SessionSummaryDto>> GetSessionSummariesByFacilitatorAsync(
+        Guid facilitatorUserId,
+        CancellationToken cancellationToken = default)
+    {
+  var key = CacheKeys.BySummaries(facilitatorUserId);
+    var cached = await _cache.GetAsync<CachedList<SessionSummaryDto>>(key, cancellationToken);
+        if (cached is not null)
+        {
+     return cached.Items;
+     }
+
+        var summaries = await _inner.GetSessionSummariesByFacilitatorAsync(facilitatorUserId, cancellationToken);
+   await _cache.SetAsync(key, new CachedList<SessionSummaryDto>(summaries), SummaryTtl, cancellationToken);
+  return summaries;
+}
 
     // -------------------------------------------------------------------------
     // Write operations — delegate then invalidate single-entity keys
@@ -135,45 +155,55 @@ public sealed class CachingSessionRepository : ISessionRepository
 
         // Evict facilitator list caches so the new session appears immediately
         // on the facilitator's dashboard without waiting for TTL expiry.
-        if (session.FacilitatorUserId.HasValue)
-        {
-            var userId = session.FacilitatorUserId.Value;
-            var keysToEvict = await _cache.FindKeysByPatternAsync(
-                CacheKeys.ByFacilitator(userId), cancellationToken: cancellationToken);
+     if (session.FacilitatorUserId.HasValue)
+     {
+       var userId = session.FacilitatorUserId.Value;
+          var keysToEvict = await _cache.FindKeysByPatternAsync(
+            CacheKeys.ByFacilitator(userId), cancellationToken: cancellationToken);
 
-            await Task.WhenAll(keysToEvict.Keys.Select(k => _cache.RemoveAsync(k, cancellationToken)));
+   await Task.WhenAll(keysToEvict.Keys.Select(k => _cache.RemoveAsync(k, cancellationToken)));
+    
+   // Also invalidate summaries cache
+      await _cache.RemoveAsync(CacheKeys.BySummaries(userId), cancellationToken);
         }
     }
 
     public async Task UpdateAsync(Session session, CancellationToken cancellationToken = default)
     {
-        await _inner.UpdateAsync(session, cancellationToken);
+ await _inner.UpdateAsync(session, cancellationToken);
 
         // Evict stale single-entity entries so next read reflects the updated status,
         // settings, or currentActivityId immediately.
         await Task.WhenAll(
             _cache.RemoveAsync(CacheKeys.ById(session.Id), cancellationToken),
-            _cache.RemoveAsync(CacheKeys.ByCode(session.Code), cancellationToken)
+      _cache.RemoveAsync(CacheKeys.ByCode(session.Code), cancellationToken)
         );
+
+   // Also invalidate summaries cache if session belongs to a facilitator
+  if (session.FacilitatorUserId.HasValue)
+        {
+     await _cache.RemoveAsync(CacheKeys.BySummaries(session.FacilitatorUserId.Value), cancellationToken);
+     }
     }
 
     // -------------------------------------------------------------------------
-    // Cache key helpers
+ // Cache key helpers
     // -------------------------------------------------------------------------
 
     private static class CacheKeys
     {
-        // GUIDs are normalised to lowercase N-format (no hyphens or braces).
+ // GUIDs are normalised to lowercase N-format (no hyphens or braces).
         // ToLowerInvariant() is called explicitly — "N" is lowercase in current .NET
-        // runtimes but is not formally guaranteed, so we enforce it here.
+    // runtimes but is not formally guaranteed, so we enforce it here.
         private static string N(Guid id) => id.ToString("N").ToLowerInvariant();
         private static string N(Guid? id) => id?.ToString("N").ToLowerInvariant() ?? "null";
 
-        public static string ById(Guid id) => $"session:id:{N(id)}";
-        public static string ByCode(string code) => $"session:code:{code}";
-        public static string ByFacilitator(Guid userId) => $"session:facilitator:{N(userId)}";
+   public static string ById(Guid id) => $"session:id:{N(id)}";
+     public static string ByCode(string code) => $"session:code:{code}";
+      public static string ByFacilitator(Guid userId) => $"session:facilitator:{N(userId)}";
         public static string ByFacilitatorPaged(Guid userId, int page, int size) => $"session:facilitator:{N(userId)}:p:{page}:{size}";
         public static string ByGroup(Guid? groupId, Guid userId) => $"session:group:{N(groupId)}:{N(userId)}";
+   public static string BySummaries(Guid userId) => $"session:summaries:{N(userId)}";
     }
 
     // -------------------------------------------------------------------------
@@ -181,14 +211,14 @@ public sealed class CachingSessionRepository : ISessionRepository
     // via the IApplicationCache generic constraint (class).
     // -------------------------------------------------------------------------
 
-    private sealed class CachedList<T>(IReadOnlyList<T> items)
+  private sealed class CachedList<T>(IReadOnlyList<T> items)
     {
-        public IReadOnlyList<T> Items { get; } = items;
+   public IReadOnlyList<T> Items { get; } = items;
     }
 
-    private sealed class CachedPage<T>(IReadOnlyList<T> items, int totalCount)
+ private sealed class CachedPage<T>(IReadOnlyList<T> items, int totalCount)
     {
         public IReadOnlyList<T> Items { get; } = items;
-        public int TotalCount { get; } = totalCount;
+  public int TotalCount { get; } = totalCount;
     }
 }
