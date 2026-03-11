@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.Repositories;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
@@ -127,6 +128,37 @@ builder.Services.AddAuthorization();
 
     // Add HttpContextAccessor for session access
     builder.Services.AddHttpContextAccessor();
+    
+    // Add Response Compression for better performance
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true; // Safe in modern .NET
+        options.Providers.Add<BrotliCompressionProvider>();
+        options.Providers.Add<GzipCompressionProvider>();
+  
+        // Specify MIME types to compress
+        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+        {
+    "application/json",
+    "application/javascript",
+            "text/css",
+            "text/html",
+         "text/plain",
+    "image/svg+xml"
+        });
+    });
+
+    // Configure Brotli compression (preferred by modern browsers)
+    builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+    {
+        options.Level = System.IO.Compression.CompressionLevel.Fastest;
+    });
+
+    // Configure Gzip compression (fallback for older browsers)
+    builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+    {
+        options.Level = System.IO.Compression.CompressionLevel.Fastest;
+    });
     
     // Add Memory Cache for content caching (cache tag helper)
     // Configure with size limit for content-only caching
@@ -290,6 +322,17 @@ options.Retry.MaxRetryAttempts = 2;
         options.MaximumReceiveMessageSize = 32 * 1024; // 32KB limit
     });
 
+    // Add response compression services with Brotli and Gzip support
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+        {
+            "image/svg+xml",
+            "application/octet-stream"
+        });
+    });
+
     var app = builder.Build();
 
     // Ensure database is created using provider-specific method
@@ -311,6 +354,9 @@ options.Retry.MaxRetryAttempts = 2;
 
     // Important: UseHttpsRedirection should come before UseStaticFiles
     app.UseHttpsRedirection();
+
+    // Enable response compression (must be before UseStaticFiles)
+    app.UseResponseCompression();
 
     // Configure static files with proper caching
     app.UseStaticFiles(new StaticFileOptions
