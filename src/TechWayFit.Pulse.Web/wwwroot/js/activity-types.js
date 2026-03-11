@@ -116,52 +116,55 @@ class Activity {
         const emoji = this.getEmoji();
         const details = this.renderCardDetails();
         const activityNumber = index + 1;
-        
+    
         return `
             <div class="card border-0 shadow-sm">
-                <div class="card-body p-3">
-                    <div class="d-flex gap-3">
-                        <!-- Activity Number & Rearrange Controls -->
-                        <div class="activity-order-column d-flex flex-column align-items-center gap-2">
-                            <div class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center activity-order-badge">
-                                #${activityNumber}
-                            </div>
-                            <div class="d-flex flex-column gap-1">
-                                <button class="btn btn-sm btn-outline-secondary py-0 activity-order-btn" 
-                                        onclick="activityManager.moveActivityUp(${index})" 
-                                        ${index === 0 ? 'disabled' : ''} title="Move up">
-                                    ▲
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary py-0 activity-order-btn" 
-                                        onclick="activityManager.moveActivityDown(${index})" 
-                                        title="Move down">
-                                    ▼
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Activity Content -->
-                        <div class="flex-grow-1 activity-content-col">
-                            <div class="d-flex align-items-start justify-content-between mb-2">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="text-primary fs-5">${emoji}</span>
-                                    <h5 class="mb-0 fw-semibold">${this.escapeHtml(this.title)}</h5>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-primary" onclick="activityManager.editActivity(${index})">
-                                        <i class="ics ics-pencil ic-xs ic-mr"></i>Edit
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="activityManager.removeActivity(${index})">
-                                        <i class="ics ics-trash ic-xs ic-mr"></i>Remove
-                                    </button>
-                                </div>
-                            </div>
-                            <p class="text-muted mb-2">${this.escapeHtml(this.prompt)}</p>
-                            ${details ? `<div class="small text-muted"><i class="ics ics-info ic-xs ic-mr"></i>${details}</div>` : ''}
-                        </div>
-                    </div>
-                </div>
-            </div>
+                 <div class="card-body p-3">
+                <div class="d-flex gap-3">
+                           <!-- Activity Number & Rearrange Controls -->
+                <div class="activity-order-column d-flex flex-column align-items-center gap-2">
+                  <div class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center activity-order-badge">
+ #${activityNumber}
+               </div>
+   <div class="d-flex flex-column gap-1">
+          <button class="btn btn-sm btn-outline-secondary py-0 activity-order-btn" 
+           onclick="activityManager.moveActivityUp(${index})" 
+          ${index === 0 ? 'disabled' : ''} title="Move up">
+     ▲
+   </button>
+          <button class="btn btn-sm btn-outline-secondary py-0 activity-order-btn" 
+       onclick="activityManager.moveActivityDown(${index})" 
+    title="Move down">
+         ▼
+   </button>
+          </div>
+    </div>
+  
+          <!-- Activity Content -->
+     <div class="flex-grow-1 activity-content-col">
+   <div class="d-flex align-items-start justify-content-between mb-2">
+        <div class="d-flex align-items-center gap-2">
+         <span class="text-primary fs-5">${emoji}</span>
+     <h5 class="mb-0 fw-semibold">${this.escapeHtml(this.title)}</h5>
+ </div>
+           <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-primary" onclick="activityManager.editActivity(${index})">
+       <i class="ics ics-pencil ic-xs ic-mr"></i>Edit
+            </button>
+ <button class="btn btn-sm btn-outline-primary" onclick="activityManager.copyActivity(${index})" title="Copy Activity">
+     <i class="ics ics-copy ic-xs ic-mr"></i>Copy
+             </button>
+    <button class="btn btn-sm btn-outline-danger" onclick="activityManager.removeActivity(${index})">
+         <i class="ics ics-trash ic-xs ic-mr"></i>Remove
+   </button>
+          </div>
+          </div>
+        <p class="text-muted mb-2">${this.escapeHtml(this.prompt)}</p>
+      ${details ? `<div class="small text-muted"><i class="ics ics-info ic-xs ic-mr"></i>${details}</div>` : ''}
+    </div>
+      </div>
+   </div>
+ </div>
         `;
     }
 

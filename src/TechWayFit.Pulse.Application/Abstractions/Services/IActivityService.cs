@@ -31,6 +31,18 @@ public interface IActivityService
         Guid activityId,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Copy an existing activity to create a new pending activity with " (Copy)" appended to the title.
+    /// </summary>
+    /// <param name="sessionId">The session ID</param>
+    /// <param name="activityId">The activity ID to copy</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The newly created activity copy</returns>
+    Task<Activity> CopyActivityAsync(
+        Guid sessionId,
+        Guid activityId,
+        CancellationToken cancellationToken = default);
+
     Task OpenAsync(Guid sessionId, Guid activityId, DateTimeOffset openedAt, CancellationToken cancellationToken = default);
 
     Task ReopenAsync(Guid sessionId, Guid activityId, DateTimeOffset openedAt, CancellationToken cancellationToken = default);

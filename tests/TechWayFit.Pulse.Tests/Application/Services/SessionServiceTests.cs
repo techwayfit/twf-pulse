@@ -210,9 +210,9 @@ public class SessionServiceTests
      .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _sessionService.UpdateJoinFormSchemaAsync(sessionId, newSchema, now);
+      var result = await _sessionService.UpdateJoinFormSchemaAsync(sessionId, newSchema, now);
 
-        // Assert
+  // Assert
         result.Should().Be(session);
         session.JoinFormSchema.Should().Be(newSchema);
    session.UpdatedAt.Should().Be(now);

@@ -52,7 +52,9 @@ else if (session != null)
                                     SelectedActivityId="@selectedActivityId"
                                     IsSessionEnded="@(session.Status == SessionStatus.Ended || session.Status == SessionStatus.Expired)"
                                     OnSelectActivity="@SelectActivity"
-                                    OnAddActivity="@ShowAddActivityModal" />
+                                    OnAddActivity="@ShowAddActivityModal"
+                                    OnEditActivity="@ShowEditActivityModal"
+                                    OnCopyActivity="@CopyActivity" />
             </aside>
 
             @* Mobile sidebar overlay backdrop *@

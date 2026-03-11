@@ -12,11 +12,13 @@
 @if (isPresentationRoute)
 {
     <script src="/_framework/blazor.server.js"></script>
+    <script src="/js/blazor-reconnect.js" asp-append-version="true"></script>
 }
 else
 {
     @section Scripts {
         <!-- Blazor Server - loads AFTER QR scripts from layout -->
         <script src="/_framework/blazor.server.js"></script>
+        <script src="/js/blazor-reconnect.js" asp-append-version="true"></script>
     }
 }

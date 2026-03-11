@@ -165,6 +165,59 @@ public sealed class ActivityService : IActivityService
         await _activities.DeleteAsync(activity, cancellationToken);
     }
 
+    public async Task<Activity> CopyActivityAsync(
+        Guid sessionId,
+        Guid activityId,
+        CancellationToken cancellationToken = default)
+    {
+        if (sessionId == Guid.Empty)
+        {
+            throw new ArgumentException("Session id is required.", nameof(sessionId));
+        }
+
+        var sourceActivity = await _activities.GetByIdAsync(activityId, cancellationToken);
+        if (sourceActivity is null)
+        {
+            throw new InvalidOperationException("Activity not found.");
+        }
+
+        if (sourceActivity.SessionId != sessionId)
+        {
+            throw new InvalidOperationException("Activity does not belong to the session.");
+        }
+
+        // Get all activities in the session to determine the new order
+        var allActivities = await _activities.GetBySessionAsync(sessionId, cancellationToken);
+        var newOrder = allActivities.Count + 1;
+
+        // Create copy with " (Copy)" appended to title
+        var copiedTitle = sourceActivity.Title;
+        const string copySuffix = " (Copy)";
+
+        // Ensure the title doesn't exceed max length after adding suffix
+        if (copiedTitle.Length + copySuffix.Length > TitleMaxLength)
+        {
+            copiedTitle = copiedTitle.Substring(0, TitleMaxLength - copySuffix.Length);
+        }
+        copiedTitle += copySuffix;
+
+        var copiedActivity = new Activity(
+            Guid.NewGuid(),
+            sessionId,
+            newOrder,
+            sourceActivity.Type,
+            copiedTitle,
+            sourceActivity.Prompt,
+            sourceActivity.Config,
+            ActivityStatus.Pending, // Always create as Pending
+            null, // Not opened
+            null, // Not closed
+            sourceActivity.DurationMinutes);
+
+        await _activities.AddAsync(copiedActivity, cancellationToken);
+        return copiedActivity;
+    }
+
     public async Task<IReadOnlyList<Activity>> ReorderAsync(
         Guid sessionId,
         IReadOnlyList<Guid> orderedActivityIds,

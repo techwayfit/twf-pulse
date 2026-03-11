@@ -914,45 +914,100 @@ class AddActivitiesManager {
     
     removeActivity(index) {
         this.showConfirmation(
-            'Remove Activity',
-            'Are you sure you want to remove this activity?',
-            async () => {
-                try {
-                    const activity = this.activities[index];
-                    console.log(`Removing activity at index ${index}:`, activity);
-                    
-                    // If activity has an ID, delete from server
-                    if (activity && activity.id) {
-                        const response = await fetch(`/api/sessions/${this.sessionCode}/activities/${activity.id}`, {
-                            method: 'DELETE'
-                        });
-                        
-                        if (!response.ok) {
-                            throw new Error('Failed to delete activity from server');
-                        }
-                    }
-                    
-                    // Remove from local array
-                    this.activities.splice(index, 1);
-                    console.log(`Activities remaining: ${this.activities.length}`);
-                    
-                    // Update the display
-                    this.updateActivityList();
-                } catch (error) {
-                    console.error('Error removing activity:', error);
-                    this.showNotification(
-                        'error',
-                        'Failed to Remove Activity',
-                        'Could not remove the activity. Please try again.'
-                    );
-                }
-            },
+    'Remove Activity',
+'Are you sure you want to remove this activity?',
+ async () => {
+       try {
+        const activity = this.activities[index];
+            console.log(`Removing activity at index ${index}:`, activity);
+ 
+      // If activity has an ID, delete from server
+          if (activity && activity.id) {
+ const response = await fetch(`/api/sessions/${this.sessionCode}/activities/${activity.id}`, {
+     method: 'DELETE'
+           });
+            
+   if (!response.ok) {
+     throw new Error('Failed to delete activity from server');
+       }
+  }
+     
+          // Remove from local array
+   this.activities.splice(index, 1);
+            console.log(`Activities remaining: ${this.activities.length}`);
+      
+      // Update the display
+     this.updateActivityList();
+     } catch (error) {
+       console.error('Error removing activity:', error);
+   this.showNotification(
+           'error',
+          'Failed to Remove Activity',
+           'Could not remove the activity. Please try again.'
+       );
+     }
+         },
             {
                 icon: '<i class="ics ics-trash ic-xl"></i>',
-                okText: 'Remove',
-                okClass: 'btn-danger'
+     okText: 'Remove',
+  okClass: 'btn-danger'
+    }
+  );
+    }
+
+    async copyActivity(index) {
+      try {
+        const activity = this.activities[index];
+            if (!activity || !activity.id) {
+   console.error('Invalid activity to copy');
+return;
             }
-        );
+
+        console.log(`Copying activity at index ${index}:`, activity);
+
+        // Call API to copy the activity
+          const response = await fetch(`/api/sessions/${this.sessionCode}/activities/${activity.id}/copy`, {
+   method: 'POST'
+            });
+
+            if (!response.ok) {
+     const errorData = await response.json().catch(() => ({}));
+     throw new Error(errorData.error?.message || 'Failed to copy activity');
+            }
+
+            const result = await response.json();
+            const copiedActivity = result.data;
+
+            console.log('Activity copied successfully:', copiedActivity);
+
+// Add the copied activity to local array
+            this.activities.push({
+        id: copiedActivity.activityId,
+      type: copiedActivity.type.toLowerCase(),
+   title: copiedActivity.title,
+           prompt: copiedActivity.prompt,
+         durationMinutes: copiedActivity.durationMinutes,
+      config: copiedActivity.config,
+  order: copiedActivity.order
+   });
+
+            // Update the display
+       this.updateActivityList();
+
+   // Show success notification
+      this.showNotification(
+       'success',
+       'Activity Copied',
+         `"${activity.title}" has been copied successfully.`
+      );
+        } catch (error) {
+ console.error('Error copying activity:', error);
+   this.showNotification(
+      'error',
+     'Failed to Copy Activity',
+        error.message || 'Could not copy the activity. Please try again.'
+  );
+        }
     }
 
     updateActivityList() {

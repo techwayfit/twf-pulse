@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -112,6 +113,9 @@ builder.Services.AddAuthorization();
    options.JSInteropDefaultCallTimeout = TimeSpan.FromSeconds(30);
  options.MaxBufferedUnacknowledgedRenderBatches = 10; // Reduce memory usage
     });
+
+    // Register circuit handler for mobile connection management
+    builder.Services.AddScoped<CircuitHandler, TechWayFit.Pulse.Web.Infrastructure.MobileCircuitHandler>();
 
     // Add session support for token storage
     builder.Services.AddSession(options =>

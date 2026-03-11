@@ -811,6 +811,48 @@ public sealed class SessionsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Copy an existing activity to create a new pending activity.
+    /// The title will have " (Copy)" appended.
+    /// </summary>
+    [HttpPost("{code}/activities/{activityId:guid}/copy")]
+    public async Task<ActionResult<ApiResponse<AgendaActivityResponse>>> CopyActivity(
+        string code,
+        Guid activityId,
+        CancellationToken cancellationToken)
+    {
+      try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+        return NotFound(Error<AgendaActivityResponse>("not_found", "Session not found."));
+      }
+
+      var authError = RequireFacilitatorToken<AgendaActivityResponse>(session);
+  if (authError is not null)
+  {
+           return authError;
+         }
+
+  var copiedActivity = await _activities.CopyActivityAsync(
+          session.Id,
+     activityId,
+      cancellationToken);
+
+            await _hubNotifications.PublishActivityStateChangedAsync(session.Code, copiedActivity, cancellationToken);
+            return Ok(Wrap(ApiMapper.ToAgenda(copiedActivity)));
+        }
+  catch (ArgumentException ex)
+ {
+            return BadRequest(Error<AgendaActivityResponse>("validation_error", ex.Message));
+}
+  catch (InvalidOperationException ex)
+        {
+ return BadRequest(Error<AgendaActivityResponse>("validation_error", ex.Message));
+        }
+    }
+
     [HttpGet("{code}/activities")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<AgendaActivityResponse>>>> GetAgenda(
         string code,

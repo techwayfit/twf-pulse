@@ -1184,12 +1184,12 @@ public partial class Live : IAsyncDisposable
         {
             await InvokeAsync(() =>
 {
-              if (session != null && participantEvent.SessionCode == session.Code)
-              {
-                  participantCount = participantEvent.TotalParticipantCount;
-                  StateHasChanged();
-              }
-          });
+    if (session != null && participantEvent.SessionCode == session.Code)
+    {
+        participantCount = participantEvent.TotalParticipantCount;
+        StateHasChanged();
+    }
+});
         });
 
             // Handle response received events (for real-time response tracking)
@@ -1197,17 +1197,17 @@ public partial class Live : IAsyncDisposable
                     {
                         await InvokeAsync(() =>
               {
-                if (session != null && responseEvent.SessionCode == session.Code)
-                {
+                  if (session != null && responseEvent.SessionCode == session.Code)
+                  {
                       // Trigger UI refresh - the PollDashboard component handles its own SignalR updates
-                    if (currentActivity != null &&
-     responseEvent.ActivityId == currentActivity.ActivityId)
-                    {
-                        currentActivityResponseCount++;
-                        StateHasChanged();
-                    }
-                }
-            });
+                      if (currentActivity != null &&
+       responseEvent.ActivityId == currentActivity.ActivityId)
+                      {
+                          currentActivityResponseCount++;
+                          StateHasChanged();
+                      }
+                  }
+              });
                     });
 
             // Handle dashboard update events (for real-time dashboard updates)
@@ -1215,38 +1215,38 @@ public partial class Live : IAsyncDisposable
            {
                await InvokeAsync(() =>
 {
-                      if (session != null && dashboardEvent.SessionCode == session.Code)
-                      {
+    if (session != null && dashboardEvent.SessionCode == session.Code)
+    {
         // If this is an AI insight, capture payload for facilitator UI
-                          try
-                          {
-                              if (string.Equals(dashboardEvent.AggregateType, "AIInsight", StringComparison.OrdinalIgnoreCase))
-                              {
-                                  if (dashboardEvent.Payload is JsonElement je)
-                                  {
-                                      _aiInsightJson = je;
-                                  }
-                                  else
-                                  {
+        try
+        {
+            if (string.Equals(dashboardEvent.AggregateType, "AIInsight", StringComparison.OrdinalIgnoreCase))
+            {
+                if (dashboardEvent.Payload is JsonElement je)
+                {
+                    _aiInsightJson = je;
+                }
+                else
+                {
                     // Try to serialize/deserialize generic object into JsonElement
-                                      _aiInsightJson = JsonSerializer.SerializeToElement(dashboardEvent.Payload ?? new { });
-                                  }
-                                  _hasAiInsight = true;
-                                  _aiInsightTimestamp = dashboardEvent.Timestamp;
-                              }
+                    _aiInsightJson = JsonSerializer.SerializeToElement(dashboardEvent.Payload ?? new { });
+                }
+                _hasAiInsight = true;
+                _aiInsightTimestamp = dashboardEvent.Timestamp;
+            }
 
             // Trigger UI refresh - the dashboard components handle their own updates
-                              if (currentActivity != null && dashboardEvent.ActivityId.HasValue && dashboardEvent.ActivityId == currentActivity.ActivityId)
-                              {
-                                  StateHasChanged();
-                              }
-                          }
-                          catch
-                          {
+            if (currentActivity != null && dashboardEvent.ActivityId.HasValue && dashboardEvent.ActivityId == currentActivity.ActivityId)
+            {
+                StateHasChanged();
+            }
+        }
+        catch
+        {
             // ignore any payload parsing issues
-                          }
-                      }
-                  });
+        }
+    }
+});
            });
 
             // Handle activity deleted events
@@ -1301,56 +1301,103 @@ public partial class Live : IAsyncDisposable
         }
     }
 
+    private async Task CopyActivity(Guid activityId)
+    {
+        try
+      {
+isPerformingAction = true;
+  errorMessage = string.Empty;
+            StateHasChanged();
+
+            var token = await TokenService.GetFacilitatorTokenAsync(sessionCode);
+            if (string.IsNullOrEmpty(token))
+    {
+                errorMessage = "Unable to get facilitator authentication token. Please refresh and try again.";
+   return;
+ }
+
+       // Get session entity
+            var sessionEntity = await SessionService.GetByCodeAsync(sessionCode);
+      if (sessionEntity == null)
+            {
+                errorMessage = "Session not found.";
+          return;
+            }
+
+    // Copy the activity
+            var copiedActivity = await ActivityService.CopyActivityAsync(sessionEntity.Id, activityId);
+
+  // Broadcast SignalR event
+            await HubNotifications.PublishActivityStateChangedAsync(sessionCode, copiedActivity);
+
+    // Reload session to get updated activity list
+            await LoadSession();
+
+            // Show success notification using JavaScript
+            try
+ {
+          await JS.InvokeVoidAsync("eval", @"
+         if (typeof showToast === 'function') {
+     showToast('Activity copied successfully', 'success');
+   } else {
+       console.log('Activity copied successfully');
+    }
+                ");
+        }
+          catch (Exception jsEx)
+            {
+         Logger.LogWarning(jsEx, "Failed to show success toast, but activity was copied successfully");
+            }
+        }
+ catch (Exception ex)
+        {
+            errorMessage = $"Failed to copy activity: {ex.Message}";
+            Logger.LogError(ex, "Failed to copy activity {ActivityId}", activityId);
+     }
+        finally
+      {
+            isPerformingAction = false;
+       StateHasChanged();
+  }
+    }
+
     private async Task ShowAddActivityModal(string activityType)
     {
         // Modal is opened via HTML data-bs-toggle, this just logs
         Logger.LogDebug("Add activity modal triggered for type: {ActivityType}", activityType);
-        await Task.CompletedTask;
-    }
-
-    private async Task HandleSessionUpdated()
-    {
-        await LoadSession();
     }
 
     private async Task HandleActivityUpdated()
     {
-        await LoadSession();
+        // Reload session to get updated activity list
+      await LoadSession();
     }
 
     private async Task HandleActivityDeleted()
     {
-        await LoadSession();
-    }
+        // Reload session to get updated activity list
+   await LoadSession();
+ }
 
     #endregion
 
-    #region Disposal
+    #region IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        try
-        {
-            await JS.InvokeVoidAsync("eval", "document.body.classList.remove('live-layout-active')");
-        }
-        catch (Exception ex)
-        {
-            Logger.LogDebug(ex, "Unable to remove live layout body class during disposal");
-        }
-
-        if (hubConnection is not null)
-        {
+        if (hubConnection != null)
+ {
             try
             {
-                await hubConnection.InvokeAsync("Unsubscribe", sessionCode);
-                await hubConnection.DisposeAsync();
-            }
+        await hubConnection.DisposeAsync();
+     }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Error disposing SignalR connection");
-            }
-        }
+          }
     }
+  }
 
     #endregion
+
 }
