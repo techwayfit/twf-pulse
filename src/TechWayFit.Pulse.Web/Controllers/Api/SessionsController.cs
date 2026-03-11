@@ -411,6 +411,52 @@ public sealed class SessionsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Copy a session and all its activities to create a new draft session.
+    /// The new session will have a timestamp appended to the title and will be in Draft status.
+    /// </summary>
+    [HttpPost("{code}/copy")]
+    public async Task<ActionResult<ApiResponse<CreateSessionResponse>>> CopySession(
+        string code,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<CreateSessionResponse>("not_found", "Session not found."));
+            }
+
+            // SECURITY: Only allow authenticated facilitators who own this session
+            var userId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
+            if (userId == null || session.FacilitatorUserId != userId)
+            {
+                return Unauthorized(Error<CreateSessionResponse>("unauthorized", "Only the session owner can copy this session."));
+            }
+
+            // Generate a unique code for the new session
+            var newCode = await _codeGenerator.GenerateUniqueCodeAsync(cancellationToken);
+
+            // Copy the session
+            var newSession = await _sessions.CopySessionAsync(
+    session.Id,
+         newCode,
+ DateTimeOffset.UtcNow,
+           cancellationToken);
+
+            return Ok(Wrap(new CreateSessionResponse(newSession.Id, newSession.Code)));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<CreateSessionResponse>("validation_error", ex.Message));
+        }
+    }
+
     [HttpPost("{code}/activities")]
     public async Task<ActionResult<ApiResponse<ActivityResponse>>> AddActivity(
         string code,
@@ -468,59 +514,59 @@ public sealed class SessionsController : ControllerBase
    [FromBody] BulkCreateActivitiesRequest request,
         CancellationToken cancellationToken)
     {
-     try
-     {
-       var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-   if (session is null)
-   {
-           return NotFound(Error<BulkCreateActivitiesResponse>("not_found", "Session not found."));
+        try
+        {
+            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+            if (session is null)
+            {
+                return NotFound(Error<BulkCreateActivitiesResponse>("not_found", "Session not found."));
             }
 
             var authError = RequireFacilitatorToken<BulkCreateActivitiesResponse>(session);
-   if (authError is not null)
-        {
-            return authError;
-    }
-
-      if (request.Activities == null || request.Activities.Count == 0)
+            if (authError is not null)
             {
-return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", "No activities provided."));
-       }
+                return authError;
+            }
+
+            if (request.Activities == null || request.Activities.Count == 0)
+            {
+                return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", "No activities provided."));
+            }
 
             if (request.Activities.Count > 100)
- {
-         return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", "Cannot create more than 100 activities at once."));
-       }
+            {
+                return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", "Cannot create more than 100 activities at once."));
+            }
 
             var createdActivityIds = new List<Guid>();
-   var errors = new List<string>();
+            var errors = new List<string>();
 
             // Get current activities to determine starting order
-      var existingActivities = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+            var existingActivities = await _activities.GetAgendaAsync(session.Id, cancellationToken);
             var nextOrder = existingActivities.Count + 1;
 
             foreach (var item in request.Activities.OrderBy(a => a.Order))
-  {
-          try
-     {
-    var activity = await _activities.AddActivityAsync(
-        session.Id,
-      nextOrder++,
-     ApiMapper.MapActivityType(item.Type),
-       item.Title,
-     item.Prompt,
-item.Config,
- item.DurationMinutes,
-       cancellationToken);
+            {
+                try
+                {
+                    var activity = await _activities.AddActivityAsync(
+                        session.Id,
+                      nextOrder++,
+                     ApiMapper.MapActivityType(item.Type),
+                       item.Title,
+                     item.Prompt,
+                item.Config,
+                 item.DurationMinutes,
+                       cancellationToken);
 
-    createdActivityIds.Add(activity.Id);
-           await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
-              }
-  catch (Exception ex)
-       {
-   errors.Add($"Row {item.Order}: {ex.Message}");
-   }
-       }
+                    createdActivityIds.Add(activity.Id);
+                    await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"Row {item.Order}: {ex.Message}");
+                }
+            }
 
             var response = new BulkCreateActivitiesResponse(
       createdActivityIds.Count,
@@ -528,20 +574,20 @@ item.Config,
         errors.Any() ? errors : null
             );
 
-      if (createdActivityIds.Count == 0)
-   {
-        return BadRequest(Error<BulkCreateActivitiesResponse>("bulk_create_failed", "Failed to create any activities. Check errors."));
-   }
+            if (createdActivityIds.Count == 0)
+            {
+                return BadRequest(Error<BulkCreateActivitiesResponse>("bulk_create_failed", "Failed to create any activities. Check errors."));
+            }
 
-  return Ok(Wrap(response));
-    }
+            return Ok(Wrap(response));
+        }
         catch (ArgumentException ex)
         {
-    return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", ex.Message));
+            return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", ex.Message));
         }
-   catch (InvalidOperationException ex)
-   {
-         return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", ex.Message));
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(Error<BulkCreateActivitiesResponse>("validation_error", ex.Message));
         }
     }
 

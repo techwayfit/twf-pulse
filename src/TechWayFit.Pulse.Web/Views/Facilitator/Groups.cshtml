@@ -177,7 +177,13 @@
     </div>
 </div>
 
+@* Include shared Copy Session modals *@
+@await Html.PartialAsync("_CopySessionModals")
+
 @section Scripts {
+    @* Include copy session JavaScript *@
+    <script src="~/js/copy-session.js"></script>
+    
     <script src="~/js/icon-picker.js"></script>
     <script>
         // Initialize icon and color pickers
@@ -330,234 +336,234 @@
             // Skip if field is disabled (sub-group creation mode)
             if (this.disabled) return;
             
-            const level = parseInt(this.value);
-            const parentContainer = document.getElementById('parentGroupContainer');
-            const parentSelect = document.getElementById('parentGroup');
-            
+  const level = parseInt(this.value);
+  const parentContainer = document.getElementById('parentGroupContainer');
+const parentSelect = document.getElementById('parentGroup');
+   
             if (level > 1) {
-                parentContainer.style.display = 'block';
-                parentSelect.required = true;
-                
+    parentContainer.style.display = 'block';
+parentSelect.required = true;
+
                 // Filter parent options based on level
-                const options = parentSelect.querySelectorAll('option[data-level]');
-                options.forEach(option => {
-                    const optionLevel = parseInt(option.getAttribute('data-level'));
-                    option.style.display = optionLevel < level ? 'block' : 'none';
-                });
-            } else {
-                parentContainer.style.display = 'none';
-                parentSelect.required = false;
-                parentSelect.value = '';
+    const options = parentSelect.querySelectorAll('option[data-level]');
+    options.forEach(option => {
+          const optionLevel = parseInt(option.getAttribute('data-level'));
+            option.style.display = optionLevel < level ? 'block' : 'none';
+     });
+ } else {
+          parentContainer.style.display = 'none';
+         parentSelect.required = false;
+   parentSelect.value = '';
             }
         });
 
-        // Create group form
+// Create group form
         document.getElementById('createGroupForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+e.preventDefault();
             
             const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
+         const data = Object.fromEntries(formData.entries());
             
-            // Handle disabled fields manually (disabled fields are not included in FormData)
-            const levelSelect = document.getElementById('groupLevel');
-            const parentSelect = document.getElementById('parentGroup');
+  // Handle disabled fields manually (disabled fields are not included in FormData)
+      const levelSelect = document.getElementById('groupLevel');
+         const parentSelect = document.getElementById('parentGroup');
+          
+       if (levelSelect.disabled && levelSelect.value) {
+    data.level = levelSelect.value;
+ }
+     if (parentSelect.disabled && parentSelect.value) {
+        data.parentGroupId = parentSelect.value;
+ }
+    
+ console.log('Form data before processing:', data);
+    console.log('Icon value:', data.icon);
+          console.log('Color value:', data.color);
             
-            if (levelSelect.disabled && levelSelect.value) {
-                data.level = levelSelect.value;
-            }
-            if (parentSelect.disabled && parentSelect.value) {
-                data.parentGroupId = parentSelect.value;
-            }
-            
-            console.log('Form data before processing:', data);
-            console.log('Icon value:', data.icon);
-            console.log('Color value:', data.color);
-            
-            // Convert empty parentGroupId to null
+     // Convert empty parentGroupId to null
             if (!data.parentGroupId) {
-                data.parentGroupId = null;
+         data.parentGroupId = null;
             }
             
-            data.level = parseInt(data.level);
+        data.level = parseInt(data.level);
             
-            // Ensure icon has a default value if not set
-            if (!data.icon) {
-                data.icon = 'folder';
-            }
+  // Ensure icon has a default value if not set
+       if (!data.icon) {
+           data.icon = 'folder';
+     }
             
-            console.log('Final data to send:', data);
-            
-            try {
-                const response = await fetch('/api/session-groups', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                console.log('Response status:', response.status);
-                
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    let errorMessage = 'Unknown error';
-                    try {
-                        const error = await response.json();
-                        console.error('Error response:', error);
-                        errorMessage = error.message || error.title || JSON.stringify(error);
-                    } catch (parseErr) {
-                        const errorText = await response.text();
-                        console.error('Error response (text):', errorText);
-                        errorMessage = errorText || `HTTP ${response.status}`;
-                    }
-                    alert('Error creating group: ' + errorMessage);
-                }
-            } catch (err) {
-                console.error('Error creating group:', err);
-                alert('Error creating group: ' + (err.message || 'Network error'));
-            }
+      console.log('Final data to send:', data);
+   
+     try {
+         const response = await fetch('/api/session-groups', {
+          method: 'POST',
+      headers: {
+   'Content-Type': 'application/json',
+          },
+        body: JSON.stringify(data)
         });
+  
+ console.log('Response status:', response.status);
+     
+     if (response.ok) {
+           location.reload();
+                } else {
+    let errorMessage = 'Unknown error';
+    try {
+             const error = await response.json();
+    console.error('Error response:', error);
+     errorMessage = error.message || error.title || JSON.stringify(error);
+    } catch (parseErr) {
+   const errorText = await response.text();
+ console.error('Error response (text):', errorText);
+            errorMessage = errorText || `HTTP ${response.status}`;
+       }
+    alert('Error creating group: ' + errorMessage);
+  }
+    } catch (err) {
+         console.error('Error creating group:', err);
+              alert('Error creating group: ' + (err.message || 'Network error'));
+            }
+});
 
         // Edit group
-        function editGroup(id, name, description, icon, color) {
-            event.preventDefault();
-            document.getElementById('editGroupId').value = id;
-            document.getElementById('editGroupName').value = name;
-            document.getElementById('editGroupDescription').value = description || '';
+  function editGroup(id, name, description, icon, color) {
+event.preventDefault();
+         document.getElementById('editGroupId').value = id;
+       document.getElementById('editGroupName').value = name;
+    document.getElementById('editGroupDescription').value = description || '';
             document.getElementById('editGroupIcon').value = icon || 'folder';
-            
-            if (editIconPicker) {
-                editIconPicker.updateDisplay(icon || 'folder');
-            }
-            
-            // Update color preview
-            updateColorPreview('editGroupColor-preview', 'editGroupColor', color);
-            
-            new bootstrap.Modal(document.getElementById('editGroupModal')).show();
-            return false;
+  
+     if (editIconPicker) {
+      editIconPicker.updateDisplay(icon || 'folder');
+    }
+    
+   // Update color preview
+       updateColorPreview('editGroupColor-preview', 'editGroupColor', color);
+       
+   new bootstrap.Modal(document.getElementById('editGroupModal')).show();
+          return false;
         }
 
         // Edit group form
         document.getElementById('editGroupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
-            const groupId = data.id;
+    const formData = new FormData(this);
+     const data = Object.fromEntries(formData.entries());
+        const groupId = data.id;
             
-            try {
-                const response = await fetch(`/api/session-groups/${groupId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        name: data.name,
-                        description: data.description,
-                        icon: data.icon,
-                        color: data.color
-                    })
-                });
-                
+      try {
+        const response = await fetch(`/api/session-groups/${groupId}`, {
+        method: 'PUT',
+          headers: {
+     'Content-Type': 'application/json',
+   },
+        body: JSON.stringify({
+          name: data.name,
+         description: data.description,
+     icon: data.icon,
+        color: data.color
+        })
+      });
+ 
                 if (response.ok) {
-                    location.reload();
-                } else {
-                    const error = await response.json();
-                    alert('Error updating group: ' + (error.message || 'Unknown error'));
-                }
-            } catch (err) {
-                alert('Error updating group: ' + (err.message || 'Network error'));
-            }
+         location.reload();
+  } else {
+         const error = await response.json();
+        alert('Error updating group: ' + (error.message || 'Unknown error'));
+           }
+   } catch (err) {
+           alert('Error updating group: ' + (err.message || 'Network error'));
+        }
         });
 
         // Delete group
         async function deleteGroup(id, name) {
-            event.preventDefault();
-            if (!confirm(`Are you sure you want to delete the group "${name}"? This action cannot be undone.`)) {
-                return false;
+ event.preventDefault();
+    if (!confirm(`Are you sure you want to delete the group "${name}"? This action cannot be undone.`)) {
+     return false;
             }
-            
-            try {
-                const response = await fetch(`/api/session-groups/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    const error = await response.json();
-                    alert('Error deleting group: ' + (error.message || 'Unknown error'));
-                }
-            } catch (err) {
-                alert('Error deleting group: ' + (err.message || 'Network error'));
-            }
+         
+       try {
+         const response = await fetch(`/api/session-groups/${id}`, {
+      method: 'DELETE'
+     });
+     
+  if (response.ok) {
+            location.reload();
+        } else {
+     const error = await response.json();
+      alert('Error deleting group: ' + (error.message || 'Unknown error'));
+     }
+   } catch (err) {
+  alert('Error deleting group: ' + (err.message || 'Network error'));
+    }
             return false;
         }
-        
+      
         // ===== EXPAND/COLLAPSE WITH LOCALSTORAGE =====
         const STORAGE_KEY = 'groupsExpandedState';
-        
+      
         // Get expanded state from localStorage
         function getExpandedState() {
             const stored = localStorage.getItem(STORAGE_KEY);
             return stored ? JSON.parse(stored) : {};
-        }
+  }
         
         // Save expanded state to localStorage
         function saveExpandedState(groupId, isExpanded) {
             const state = getExpandedState();
-            state[groupId] = isExpanded;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+     state[groupId] = isExpanded;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         }
         
         // Toggle group expand/collapse
         window.toggleGroupExpand = function(groupId) {
-            const content = document.getElementById(`content-${groupId}`);
+   const content = document.getElementById(`content-${groupId}`);
             const icon = document.getElementById(`expand-icon-${groupId}`);
+   
+ if (!content || !icon) return;
+  
+          const isExpanding = !content.classList.contains('show');
             
-            if (!content || !icon) return;
-            
-            const isExpanding = !content.classList.contains('show');
-            
-            // Toggle Bootstrap collapse
+// Toggle Bootstrap collapse
             if (isExpanding) {
-                content.classList.add('show');
-                icon.classList.add('expanded');
+   content.classList.add('show');
+         icon.classList.add('expanded');
             } else {
-                content.classList.remove('show');
-                icon.classList.remove('expanded');
-            }
-            
-            // Save state to localStorage
+        content.classList.remove('show');
+   icon.classList.remove('expanded');
+}
+   
+ // Save state to localStorage
             saveExpandedState(groupId, isExpanding);
-        };
-        
-        // Initialize expand/collapse state on page load
-        function initializeExpandedState() {
+     };
+  
+ // Initialize expand/collapse state on page load
+ function initializeExpandedState() {
             const state = getExpandedState();
-            const allCards = document.querySelectorAll('[data-group-id]');
+   const allCards = document.querySelectorAll('[data-group-id]');
             
             // If no saved state, expand the first top-level group
-            if (Object.keys(state).length === 0 && allCards.length > 0) {
-                const firstGroupId = allCards[0].getAttribute('data-group-id');
-                toggleGroupExpand(firstGroupId);
-                return;
-            }
+       if (Object.keys(state).length === 0 && allCards.length > 0) {
+  const firstGroupId = allCards[0].getAttribute('data-group-id');
+       toggleGroupExpand(firstGroupId);
+       return;
+       }
             
             // Restore saved state
-            allCards.forEach(card => {
-                const groupId = card.getAttribute('data-group-id');
-                if (state[groupId]) {
+ allCards.forEach(card => {
+      const groupId = card.getAttribute('data-group-id');
+     if (state[groupId]) {
                     const content = document.getElementById(`content-${groupId}`);
-                    const icon = document.getElementById(`expand-icon-${groupId}`);
-                    if (content && icon) {
-                        content.classList.add('show');
-                        icon.classList.add('expanded');
-                    }
-                }
+         const icon = document.getElementById(`expand-icon-${groupId}`);
+   if (content && icon) {
+       content.classList.add('show');
+ icon.classList.add('expanded');
+             }
+            }
             });
-        }
+    }
         
         // Initialize on page load
         initializeExpandedState();

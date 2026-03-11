@@ -137,6 +137,28 @@
                                         <div class="session-status-@session.Status.ToLower()">@session.Status</div>
                                         <div>Expires @session.ExpiresAt.ToString("MMM d")</div>
                                     </div>
+                                    
+                                    @* Action Buttons *@
+                                    <div class="d-flex gap-1" onclick="event.stopPropagation();">
+                                        <a href="/facilitator/live?Code=@session.SessionCode" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                          title="View Session">
+                                             <i class="fas fa-eye"></i>
+                                                   </a>
+                                                  <a href="/facilitator/edit-session/@session.SessionCode?returnUrl=@Uri.EscapeDataString(Url.Action("Groups", "Facilitator") ?? "/facilitator/groups")" 
+                                         class="btn btn-sm btn-outline-secondary"
+                                      title="Edit Session">
+                                          <i class="fas fa-edit"></i>
+                                           </a>
+                                                <button type="button" 
+                                      class="btn btn-sm btn-outline-info copy-session-btn" 
+                                             data-session-code="@session.SessionCode"
+                                      data-session-title="@session.Title"
+                                         title="Copy Session">
+                                          <i class="fas fa-copy"></i>
+                                    </button>
+                                    </div>
+                                
                                 </div>
                             </div>
                         }

@@ -9,12 +9,14 @@ namespace TechWayFit.Pulse.Application.Services;
 public sealed class SessionService : ISessionService
 {
     private readonly ISessionRepository _sessions;
+    private readonly IActivityRepository _activities;
     private const int CodeMaxLength = 32;
     private const int TitleMaxLength = 200;
 
-    public SessionService(ISessionRepository sessions)
+    public SessionService(ISessionRepository sessions, IActivityRepository activities)
     {
         _sessions = sessions;
+        _activities = activities;
     }
 
     public async Task<Session> CreateSessionAsync(
@@ -228,5 +230,92 @@ public sealed class SessionService : ISessionService
         CancellationToken cancellationToken = default)
     {
         return await _sessions.GetByGroupAsync(groupId, facilitatorUserId, cancellationToken);
+    }
+
+    public async Task<Session> CopySessionAsync(
+        Guid sessionId,
+        string newCode,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        // Get the original session
+        var originalSession = await _sessions.GetByIdAsync(sessionId, cancellationToken);
+        if (originalSession is null)
+        {
+            throw new InvalidOperationException("Session not found.");
+        }
+
+        // Verify the new code is unique
+        if (string.IsNullOrWhiteSpace(newCode))
+        {
+            throw new ArgumentException("Session code is required.", nameof(newCode));
+        }
+
+        if (newCode.Trim().Length > CodeMaxLength)
+        {
+            throw new ArgumentException($"Session code must be <= {CodeMaxLength} characters.", nameof(newCode));
+        }
+
+        var existing = await _sessions.GetByCodeAsync(newCode.Trim(), cancellationToken);
+        if (existing is not null)
+        {
+            throw new InvalidOperationException("Session code already exists.");
+        }
+
+        // Create new title with timestamp - format: "Copy-DDMMYYHHmmss"
+        var timestamp = now.ToString("ddMMyyHHmmss");
+        var newTitle = $"{originalSession.Title} - Copy-{timestamp}";
+        
+        // Ensure title doesn't exceed max length
+        if (newTitle.Length > TitleMaxLength)
+        {
+            var maxOriginalTitleLength = TitleMaxLength - timestamp.Length - 9; // 9 chars for " - Copy-"
+            newTitle = $"{originalSession.Title.Substring(0, maxOriginalTitleLength)} - Copy-{timestamp}";
+        }
+
+        // Create the new session in Draft state
+        var newSession = new Session(
+            Guid.NewGuid(),
+            newCode.Trim(),
+            newTitle,
+            originalSession.Goal,
+            originalSession.Context,
+            originalSession.Settings, // Copy settings as-is
+            originalSession.JoinFormSchema, // Copy join form schema
+            SessionStatus.Draft, // Always start as Draft
+            null, // No current activity
+            now,
+            now,
+            now.AddDays(30), // Initial expiry
+            originalSession.FacilitatorUserId,
+            originalSession.GroupId, // Keep same group
+            null, // Clear session start
+            null); // Clear session end
+
+        await _sessions.AddAsync(newSession, cancellationToken);
+
+        // Copy all activities from the original session
+        var originalActivities = await _activities.GetBySessionAsync(originalSession.Id, cancellationToken);
+        
+        foreach (var originalActivity in originalActivities.OrderBy(a => a.Order))
+        {
+            // Create new activity without session-specific data
+            var newActivity = new Activity(
+                Guid.NewGuid(),
+                newSession.Id,
+                originalActivity.Order,
+                originalActivity.Type,
+                originalActivity.Title,
+                originalActivity.Prompt,
+                originalActivity.Config, // Copy config as-is
+                ActivityStatus.Pending, // Reset to Pending (not Open/Closed)
+                null, // Clear OpenedAt
+                null, // Clear ClosedAt
+                originalActivity.DurationMinutes);
+
+            await _activities.AddAsync(newActivity, cancellationToken);
+        }
+
+        return newSession;
     }
 }

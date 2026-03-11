@@ -1,3 +1,4 @@
+using Bogus;
 using FluentAssertions;
 using Moq;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
@@ -17,7 +18,8 @@ public class SessionServiceTests
     public SessionServiceTests()
     {
         _sessionRepositoryMock = new Mock<ISessionRepository>();
-        _sessionService = new SessionService(_sessionRepositoryMock.Object);
+        var activityRepoMock = new Mock<IActivityRepository>();
+        _sessionService = new SessionService(_sessionRepositoryMock.Object, activityRepoMock.Object);
     }
 
     [Fact]

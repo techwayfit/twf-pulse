@@ -1,0 +1,79 @@
+@* Copy Session Modals - Shared Component *@
+@* Usage: Include this partial view in any page that needs copy session functionality *@
+@* Requires: copy-session.js to be included in the page *@
+
+<!-- Copy Session Confirmation Modal -->
+<div class="modal fade" id="copySessionModal" tabindex="-1" aria-labelledby="copySessionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+<div class="modal-header">
+      <h5 class="modal-title" id="copySessionModalLabel">Copy Session</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  </div>
+       <div class="modal-body">
+   <p class="mb-3">
+               Are you sure you want to copy <strong id="copySessionTitleDisplay"></strong>?
+          </p>
+     <div class="alert alert-info mb-0">
+        <i class="fas fa-info-circle me-2"></i>
+            This will create a new draft session with all activities copied.
+  </div>
+            </div>
+   <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+             <button type="button" class="btn btn-primary" id="confirmCopyBtn">
+         <i class="fas fa-copy me-2"></i>Copy Session
+          </button>
+ </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copy Session Success Modal -->
+<div class="modal fade" id="copySuccessModal" tabindex="-1" aria-labelledby="copySuccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+  <div class="modal-content">
+  <div class="modal-header bg-success bg-opacity-10">
+                <h5 class="modal-title text-success" id="copySuccessModalLabel">
+  <i class="fas fa-check-circle me-2"></i>Session Copied Successfully
+   </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+   <div class="modal-body">
+         <p class="mb-2">Your session has been copied successfully!</p>
+     <div class="alert alert-success mb-0">
+       <strong>New Session Code:</strong> <span id="newSessionCodeDisplay" class="badge bg-success ms-2"></span>
+     </div>
+        </div>
+       <div class="modal-footer">
+   <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="stayHereBtn">Stay Here</button>
+      <button type="button" class="btn btn-primary" id="goToEditBtn">
+       <i class="fas fa-edit me-2"></i>Edit New Session
+</button>
+    </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copy Session Error Modal -->
+<div class="modal fade" id="copyErrorModal" tabindex="-1" aria-labelledby="copyErrorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+    <div class="modal-content">
+          <div class="modal-header bg-danger bg-opacity-10">
+   <h5 class="modal-title text-danger" id="copyErrorModalLabel">
+    <i class="fas fa-exclamation-circle me-2"></i>Copy Failed
+                </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+     </div>
+          <div class="modal-body">
+        <p class="mb-2">Failed to copy the session:</p>
+         <div class="alert alert-danger mb-0">
+          <small id="copyErrorMessage"></small>
+          </div>
+         </div>
+   <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+ </div>
+     </div>
+    </div>
+</div>

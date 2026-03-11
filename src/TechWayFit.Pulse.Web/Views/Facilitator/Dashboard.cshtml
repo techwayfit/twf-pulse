@@ -12,456 +12,478 @@
 }
 
 <div class="container container-wide">
-        <!-- Header -->
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
-            <div>
-                <h2 class="mb-2">My Workshop Sessions</h2>
-                <p class="text-muted mb-0">Welcome back, <strong>@userName</strong></p>
-            </div>
-            <div class="d-none d-md-flex gap-2">
-                <a href="@Url.Action("Groups", "Facilitator")" class="btn btn-outline-primary">
-                    <span class="d-none d-sm-inline"><i class="fas fa-folder me-1"></i></span>Manage Groups
-                </a>
-                <a class="btn btn-outline-primary" href="@Url.Action("Create", "Facilitator")">
-                                <span class="d-none d-sm-inline"><i class="fas fa-pencil"></i></span> Create Session 
-                </a>
-                <!-- Create Session Dropdown -->
-                
-            </div>
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="mb-2">My Workshop Sessions</h2>
+            <p class="text-muted mb-0">Welcome back, <strong>@userName</strong></p>
         </div>
+        <div class="d-none d-md-flex gap-2">
+            <a href="@Url.Action("Groups", "Facilitator")" class="btn btn-outline-primary">
+                <span class="d-none d-sm-inline"><i class="fas fa-folder me-1"></i></span>Manage Groups
+            </a>
+            <a class="btn btn-outline-primary" href="@Url.Action("Create", "Facilitator")">
+                <span class="d-none d-sm-inline"><i class="fas fa-pencil"></i></span> Create Session
+            </a>
+            <!-- Create Session Dropdown -->
 
-        <!-- Stats Cards -->
-        <div class="d-lg-none mb-2"></div>
-        @{
-            var statCards = new List<TechWayFit.Pulse.Web.Models.StatCardData>
-            {
-                new TechWayFit.Pulse.Web.Models.StatCardData
-                {
-                    Icon = "fas fa-folder",
-                    Value = Model.Count.ToString(),
-                    Label = "Total Sessions",
-                    Variant = "blue"
-                },
-                new TechWayFit.Pulse.Web.Models.StatCardData
-                {
-                    Icon = "fas fa-broadcast-tower",
-                    Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Live).ToString(),
-                    Label = "Live Sessions",
-                    Variant = "green"
-                },
-                new TechWayFit.Pulse.Web.Models.StatCardData
-                {
-                    Icon = "fas fa-file-alt",
-                    Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft).ToString(),
-                    Label = "Draft Sessions",
-                    Variant = "info"
-                },
-                new TechWayFit.Pulse.Web.Models.StatCardData
-                {
-                    Icon = "fas fa-check-circle",
-                    Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended).ToString(),
-                    Label = "Completed",
-                    Variant = "gray"
-                }
-            };
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="d-lg-none mb-2"></div>
+    @{
+        var statCards = new List<TechWayFit.Pulse.Web.Models.StatCardData>
+        {
+        new TechWayFit.Pulse.Web.Models.StatCardData
+        {
+        Icon = "fas fa-folder",
+        Value = Model.Count.ToString(),
+        Label = "Total Sessions",
+        Variant = "blue"
+        },
+        new TechWayFit.Pulse.Web.Models.StatCardData
+        {
+        Icon = "fas fa-broadcast-tower",
+        Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Live).ToString(),
+        Label = "Live Sessions",
+        Variant = "green"
+        },
+        new TechWayFit.Pulse.Web.Models.StatCardData
+        {
+        Icon = "fas fa-file-alt",
+        Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft).ToString(),
+        Label = "Draft Sessions",
+        Variant = "info"
+        },
+        new TechWayFit.Pulse.Web.Models.StatCardData
+        {
+        Icon = "fas fa-check-circle",
+        Value = Model.Count(s => s.Status == TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended).ToString(),
+        Label = "Completed",
+        Variant = "gray"
         }
-        <div class="stat-cards-mobile-wrapper mb-3">
-            @await Component.InvokeAsync("StatCards", new { cards = statCards })
-        </div>
+        };
+    }
+    <div class="stat-cards-mobile-wrapper mb-3">
+        @await Component.InvokeAsync("StatCards", new { cards = statCards })
+    </div>
 
-        <!-- Search and Filter Bar -->
-        <div class="filter-card mb-4">
-            <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md-3">
-                        <label class="filter-label">Search</label>
-                        <input type="text" class="form-control" id="sessionSearch" placeholder="Search sessions...">
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <label class="filter-label">Status</label>
-                        <select class="form-select" id="statusFilter">
-                            <option value="">All</option>
-                            <option value="Live">Live</option>
-                            <option value="Draft">Draft</option>
-                            <option value="Ended">Ended</option>
-                            <option value="Expired">Expired</option>
-                        </select>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div>
-                            <label class="filter-label">Group</label>
-                            <div class="flex-grow-1">
-                                @{
-                                    var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
-                                    
-                                    if (sessionGroups != null)
+    <!-- Search and Filter Bar -->
+    <div class="filter-card mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-3">
+                <label class="filter-label">Search</label>
+                <input type="text" class="form-control" id="sessionSearch" placeholder="Search sessions...">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="filter-label">Status</label>
+                <select class="form-select" id="statusFilter">
+                    <option value="">All</option>
+                    <option value="Live">Live</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Ended">Ended</option>
+                    <option value="Expired">Expired</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <div>
+                    <label class="filter-label">Group</label>
+                    <div class="flex-grow-1">
+                        @{
+                            var treeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
+
+                            if (sessionGroups != null)
+                            {
+                                foreach (var group in sessionGroups)
+                                {
+                                    treeItems.Add(new TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem
                                     {
-                                        foreach (var group in sessionGroups)
-                                        {
-                                            treeItems.Add(new TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem
-                                            {
-                                                Value = group.Id.ToString(),
-                                                Text = group.Name,
-                                                ParentValue = group.ParentGroupId?.ToString(),
-                                                Level = group.Level - 1,
-                                                HasChildren = sessionGroups.Any(g => g.ParentGroupId == group.Id),
-                                                Icon = group.Level == 1 ? "folder" : group.Level == 2 ? "folder-open" : "file"
-                                            });
-                                        }
+                                        Value = group.Id.ToString(),
+                                        Text = group.Name,
+                                        ParentValue = group.ParentGroupId?.ToString(),
+                                        Level = group.Level - 1,
+                                        HasChildren = sessionGroups.Any(g => g.ParentGroupId == group.Id),
+                                        Icon = group.Level == 1 ? "folder" : group.Level == 2 ? "folder-open" : "file"
+                                    });
+                                }
+                            }
+                        }
+                        @await Component.InvokeAsync("TreeDropdown", new {
+                        id = "groupFilter",
+                                                name = "groupFilter",
+                                                placeholder = "All Groups",
+                                                items = treeItems,
+                                                allowClear = true
+                                                })
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="filter-label">&nbsp;</label>
+                <div class="d-flex gap-2 flex-nowrap">
+                    <button type="button" class="btn btn-primary" id="applyFilters" style="flex: 1; white-space: nowrap;">
+                        Apply
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="clearFilters" style="flex: 1; white-space: nowrap;">
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sessions Table -->
+    <div class="card shadow-sm sessions-card">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-bold">Sessions</h5>
+                <div class="sort-controls">
+                    <span class="filter-label me-2 mb-0 d-inline">Sort:</span>
+                    <div class="sort-pills" id="sortPills">
+                        <span class="sort-pill active" data-sort="recent">
+                            <i class="fas fa-clock"></i> Recent
+                        </span>
+                        <span class="sort-pill" data-sort="upcoming">
+                            <i class="fas fa-calendar-alt"></i> Upcoming
+                        </span>
+                        <span class="sort-pill" data-sort="group">
+                            <i class="fas fa-folder"></i> Group
+                        </span>
+                        <span class="sort-pill" data-sort="title">
+                            <i class="fas fa-font"></i> A-Z
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Any())
+            {
+                <!-- Desktop Table View -->
+                <div class="d-none d-lg-block">
+                    <table class="table table-hover" id="sessionsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 140px;">Session Code</th>
+                                <th>Title</th>
+                                <th style="width: 200px;">Group</th>
+                                <th style="width: 180px;">Scheduled</th>
+                                <th style="width: 100px;">Status</th>
+                                <th style="width: 180px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var session in Model)
+                            {
+                                var groupColor = "#6366f1";
+                                var groupIcon = "folder";
+                                var groupName = "";
+                                if (session.GroupId.HasValue && sessionGroups != null)
+                                {
+                                    var group = sessionGroups.FirstOrDefault(g => g.Id == session.GroupId.Value);
+                                    if (group != null)
+                                    {
+                                        groupName = group.Name;
+                                        groupIcon = group.Icon;
+                                        groupColor = group.Color ?? "#6366f1";
                                     }
                                 }
-                                @await Component.InvokeAsync("TreeDropdown", new {
-                                    id = "groupFilter",
-                                    name = "groupFilter",
-                                    placeholder = "All Groups",
-                                    items = treeItems,
-                                    allowClear = true
-                                })
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label class="filter-label">&nbsp;</label>
-                        <div class="d-flex gap-2 flex-nowrap">
-                            <button type="button" class="btn btn-primary" id="applyFilters" style="flex: 1; white-space: nowrap;">
-                                Apply
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" id="clearFilters" style="flex: 1; white-space: nowrap;">
-                                Clear
-                            </button>
-                        </div>
-                    </div>
-                </div>
-        </div>
-
-        <!-- Sessions Table -->
-        <div class="card shadow-sm sessions-card">
-            <div class="card-header bg-white">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0 fw-bold">Sessions</h5>
-                    <div class="sort-controls">
-                        <span class="filter-label me-2 mb-0 d-inline">Sort:</span>
-                        <div class="sort-pills" id="sortPills">
-                            <span class="sort-pill active" data-sort="recent">
-                                <i class="fas fa-clock"></i> Recent
-                            </span>
-                            <span class="sort-pill" data-sort="upcoming">
-                                <i class="fas fa-calendar-alt"></i> Upcoming
-                            </span>
-                            <span class="sort-pill" data-sort="group">
-                                <i class="fas fa-folder"></i> Group
-                            </span>
-                            <span class="sort-pill" data-sort="title">
-                                <i class="fas fa-font"></i> A-Z
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                @if (Model.Any())
-                {
-                    <!-- Desktop Table View -->
-                    <div class="d-none d-lg-block">
-                        <table class="table table-hover" id="sessionsTable">
-                            <thead>
-                                <tr>
-                                    <th style="width: 140px;">Session Code</th>
-                                    <th>Title</th>
-                                    <th style="width: 200px;">Group</th>
-                                    <th style="width: 180px;">Scheduled</th>
-                                    <th style="width: 100px;">Status</th>
-                                    <th style="width: 50px;"></th>
+                                <tr class="session-row"
+                                    data-session-id="@session.Id"
+                                    data-session-code="@session.Code"
+                                    data-group-id="@(session.GroupId?.ToString() ?? "")"
+                                    data-group-name="@groupName"
+                                    data-status="@session.Status.ToString()"
+                                    data-scheduled="@(session.SessionStart?.ToString("o") ?? "")"
+                                    data-session-start="@(session.SessionStart?.ToString("yyyy-MM-ddTHH:mm") ?? "")"
+                                    data-session-end="@(session.SessionEnd?.ToString("yyyy-MM-ddTHH:mm") ?? "")"
+                                    data-created="@session.CreatedAt.ToString("o")"
+                                    data-title="@session.Title"
+                                    data-goal="@(session.Goal ?? "")"
+                                    data-context="@(session.Context ?? "")"
+                                    data-allow-anonymous="@session.Settings.AllowAnonymous.ToString().ToLower()"
+                                    data-ttl-minutes="@session.Settings.TtlMinutes"
+                                    data-strict-current-activity="@session.Settings.StrictCurrentActivityOnly.ToString().ToLower()"
+                                    data-search-text="@($"{session.Code} {session.Title} {session.Goal ?? ""}").ToLower()"
+                                    onclick="window.location.href='/facilitator/live?Code=@session.Code'"
+                                    style="cursor: pointer;">
+                                    <td onclick="event.stopPropagation();">
+                                        <a href="/facilitator/live?Code=@session.Code" class="session-code">
+                                            @session.Code
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong class="d-block">@session.Title</strong>
+                                            @if (!string.IsNullOrEmpty(session.Goal))
+                                            {
+                                                <small class="text-muted">@session.Goal</small>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(groupName))
+                                        {
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="group-icon-display group-icon-square" style="background-color: @groupColor;" data-icon="@groupIcon"></span>
+                                                <span class="group-name-text">@groupName</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (session.SessionStart.HasValue)
+                                        {
+                                            <div class="scheduled-info">
+                                                <div class="scheduled-date">
+                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                    @session.SessionStart.Value.ToString("MMM dd, yyyy")
+                                                </div>
+                                                <div class="scheduled-time text-muted">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    @session.SessionStart.Value.ToString("HH:mm")
+                                                    @if (session.SessionEnd.HasValue)
+                                                    {
+                                                        <span> - @session.SessionEnd.Value.ToString("HH:mm")</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not scheduled</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @switch (session.Status)
+                                        {
+                                            case TechWayFit.Pulse.Domain.Enums.SessionStatus.Live:
+                                                <span class="status-badge status-live"><span class="status-dot"></span>Live</span>
+                                                break;
+                                            case TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft:
+                                                <span class="status-badge status-draft"><span class="status-dot"></span>Draft</span>
+                                                break;
+                                            case TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended:
+                                                <span class="status-badge status-ended"><span class="status-dot"></span>Ended</span>
+                                                break;
+                                            case TechWayFit.Pulse.Domain.Enums.SessionStatus.Expired:
+                                                <span class="status-badge status-expired"><span class="status-dot"></span>Expired</span>
+                                                break;
+                                        }
+                                    </td>
+                                    <td class="text-end" onclick="event.stopPropagation();">
+                                        <div class="btn-group" role="group">
+                                            <a href="/facilitator/live?Code=@session.Code"
+                                               class="btn btn-sm btn-outline-primary"
+                                               title="View Session">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="/facilitator/edit-session/@session.Code?returnUrl=@Uri.EscapeDataString(Url.Action("Dashboard", "Facilitator", new { page = ViewData["CurrentPage"] }) ?? "/facilitator/dashboard")"
+                                               class="btn btn-sm btn-outline-secondary"
+                                               title="Edit Session">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-info copy-session-btn"
+                                                    data-session-code="@session.Code"
+                                                    data-session-title="@session.Title"
+                                                    title="Copy Session">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var session in Model)
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="d-lg-none" id="sessionCards">
+                    @foreach (var session in Model)
+                    {
+                        var groupName = "";
+                        if (session.GroupId.HasValue && sessionGroups != null)
+                        {
+                            var group = sessionGroups.FirstOrDefault(g => g.Id == session.GroupId.Value);
+                            if (group != null)
+                            {
+                                groupName = group.Name;
+                            }
+                        }
+                        <div class="session-mobile-card"
+                             data-session-id="@session.Id"
+                             data-group-id="@(session.GroupId?.ToString() ?? "")"
+                             data-group-name="@groupName"
+                             data-status="@session.Status.ToString()"
+                             data-scheduled="@(session.SessionStart?.ToString("o") ?? "")"
+                             data-created="@session.CreatedAt.ToString("o")"
+                             data-title="@session.Title"
+                             data-search-text="@($"{session.Code} {session.Title} {session.Goal ?? ""}").ToLower()">
+                            <div class="session-mobile-card-header">
+                                <a href="/facilitator/live?Code=@session.Code" class="session-code">@session.Code</a>
+                                @switch (session.Status)
                                 {
-                                    var groupColor = "#6366f1";
-                                    var groupIcon = "folder";
-                                    var groupName = "";
-                                    if (session.GroupId.HasValue && sessionGroups != null)
+                                    case TechWayFit.Pulse.Domain.Enums.SessionStatus.Live:
+                                        <span class="status-badge status-live"><span class="status-dot"></span>Live</span>
+                                        break;
+                                    case TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft:
+                                        <span class="status-badge status-draft"><span class="status-dot"></span>Draft</span>
+                                        break;
+                                    case TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended:
+                                        <span class="status-badge status-ended"><span class="status-dot"></span>Ended</span>
+                                        break;
+                                    case TechWayFit.Pulse.Domain.Enums.SessionStatus.Expired:
+                                        <span class="status-badge status-expired"><span class="status-dot"></span>Expired</span>
+                                        break;
+                                }
+                            </div>
+                            <div class="session-mobile-card-body">
+                                <h6 class="session-mobile-title">@session.Title</h6>
+                                @if (!string.IsNullOrEmpty(session.Goal))
+                                {
+                                    <p class="session-mobile-goal">@session.Goal</p>
+                                }
+                                <div class="session-mobile-meta">
+                                    @if (session.GroupId.HasValue && sessionGroups != null)
                                     {
                                         var group = sessionGroups.FirstOrDefault(g => g.Id == session.GroupId.Value);
                                         if (group != null)
                                         {
-                                            groupName = group.Name;
-                                            groupIcon = group.Icon;
-                                            groupColor = group.Color ?? "#6366f1";
+                                            <span class="session-mobile-group"><i class="fas fa-folder"></i> @group.Name</span>
                                         }
                                     }
-                                    <tr class="session-row" 
-                                        data-session-id="@session.Id" 
-                                        data-session-code="@session.Code"
-                                        data-group-id="@(session.GroupId?.ToString() ?? "")" 
-                                        data-group-name="@groupName"
-                                        data-status="@session.Status.ToString()"
-                                        data-scheduled="@(session.SessionStart?.ToString("o") ?? "")"
-                                        data-session-start="@(session.SessionStart?.ToString("yyyy-MM-ddTHH:mm") ?? "")"
-                                        data-session-end="@(session.SessionEnd?.ToString("yyyy-MM-ddTHH:mm") ?? "")"
-                                        data-created="@session.CreatedAt.ToString("o")"
-                                        data-title="@session.Title"
-                                        data-goal="@(session.Goal ?? "")"
-                                        data-context="@(session.Context ?? "")"
-                                        data-allow-anonymous="@session.Settings.AllowAnonymous.ToString().ToLower()"
-                                        data-ttl-minutes="@session.Settings.TtlMinutes"
-                                        data-strict-current-activity="@session.Settings.StrictCurrentActivityOnly.ToString().ToLower()"
-                                        data-search-text="@($"{session.Code} {session.Title} {session.Goal ?? ""}").ToLower()"
-                                        onclick="window.location.href='/facilitator/live?Code=@session.Code'"
-                                        style="cursor: pointer;">
-                                        <td onclick="event.stopPropagation();">
-                                            <a href="/facilitator/live?Code=@session.Code" class="session-code">
-                                                @session.Code
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <strong class="d-block">@session.Title</strong>
-                                                @if (!string.IsNullOrEmpty(session.Goal))
-                                                {
-                                                    <small class="text-muted">@session.Goal</small>
-                                                }
-                                            </div>
-                                        </td>
-                                        <td>
-                                            @if (!string.IsNullOrEmpty(groupName))
-                                            {
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <span class="group-icon-display group-icon-square" style="background-color: @groupColor;" data-icon="@groupIcon"></span>
-                                                    <span class="group-name-text">@groupName</span>
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">—</span>
-                                            }
-                                        </td>
-                                        <td>
-                                            @if (session.SessionStart.HasValue)
-                                            {
-                                                <div class="scheduled-info">
-                                                    <div class="scheduled-date">
-                                                        <i class="fas fa-calendar-alt me-1"></i>
-                                                        @session.SessionStart.Value.ToString("MMM dd, yyyy")
-                                                    </div>
-                                                    <div class="scheduled-time text-muted">
-                                                        <i class="fas fa-clock me-1"></i>
-                                                        @session.SessionStart.Value.ToString("HH:mm")
-                                                        @if (session.SessionEnd.HasValue)
-                                                        {
-                                                            <span> - @session.SessionEnd.Value.ToString("HH:mm")</span>
-                                                        }
-                                                    </div>
-                                                </div>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">Not scheduled</span>
-                                            }
-                                        </td>
-                                        <td>
-                                            @switch (session.Status)
-                                            {
-                                                case TechWayFit.Pulse.Domain.Enums.SessionStatus.Live:
-                                                    <span class="status-badge status-live"><span class="status-dot"></span>Live</span>
-                                                    break;
-                                                case TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft:
-                                                    <span class="status-badge status-draft"><span class="status-dot"></span>Draft</span>
-                                                    break;
-                                                case TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended:
-                                                    <span class="status-badge status-ended"><span class="status-dot"></span>Ended</span>
-                                                    break;
-                                                case TechWayFit.Pulse.Domain.Enums.SessionStatus.Expired:
-                                                    <span class="status-badge status-expired"><span class="status-dot"></span>Expired</span>
-                                                    break;
-                                            }
-                                        </td>
-                                        <td class="text-end" onclick="event.stopPropagation();">
-                                            <a href="/facilitator/edit-session/@session.Code?returnUrl=@Uri.EscapeDataString(Url.Action("Dashboard", "Facilitator", new { page = ViewData["CurrentPage"] }) ?? "/facilitator/dashboard")" 
-                                               class="btn btn-sm btn-outline-secondary">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- Mobile Card View -->
-                    <div class="d-lg-none" id="sessionCards">
-                        @foreach (var session in Model)
-                        {
-                            var groupName = "";
-                            if (session.GroupId.HasValue && sessionGroups != null)
-                            {
-                                var group = sessionGroups.FirstOrDefault(g => g.Id == session.GroupId.Value);
-                                if (group != null)
-                                {
-                                    groupName = group.Name;
-                                }
-                            }
-                            <div class="session-mobile-card" 
-                                 data-session-id="@session.Id" 
-                                 data-group-id="@(session.GroupId?.ToString() ?? "")" 
-                                 data-group-name="@groupName"
-                                 data-status="@session.Status.ToString()"
-                                 data-scheduled="@(session.SessionStart?.ToString("o") ?? "")"
-                                 data-created="@session.CreatedAt.ToString("o")"
-                                 data-title="@session.Title"
-                                 data-search-text="@($"{session.Code} {session.Title} {session.Goal ?? ""}").ToLower()">
-                                <div class="session-mobile-card-header">
-                                    <a href="/facilitator/live?Code=@session.Code" class="session-code">@session.Code</a>
-                                    @switch (session.Status)
+                                    @if (session.SessionStart.HasValue)
                                     {
-                                        case TechWayFit.Pulse.Domain.Enums.SessionStatus.Live:
-                                            <span class="status-badge status-live"><span class="status-dot"></span>Live</span>
-                                            break;
-                                        case TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft:
-                                            <span class="status-badge status-draft"><span class="status-dot"></span>Draft</span>
-                                            break;
-                                        case TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended:
-                                            <span class="status-badge status-ended"><span class="status-dot"></span>Ended</span>
-                                            break;
-                                        case TechWayFit.Pulse.Domain.Enums.SessionStatus.Expired:
-                                            <span class="status-badge status-expired"><span class="status-dot"></span>Expired</span>
-                                            break;
+                                        <span class="session-mobile-schedule"><i class="fas fa-calendar"></i> @session.SessionStart.Value.ToString("MMM dd, HH:mm")</span>
                                     }
-                                </div>
-                                <div class="session-mobile-card-body">
-                                    <h6 class="session-mobile-title">@session.Title</h6>
-                                    @if (!string.IsNullOrEmpty(session.Goal))
-                                    {
-                                        <p class="session-mobile-goal">@session.Goal</p>
-                                    }
-                                    <div class="session-mobile-meta">
-                                        @if (session.GroupId.HasValue && sessionGroups != null)
-                                        {
-                                            var group = sessionGroups.FirstOrDefault(g => g.Id == session.GroupId.Value);
-                                            if (group != null)
-                                            {
-                                                <span class="session-mobile-group"><i class="fas fa-folder"></i> @group.Name</span>
-                                            }
-                                        }
-                                        @if (session.SessionStart.HasValue)
-                                        {
-                                            <span class="session-mobile-schedule"><i class="fas fa-calendar"></i> @session.SessionStart.Value.ToString("MMM dd, HH:mm")</span>
-                                        }
-                                        <span class="session-mobile-date">Created: @session.CreatedAt.ToString("MMM dd, yyyy")</span>
-                                    </div>
-                                </div>
-                                <div class="session-mobile-card-footer">
-                                    <div class="d-flex gap-2">
-                                        <a href="/facilitator/live?Code=@session.Code" 
-                                           class="btn btn-sm btn-primary flex-fill">
-                                            <i class="fas fa-eye"></i> View
-                                        </a>
-                                        <a href="/facilitator/edit-session/@session.Code?returnUrl=@Uri.EscapeDataString(Url.Action("Dashboard", "Facilitator", new { page = ViewData["CurrentPage"] }) ?? "/facilitator/dashboard")" 
-                                           class="btn btn-sm btn-outline-secondary flex-fill">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </a>
-                                    </div>
+                                    <span class="session-mobile-date">Created: @session.CreatedAt.ToString("MMM dd, yyyy")</span>
                                 </div>
                             </div>
-                        }
-                    </div>
-                    
-                    <!-- Pagination Controls -->
-                    @if (totalPages > 1)
-                    {
-                        <div class="pagination-footer">
-                            <div class="pagination-info">
-                                Showing @((currentPage - 1) * pageSize + 1) to @(Math.Min(currentPage * pageSize, totalCount)) of @totalCount sessions
+                            <div class="session-mobile-card-footer">
+                                <div class="d-flex gap-2">
+                                    <a href="/facilitator/live?Code=@session.Code"
+                                       class="btn btn-sm btn-primary flex-fill">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <a href="/facilitator/edit-session/@session.Code?returnUrl=@Uri.EscapeDataString(Url.Action("Dashboard", "Facilitator", new { page = ViewData["CurrentPage"] }) ?? "/facilitator/dashboard")"
+                                       class="btn btn-sm btn-outline-secondary flex-fill">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-info flex-fill copy-session-btn"
+                                            data-session-code="@session.Code"
+                                            data-session-title="@session.Title"
+                                            title="Copy Session">
+                                        <i class="fas fa-copy"></i> Copy
+                                    </button>
+                                </div>
                             </div>
-                            <nav aria-label="Page navigation">
-                                <ul class="pagination pagination-sm mb-0">
-                                    <!-- First Page -->
-                                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                                        <a class="page-link" href="?page=1&pageSize=@pageSize" aria-label="First">
-                                            <span aria-hidden="true">&laquo;</span>
-                                        </a>
-                                    </li>
-                                    
-                                    <!-- Previous Page -->
-                                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                                        <a class="page-link" href="?page=@(currentPage - 1)&pageSize=@pageSize" aria-label="Previous">
-                                            <span aria-hidden="true">&lsaquo;</span>
-                                        </a>
-                                    </li>
-
-                                    <!-- Page Numbers -->
-                                    @{
-                                        var startPage = Math.Max(1, currentPage - 2);
-                                        var endPage = Math.Min(totalPages, currentPage + 2);
-                                        
-                                        if (startPage > 1)
-                                        {
-                                            <li class="page-item"><a class="page-link" href="?page=1&pageSize=@pageSize">1</a></li>
-                                            if (startPage > 2)
-                                            {
-                                                <li class="page-item disabled"><span class="page-link">...</span></li>
-                                            }
-                                        }
-                                        
-                                        for (var i = startPage; i <= endPage; i++)
-                                        {
-                                            <li class="page-item @(i == currentPage ? "active" : "")">
-                                                <a class="page-link" href="?page=@i&pageSize=@pageSize">@i</a>
-                                            </li>
-                                        }
-                                        
-                                        if (endPage < totalPages)
-                                        {
-                                            if (endPage < totalPages - 1)
-                                            {
-                                                <li class="page-item disabled"><span class="page-link">...</span></li>
-                                            }
-                                            <li class="page-item"><a class="page-link" href="?page=@totalPages&pageSize=@pageSize">@totalPages</a></li>
-                                        }
-                                    }
-
-                                    <!-- Next Page -->
-                                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                                        <a class="page-link" href="?page=@(currentPage + 1)&pageSize=@pageSize" aria-label="Next">
-                                            <span aria-hidden="true">&rsaquo;</span>
-                                        </a>
-                                    </li>
-                                    
-                                    <!-- Last Page -->
-                                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                                        <a class="page-link" href="?page=@totalPages&pageSize=@pageSize" aria-label="Last">
-                                            <span aria-hidden="true">&raquo;</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
                         </div>
                     }
-                    
-                    <div class="session-count-badge">
-                        <span id="sessionCount">
-                            @totalCount @(totalCount == 1 ? "session" : "sessions") total
-                        </span>
-                    </div>
-                }
-                else
+                </div>
+
+                <!-- Pagination Controls -->
+                @if (totalPages > 1)
                 {
-                    <div class="empty-state">
-                        <div class="empty-state-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" fill="#0066FF" opacity="0.2"/>
-                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" fill="#0066FF"/>
-                            </svg>
+                    <div class="pagination-footer">
+                        <div class="pagination-info">
+                            Showing @((currentPage - 1) * pageSize + 1) to @(Math.Min(currentPage * pageSize, totalCount)) of @totalCount sessions
                         </div>
-                        <h3 class="empty-state-title">No Sessions Yet</h3>
-                        <p class="empty-state-text">Create your first interactive workshop session and start engaging with participants!</p>
-                        <a href="@Url.Action("Create", "Facilitator")" class="btn btn-primary">
-                            <i class="fas fa-sparkles me-2"></i>Create Your First Session
-                        </a>
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm mb-0">
+                                <!-- First Page -->
+                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link" href="?page=1&pageSize=@pageSize" aria-label="First">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+
+                                <!-- Previous Page -->
+                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link" href="?page=@(currentPage - 1)&pageSize=@pageSize" aria-label="Previous">
+                                        <span aria-hidden="true">&lsaquo;</span>
+                                    </a>
+                                </li>
+
+                                <!-- Page Numbers -->
+                                @{
+                                    var startPage = Math.Max(1, currentPage - 2);
+                                    var endPage = Math.Min(totalPages, currentPage + 2);
+
+                                    if (startPage > 1)
+                                    {
+                                        <li class="page-item"><a class="page-link" href="?page=1&pageSize=@pageSize">1</a></li>
+                                        if (startPage > 2)
+                                        {
+                                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                                        }
+                                    }
+
+                                    for (var i = startPage; i <= endPage; i++)
+                                    {
+                                        <li class="page-item @(i == currentPage ? "active" : "")">
+                                            <a class="page-link" href="?page=@i&pageSize=@pageSize">@i</a>
+                                        </li>
+                                    }
+
+                                    if (endPage < totalPages)
+                                    {
+                                        if (endPage < totalPages - 1)
+                                        {
+                                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                                        }
+                                        <li class="page-item"><a class="page-link" href="?page=@totalPages&pageSize=@pageSize">@totalPages</a></li>
+                                    }
+                                }
+
+                                <!-- Next Page -->
+                                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                    <a class="page-link" href="?page=@(currentPage + 1)&pageSize=@pageSize" aria-label="Next">
+                                        <span aria-hidden="true">&rsaquo;</span>
+                                    </a>
+                                </li>
+
+                                <!-- Last Page -->
+                                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                    <a class="page-link" href="?page=@totalPages&pageSize=@pageSize" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 }
-            </div>
+
+                <div class="session-count-badge">
+                    <span id="sessionCount">
+                        @totalCount @(totalCount == 1 ? "session" : "sessions") total
+                    </span>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" fill="#0066FF" opacity="0.2" />
+                            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" fill="#0066FF" />
+                        </svg>
+                    </div>
+                    <h3 class="empty-state-title">No Sessions Yet</h3>
+                    <p class="empty-state-text">Create your first interactive workshop session and start engaging with participants!</p>
+                    <a href="@Url.Action("Create", "Facilitator")" class="btn btn-primary">
+                        <i class="fas fa-sparkles me-2"></i>Create Your First Session
+                    </a>
+                </div>
+            }
         </div>
     </div>
+</div>
 </div>
 
 <!-- Assign Group Modal -->
@@ -482,7 +504,7 @@
                     <label for="assignGroupSelect" class="form-label">Select Group</label>
                     @{
                         var assignTreeItems = new List<TechWayFit.Pulse.Web.ViewComponents.TreeDropdown.TreeDropdownItem>();
-                        
+
                         if (sessionGroups != null)
                         {
                             foreach (var group in sessionGroups)
@@ -500,12 +522,12 @@
                         }
                     }
                     @await Component.InvokeAsync("TreeDropdown", new {
-                        id = "assignGroupSelect",
-                        name = "assignGroupSelect",
-                        placeholder = "No Group (Remove Assignment)",
-                        items = assignTreeItems,
-                        allowClear = true
-                    })
+                    id = "assignGroupSelect",
+                                        name = "assignGroupSelect",
+                                        placeholder = "No Group (Remove Assignment)",
+                                        items = assignTreeItems,
+                                        allowClear = true
+                                        })
                 </div>
             </div>
             <div class="modal-footer">
@@ -516,340 +538,339 @@
     </div>
 </div>
 
+@* Include shared Copy Session modals *@
+@await Html.PartialAsync("_CopySessionModals")
+
 @section Scripts {
+    @* Include copy session JavaScript *@
+    <script src="~/js/copy-session.js"></script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Render group icons using IconHelper
-            if (window.IconHelper) {
-                const iconElements = document.querySelectorAll('.group-icon-display[data-icon]');
-                iconElements.forEach(element => {
-                    const iconValue = element.getAttribute('data-icon');
-                    if (iconValue) {
-                        element.innerHTML = IconHelper.toFontAwesome(iconValue);
-                    }
-                });
-            }
+                document.addEventListener('DOMContentLoaded', function() {
+                // Render group icons using IconHelper
+         if (window.IconHelper) {
+               const iconElements = document.querySelectorAll('.group-icon-display[data-icon]');
+           iconElements.forEach(element => {
+                         const iconValue = element.getAttribute('data-icon');
+            if (iconValue) {
+                 element.innerHTML = IconHelper.toFontAwesome(iconValue);
+          }
+                   });
+                }
 
-            const searchInput = document.getElementById('sessionSearch');
-            const groupFilter = document.getElementById('groupFilter');
-            const statusFilter = document.getElementById('statusFilter');
+          const searchInput = document.getElementById('sessionSearch');
+                    const groupFilter = document.getElementById('groupFilter');
+             const statusFilter = document.getElementById('statusFilter');
             const applyBtn = document.getElementById('applyFilters');
-            const clearBtn = document.getElementById('clearFilters');
-            const sessionCount = document.getElementById('sessionCount');
-            
-            // Apply filters
-            applyBtn.addEventListener('click', function() {
-                applyFilters();
-            });
-            
-            // Clear filters
-            clearBtn.addEventListener('click', function() {
+         const clearBtn = document.getElementById('clearFilters');
+                    const sessionCount = document.getElementById('sessionCount');
+
+              // Apply filters
+                    applyBtn.addEventListener('click', function() {
+             applyFilters();
+          });
+
+                    // Clear filters
+                 clearBtn.addEventListener('click', function() {
                 searchInput.value = '';
-                groupFilter.value = '';
-                statusFilter.value = '';
+                  groupFilter.value = '';
+           statusFilter.value = '';
                 document.querySelector('[data-dropdown-id="groupFilter"] .dropdown-text').textContent = 'All Groups';
-                applyFilters();
-            });
-            
-            // Tree dropdown functionality
-            initializeTreeDropdown();
-            
+                        applyFilters();
+           });
+
+             // Tree dropdown functionality
+             initializeTreeDropdown();
+
             function applyFilters() {
-                const searchText = searchInput.value.toLowerCase();
-                const selectedGroupId = groupFilter.value;
-                const selectedStatus = statusFilter.value;
-                const rows = document.querySelectorAll('#sessionsTable tbody tr');
-                const cards = document.querySelectorAll('.session-mobile-card');
-                let visibleCount = 0;
-                
-                // Filter desktop table rows
-                rows.forEach(row => {
-                    const rowSearchText = row.getAttribute('data-search-text');
-                    const rowGroupId = row.getAttribute('data-group-id');
-                    const rowStatus = row.getAttribute('data-status');
-                    
-                    let showRow = true;
-                    
-                    // Apply search filter
-                    if (searchText && !rowSearchText.includes(searchText)) {
-                        showRow = false;
-                    }
-                    
-                    // Apply group filter
-                    if (selectedGroupId && rowGroupId !== selectedGroupId) {
-                        showRow = false;
-                    }
-                    
-                    // Apply status filter
-                    if (selectedStatus && rowStatus !== selectedStatus) {
-                        showRow = false;
-                    }
-                    
-                    if (showRow) {
-                        row.style.display = '';
-                        visibleCount++;
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-                
+              const searchText = searchInput.value.toLowerCase();
+                 const selectedGroupId = groupFilter.value;
+             const selectedStatus = statusFilter.value;
+             const rows = document.querySelectorAll('#sessionsTable tbody tr');
+           const cards = document.querySelectorAll('.session-mobile-card');
+            let visibleCount = 0;
+
+             // Filter desktop table rows
+                     rows.forEach(row => {
+                       const rowSearchText = row.getAttribute('data-search-text');
+        const rowGroupId = row.getAttribute('data-group-id');
+                  const rowStatus = row.getAttribute('data-status');
+
+                  let showRow = true;
+
+          // Apply search filter
+            if (searchText && !rowSearchText.includes(searchText)) {
+                    showRow = false;
+                 }
+
+                  // Apply group filter
+                if (selectedGroupId && rowGroupId !== selectedGroupId) {
+                     showRow = false;
+           }
+
+             // Apply status filter
+              if (selectedStatus && rowStatus !== selectedStatus) {
+                  showRow = false;
+          }
+
+                if (showRow) {
+               row.style.display = '';
+               visibleCount++;
+             } else {
+             row.style.display = 'none';
+            }
+               });
+
                 // Filter mobile cards
-                cards.forEach(card => {
-                    const cardSearchText = card.getAttribute('data-search-text');
+               cards.forEach(card => {
+                  const cardSearchText = card.getAttribute('data-search-text');
                     const cardGroupId = card.getAttribute('data-group-id');
-                    const cardStatus = card.getAttribute('data-status');
-                    
-                    let showCard = true;
-                    
-                    // Apply search filter
-                    if (searchText && !cardSearchText.includes(searchText)) {
-                        showCard = false;
-                    }
-                    
-                    // Apply group filter
-                    if (selectedGroupId && cardGroupId !== selectedGroupId) {
-                        showCard = false;
-                    }
-                    
-                    // Apply status filter
-                    if (selectedStatus && cardStatus !== selectedStatus) {
-                        showCard = false;
-                    }
-                    
-                    card.style.display = showCard ? '' : 'none';
-                });
-                
-                // Update count
-                sessionCount.textContent = `${visibleCount} ${visibleCount === 1 ? 'session' : 'sessions'}`;
-            }
-            
-            function initializeTreeDropdown() {
-                // Handle tree toggle clicks first with capture phase
-                document.addEventListener('click', function(e) {
-                    // Tree toggle functionality - handle in capture phase to prevent dropdown from closing
-                    if (e.target.closest('.tree-toggle')) {
-                        const toggle = e.target.closest('.tree-toggle');
-                        const targetId = toggle.getAttribute('data-target');
-                        const target = document.getElementById(targetId);
-                        const icon = toggle.querySelector('i');
-                        
-                        if (target) {
-                            target.classList.toggle('show');
-                            if (target.classList.contains('show')) {
-                                icon.className = 'fas fa-chevron-down';
-                            } else {
-                                icon.className = 'fas fa-chevron-right';
-                            }
-                        }
-                        
-                        e.preventDefault();
-                        e.stopPropagation();
-                        e.stopImmediatePropagation();
-                        return false;
-                    }
-                }, true); // Use capture phase
-                
-                // Handle tree item selection in normal phase
-                document.addEventListener('click', function(e) {
-                    // Only handle tree item selection if not clicking on toggle
-                    if (e.target.closest('.tree-item') && !e.target.closest('.tree-toggle')) {
-                        const treeItem = e.target.closest('.tree-item');
-                        const value = treeItem.getAttribute('data-value');
-                        const text = treeItem.querySelector('.tree-item-text').textContent;
-                        const dropdown = treeItem.closest('.tree-dropdown');
-                        const hiddenInput = dropdown.querySelector('input[type="hidden"]');
-                        const dropdownText = dropdown.querySelector('.dropdown-text');
-                        
-                        // Update value
-                        hiddenInput.value = value;
-                        dropdownText.textContent = value ? text : 'All Groups';
-                        
-                        // Close dropdown only when selecting an item
-                        const dropdownElement = new bootstrap.Dropdown(dropdown.querySelector('[data-bs-toggle="dropdown"]'));
-                        dropdownElement.hide();
-                        
-                        // Remove selected class from all items
-                        dropdown.querySelectorAll('.tree-item').forEach(item => {
-                            item.classList.remove('selected');
+               const cardStatus = card.getAttribute('data-status');
+
+           let showCard = true;
+
+            // Apply search filter
+                if (searchText && !cardSearchText.includes(searchText)) {
+                            showCard = false;
+           }
+
+                  // Apply group filter
+              if (selectedGroupId && cardGroupId !== selectedGroupId) {
+             showCard = false;
+             }
+
+           // Apply status filter
+         if (selectedStatus && cardStatus !== selectedStatus) {
+                     showCard = false;
+                     }
+
+                card.style.display = showCard ? '' : 'none';
                         });
-                        
-                        // Add selected class to clicked item
-                        if (value) {
-                            treeItem.classList.add('selected');
-                        }
-                        
-                        e.preventDefault();
-                        e.stopPropagation();
-                    }
-                });
-            }
-        });
-        
-        // Context menu functions
-        function assignGroup(sessionCode, sessionId) {
-            // Find session data from the table
-            const row = document.querySelector(`tr[data-session-id="${sessionId}"]`);
-            if (!row) return;
-            
-            const titleElement = row.querySelector('strong');
-            const groupId = row.getAttribute('data-group-id');
-            
+
+              // Update count
+             sessionCount.textContent = `${visibleCount} ${visibleCount === 1 ? 'session' : 'sessions'}`;
+                }
+
+                    function initializeTreeDropdown() {
+                   // Handle tree toggle clicks first with capture phase
+                document.addEventListener('click', function(e) {
+                 // Tree toggle functionality - handle in capture phase to prevent dropdown from closing
+             if (e.target.closest('.tree-toggle')) {
+            const toggle = e.target.closest('.tree-toggle');
+                   const targetId = toggle.getAttribute('data-target');
+                  const target = document.getElementById(targetId);
+                const icon = toggle.querySelector('i');
+
+          if (target) {
+                            target.classList.toggle('show');
+                 if (target.classList.contains('show')) {
+                    icon.className = 'fas fa-chevron-down';
+          } else {
+              icon.className = 'fas fa-chevron-right';
+              }
+                     }
+
+                   e.preventDefault();
+             e.stopPropagation();
+           e.stopImmediatePropagation();
+             return false;
+                   }
+                        }, true); // Use capture phase
+
+            // Handle tree item selection in normal phase
+                    document.addEventListener('click', function(e) {
+                  // Only handle tree item selection if not clicking on toggle
+                if (e.target.closest('.tree-item') && !e.target.closest('.tree-toggle')) {
+                     const treeItem = e.target.closest('.tree-item');
+           const value = treeItem.getAttribute('data-value');
+            const text = treeItem.querySelector('.tree-item-text').textContent;
+                 const dropdown = treeItem.closest('.tree-dropdown');
+            const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+                     const dropdownText = dropdown.querySelector('.dropdown-text');
+
+               // Update value
+                      hiddenInput.value = value;
+                 dropdownText.textContent = value ? text : 'All Groups';
+
+           // Close dropdown only when selecting an item
+                  const dropdownElement = new bootstrap.Dropdown(dropdown.querySelector('[data-bs-toggle="dropdown"]'));
+                    dropdownElement.hide();
+
+                 // Remove selected class from all items
+           dropdown.querySelectorAll('.tree-item').forEach(item => {
+        item.classList.remove('selected');
+                    });
+
+               // Add selected class to clicked item
+                      if (value) {
+        treeItem.classList.add('selected');
+               }
+
+                    e.preventDefault();
+                   e.stopPropagation();
+                            }
+                 });
+              }
+             });
+
+                // Context menu functions
+             function assignGroup(sessionCode, sessionId) {
+         // Find session data from the table
+               const row = document.querySelector(`tr[data-session-id="${sessionId}"]`);
+               if (!row) return;
+
+           const titleElement = row.querySelector('strong');
+                  const groupId = row.getAttribute('data-group-id');
+
             // Populate modal
-            document.getElementById('assignGroupSessionCode').value = sessionCode;
+           document.getElementById('assignGroupSessionCode').value = sessionCode;
             document.getElementById('assignGroupSessionId').value = sessionId;
-            document.getElementById('assignGroupSessionTitle').textContent = titleElement ? titleElement.textContent : sessionCode;
-            
-            // Set current group in dropdown
-            const groupSelect = document.getElementById('assignGroupSelect');
-            if (groupSelect && groupId) {
-                groupSelect.value = groupId;
-                const dropdownText = document.querySelector('[data-dropdown-id="assignGroupSelect"] .dropdown-text');
+                    document.getElementById('assignGroupSessionTitle').textContent = titleElement ? titleElement.textContent : sessionCode;
+
+        // Set current group in dropdown
+                    const groupSelect = document.getElementById('assignGroupSelect');
+                    if (groupSelect && groupId) {
+           groupSelect.value = groupId;
+            const dropdownText = document.querySelector('[data-dropdown-id="assignGroupSelect"] .dropdown-text');
                 const selectedItem = document.querySelector(`[data-dropdown-id="assignGroupSelect"] [data-value="${groupId}"]`);
-                if (dropdownText && selectedItem) {
-                    dropdownText.textContent = selectedItem.querySelector('.tree-item-text').textContent;
-                }
-            }
-            
+                   if (dropdownText && selectedItem) {
+            dropdownText.textContent = selectedItem.querySelector('.tree-item-text').textContent;
+               }
+                    }
+
             // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('assignGroupModal'));
-            modal.show();
-        }
-        
-        // Save group assignment
-        document.getElementById('saveGroupAssignmentBtn').addEventListener('click', async function() {
-            const btn = this;
-            const sessionCode = document.getElementById('assignGroupSessionCode').value;
-            const sessionId = document.getElementById('assignGroupSessionId').value;
-            const groupId = document.getElementById('assignGroupSelect').value || null;
-            
-            // Show loading state
-            btn.classList.add('btn-loading');
-            btn.disabled = true;
-            
-            try {
+                    const modal = new bootstrap.Modal(document.getElementById('assignGroupModal'));
+                    modal.show();
+                }
+
+                // Save group assignment
+                document.getElementById('saveGroupAssignmentBtn').addEventListener('click', async function() {
+                    const btn = this;
+        const sessionCode = document.getElementById('assignGroupSessionCode').value;
+                const sessionId = document.getElementById('assignGroupSessionId').value;
+                  const groupId = document.getElementById('assignGroupSelect').value || null;
+
+                    // Show loading state
+           btn.classList.add('btn-loading');
+                    btn.disabled = true;
+
+           try {
                 const response = await fetch(`/api/sessions/${sessionCode}/group`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+            method: 'PUT',
+                  headers: {
+            'Content-Type': 'application/json'
+         },
                     body: JSON.stringify({
-                        groupId: groupId
-                    })
-                });
-                
-                if (response.ok) {
-                    // Close modal
-                    bootstrap.Modal.getInstance(document.getElementById('assignGroupModal')).hide();
-                    
-                    // Reload page to show updated data
-                    window.location.reload();
-                } else {
-                    const error = await response.json();
-                    alert('Error assigning group: ' + (error.message || 'Unknown error'));
-                }
-            } catch (error) {
-                alert('Error assigning group: ' + error.message);
-            } finally {
-                btn.classList.remove('btn-loading');
-                btn.disabled = false;
+                       groupId: groupId
+                  })
+                     });
+
+             if (response.ok) {
+             // Close modal
+                   bootstrap.Modal.getInstance(document.getElementById('assignGroupModal')).hide();
+
+          // Reload page to show updated data
+             window.location.reload();
+             } else {
+            const error = await response.json();
+               alert('Error assigning group: ' + (error.message || 'Unknown error'));
+                   }
+                    } catch (error) {
+            alert('Error assigning group: ' + error.message);
+          } finally {
+                 btn.classList.remove('btn-loading');
+            btn.disabled = false;
             }
-        });
+                });
 
-        // Sort functionality
-        const sortPills = document.querySelectorAll('.sort-pill');
-        sortPills.forEach(pill => {
-            pill.addEventListener('click', function() {
-                sortPills.forEach(p => p.classList.remove('active'));
-                this.classList.add('active');
+           // Sort functionality
+            const sortPills = document.querySelectorAll('.sort-pill');
+              sortPills.forEach(pill => {
+                    pill.addEventListener('click', function() {
+            sortPills.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
                 const sortBy = this.dataset.sort;
-                sortSessions(sortBy);
-                sortMobileCards(sortBy);
-            });
+              sortSessions(sortBy);
+          sortMobileCards(sortBy);
+                 });
+                });
+
+             function sortSessions(sortBy) {
+               const tableBody = document.querySelector('#sessionsTable tbody');
+             if (!tableBody) return;
+
+                    const rows = Array.from(tableBody.querySelectorAll('tr.session-row'));
+
+               rows.sort((a, b) => {
+          switch(sortBy) {
+           case 'recent':
+                       const dateA = new Date(a.dataset.created);
+                     const dateB = new Date(b.dataset.created);
+                   return dateB - dateA;
+
+                        case 'upcoming':
+                   const schedA = a.dataset.scheduled || 'Z';
+                  const schedB = b.dataset.scheduled || 'Z';
+                  if (schedA === 'Z' && schedB === 'Z') return 0;
+          if (schedA === 'Z') return 1;
+               if (schedB === 'Z') return -1;
+            return new Date(schedA) - new Date(schedB);
+
+             case 'group':
+                    const groupA = a.dataset.groupName || 'zzz';
+                 const groupB = b.dataset.groupName || 'zzz';
+                 const groupCompare = groupA.localeCompare(groupB);
+          if (groupCompare !== 0) return groupCompare;
+                 return a.dataset.title.localeCompare(b.dataset.title);
+
+            case 'title':
+          return a.dataset.title.localeCompare(b.dataset.title);
+
+                 default:
+                return 0;
+             }
+                    });
+
+          rows.forEach(row => tableBody.appendChild(row));
+                }
+
+                function sortMobileCards(sortBy) {
+          const container = document.getElementById('sessionCards');
+                 if (!container) return;
+
+                  const cards = Array.from(container.querySelectorAll('.session-mobile-card'));
+
+             cards.sort((a, b) => {
+                  switch(sortBy) {
+                 case 'recent':
+          const dateA = new Date(a.dataset.created || 0);
+            const dateB = new Date(b.dataset.created || 0);
+           return dateB - dateA;
+
+          case 'upcoming':
+           const schedA = a.dataset.scheduled || 'Z';
+            const schedB = b.dataset.scheduled || 'Z';
+           if (schedA === 'Z' && schedB === 'Z') return 0;
+                    if (schedA === 'Z') return 1;
+         if (schedB === 'Z') return -1;
+                return new Date(schedA) - new Date(schedB);
+
+                 case 'group':
+            const groupA = a.dataset.groupName || 'zzz';
+            const groupB = b.dataset.groupName || 'zzz';
+                    const groupCompare = groupA.localeCompare(groupB);
+                 if (groupCompare !== 0) return groupCompare;
+            return a.dataset.title.localeCompare(b.dataset.title);
+
+                 case 'title':
+                return a.dataset.title.localeCompare(b.dataset.title);
+
+                     default:
+             return 0;
+               }
         });
 
-        function sortSessions(sortBy) {
-            const tableBody = document.querySelector('#sessionsTable tbody');
-            if (!tableBody) return;
-
-            const rows = Array.from(tableBody.querySelectorAll('tr.session-row'));
-            
-            rows.sort((a, b) => {
-                switch(sortBy) {
-                    case 'recent':
-                        // Sort by created date, newest first
-                        const dateA = new Date(a.dataset.created);
-                        const dateB = new Date(b.dataset.created);
-                        return dateB - dateA;
-                    
-                    case 'upcoming':
-                        // Sort by scheduled date, upcoming first (nulls last)
-                        const schedA = a.dataset.scheduled || 'Z';
-                        const schedB = b.dataset.scheduled || 'Z';
-                        if (schedA === 'Z' && schedB === 'Z') return 0;
-                        if (schedA === 'Z') return 1;
-                        if (schedB === 'Z') return -1;
-                        return new Date(schedA) - new Date(schedB);
-                    
-                    case 'group':
-                        // Sort by group name (nulls last), then by title
-                        const groupA = a.dataset.groupName || 'zzz';
-                        const groupB = b.dataset.groupName || 'zzz';
-                        const groupCompare = groupA.localeCompare(groupB);
-                        if (groupCompare !== 0) return groupCompare;
-                        return a.dataset.title.localeCompare(b.dataset.title);
-                    
-                    case 'title':
-                        // Sort alphabetically by title
-                        return a.dataset.title.localeCompare(b.dataset.title);
-                    
-                    default:
-                        return 0;
+         cards.forEach(card => container.appendChild(card));
                 }
-            });
-
-            // Reorder rows
-            rows.forEach(row => tableBody.appendChild(row));
-        }
-
-        // Mobile card sorting handled by unified sort pills above
-
-        function sortMobileCards(sortBy) {
-            const container = document.getElementById('sessionCards');
-            if (!container) return;
-
-            const cards = Array.from(container.querySelectorAll('.session-mobile-card'));
-            
-            cards.sort((a, b) => {
-                switch(sortBy) {
-                    case 'recent':
-                        const dateA = new Date(a.dataset.created || 0);
-                        const dateB = new Date(b.dataset.created || 0);
-                        return dateB - dateA;
-                    
-                    case 'upcoming':
-                        const schedA = a.dataset.scheduled || 'Z';
-                        const schedB = b.dataset.scheduled || 'Z';
-                        if (schedA === 'Z' && schedB === 'Z') return 0;
-                        if (schedA === 'Z') return 1;
-                        if (schedB === 'Z') return -1;
-                        return new Date(schedA) - new Date(schedB);
-                    
-                    case 'group':
-                        const groupA = a.dataset.groupName || 'zzz';
-                        const groupB = b.dataset.groupName || 'zzz';
-                        const groupCompare = groupA.localeCompare(groupB);
-                        if (groupCompare !== 0) return groupCompare;
-                        return a.dataset.title.localeCompare(b.dataset.title);
-                    
-                    case 'title':
-                        return a.dataset.title.localeCompare(b.dataset.title);
-                    
-                    default:
-                        return 0;
-                }
-            });
-
-            cards.forEach(card => container.appendChild(card));
-        }
     </script>
 }

@@ -61,4 +61,18 @@ public interface ISessionService
         Guid? groupId,
         Guid facilitatorUserId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Copy a session and its activities to create a new draft session.
+    /// </summary>
+    /// <param name="sessionId">The ID of the session to copy</param>
+    /// <param name="newCode">The code for the new session</param>
+    /// <param name="now">Current timestamp</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The newly created session copy</returns>
+    Task<Session> CopySessionAsync(
+        Guid sessionId,
+        string newCode,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default);
 }
