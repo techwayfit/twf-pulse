@@ -878,6 +878,55 @@ main.flex-grow-1 {
    GROUP TREE COMPONENTS - Minimal Custom Styles
    ============================================ */
 
+/* Group Cards - Subtle alternating background */
+.card[data-group-id] {
+  margin-bottom: 1rem;
+}
+
+/* Card headers - Add subtle teal tint background */
+.card[data-group-id] > .card-header {
+  background: linear-gradient(135deg, rgba(14, 158, 154, 0.03) 0%, rgba(14, 158, 154, 0.06) 100%);
+  transition: background 0.2s ease;
+}
+
+.card[data-group-id] > .card-header:hover {
+  background: linear-gradient(135deg, rgba(14, 158, 154, 0.06) 0%, rgba(14, 158, 154, 0.1) 100%);
+}
+
+/* Alternate background for even/odd groups at each level */
+.card[data-group-id]:nth-child(even) {
+  background-color: #f8fafb;
+}
+
+.card[data-group-id]:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+/* Child groups container - Add subtle left border */
+.child-groups {
+  border-left: 3px solid rgba(14, 158, 154, 0.2);
+  padding-left: 1rem;
+  margin-top: 0.75rem;
+}
+
+/* Session items - Make them stand out slightly from card body */
+.session-item {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  transition: all 0.15s ease;
+}
+
+.session-item:hover {
+  transform: translateX(2px);
+  border-color: rgba(14, 158, 154, 0.3);
+  box-shadow: 0 1px 3px rgba(14, 158, 154, 0.1);
+}
+
+/* Card body - Subtle background for content area */
+.card[data-group-id] .card-body {
+  background-color: rgba(248, 250, 251, 0.5);
+}
+
 /* Expand/Collapse Animation */
 .expand-icon {
   display: inline-block;
@@ -913,24 +962,10 @@ main.flex-grow-1 {
   background: var(--pulse-gray-500);
 }
 
-/* Session item hover effect */
-.session-item {
-  transition: all 0.15s ease;
-}
-
-.session-item:hover {
-  transform: translateX(2px);
-}
-
-/* Child groups indentation with border */
-.child-groups {
-  border-left: 2px solid var(--pulse-gray-300);
-}
-
 /* Icon & Color Picker sizing */
 .icon-picker-display {
   width: 60px;
-  height: 60px;
+height: 60px;
 }
 
 .color-preview {
