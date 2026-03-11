@@ -6,7 +6,7 @@
     var userName = ViewData["UserName"] as string;
     var returnUrl = Context.Request.Query["returnUrl"].ToString();
     var isFromCreateSession = !string.IsNullOrEmpty(returnUrl) && returnUrl.Contains("create", StringComparison.OrdinalIgnoreCase);
-    
+
     // Store all groups in ViewData for recursive rendering
     ViewData["AllGroups"] = Model;
 }
@@ -78,12 +78,12 @@
                         <label for="groupName" class="form-label">Group Name *</label>
                         <input type="text" class="form-control" id="groupName" name="name" required maxlength="200">
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="groupDescription" class="form-label">Description</label>
                         <textarea class="form-control" id="groupDescription" name="description" rows="3" maxlength="1000" placeholder="Optional description for this group"></textarea>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Icon & Color</label>
                         <div class="d-flex align-items-start gap-3 flex-wrap">
@@ -99,7 +99,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="groupLevel" class="form-label">Level *</label>
                         <select class="form-select" id="groupLevel" name="level" required>
@@ -108,7 +108,7 @@
                             <option value="3">Level 3 (Sub Sub Group)</option>
                         </select>
                     </div>
-                    
+
                     <div class="mb-3" id="parentGroupContainer" style="display: none;">
                         <label for="parentGroup" class="form-label">Parent Group *</label>
                         <select class="form-select" id="parentGroup" name="parentGroupId">
@@ -146,12 +146,12 @@
                         <label for="editGroupName" class="form-label">Group Name *</label>
                         <input type="text" class="form-control" id="editGroupName" name="name" required maxlength="200">
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="editGroupDescription" class="form-label">Description</label>
                         <textarea class="form-control" id="editGroupDescription" name="description" rows="3" maxlength="1000"></textarea>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Icon & Color</label>
                         <div class="d-flex align-items-start gap-3 flex-wrap">
@@ -183,389 +183,578 @@
 @section Scripts {
     @* Include copy session JavaScript *@
     <script src="~/js/copy-session.js"></script>
-    
+
     <script src="~/js/icon-picker.js"></script>
     <script>
-        // Initialize icon and color pickers
-        let createIconPicker, createColorPicker, editIconPicker, editColorPicker;
-        let initialized = false;
-        
-        document.addEventListener('DOMContentLoaded', () => {
+          // Global drag state variables (outside DOMContentLoaded)
+                let draggedSession = null;
+                let draggedSessionCode = null;
+                let isDragging = false;
+
+                // Initialize icon and color pickers
+                let createIconPicker, createColorPicker, editIconPicker, editColorPicker;
+                let initialized = false;
+
+         document.addEventListener('DOMContentLoaded', () => {
             if (initialized) {
-                console.log('Already initialized, skipping');
-                return;
-            }
-            initialized = true;
-            
-            console.log('Initializing icon and color pickers...');
-            
-            // Initialize CREATE icon picker (icon-only mode)
-            createIconPicker = new IconPicker('groupIcon', { 
-                displayId: 'groupIcon-display',
-                triggerButtonId: 'groupIcon-change',
-                pickerContainerId: 'groupIcon-picker',
-                mode: 'icon-only'
-            });
-            
-            // Initialize CREATE color picker (color-only mode)
-            createColorPicker = new IconPicker('groupColor', { 
-                displayId: 'groupColor-preview',
-                triggerButtonId: 'groupColor-change',
-                pickerContainerId: 'groupColor-picker',
-                mode: 'color-only',
-                onColorChange: updateColorPreview.bind(null, 'groupColor-preview', 'groupColor')
-            });
-            
-            // Initialize EDIT icon picker (icon-only mode)
-            editIconPicker = new IconPicker('editGroupIcon', { 
-                displayId: 'editGroupIcon-display',
-                triggerButtonId: 'editGroupIcon-change',
-                pickerContainerId: 'editGroupIcon-picker',
-                mode: 'icon-only'
-            });
-            
-            // Initialize EDIT color picker (color-only mode)
-            editColorPicker = new IconPicker('editGroupColor', { 
-                displayId: 'editGroupColor-preview',
-                triggerButtonId: 'editGroupColor-change',
-                pickerContainerId: 'editGroupColor-picker',
-                mode: 'color-only',
-                onColorChange: updateColorPreview.bind(null, 'editGroupColor-preview', 'editGroupColor')
-            });
-            
-            console.log('Icon and color pickers initialized');
-        });
-        
-        // Update color preview box
-        function updateColorPreview(previewId, inputId, color) {
-            console.log('updateColorPreview called:', { previewId, inputId, color });
-            
-            const preview = document.getElementById(previewId);
-            const input = document.getElementById(inputId);
-            
-            console.log('Preview element:', preview);
-            console.log('Input element:', input);
-            
-            if (color) {
-                preview.style.background = color;
-                preview.textContent = '';
-                input.value = color;
-                console.log('Color set to:', color);
-            } else {
-                preview.style.background = '#f8fafc';
-                preview.textContent = 'No Color';
-                preview.style.color = '#94a3b8';
-                input.value = '';
-                console.log('Color cleared');
-            }
-        }
-        
-        // Reset modal when it's closed
-        document.getElementById('createGroupModal').addEventListener('hidden.bs.modal', function () {
-            const levelSelect = document.getElementById('groupLevel');
-            const parentSelect = document.getElementById('parentGroup');
-            const createModalLabel = document.getElementById('createGroupModalLabel');
-            const parentContainer = document.getElementById('parentGroupContainer');
-            
-            // Reset modal title
-            createModalLabel.textContent = 'Create Session Group';
-            
-            // Re-enable fields
-            levelSelect.disabled = false;
-            parentSelect.disabled = false;
-            
-            // Reset form
-            document.getElementById('createGroupForm').reset();
-            
-            // Hide parent container
-            parentContainer.style.display = 'none';
-            parentSelect.required = false;
-            
-            // Reset icon and color
-            if (createIconPicker) {
-                createIconPicker.updateDisplay('folder');
-                document.getElementById('groupIcon').value = 'folder';
-            }
-            updateColorPreview('groupColor-preview', 'groupColor', null);
-        });
-        
-        // Ensure pickers are visible when modal is shown
-        document.getElementById('createGroupModal').addEventListener('shown.bs.modal', function () {
-            if (!createIconPicker || !document.getElementById('groupIcon-picker')) {
-                createIconPicker = new IconPicker('groupIcon', { 
-                    displayId: 'groupIcon-display',
-                    triggerButtonId: 'groupIcon-change',
-                    pickerContainerId: 'groupIcon-picker',
-                    mode: 'icon-only'
-                });
-            }
-            if (!createColorPicker || !document.getElementById('groupColor-picker')) {
-                createColorPicker = new IconPicker('groupColor', { 
-                    displayId: 'groupColor-preview',
-                    triggerButtonId: 'groupColor-change',
-                    pickerContainerId: 'groupColor-picker',
-                    mode: 'color-only',
-                    onColorChange: updateColorPreview.bind(null, 'groupColor-preview', 'groupColor')
-                });
-            }
-        });
-        
-        // Ensure edit pickers are visible when modal is shown
-        document.getElementById('editGroupModal').addEventListener('shown.bs.modal', function () {
-            if (!editIconPicker || !document.getElementById('editGroupIcon-picker')) {
-                editIconPicker = new IconPicker('editGroupIcon', { 
-                    displayId: 'editGroupIcon-display',
-                    triggerButtonId: 'editGroupIcon-change',
-                    pickerContainerId: 'editGroupIcon-picker',
-                    mode: 'icon-only'
-                });
-            }
-            if (!editColorPicker || !document.getElementById('editGroupColor-picker')) {
-                editColorPicker = new IconPicker('editGroupColor', { 
-                    displayId: 'editGroupColor-preview',
-                    triggerButtonId: 'editGroupColor-change',
-                    pickerContainerId: 'editGroupColor-picker',
-                    mode: 'color-only',
-                    onColorChange: updateColorPreview.bind(null, 'editGroupColor-preview', 'editGroupColor')
-                });
-            }
-        });
+                  console.log('Already initialized, skipping');
+                 return;
+               }
+                 initialized = true;
 
-        // Group level change handler
-        document.getElementById('groupLevel').addEventListener('change', function() {
-            // Skip if field is disabled (sub-group creation mode)
-            if (this.disabled) return;
-            
-  const level = parseInt(this.value);
-  const parentContainer = document.getElementById('parentGroupContainer');
-const parentSelect = document.getElementById('parentGroup');
-   
-            if (level > 1) {
-    parentContainer.style.display = 'block';
-parentSelect.required = true;
+                    console.log('Initializing icon and color pickers...');
 
-                // Filter parent options based on level
-    const options = parentSelect.querySelectorAll('option[data-level]');
-    options.forEach(option => {
-          const optionLevel = parseInt(option.getAttribute('data-level'));
-            option.style.display = optionLevel < level ? 'block' : 'none';
+               // Initialize CREATE icon picker (icon-only mode)
+                 createIconPicker = new IconPicker('groupIcon', {
+                        displayId: 'groupIcon-display',
+              triggerButtonId: 'groupIcon-change',
+                 pickerContainerId: 'groupIcon-picker',
+                   mode: 'icon-only'
+          });
+
+                  // Initialize CREATE color picker (color-only mode)
+                    createColorPicker = new IconPicker('groupColor', {
+            displayId: 'groupColor-preview',
+             triggerButtonId: 'groupColor-change',
+             pickerContainerId: 'groupColor-picker',
+                        mode: 'color-only',
+              onColorChange: updateColorPreview.bind(null, 'groupColor-preview', 'groupColor')
+                    });
+
+                    // Initialize EDIT icon picker (icon-only mode)
+            editIconPicker = new IconPicker('editGroupIcon', {
+            displayId: 'editGroupIcon-display',
+                 triggerButtonId: 'editGroupIcon-change',
+                        pickerContainerId: 'editGroupIcon-picker',
+             mode: 'icon-only'
+                });
+
+         // Initialize EDIT color picker (color-only mode)
+            editColorPicker = new IconPicker('editGroupColor', {
+                        displayId: 'editGroupColor-preview',
+               triggerButtonId: 'editGroupColor-change',
+         pickerContainerId: 'editGroupColor-picker',
+         mode: 'color-only',
+                  onColorChange: updateColorPreview.bind(null, 'editGroupColor-preview', 'editGroupColor')
+               });
+
+                    console.log('Icon and color pickers initialized');
+
+              // =======================
+             // DRAG AND DROP FUNCTIONALITY
+                    // =======================
+
+            // Initialize drag and drop for sessions
+                    initSessionDragDrop();
+           initGroupDropZones();
+
+          console.log('✅ Drag-and-drop initialized on Groups page');
+                });
+
+                // =======================
+           // DRAG AND DROP FUNCTIONS
+                // =======================
+
+                // Make session items draggable
+              function initSessionDragDrop() {
+                    const sessionItems = document.querySelectorAll('.session-item');
+
+                    console.log(`🔍 Found ${sessionItems.length} session items to make draggable`);
+
+        sessionItems.forEach((item, index) => {
+           item.setAttribute('draggable', 'true');
+                   console.log(`  - Session item ${index + 1}:`, item.querySelector('.badge')?.textContent.trim());
+
+              item.addEventListener('dragstart', (e) => {
+                draggedSession = item;
+                    // Extract session code from the badge
+             const codeElement = item.querySelector('.badge');
+            draggedSessionCode = codeElement ? codeElement.textContent.trim() : null;
+             item.classList.add('dragging');
+          isDragging = true;
+                    e.dataTransfer.effectAllowed = 'move';
+         e.dataTransfer.setData('text/plain', draggedSessionCode || '');
+                console.log('🚀 Started dragging session:', draggedSessionCode);
+                    });
+
+                   item.addEventListener('dragend', () => {
+                     item.classList.remove('dragging');
+                 console.log('✋ Drag ended for session:', draggedSessionCode);
+                  setTimeout(() => {
+            draggedSession = null;
+                draggedSessionCode = null;
+                   isDragging = false;
+                }, 100);
+           clearDropTargets();
+             });
+         });
+                }
+
+         // Make group cards droppable
+                function initGroupDropZones() {
+       // Select only the card HEADERS as drop zones, not the entire card
+      // This prevents child groups and session lists from being drop targets
+                const groupHeaders = document.querySelectorAll('.card[data-group-id] > .card-header');
+
+         console.log(`🎯 Found ${groupHeaders.length} group headers as drop zones`);
+
+         groupHeaders.forEach((header, index) => {
+    // Get the group ID from the parent card
+            const card = header.closest('.card[data-group-id]');
+     const groupId = card?.getAttribute('data-group-id');
+      if (!groupId) return;
+    
+        const groupNameElement = header.querySelector('.fw-semibold');
+  const groupName = groupNameElement ? groupNameElement.textContent : 'Unknown';
+  console.log(`  - Group ${index + 1}: ${groupName} (ID: ${groupId})`);
+
+      header.addEventListener('dragover', (e) => {
+         if (draggedSession) {
+    e.preventDefault();
+          e.stopPropagation();
+header.classList.add('drop-target');
+             }
      });
- } else {
-          parentContainer.style.display = 'none';
-         parentSelect.required = false;
-   parentSelect.value = '';
-            }
-        });
 
-// Create group form
-        document.getElementById('createGroupForm').addEventListener('submit', async function(e) {
+     header.addEventListener('dragleave', (e) => {
+  // Only remove highlight if we're truly leaving the header
+    if (!header.contains(e.relatedTarget)) {
+                   header.classList.remove('drop-target');
+           }
+  });
+
+         header.addEventListener('drop', async (e) => {
 e.preventDefault();
-            
-            const formData = new FormData(this);
-         const data = Object.fromEntries(formData.entries());
-            
-  // Handle disabled fields manually (disabled fields are not included in FormData)
-      const levelSelect = document.getElementById('groupLevel');
-         const parentSelect = document.getElementById('parentGroup');
-          
-       if (levelSelect.disabled && levelSelect.value) {
-    data.level = levelSelect.value;
- }
-     if (parentSelect.disabled && parentSelect.value) {
-        data.parentGroupId = parentSelect.value;
- }
-    
- console.log('Form data before processing:', data);
-    console.log('Icon value:', data.icon);
-          console.log('Color value:', data.color);
-            
-     // Convert empty parentGroupId to null
-            if (!data.parentGroupId) {
-         data.parentGroupId = null;
-            }
-            
-        data.level = parseInt(data.level);
-            
-  // Ensure icon has a default value if not set
-       if (!data.icon) {
-           data.icon = 'folder';
-     }
-            
-      console.log('Final data to send:', data);
-   
-     try {
-         const response = await fetch('/api/session-groups', {
-          method: 'POST',
-      headers: {
-   'Content-Type': 'application/json',
-          },
-        body: JSON.stringify(data)
-        });
-  
- console.log('Response status:', response.status);
-     
-     if (response.ok) {
-           location.reload();
-                } else {
-    let errorMessage = 'Unknown error';
-    try {
-             const error = await response.json();
-    console.error('Error response:', error);
-     errorMessage = error.message || error.title || JSON.stringify(error);
-    } catch (parseErr) {
-   const errorText = await response.text();
- console.error('Error response (text):', errorText);
-            errorMessage = errorText || `HTTP ${response.status}`;
-       }
-    alert('Error creating group: ' + errorMessage);
-  }
-    } catch (err) {
-         console.error('Error creating group:', err);
-              alert('Error creating group: ' + (err.message || 'Network error'));
-            }
-});
+      e.stopPropagation();
 
-        // Edit group
-  function editGroup(id, name, description, icon, color) {
-event.preventDefault();
-         document.getElementById('editGroupId').value = id;
-       document.getElementById('editGroupName').value = name;
-    document.getElementById('editGroupDescription').value = description || '';
-            document.getElementById('editGroupIcon').value = icon || 'folder';
-  
-     if (editIconPicker) {
-      editIconPicker.updateDisplay(icon || 'folder');
+             console.log('💧 DROP EVENT FIRED!');
+       console.log('  - draggedSession:', draggedSession);
+   console.log('  - draggedSessionCode:', draggedSessionCode);
+            console.log('  - target groupId:', groupId);
+
+if (draggedSession && draggedSessionCode) {
+        // Get group name from the card
+  const groupNameElement = header.querySelector('.fw-semibold');
+       const groupName = groupNameElement ? groupNameElement.textContent : 'Unknown Group';
+
+      console.log('📦 Dropping session', draggedSessionCode, 'into group', groupId, groupName);
+
+           // Call API to assign session to group
+        console.log('🌐 Calling assignSessionToGroup...');
+   await assignSessionToGroup(draggedSessionCode, groupId, groupName);
+          console.log('✅ assignSessionToGroup completed');
+        } else {
+            console.warn('⚠️ Drop cancelled - missing draggedSession or draggedSessionCode');
+   }
+
+          clearDropTargets();
+    });
+    });
+              }
+
+      function clearDropTargets() {
+          document.querySelectorAll('.drop-target').forEach(el => {
+    el.classList.remove('drop-target');
+        });
+      }
+
+          async function assignSessionToGroup(sessionCode, groupId, groupName) {
+           console.log('📡 assignSessionToGroup called with:', { sessionCode, groupId, groupName });
+
+     try {
+         const url = `/api/sessions/${sessionCode}/group`;
+         const body = { groupId: groupId || null };
+
+   console.log('🔗 API URL:', url);
+         console.log('📤 Request body:', JSON.stringify(body));
+
+    const response = await fetch(url, {
+        method: 'PUT',
+  headers: {
+     'Content-Type': 'application/json'
+               },
+  body: JSON.stringify(body)
+    });
+
+console.log('📥 Response status:', response.status);
+               console.log('📥 Response ok:', response.ok);
+
+         if (response.ok) {
+     console.log('✅ Successfully assigned session to group');
+
+     // Show success message
+   showToast(`Session moved to "${groupName}"`, 'success');
+
+                // Save the target group to localStorage so we can expand it after reload
+      if (groupId) {
+           console.log('💾 Saving expanded state for group:', groupId);
+       const expandedState = getExpandedState();
+   expandedState[groupId] = true;
+   localStorage.setItem('groupsExpandedState', JSON.stringify(expandedState));
+ console.log('💾 Expanded state saved:', expandedState);
+           }
+
+            // Reload page to show updated data
+     console.log('🔄 Reloading page in 800ms...');
+  setTimeout(() => {
+       window.location.reload();
+ }, 800);
+      } else {
+ const error = await response.json();
+        console.error('❌ Error assigning group:', error);
+   showToast('Failed to move session: ' + (error.errors?.[0]?.message || error.message || 'Unknown error'), 'error');
+        }
+         } catch (error) {
+       console.error('💥 Exception in assignSessionToGroup:', error);
+   showToast('Failed to move session: ' + error.message, 'error');
+      }
     }
-    
-   // Update color preview
-       updateColorPreview('editGroupColor-preview', 'editGroupColor', color);
-       
-   new bootstrap.Modal(document.getElementById('editGroupModal')).show();
-          return false;
+
+      function showToast(message, type = 'info') {
+    // Create a simple toast notification
+           const toast = document.createElement('div');
+         toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed top-0 start-50 translate-middle-x mt-3`;
+    toast.style.zIndex = '9999';
+       toast.style.minWidth = '300px';
+       toast.textContent = message;
+
+   document.body.appendChild(toast);
+
+                setTimeout(() => {
+    toast.remove();
+           }, 3000);
         }
 
-        // Edit group form
-        document.getElementById('editGroupForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-    const formData = new FormData(this);
-     const data = Object.fromEntries(formData.entries());
-        const groupId = data.id;
-            
-      try {
-        const response = await fetch(`/api/session-groups/${groupId}`, {
-        method: 'PUT',
-          headers: {
-     'Content-Type': 'application/json',
+         // Update color preview box
+     function updateColorPreview(previewId, inputId, color) {
+        console.log('updateColorPreview called:', { previewId, inputId, color });
+
+             const preview = document.getElementById(previewId);
+   const input = document.getElementById(inputId);
+
+    console.log('Preview element:', preview);
+          console.log('Input element:', input);
+
+       if (color) {
+          preview.style.background = color;
+   preview.textContent = '';
+   input.value = color;
+     console.log('Color set to:', color);
+         } else {
+        preview.style.background = '#f8fafc';
+         preview.textContent = 'No Color';
+      preview.style.color = '#94a3b8';
+   input.value = '';
+        console.log('Color cleared');
+            }
+        }
+
+       // Reset modal when it's closed
+         document.getElementById('createGroupModal').addEventListener('hidden.bs.modal', function () {
+           const levelSelect = document.getElementById('groupLevel');
+          const parentSelect = document.getElementById('parentGroup');
+       const createModalLabel = document.getElementById('createGroupModalLabel');
+      const parentContainer = document.getElementById('parentGroupContainer');
+
+  // Reset modal title
+     createModalLabel.textContent = 'Create Session Group';
+
+      // Re-enable fields
+    levelSelect.disabled = false;
+        parentSelect.disabled = false;
+
+        // Reset form
+     document.getElementById('createGroupForm').reset();
+
+ // Hide parent container
+  parentContainer.style.display = 'none';
+ parentSelect.required = false;
+
+      // Reset icon and color
+  if (createIconPicker) {
+              createIconPicker.updateDisplay('folder');
+        document.getElementById('groupIcon').value = 'folder';
+       }
+        updateColorPreview('groupColor-preview', 'groupColor', null);
+          });
+
+    // Ensure pickers are visible when modal is shown
+      document.getElementById('createGroupModal').addEventListener('shown.bs.modal', function () {
+        if (!createIconPicker || !document.getElementById('groupIcon-picker')) {
+        createIconPicker = new IconPicker('groupIcon', {
+              displayId: 'groupIcon-display',
+        triggerButtonId: 'groupIcon-change',
+        pickerContainerId: 'groupIcon-picker',
+  mode: 'icon-only'
+    });
+           }
+       if (!createColorPicker || !document.getElementById('groupColor-picker')) {
+         createColorPicker = new IconPicker('groupColor', {
+         displayId: 'groupColor-preview',
+    triggerButtonId: 'groupColor-change',
+      pickerContainerId: 'groupColor-picker',
+      mode: 'color-only',
+         onColorChange: updateColorPreview.bind(null, 'groupColor-preview', 'groupColor')
+           });
+          }
+   });
+
+       // Ensure edit pickers are visible when modal is shown
+    document.getElementById('editGroupModal').addEventListener('shown.bs.modal', function () {
+     if (!editIconPicker || !document.getElementById('editGroupIcon-picker')) {
+           editIconPicker = new IconPicker('editGroupIcon', {
+      displayId: 'editGroupIcon-display',
+   triggerButtonId: 'editGroupIcon-change',
+                  pickerContainerId: 'editGroupIcon-picker',
+       mode: 'icon-only'
+});
+        }
+              if (!editColorPicker || !document.getElementById('editGroupColor-picker')) {
+       editColorPicker = new IconPicker('editGroupColor', {
+        displayId: 'editGroupColor-preview',
+      triggerButtonId: 'editGroupColor-change',
+             pickerContainerId: 'editGroupColor-picker',
+mode: 'color-only',
+      onColorChange: updateColorPreview.bind(null, 'editGroupColor-preview', 'editGroupColor')
+         });
+           }
+   });
+
+ // Group level change handler
+                document.getElementById('groupLevel').addEventListener('change', function () {
+  // Skip if field is disabled (sub-group creation mode)
+       if (this.disabled) return;
+
+        const level = parseInt(this.value);
+                const parentContainer = document.getElementById('parentGroupContainer');
+                  const parentSelect = document.getElementById('parentGroup');
+
+         if (level > 1) {
+    parentContainer.style.display = 'block';
+             parentSelect.required = true;
+
+      // Filter parent options based on level
+      const options = parentSelect.querySelectorAll('option[data-level]');
+            options.forEach(option => {
+       const optionLevel = parseInt(option.getAttribute('data-level'));
+           option.style.display = optionLevel < level ? 'block' : 'none';
+          });
+            } else {
+     parentContainer.style.display = 'none';
+       parentSelect.required = false;
+     parentSelect.value = '';
+      }
+             });
+
+             // Create group form
+          document.getElementById('createGroupForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+   const formData = new FormData(this);
+           const data = Object.fromEntries(formData.entries());
+
+     // Handle disabled fields manually (disabled fields are not included in FormData)
+      const levelSelect = document.getElementById('groupLevel');
+       const parentSelect = document.getElementById('parentGroup');
+
+   if (levelSelect.disabled && levelSelect.value) {
+    data.level = levelSelect.value;
+       }
+          if (parentSelect.disabled && parentSelect.value) {
+      data.parentGroupId = parentSelect.value;
+        }
+
+         console.log('Form data before processing:', data);
+         console.log('Icon value:', data.icon);
+          console.log('Color value:', data.color);
+
+    // Convert empty parentGroupId to null
+     if (!data.parentGroupId) {
+         data.parentGroupId = null;
+       }
+
+   data.level = parseInt(data.level);
+
+           // Ensure icon has a default value if not set
+      if (!data.icon) {
+        data.icon = 'folder';
+    }
+
+         console.log('Final data to send:', data);
+
+       try {
+        const response = await fetch('/api/session-groups', {
+          method: 'POST',
+         headers: {
+      'Content-Type': 'application/json',
    },
-        body: JSON.stringify({
-          name: data.name,
-         description: data.description,
-     icon: data.icon,
-        color: data.color
+     body: JSON.stringify(data)
+    });
+
+       console.log('Response status:', response.status);
+
+ if (response.ok) {
+             location.reload();
+         } else {
+   let errorMessage = 'Unknown error';
+   try {
+  const error = await response.json();
+             console.error('Error response:', error);
+  errorMessage = error.message || error.title || JSON.stringify(error);
+         } catch (parseErr) {
+          const errorText = await response.text();
+       console.error('Error response (text):', errorText);
+            errorMessage = errorText || `HTTP ${response.status}`;
+     }
+       alert('Error creating group: ' + errorMessage);
+          }
+          } catch (err) {
+ console.error('Error creating group:', err);
+          alert('Error creating group: ' + (err.message || 'Network error'));
+       }
+    });
+
+      // Edit group
+    function editGroup(id, name, description, icon, color) {
+              event.preventDefault();
+         document.getElementById('editGroupId').value = id;
+             document.getElementById('editGroupName').value = name;
+            document.getElementById('editGroupDescription').value = description || '';
+    document.getElementById('editGroupIcon').value = icon || 'folder';
+
+ if (editIconPicker) {
+       editIconPicker.updateDisplay(icon || 'folder');
+               }
+
+            // Update color preview
+  updateColorPreview('editGroupColor-preview', 'editGroupColor', color);
+
+           new bootstrap.Modal(document.getElementById('editGroupModal')).show();
+         return false;
+              }
+
+            // Edit group form
+        document.getElementById('editGroupForm').addEventListener('submit', async function (e) {
+              e.preventDefault();
+
+   const formData = new FormData(this);
+   const data = Object.fromEntries(formData.entries());
+        const groupId = data.id;
+
+           try {
+ const response = await fetch(`/api/session-groups/${groupId}`, {
+    method: 'PUT',
+        headers: {
+         'Content-Type': 'application/json',
+       },
+    body: JSON.stringify({
+        name: data.name,
+            description: data.description,
+         icon: data.icon,
+      color: data.color
         })
       });
- 
-                if (response.ok) {
-         location.reload();
-  } else {
-         const error = await response.json();
-        alert('Error updating group: ' + (error.message || 'Unknown error'));
-           }
-   } catch (err) {
-           alert('Error updating group: ' + (err.message || 'Network error'));
-        }
-        });
 
-        // Delete group
-        async function deleteGroup(id, name) {
- event.preventDefault();
-    if (!confirm(`Are you sure you want to delete the group "${name}"? This action cannot be undone.`)) {
-     return false;
-            }
-         
-       try {
-         const response = await fetch(`/api/session-groups/${id}`, {
-      method: 'DELETE'
-     });
-     
-  if (response.ok) {
+if (response.ok) {
             location.reload();
-        } else {
-     const error = await response.json();
-      alert('Error deleting group: ' + (error.message || 'Unknown error'));
-     }
-   } catch (err) {
-  alert('Error deleting group: ' + (err.message || 'Network error'));
-    }
-            return false;
-        }
-      
-        // ===== EXPAND/COLLAPSE WITH LOCALSTORAGE =====
-        const STORAGE_KEY = 'groupsExpandedState';
-      
-        // Get expanded state from localStorage
-        function getExpandedState() {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            return stored ? JSON.parse(stored) : {};
-  }
-        
-        // Save expanded state to localStorage
-        function saveExpandedState(groupId, isExpanded) {
-            const state = getExpandedState();
-     state[groupId] = isExpanded;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        }
-        
-        // Toggle group expand/collapse
-        window.toggleGroupExpand = function(groupId) {
-   const content = document.getElementById(`content-${groupId}`);
-            const icon = document.getElementById(`expand-icon-${groupId}`);
-   
- if (!content || !icon) return;
-  
-          const isExpanding = !content.classList.contains('show');
-            
-// Toggle Bootstrap collapse
-            if (isExpanding) {
-   content.classList.add('show');
-         icon.classList.add('expanded');
-            } else {
-        content.classList.remove('show');
-   icon.classList.remove('expanded');
-}
-   
- // Save state to localStorage
-            saveExpandedState(groupId, isExpanding);
-     };
-  
- // Initialize expand/collapse state on page load
- function initializeExpandedState() {
-            const state = getExpandedState();
-   const allCards = document.querySelectorAll('[data-group-id]');
-            
-            // If no saved state, expand the first top-level group
-       if (Object.keys(state).length === 0 && allCards.length > 0) {
-  const firstGroupId = allCards[0].getAttribute('data-group-id');
-       toggleGroupExpand(firstGroupId);
-       return;
+ } else {
+      const error = await response.json();
+              alert('Error updating group: ' + (error.message || 'Unknown error'));
        }
-            
-            // Restore saved state
- allCards.forEach(card => {
-      const groupId = card.getAttribute('data-group-id');
-     if (state[groupId]) {
-                    const content = document.getElementById(`content-${groupId}`);
-         const icon = document.getElementById(`expand-icon-${groupId}`);
-   if (content && icon) {
-       content.classList.add('show');
- icon.classList.add('expanded');
-             }
-            }
-            });
+      } catch (err) {
+    alert('Error updating group: ' + (err.message || 'Network error'));
+      }
+     });
+
+         // Delete group
+           async function deleteGroup(id, name) {
+           event.preventDefault();
+       if (!confirm(`Are you sure you want to delete the group "${name}"? This action cannot be undone.`)) {
+        return false;
+  }
+
+         try {
+  const response = await fetch(`/api/session-groups/${id}`, {
+          method: 'DELETE'
+   });
+
+        if (response.ok) {
+       location.reload();
+           } else {
+    const error = await response.json();
+            alert('Error deleting group: ' + (error.message || 'Unknown error'));
+     }
+              } catch (err) {
+         alert('Error deleting group: ' + (err.message || 'Network error'));
+       }
+   return false;
     }
-        
-        // Initialize on page load
-        initializeExpandedState();
+
+// ===== EXPAND/COLLAPSE WITH LOCALSTORAGE =====
+        const STORAGE_KEY = 'groupsExpandedState';
+
+           // Get expanded state from localStorage
+    function getExpandedState() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+           return stored ? JSON.parse(stored) : {};
+     }
+
+     // Save expanded state to localStorage
+                function saveExpandedState(groupId, isExpanded) {
+       const state = getExpandedState();
+   state[groupId] = isExpanded;
+         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            }
+
+                // Toggle group expand/collapse
+           window.toggleGroupExpand = function (groupId) {
+       const content = document.getElementById(`content-${groupId}`);
+        const icon = document.getElementById(`expand-icon-${groupId}`);
+
+    if (!content || !icon) return;
+
+           const isExpanding = !content.classList.contains('show');
+
+            // Toggle Bootstrap collapse
+  if (isExpanding) {
+    content.classList.add('show');
+      icon.classList.add('expanded');
+          } else {
+    content.classList.remove('show');
+        icon.classList.remove('expanded');
+            }
+
+      // Save state to localStorage
+                 saveExpandedState(groupId, isExpanding);
+      };
+
+     // Initialize expand/collapse state on page load
+         function initializeExpandedState() {
+          const state = getExpandedState();
+ const allCards = document.querySelectorAll('[data-group-id]');
+
+        // If no saved state, expand the first top-level group
+   if (Object.keys(state).length === 0 && allCards.length > 0) {
+const firstGroupId = allCards[0].getAttribute('data-group-id');
+    toggleGroupExpand(firstGroupId);
+ return;
+ }
+
+            // Restore saved state
+      allCards.forEach(card => {
+          const groupId = card.getAttribute('data-group-id');
+  if (state[groupId]) {
+            const content = document.getElementById(`content-${groupId}`);
+        const icon = document.getElementById(`expand-icon-${groupId}`);
+      if (content && icon) {
+   content.classList.add('show');
+   icon.classList.add('expanded');
+       }
+   }
+      });
+     }
+
+   // Initialize on page load
+         initializeExpandedState();
     </script>
 }

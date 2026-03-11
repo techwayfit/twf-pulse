@@ -658,6 +658,14 @@ main.flex-grow-1 {
   font-weight: 600;
 }
 
+/* Drag and Drop: Drop Target Highlight */
+.tree-item.drop-target {
+  background-color: rgba(14, 165, 233, 0.15);
+  border: 2px dashed var(--pulse-blue);
+  color: var(--pulse-blue);
+  font-weight: 600;
+}
+
 .tree-toggle {
   border: 0;
   background: transparent;
@@ -711,70 +719,159 @@ main.flex-grow-1 {
   display: block;
 }
 
-/* ===== MINIMAL HOMEPAGE STYLES ===== */
+/* ===== DRAG AND DROP STYLES ===== */
 
-/* Only essential custom styles that Bootstrap cannot provide */
-
-.min-vh-75 {
-  min-height: 75vh;
+/* Dragging state for session rows - Make it semi-transparent with scale down */
+.session-row.dragging,
+.session-mobile-card.dragging,
+.session-item.dragging {
+  opacity: 0.6;
+  transform: scale(0.98);
+  cursor: move !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: rgba(14, 165, 233, 0.05);
+  transition: all 0.2s ease;
 }
 
-/* Gradient Orb - Unique visual component */
-.gradient-orb {
-  width: 380px;
-  height: 380px;
-  background: var(--pulse-gradient);
-  border-radius: 50%;
-  position: relative;
-  animation: float 6s ease-in-out infinite;
-  box-shadow: 0 20px 60px rgba(14, 165, 233, 0.4);
+/* Visual feedback when dragging over valid drop targets - Use green instead of blue */
+/* Apply ONLY to card headers, not entire cards */
+.card-header.drop-target {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.12) 100%) !important;
+  border: 2px dashed var(--pulse-green) !important;
+  transform: scale(1.01);
+  transition: all 0.2s ease;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1), 0 4px 12px rgba(16, 185, 129, 0.2);
 }
 
-.gradient-orb::before {
-  content: '';
+/* Pulse animation for drop target */
+@keyframes dropPulse {
+  0%, 100% { 
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1), 0 4px 12px rgba(16, 185, 129, 0.2);
+  }
+  50% { 
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.15), 0 6px 16px rgba(16, 185, 129, 0.3);
+  }
+}
+
+.card-header.drop-target {
+  animation: dropPulse 1.5s ease-in-out infinite;
+}
+
+/* Make draggable sessions show cursor feedback */
+.session-row[draggable="true"],
+.session-mobile-card[draggable="true"],
+.session-item[draggable="true"] {
+  cursor: move;
+}
+
+/* Add grab cursor on hover for sessions */
+.session-row[draggable="true"]:hover,
+.session-item[draggable="true"]:hover {
+  cursor: grab;
+  background-color: rgba(14, 165, 233, 0.03);
+}
+
+.session-row[draggable="true"]:active,
+.session-item[draggable="true"]:active {
+  cursor: grabbing !important;
+}
+
+.session-mobile-card[draggable="true"]:hover {
+  cursor: grab;
+}
+
+.session-mobile-card[draggable="true"]:active {
+  cursor: grabbing !important;
+}
+
+/* Prevent text selection during drag */
+.session-row.dragging *,
+.session-mobile-card.dragging *,
+.session-item.dragging * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Add visual hint that rows are draggable - Font Awesome grip-vertical icon */
+.session-row[draggable="true"]::before {
+  content: '\f58e'; /* Font Awesome grip-vertical icon */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
   position: absolute;
-  top: 20%;
-  left: 20%;
-  width: 60%;
-  height: 60%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: pulse-glow 4s ease-in-out infinite;
-}
-
-.gradient-orb .pulse-overlay {
-  position: absolute;
+  left: 8px;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  height: auto;
-  opacity: 0.9;
+  transform: translateY(-50%);
+  color: var(--pulse-gray-400);
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
-.animated-pulse-line {
-  stroke-dasharray: 1000;
-  stroke-dashoffset: 1000;
-  animation: drawLine 2s ease-in-out forwards, pulseLine 2s ease-in-out infinite 2s;
+.session-row[draggable="true"]:hover::before {
+  opacity: 0.7;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+/* Make the table position relative for absolute positioning */
+#sessionsTable tbody tr {
+  position: relative;
+  padding-left: 24px;
+  transition: all 0.2s ease;
 }
 
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.3; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.1); }
+/* Session items on Groups page - make them look draggable */
+.session-item[draggable="true"] {
+  transition: all 0.2s ease;
+  position: relative;
+  padding-left: 1.5rem;
 }
 
-@keyframes drawLine {
-  to { stroke-dashoffset: 0; }
+.session-item[draggable="true"]::before {
+  content: '\f58e'; /* Font Awesome grip-vertical icon */
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--pulse-gray-400);
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
-@keyframes pulseLine {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
+.session-item[draggable="true"]:hover::before {
+  opacity: 0.7;
+}
+
+.session-item[draggable="true"]:hover {
+  background-color: rgba(14, 165, 233, 0.04) !important;
+  transform: translateX(2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Success animation after drop */
+@keyframes dropSuccess {
+  0% { 
+    transform: scale(1);
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% { 
+    transform: scale(1.02);
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+  100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+/* Apply success animation to group card after successful drop */
+.drop-success {
+  animation: dropSuccess 0.6s ease-out;
 }
 
 /* ============================================
@@ -864,4 +961,3 @@ main.flex-grow-1 {
     right: 0.75rem;
     top: 0.5rem;
 }
- 
