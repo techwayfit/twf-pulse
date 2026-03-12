@@ -3,197 +3,200 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 
-<!-- Sidebar header -->
+<!-- Sidebar header with enhanced styling -->
 <div class="live-sidebar-header">
-    <span class="live-sidebar-label">Activities</span>
-    <span class="badge badge-gradient rounded-pill" style="font-size: 0.68rem;">@Activities.Count</span>
+    <div class="live-sidebar-label">
+        <i class="fas fa-list-ul" style="font-size: 12px;"></i>
+  Activities
+  </div>
+    <span class="activity-count">@Activities.Count</span>
 </div>
 
 <!-- Scrollable activity queue -->
 <div class="live-sidebar-queue">
     @if (Activities != null && Activities.Any())
     {
-        @foreach (var (activity, index) in Activities.OrderBy(a => a.Order).Select((a, i) => (a, i)))
+      @foreach (var (activity, index) in Activities.OrderBy(a => a.Order).Select((a, i) => (a, i)))
         {
-            var statusClass = GetActivityStatusClass(activity.Status);
-            var isSelected = SelectedActivityId.HasValue && SelectedActivityId.Value == activity.ActivityId;
+          var statusClass = GetActivityStatusClass(activity.Status);
+         var isSelected = SelectedActivityId.HasValue && SelectedActivityId.Value == activity.ActivityId;
 
-            <div class="live-activity-item live-activity-item--@statusClass @(isSelected ? "live-activity-item--selected" : string.Empty)"
-                 style="padding: 0.75rem; position: relative;"
-                 role="button"
+      <div class="live-activity-item live-activity-item--@statusClass live-activity-item--clickable @(isSelected ? "live-activity-item--selected" : string.Empty)"
+     role="button"
                  tabindex="0"
-                 @onclick="@(() => HandleActivityClick(activity.ActivityId))"
-                 @onkeydown="@((KeyboardEventArgs e) => HandleActivityKeyDown(e, activity.ActivityId))">
+        @onclick="@(() => HandleActivityClick(activity.ActivityId))"
+       @onkeydown="@((KeyboardEventArgs e) => HandleActivityKeyDown(e, activity.ActivityId))">
 
-                <!-- Floating action buttons -->
-                <div class="position-absolute top-0 end-0 d-flex flex-column gap-1 p-2"
-                     style="z-index: 10;"
-                     @onclick:stopPropagation="true">
-                    @if (activity.Status == ActivityStatus.Pending)
-                    {
-                        <button type="button"
-                                class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center live-activity-action-btn"
-                                style="width: 28px; height: 28px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease;"
-                                title="Edit Activity"
-                                @onclick="@(() => OnEditActivity.InvokeAsync(activity))">
-                            <i class="fas fa-pencil" style="font-size: 0.7rem; color: #6c757d; transition: color 0.2s ease;"></i>
-                        </button>
-                    }
-                    <button type="button"
-                            class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center live-activity-action-btn live-activity-action-btn--copy"
-                            style="width: 28px; height: 28px; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s ease;"
-                            title="Copy Activity"
-                            @onclick="@(() => OnCopyActivity.InvokeAsync(activity.ActivityId))">
-                        <i class="fas fa-copy" style="font-size: 0.7rem; color: #0d6efd; transition: color 0.2s ease;"></i>
-                    </button>
-                </div>
+           <!-- Floating action buttons -->
+  <div class="live-activity-item-actions"
+  @onclick:stopPropagation="true">
+  @if (activity.Status == ActivityStatus.Pending)
+         {
+   <button type="button"
+      class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
+      style="width: 28px; height: 28px; background: white; border: 1px solid var(--live-border); box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: all 0.2s ease;"
+     title="Edit Activity"
+     @onclick="@(() => OnEditActivity.InvokeAsync(activity))">
+      <i class="fas fa-pencil" style="font-size: 0.7rem; color: #6c757d;"></i>
+         </button>
+  }
+               <button type="button"
+         class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
+    style="width: 28px; height: 28px; background: white; border: 1px solid var(--live-border); box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: all 0.2s ease;"
+   title="Copy Activity"
+        @onclick="@(() => OnCopyActivity.InvokeAsync(activity.ActivityId))">
+      <i class="fas fa-copy" style="font-size: 0.7rem; color: #0d6efd;"></i>
+           </button>
+         </div>
 
-                <!-- Main content layout -->
-                <div class="live-activity-item-body">
-                    <!-- Row 1: Order + Status dot + Activity Type Badge + Duration -->
-                    <div class="d-flex align-items-center  mb-1">
-                        <span class="live-activity-item-order">@(index + 1)</span>
-                        <div class="badge" style="@GetActivityTypeBadgeStyle(activity.Type); padding: 0.2rem 0.45rem; font-size: 0.65rem;">
-                            @GetActivityTypeIcon(activity.Type)
-                            @activity.Type
-                        </div>
-                       
-                    </div>
+             <!-- Main content layout -->
+     <div class="d-flex gap-2 w-100">
+          <!-- Order number -->
+     <span class="live-activity-item-order">@(index + 1)</span>
 
-                    <!-- Row 2: Title -->
-                    <div class="live-activity-item-title">@activity.Title
-                        @* Display options count for Poll activities *@
-                        @if (!string.IsNullOrEmpty(activity.Config) && activity.Type == ActivityType.Poll)
-                        {
-                            try
-                            {
-                                var pollConfig = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
-                                if (pollConfig.TryGetProperty("options", out var options) && options.ValueKind == System.Text.Json.JsonValueKind.Array)
-                                {
-                                    <span class="live-activity-item-meta">
-                                        <i class="far fa-list-alt text-primary"></i>
-                                        @options.GetArrayLength() options
-                                    </span>
-                                }
-                            }
-                            catch { }
-                        }
-                    </div>
-
-                    <!-- Row 3: Status + Poll options (if applicable) -->
-                    <div class="d-flex align-items-center gap-2 mt-1">
-
-                        <div class="live-activity-item-status live-activity-item-status--@statusClass"></div>
-                        <span class="live-activity-item-status-text live-activity-item-status-text--@statusClass">
-                            @GetActivityStatusLabel(activity.Status)
-                        </span>
-                        @if (activity.DurationMinutes.HasValue)
-                        {
-                            <span class="" style="font-size: 0.65rem; white-space: nowrap; margin-top:0.35rem">
-                                <i class="far fa-clock"></i> @activity.DurationMinutes&#8202;m
-                            </span>
-                        }
-                        
-                    </div>
-                </div>
+    <!-- Activity body -->
+           <div class="live-activity-item-body">
+   <!-- Activity type badge -->
+    <div class="activity-label @activity.Type.ToString().ToLower()">
+                    @GetActivityTypeIcon(activity.Type)
+  @activity.Type
             </div>
-        }
+
+      <!-- Title -->
+        <div class="live-activity-item-title">@activity.Title</div>
+
+    <!-- Meta info -->
+                  <div class="live-activity-item-meta">
+             @if (!string.IsNullOrEmpty(activity.Config) && activity.Type == ActivityType.Poll)
+ {
+               try
+            {
+      var pollConfig = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
+ if (pollConfig.TryGetProperty("options", out var options) && options.ValueKind == System.Text.Json.JsonValueKind.Array)
+   {
+              <span class="meta-item">
+  <i class="far fa-list-alt"></i>
+    @options.GetArrayLength() options
+      </span>
+ }
+         }
+           catch { }
+       }
+
+    @if (activity.DurationMinutes.HasValue)
+         {
+     <span class="meta-item">
+       <i class="far fa-clock"></i>
+       @activity.DurationMinutes&#8202;m
+    </span>
+  }
+
+    <!-- Status indicator -->
+  <div class="d-flex align-items-center gap-1">
+            <div class="live-activity-item-status live-activity-item-status--@statusClass"></div>
+           <span class="live-activity-item-status-text live-activity-item-status-text--@statusClass">
+                   @GetActivityStatusLabel(activity.Status)
+           </span>
+       </div>
+            </div>
+   </div>
+ </div>
+</div>
+  }
     }
     else
     {
-        <div class="text-center py-4 px-3">
-            <i class="fas fa-clipboard-list fa-2x text-muted mb-2"></i>
-            <p class="text-muted small mb-0">No activities yet.</p>
-        </div>
+     <div class="text-center py-4 px-3">
+         <div class="empty-state-icon mx-auto mb-3" style="width: 60px; height: 60px; font-size: 30px;">
+      <i class="fas fa-clipboard-list"></i>
+      </div>
+        <p class="text-muted small mb-0">No activities yet.</p>
+    </div>
     }
 </div>
 
-<!-- Add activity footer -->
+<!-- Add activity footer with enhanced styling -->
 @if (!IsSessionEnded)
 {
     <div class="live-sidebar-add">
         <div class="live-sidebar-add-label">Add Activity</div>
-        <div class="live-add-activity-grid">
+  <div class="live-add-activity-grid">
+      <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+         data-bs-target="#pollModal" @onclick='() => OnAddActivity.InvokeAsync("Poll")'>
+     <i class="fas fa-chart-bar"></i>Poll
+            </button>
+          <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+                  data-bs-target="#wordcloudModal" @onclick='() => OnAddActivity.InvokeAsync("WordCloud")'>
+    <i class="fas fa-cloud"></i>Word Cloud
+</button>
+ <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+         data-bs-target="#quadrantModal" @onclick='() => OnAddActivity.InvokeAsync("Quadrant")'>
+       <i class="fas fa-chart-line"></i>Quadrant
+   </button>
             <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
-                    data-bs-target="#pollModal" @onclick='() => OnAddActivity.InvokeAsync("Poll")'>
-                <i class="fas fa-chart-bar"></i>Poll
+        data-bs-target="#fivewhysModal" @onclick='() => OnAddActivity.InvokeAsync("FiveWhys")'>
+  <i class="fas fa-magnifying-glass"></i>5 Whys
             </button>
             <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
-                    data-bs-target="#wordcloudModal" @onclick='() => OnAddActivity.InvokeAsync("WordCloud")'>
-                <i class="fas fa-cloud"></i>Word Cloud
+       data-bs-target="#ratingModal" @onclick='() => OnAddActivity.InvokeAsync("Rating")'>
+   <i class="fas fa-star"></i>Rating
             </button>
             <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
-                    data-bs-target="#quadrantModal" @onclick='() => OnAddActivity.InvokeAsync("Quadrant")'>
-                <i class="fas fa-chart-line"></i>Quadrant
+     data-bs-target="#feedbackModal" @onclick='() => OnAddActivity.InvokeAsync("Feedback")'>
+      <i class="fas fa-comment"></i>Feedback
             </button>
+        <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+        data-bs-target="#qnaModal" @onclick='() => OnAddActivity.InvokeAsync("QnA")'>
+       <i class="fas fa-lightbulb"></i>Q&amp;A
+   </button>
+     <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
+            data-bs-target="#aisummaryModal" @onclick='() => OnAddActivity.InvokeAsync("AiSummary")'>
+    <i class="fas fa-robot"></i>AI Summary
+  </button>
             <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
-                    data-bs-target="#fivewhysModal" @onclick='() => OnAddActivity.InvokeAsync("FiveWhys")'>
-                <i class="fas fa-magnifying-glass"></i>5 Whys
-            </button>
-            <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
-                    data-bs-target="#ratingModal" @onclick='() => OnAddActivity.InvokeAsync("Rating")'>
-                <i class="fas fa-star"></i>Rating
-            </button>
-            <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
-                    data-bs-target="#feedbackModal" @onclick='() => OnAddActivity.InvokeAsync("Feedback")'>
-                <i class="fas fa-comment"></i>Feedback
-            </button>
-            <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
-                    data-bs-target="#qnaModal" @onclick='() => OnAddActivity.InvokeAsync("QnA")'>
-                <i class="fas fa-lightbulb"></i>Q&amp;A
-            </button>
-            <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
-                    data-bs-target="#aisummaryModal" @onclick='() => OnAddActivity.InvokeAsync("AiSummary")'>
-                <i class="fas fa-robot"></i>AI Summary
-            </button>
-            <button type="button" class="live-add-activity-btn" data-bs-toggle="modal"
-                    data-bs-target="#breakModal" @onclick='() => OnAddActivity.InvokeAsync("Break")'>
-                <i class="fas fa-coffee"></i>Break
+       data-bs-target="#breakModal" @onclick='() => OnAddActivity.InvokeAsync("Break")'>
+            <i class="fas fa-coffee"></i>Break
             </button>
         </div>
     </div>
 }
 
 <style>
-    /* Hover effects for floating action buttons */
-    .live-activity-action-btn {
+    /* Enhanced hover effects for floating action buttons */
+  .live-activity-item-actions button {
         cursor: pointer;
     }
 
-    /* Edit button hover - gray to dark gray with scale */
-    .live-activity-action-btn:hover {
-        background: rgba(255,255,255,1) !important;
-        border-color: rgba(108,117,125,0.3) !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+    .live-activity-item-actions button:hover {
+      background: white !important;
         transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
     }
 
-    .live-activity-action-btn:hover i {
-        color: #495057 !important;
+    .live-activity-item-actions button:hover i {
+        color: var(--live-primary) !important;
     }
 
-    /* Copy button hover - blue with scale */
-    .live-activity-action-btn--copy:hover {
-        background: rgba(13,110,253,0.1) !important;
-        border-color: rgba(13,110,253,0.3) !important;
-        box-shadow: 0 4px 8px rgba(13,110,253,0.2) !important;
-        transform: scale(1.1);
+    .live-activity-item-actions button:active {
+      transform: scale(0.95);
     }
 
-    .live-activity-action-btn--copy:hover i {
-        color: #0a58ca !important;
+    .live-activity-item-actions button:focus {
+        outline: 2px solid rgba(26, 188, 156, 0.3);
+    outline-offset: 2px;
     }
 
-    /* Active/pressed state */
-    .live-activity-action-btn:active {
-        transform: scale(0.95);
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+    /* Meta item styling */
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    font-size: 0.7rem;
+        color: var(--live-text-secondary);
     }
 
-    /* Focus state for accessibility */
-    .live-activity-action-btn:focus {
-        outline: 2px solid rgba(13,110,253,0.5);
-        outline-offset: 2px;
+    .meta-item i {
+        font-size: 0.65rem;
     }
 </style>
 

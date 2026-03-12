@@ -1,4 +1,4 @@
-/* ============================================
+﻿/* ============================================
    PULSE CUSTOM STYLES
    Minimal custom styles not covered by Bootstrap
    ============================================ */
@@ -633,344 +633,139 @@ main.flex-grow-1 {
   display: block;
 }
 
-/* ===== TREE DROPDOWN COMPONENT ===== */
-
-.tree-dropdown .dropdown-menu {
-  max-height: 320px;
-  overflow-y: auto;
-  min-width: 100%;
-}
-
-.tree-item {
-  cursor: pointer;
-  padding: 0.5rem 0.75rem;
-  transition: background-color 0.2s ease;
-  border-radius: var(--pulse-radius-sm);
-}
-
-.tree-item:hover {
-  background-color: var(--pulse-gray-100);
-}
-
-.tree-item.selected {
-  background-color: rgba(14, 165, 233, 0.1);
-  color: var(--pulse-blue);
-  font-weight: 600;
-}
-
-/* Drag and Drop: Drop Target Highlight */
-.tree-item.drop-target {
-  background-color: rgba(14, 165, 233, 0.15);
-  border: 2px dashed var(--pulse-blue);
-  color: var(--pulse-blue);
-  font-weight: 600;
-}
-
-.tree-toggle {
-  border: 0;
-  background: transparent;
-  padding: 0.25rem;
-  margin-right: 0.5rem;
-  color: var(--pulse-gray-600);
-  cursor: pointer;
-  transition: color 0.2s ease;
-  width: 1.5rem;
-  height: 1.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.tree-toggle:hover {
-  color: var(--pulse-blue);
-  background: transparent;
-}
-
-.tree-toggle:focus {
-  outline: none;
-  box-shadow: none;
-}
-
-.tree-toggle i {
-  font-size: 0.75rem;
-  transition: transform 0.2s ease;
-}
-
-.tree-spacer {
-  display: inline-block;
-  width: 2rem;
-  margin-right: 0.5rem;
-}
-
-.tree-icon {
-  margin-right: 0.5rem;
-  font-size: 1rem;
-}
-
-.tree-item-text {
-  font-size: 0.875rem;
-}
-
-.tree-children {
-  display: none;
-}
-
-.tree-children.show {
-  display: block;
-}
-
-/* ===== DRAG AND DROP STYLES ===== */
-
-/* Dragging state for session rows - Make it semi-transparent with scale down */
-.session-row.dragging,
-.session-mobile-card.dragging,
-.session-item.dragging {
-  opacity: 0.6;
-  transform: scale(0.98);
-  cursor: move !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  background-color: rgba(14, 165, 233, 0.05);
-  transition: all 0.2s ease;
-}
-
-/* Visual feedback when dragging over valid drop targets - Use green instead of blue */
-/* Apply ONLY to card headers, not entire cards */
-.card-header.drop-target {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.12) 100%) !important;
-  border: 2px dashed var(--pulse-green) !important;
-  transform: scale(1.01);
-  transition: all 0.2s ease;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1), 0 4px 12px rgba(16, 185, 129, 0.2);
-}
-
-/* Pulse animation for drop target */
-@keyframes dropPulse {
-  0%, 100% { 
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1), 0 4px 12px rgba(16, 185, 129, 0.2);
-  }
-  50% { 
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.15), 0 6px 16px rgba(16, 185, 129, 0.3);
-  }
-}
-
-.card-header.drop-target {
-  animation: dropPulse 1.5s ease-in-out infinite;
-}
-
-/* Make draggable sessions show cursor feedback */
-.session-row[draggable="true"],
-.session-mobile-card[draggable="true"],
-.session-item[draggable="true"] {
-  cursor: move;
-}
-
-/* Add grab cursor on hover for sessions */
-.session-row[draggable="true"]:hover,
-.session-item[draggable="true"]:hover {
-  cursor: grab;
-  background-color: rgba(14, 165, 233, 0.03);
-}
-
-.session-row[draggable="true"]:active,
-.session-item[draggable="true"]:active {
-  cursor: grabbing !important;
-}
-
-.session-mobile-card[draggable="true"]:hover {
-  cursor: grab;
-}
-
-.session-mobile-card[draggable="true"]:active {
-  cursor: grabbing !important;
-}
-
-/* Prevent text selection during drag */
-.session-row.dragging *,
-.session-mobile-card.dragging *,
-.session-item.dragging * {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-/* Add visual hint that rows are draggable - Font Awesome grip-vertical icon */
-.session-row[draggable="true"]::before {
-  content: '\f58e'; /* Font Awesome grip-vertical icon */
-  font-family: 'Font Awesome 6 Free';
-  font-weight: 900;
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--pulse-gray-400);
-  font-size: 14px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-
-.session-row[draggable="true"]:hover::before {
-  opacity: 0.7;
-}
-
-/* Make the table position relative for absolute positioning */
-#sessionsTable tbody tr {
-  position: relative;
-  padding-left: 24px;
-  transition: all 0.2s ease;
-}
-
-/* Session items on Groups page - make them look draggable */
-.session-item[draggable="true"] {
-  transition: all 0.2s ease;
-  position: relative;
-  padding-left: 1.5rem;
-}
-
-.session-item[draggable="true"]::before {
-  content: '\f58e'; /* Font Awesome grip-vertical icon */
-  font-family: 'Font Awesome 6 Free';
-  font-weight: 900;
-  position: absolute;
-  left: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--pulse-gray-400);
-  font-size: 12px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-
-.session-item[draggable="true"]:hover::before {
-  opacity: 0.7;
-}
-
-.session-item[draggable="true"]:hover {
-  background-color: rgba(14, 165, 233, 0.04) !important;
-  transform: translateX(2px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-/* Success animation after drop */
-@keyframes dropSuccess {
-  0% { 
-    transform: scale(1);
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
-  }
-  50% { 
-    transform: scale(1.02);
-    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-  }
-  100% { 
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-  }
-}
-
-/* Apply success animation to group card after successful drop */
-.drop-success {
-  animation: dropSuccess 0.6s ease-out;
-}
-
 /* ============================================
    GROUP TREE COMPONENTS - Minimal Custom Styles
    ============================================ */
 
-/* Group Cards - Subtle alternating background */
-.card[data-group-id] {
-  margin-bottom: 1rem;
+/* Groups container */
+.groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 
-/* Card headers - Add subtle teal tint background */
+/* Group Cards - Enhanced visual design */
+.card[data-group-id] {
+    margin-bottom: 0;
+    overflow: visible;
+}
+
+.card[data-group-id]:hover {
+    border-color: rgba(14, 158, 154, 0.3) !important;
+}
+
+/* Card headers - Modern design */
 .card[data-group-id] > .card-header {
-  background: linear-gradient(135deg, rgba(14, 158, 154, 0.03) 0%, rgba(14, 158, 154, 0.06) 100%);
-  transition: background 0.2s ease;
+    transition: background 0.2s ease;
 }
 
 .card[data-group-id] > .card-header:hover {
-  background: linear-gradient(135deg, rgba(14, 158, 154, 0.06) 0%, rgba(14, 158, 154, 0.1) 100%);
+    background: rgba(14, 158, 154, 0.03) !important;
 }
 
-/* Alternate background for even/odd groups at each level */
-.card[data-group-id]:nth-child(even) {
-  background-color: #f8fafb;
-}
-
-.card[data-group-id]:nth-child(odd) {
-  background-color: #ffffff;
-}
-
-/* Child groups container - Add subtle left border */
-.child-groups {
-  border-left: 3px solid rgba(14, 158, 154, 0.2);
-  padding-left: 1rem;
-  margin-top: 0.75rem;
-}
-
-/* Session items - Make them stand out slightly from card body */
+/* Session items - Enhanced styling */
 .session-item {
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  transition: all 0.15s ease;
+    transition: all 0.2s ease;
 }
 
 .session-item:hover {
-  transform: translateX(2px);
-  border-color: rgba(14, 158, 154, 0.3);
-  box-shadow: 0 1px 3px rgba(14, 158, 154, 0.1);
+    transform: translateX(4px);
+    border-color: rgba(14, 158, 154, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(14, 158, 154, 0.12) !important;
 }
 
-/* Card body - Subtle background for content area */
-.card[data-group-id] .card-body {
-  background-color: rgba(248, 250, 251, 0.5);
+/* Child groups container - Visual hierarchy */
+.child-groups {
+    position: relative;
+}
+
+.child-groups::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, rgba(14, 158, 154, 0.15) 0%, transparent 100%);
+    border-radius: 2px;
 }
 
 /* Expand/Collapse Animation */
 .expand-icon {
-  display: inline-block;
-  transition: transform 0.2s ease;
-  width: 20px;
-  text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+  height: 24px;
+    transition: transform 0.2s ease;
 }
 
 .expand-icon.expanded {
-  transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+
+.expand-icon i {
+    transition: color 0.2s ease;
+}
+
+.card-header:hover .expand-icon i {
+    color: var(--pulse-teal-mid) !important;
 }
 
 /* Custom scrollbar for sessions list */
 .sessions-list {
-  max-height: 240px;
-  overflow-y: auto;
-}
-
-.sessions-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.sessions-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sessions-list::-webkit-scrollbar-thumb {
-  background: var(--pulse-gray-400);
-  border-radius: 2px;
-}
-
-.sessions-list::-webkit-scrollbar-thumb:hover {
-  background: var(--pulse-gray-500);
+    max-height: none;
 }
 
 /* Icon & Color Picker sizing */
 .icon-picker-display {
-  width: 60px;
-height: 60px;
+    width: 60px;
+    height: 60px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
 }
 
 .color-preview {
-  width: 60px;
-  height: 60px;
+    width: 60px;
+ height: 60px;
+    border: 1.5px solid var(--pulse-border) !important;
+}
+
+.picker-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+}
+
+/* Session status badges */
+.session-status-scheduled {
+    color: var(--pulse-info);
+    font-weight: 600;
+}
+
+.session-status-active,
+.session-status-live {
+    color: var(--pulse-success);
+    font-weight: 600;
+}
+
+.session-status-completed {
+    color: var(--pulse-text-light);
+    font-weight: 600;
+}
+
+/* Drag and drop enhancements for groups */
+.card-header.drop-target {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.10) 0%, rgba(16, 185, 129, 0.15) 100%) !important;
+    border: 2px dashed var(--pulse-green) !important;
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1), 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Hover effects for interactive elements */
+.cursor-pointer:hover {
+    cursor: pointer;
 }
 
 /* ============================================
@@ -995,4 +790,85 @@ height: 60px;
     position: absolute;
     right: 0.75rem;
     top: 0.5rem;
+}
+
+/* Hero visual wrapper with floating stats */
+.hero-visual-wrap {
+    position: relative;
+    display: flex;
+  align-items: center;
+    justify-content: center;
+    width: 100%;
+  min-height: 380px;
+}
+
+/* ── Gradient Orb (Main Circle) ── */
+.gradient-orb {
+    position: relative;
+    width: 450px;
+  height: 450px;
+    border-radius: 50%;
+    background: var(--pulse-gradient);
+    box-shadow: 0 20px 60px rgba(14, 158, 154, 0.4);
+ display: flex;
+align-items: center;
+    justify-content: center;
+    animation: orbPulse 4s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 20px 60px rgba(14, 158, 154, 0.4);
+    }
+ 50% {
+  transform: scale(1.05);
+        box-shadow: 0 24px 72px rgba(14, 158, 154, 0.5);
+    }
+}
+
+/* ── Pulse Overlay (SVG Waveform) ── */
+.pulse-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 110px;
+    opacity: 0.95;
+}
+
+/* ── Animated Pulse Line ── */
+.animated-pulse-line {
+    stroke-dasharray: 500;
+    stroke-dashoffset: 500;
+    animation: drawPulseLine 3s ease-in-out infinite;
+}
+
+@keyframes drawPulseLine {
+    0% {
+        stroke-dashoffset: 500;
+      opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    100% {
+        stroke-dashoffset: 0;
+   opacity: 1;
+    }
+}
+
+.hero-float-stat {
+    position: absolute;
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border: 1px solid #dde8ea;
+    font-size: 12px;
+  font-weight: 600;
+    color: #3d5a60;
+    white-space: nowrap;
+    animation: heroFloat 4s ease-in-out infinite;
 }

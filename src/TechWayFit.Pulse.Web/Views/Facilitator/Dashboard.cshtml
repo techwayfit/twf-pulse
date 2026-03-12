@@ -546,331 +546,267 @@
     <script src="~/js/copy-session.js"></script>
 
     <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                // Render group icons using IconHelper
-         if (window.IconHelper) {
-               const iconElements = document.querySelectorAll('.group-icon-display[data-icon]');
-           iconElements.forEach(element => {
-                         const iconValue = element.getAttribute('data-icon');
-            if (iconValue) {
-                 element.innerHTML = IconHelper.toFontAwesome(iconValue);
-          }
-                   });
-                }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Render group icons using IconHelper
+            if (window.IconHelper) {
+              const iconElements = document.querySelectorAll('.group-icon-display[data-icon]');
+       iconElements.forEach(element => {
+  const iconValue = element.getAttribute('data-icon');
+         if (iconValue) {
+           element.innerHTML = IconHelper.toFontAwesome(iconValue);
+}
+      });
+        }
 
-          const searchInput = document.getElementById('sessionSearch');
-                    const groupFilter = document.getElementById('groupFilter');
-             const statusFilter = document.getElementById('statusFilter');
-            const applyBtn = document.getElementById('applyFilters');
-         const clearBtn = document.getElementById('clearFilters');
-                    const sessionCount = document.getElementById('sessionCount');
+ const searchInput = document.getElementById('sessionSearch');
+      const groupFilter = document.getElementById('groupFilter');
+            const statusFilter = document.getElementById('statusFilter');
+      const applyBtn = document.getElementById('applyFilters');
+   const clearBtn = document.getElementById('clearFilters');
+         const sessionCount = document.getElementById('sessionCount');
 
-              // Apply filters
-                    applyBtn.addEventListener('click', function() {
-             applyFilters();
-          });
+            // Apply filters
+   applyBtn.addEventListener('click', function() {
+     applyFilters();
+            });
 
-                    // Clear filters
-                 clearBtn.addEventListener('click', function() {
-                searchInput.value = '';
-                  groupFilter.value = '';
-           statusFilter.value = '';
-                document.querySelector('[data-dropdown-id="groupFilter"] .dropdown-text').textContent = 'All Groups';
-                        applyFilters();
-           });
+  // Clear filters
+   clearBtn.addEventListener('click', function() {
+    searchInput.value = '';
+     groupFilter.value = '';
+        statusFilter.value = '';
+ document.querySelector('[data-dropdown-id="groupFilter"] .dropdown-text').textContent = 'All Groups';
+     applyFilters();
+            });
 
-             // Tree dropdown functionality
-             initializeTreeDropdown();
+      function applyFilters() {
+ const searchText = searchInput.value.toLowerCase();
+    const selectedGroupId = groupFilter.value;
+    const selectedStatus = statusFilter.value;
+     const rows = document.querySelectorAll('#sessionsTable tbody tr');
+     const cards = document.querySelectorAll('.session-mobile-card');
+     let visibleCount = 0;
 
-            function applyFilters() {
-              const searchText = searchInput.value.toLowerCase();
-                 const selectedGroupId = groupFilter.value;
-             const selectedStatus = statusFilter.value;
-             const rows = document.querySelectorAll('#sessionsTable tbody tr');
-           const cards = document.querySelectorAll('.session-mobile-card');
-            let visibleCount = 0;
+            // Filter desktop table rows
+           rows.forEach(row => {
+ const rowSearchText = row.getAttribute('data-search-text');
+ const rowGroupId = row.getAttribute('data-group-id');
+   const rowStatus = row.getAttribute('data-status');
 
-             // Filter desktop table rows
-                     rows.forEach(row => {
-                       const rowSearchText = row.getAttribute('data-search-text');
-        const rowGroupId = row.getAttribute('data-group-id');
-                  const rowStatus = row.getAttribute('data-status');
+         let showRow = true;
 
-                  let showRow = true;
-
-          // Apply search filter
-            if (searchText && !rowSearchText.includes(searchText)) {
-                    showRow = false;
-                 }
-
-                  // Apply group filter
-                if (selectedGroupId && rowGroupId !== selectedGroupId) {
-                     showRow = false;
+       // Apply search filter
+              if (searchText && !rowSearchText.includes(searchText)) {
+    showRow = false;
            }
 
-             // Apply status filter
-              if (selectedStatus && rowStatus !== selectedStatus) {
-                  showRow = false;
-          }
+   // Apply group filter
+         if (selectedGroupId && rowGroupId !== selectedGroupId) {
+    showRow = false;
+     }
 
-                if (showRow) {
-               row.style.display = '';
-               visibleCount++;
-             } else {
-             row.style.display = 'none';
+   // Apply status filter
+            if (selectedStatus && rowStatus !== selectedStatus) {
+            showRow = false;
             }
-               });
 
-                // Filter mobile cards
-               cards.forEach(card => {
-                  const cardSearchText = card.getAttribute('data-search-text');
+      if (showRow) {
+            row.style.display = '';
+       visibleCount++;
+ } else {
+      row.style.display = 'none';
+     }
+              });
+
+   // Filter mobile cards
+     cards.forEach(card => {
+            const cardSearchText = card.getAttribute('data-search-text');
                     const cardGroupId = card.getAttribute('data-group-id');
-               const cardStatus = card.getAttribute('data-status');
+    const cardStatus = card.getAttribute('data-status');
 
-           let showCard = true;
+     let showCard = true;
 
-            // Apply search filter
-                if (searchText && !cardSearchText.includes(searchText)) {
-                            showCard = false;
-           }
+   // Apply search filter
+       if (searchText && !cardSearchText.includes(searchText)) {
+          showCard = false;
+}
 
-                  // Apply group filter
-              if (selectedGroupId && cardGroupId !== selectedGroupId) {
-             showCard = false;
+        // Apply group filter
+       if (selectedGroupId && cardGroupId !== selectedGroupId) {
+ showCard = false;
              }
 
-           // Apply status filter
-         if (selectedStatus && cardStatus !== selectedStatus) {
-                     showCard = false;
-                     }
-
-                card.style.display = showCard ? '' : 'none';
-                        });
-
-              // Update count
-             sessionCount.textContent = `${visibleCount} ${visibleCount === 1 ? 'session' : 'sessions'}`;
-                }
-
-                    function initializeTreeDropdown() {
-                   // Handle tree toggle clicks first with capture phase
-                document.addEventListener('click', function(e) {
-                 // Tree toggle functionality - handle in capture phase to prevent dropdown from closing
-             if (e.target.closest('.tree-toggle')) {
-            const toggle = e.target.closest('.tree-toggle');
-                   const targetId = toggle.getAttribute('data-target');
-                  const target = document.getElementById(targetId);
-                const icon = toggle.querySelector('i');
-
-          if (target) {
-                            target.classList.toggle('show');
-                 if (target.classList.contains('show')) {
-                    icon.className = 'fas fa-chevron-down';
-          } else {
-              icon.className = 'fas fa-chevron-right';
+  // Apply status filter
+       if (selectedStatus && cardStatus !== selectedStatus) {
+    showCard = false;
               }
-                     }
 
-                   e.preventDefault();
-             e.stopPropagation();
-           e.stopImmediatePropagation();
-             return false;
-                   }
-                        }, true); // Use capture phase
+      card.style.display = showCard ? '' : 'none';
+       });
 
-            // Handle tree item selection in normal phase
-                    document.addEventListener('click', function(e) {
-                  // Only handle tree item selection if not clicking on toggle
-                if (e.target.closest('.tree-item') && !e.target.closest('.tree-toggle')) {
-                     const treeItem = e.target.closest('.tree-item');
-           const value = treeItem.getAttribute('data-value');
-            const text = treeItem.querySelector('.tree-item-text').textContent;
-                 const dropdown = treeItem.closest('.tree-dropdown');
-            const hiddenInput = dropdown.querySelector('input[type="hidden"]');
-                     const dropdownText = dropdown.querySelector('.dropdown-text');
-
-               // Update value
-                      hiddenInput.value = value;
-                 dropdownText.textContent = value ? text : 'All Groups';
-
-           // Close dropdown only when selecting an item
-                  const dropdownElement = new bootstrap.Dropdown(dropdown.querySelector('[data-bs-toggle="dropdown"]'));
-                    dropdownElement.hide();
-
-                 // Remove selected class from all items
-           dropdown.querySelectorAll('.tree-item').forEach(item => {
-        item.classList.remove('selected');
-                    });
-
-               // Add selected class to clicked item
-                      if (value) {
-        treeItem.classList.add('selected');
-               }
-
-                    e.preventDefault();
-                   e.stopPropagation();
-                            }
-                 });
-              }
-             });
-
-                // Context menu functions
-             function assignGroup(sessionCode, sessionId) {
-         // Find session data from the table
-               const row = document.querySelector(`tr[data-session-id="${sessionId}"]`);
-               if (!row) return;
-
-           const titleElement = row.querySelector('strong');
-                  const groupId = row.getAttribute('data-group-id');
-
-            // Populate modal
-           document.getElementById('assignGroupSessionCode').value = sessionCode;
-            document.getElementById('assignGroupSessionId').value = sessionId;
-                    document.getElementById('assignGroupSessionTitle').textContent = titleElement ? titleElement.textContent : sessionCode;
-
-        // Set current group in dropdown
-                    const groupSelect = document.getElementById('assignGroupSelect');
-                    if (groupSelect && groupId) {
-           groupSelect.value = groupId;
-            const dropdownText = document.querySelector('[data-dropdown-id="assignGroupSelect"] .dropdown-text');
-                const selectedItem = document.querySelector(`[data-dropdown-id="assignGroupSelect"] [data-value="${groupId}"]`);
-                   if (dropdownText && selectedItem) {
-            dropdownText.textContent = selectedItem.querySelector('.tree-item-text').textContent;
-               }
-                    }
-
-            // Show modal
-                    const modal = new bootstrap.Modal(document.getElementById('assignGroupModal'));
-                    modal.show();
-                }
-
-                // Save group assignment
-                document.getElementById('saveGroupAssignmentBtn').addEventListener('click', async function() {
-                    const btn = this;
-        const sessionCode = document.getElementById('assignGroupSessionCode').value;
-                const sessionId = document.getElementById('assignGroupSessionId').value;
-                  const groupId = document.getElementById('assignGroupSelect').value || null;
-
-                    // Show loading state
-           btn.classList.add('btn-loading');
-                    btn.disabled = true;
-
-           try {
-                const response = await fetch(`/api/sessions/${sessionCode}/group`, {
-            method: 'PUT',
-                  headers: {
-            'Content-Type': 'application/json'
-         },
-                    body: JSON.stringify({
-                       groupId: groupId
-                  })
-                     });
-
-             if (response.ok) {
-             // Close modal
-                   bootstrap.Modal.getInstance(document.getElementById('assignGroupModal')).hide();
-
-          // Reload page to show updated data
-             window.location.reload();
-             } else {
-            const error = await response.json();
-               alert('Error assigning group: ' + (error.message || 'Unknown error'));
-                   }
-                    } catch (error) {
-            alert('Error assigning group: ' + error.message);
-          } finally {
-                 btn.classList.remove('btn-loading');
-            btn.disabled = false;
-            }
-                });
-
-           // Sort functionality
-            const sortPills = document.querySelectorAll('.sort-pill');
-              sortPills.forEach(pill => {
-                    pill.addEventListener('click', function() {
-            sortPills.forEach(p => p.classList.remove('active'));
-            this.classList.add('active');
-                const sortBy = this.dataset.sort;
-              sortSessions(sortBy);
-          sortMobileCards(sortBy);
-                 });
-                });
-
-             function sortSessions(sortBy) {
-               const tableBody = document.querySelector('#sessionsTable tbody');
-             if (!tableBody) return;
-
-                    const rows = Array.from(tableBody.querySelectorAll('tr.session-row'));
-
-               rows.sort((a, b) => {
-          switch(sortBy) {
-           case 'recent':
-                       const dateA = new Date(a.dataset.created);
-                     const dateB = new Date(b.dataset.created);
-                   return dateB - dateA;
-
-                        case 'upcoming':
-                   const schedA = a.dataset.scheduled || 'Z';
-                  const schedB = b.dataset.scheduled || 'Z';
-                  if (schedA === 'Z' && schedB === 'Z') return 0;
-          if (schedA === 'Z') return 1;
-               if (schedB === 'Z') return -1;
-            return new Date(schedA) - new Date(schedB);
-
-             case 'group':
-                    const groupA = a.dataset.groupName || 'zzz';
-                 const groupB = b.dataset.groupName || 'zzz';
-                 const groupCompare = groupA.localeCompare(groupB);
-          if (groupCompare !== 0) return groupCompare;
-                 return a.dataset.title.localeCompare(b.dataset.title);
-
-            case 'title':
-          return a.dataset.title.localeCompare(b.dataset.title);
-
-                 default:
-                return 0;
-             }
-                    });
-
-          rows.forEach(row => tableBody.appendChild(row));
-                }
-
-                function sortMobileCards(sortBy) {
-          const container = document.getElementById('sessionCards');
-                 if (!container) return;
-
-                  const cards = Array.from(container.querySelectorAll('.session-mobile-card'));
-
-             cards.sort((a, b) => {
-                  switch(sortBy) {
-                 case 'recent':
-          const dateA = new Date(a.dataset.created || 0);
-            const dateB = new Date(b.dataset.created || 0);
-           return dateB - dateA;
-
-          case 'upcoming':
-           const schedA = a.dataset.scheduled || 'Z';
-            const schedB = b.dataset.scheduled || 'Z';
-           if (schedA === 'Z' && schedB === 'Z') return 0;
-                    if (schedA === 'Z') return 1;
-         if (schedB === 'Z') return -1;
-                return new Date(schedA) - new Date(schedB);
-
-                 case 'group':
-            const groupA = a.dataset.groupName || 'zzz';
-            const groupB = b.dataset.groupName || 'zzz';
-                    const groupCompare = groupA.localeCompare(groupB);
-                 if (groupCompare !== 0) return groupCompare;
-            return a.dataset.title.localeCompare(b.dataset.title);
-
-                 case 'title':
-                return a.dataset.title.localeCompare(b.dataset.title);
-
-                     default:
-             return 0;
-               }
+  // Update count
+         sessionCount.textContent = `${visibleCount} ${visibleCount === 1 ? 'session' : 'sessions'}`;
+      }
         });
 
-         cards.forEach(card => container.appendChild(card));
+    // Context menu functions
+        function assignGroup(sessionCode, sessionId) {
+            // Find session data from the table
+    const row = document.querySelector(`tr[data-session-id="${sessionId}"]`);
+            if (!row) return;
+
+            const titleElement = row.querySelector('strong');
+    const groupId = row.getAttribute('data-group-id');
+
+            // Populate modal
+       document.getElementById('assignGroupSessionCode').value = sessionCode;
+   document.getElementById('assignGroupSessionId').value = sessionId;
+            document.getElementById('assignGroupSessionTitle').textContent = titleElement ? titleElement.textContent : sessionCode;
+
+          // Set current group in dropdown
+            const groupSelect = document.getElementById('assignGroupSelect');
+            if (groupSelect && groupId) {
+       groupSelect.value = groupId;
+      const dropdownText = document.querySelector('[data-dropdown-id="assignGroupSelect"] .dropdown-text');
+    const selectedItem = document.querySelector(`[data-dropdown-id="assignGroupSelect"] [data-value="${groupId}"]`);
+       if (dropdownText && selectedItem) {
+       dropdownText.textContent = selectedItem.querySelector('.tree-item-text').textContent;
+       }
+            }
+
+            // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('assignGroupModal'));
+  modal.show();
+        }
+
+        // Save group assignment
+        document.getElementById('saveGroupAssignmentBtn').addEventListener('click', async function() {
+            const btn = this;
+            const sessionCode = document.getElementById('assignGroupSessionCode').value;
+     const sessionId = document.getElementById('assignGroupSessionId').value;
+        const groupId = document.getElementById('assignGroupSelect').value || null;
+
+ // Show loading state
+    btn.classList.add('btn-loading');
+     btn.disabled = true;
+
+            try {
+   const response = await fetch(`/api/sessions/${sessionCode}/group`, {
+        method: 'PUT',
+   headers: {
+      'Content-Type': 'application/json'
+     },
+   body: JSON.stringify({
+     groupId: groupId
+         })
+      });
+
+              if (response.ok) {
+  // Close modal
+       bootstrap.Modal.getInstance(document.getElementById('assignGroupModal')).hide();
+
+  // Reload page to show updated data
+           window.location.reload();
+                } else {
+  const error = await response.json();
+            alert('Error assigning group: ' + (error.message || 'Unknown error'));
+       }
+       } catch (error) {
+       alert('Error assigning group: ' + error.message);
+            } finally {
+     btn.classList.remove('btn-loading');
+       btn.disabled = false;
+         }
+        });
+
+   // Sort functionality
+        const sortPills = document.querySelectorAll('.sort-pill');
+        sortPills.forEach(pill => {
+            pill.addEventListener('click', function() {
+        sortPills.forEach(p => p.classList.remove('active'));
+         this.classList.add('active');
+     const sortBy = this.dataset.sort;
+       sortSessions(sortBy);
+       sortMobileCards(sortBy);
+            });
+    });
+
+     function sortSessions(sortBy) {
+    const tableBody = document.querySelector('#sessionsTable tbody');
+     if (!tableBody) return;
+
+            const rows = Array.from(tableBody.querySelectorAll('tr.session-row'));
+
+        rows.sort((a, b) => {
+    switch(sortBy) {
+       case 'recent':
+  const dateA = new Date(a.dataset.created);
+               const dateB = new Date(b.dataset.created);
+      return dateB - dateA;
+
+                 case 'upcoming':
+         const schedA = a.dataset.scheduled || 'Z';
+const schedB = b.dataset.scheduled || 'Z';
+    if (schedA === 'Z' && schedB === 'Z') return 0;
+   if (schedA === 'Z') return 1;
+    if (schedB === 'Z') return -1;
+      return new Date(schedA) - new Date(schedB);
+
+            case 'group':
+         const groupA = a.dataset.groupName || 'zzz';
+  const groupB = b.dataset.groupName || 'zzz';
+         const groupCompare = groupA.localeCompare(groupB);
+     if (groupCompare !== 0) return groupCompare;
+    return a.dataset.title.localeCompare(b.dataset.title);
+
+     case 'title':
+            return a.dataset.title.localeCompare(b.dataset.title);
+
+      default:
+     return 0;
                 }
+            });
+
+            rows.forEach(row => tableBody.appendChild(row));
+    }
+
+        function sortMobileCards(sortBy) {
+            const container = document.getElementById('sessionCards');
+          if (!container) return;
+
+      const cards = Array.from(container.querySelectorAll('.session-mobile-card'));
+
+         cards.sort((a, b) => {
+                switch(sortBy) {
+          case 'recent':
+      const dateA = new Date(a.dataset.created || 0);
+        const dateB = new Date(b.dataset.created || 0);
+                return dateB - dateA;
+
+ case 'upcoming':
+       const schedA = a.dataset.scheduled || 'Z';
+     const schedB = b.dataset.scheduled || 'Z';
+        if (schedA === 'Z' && schedB === 'Z') return 0;
+            if (schedA === 'Z') return 1;
+          if (schedB === 'Z') return -1;
+              return new Date(schedA) - new Date(schedB);
+
+            case 'group':
+   const groupA = a.dataset.groupName || 'zzz';
+    const groupB = b.dataset.groupName || 'zzz';
+              const groupCompare = groupA.localeCompare(groupB);
+      if (groupCompare !== 0) return groupCompare;
+        return a.dataset.title.localeCompare(b.dataset.title);
+
+                 case 'title':
+  return a.dataset.title.localeCompare(b.dataset.title);
+
+         default:
+return 0;
+  }
+            });
+
+         cards.forEach(card => container.appendChild(card));
+        }
     </script>
 }

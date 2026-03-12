@@ -3,10 +3,17 @@
 @{
     var levelColor = Model.Group.Level switch
     {
-        1 => "success",
-        2 => "warning",
-        3 => "danger",
-        _ => "primary"
+   1 => "var(--pulse-teal-mid)",
+        2 => "var(--pulse-info)",
+     3 => "var(--pulse-warning)",
+  _ => "var(--pulse-teal-mid)"
+    };
+    var levelBgColor = Model.Group.Level switch
+    {
+        1 => "rgba(14, 158, 154, 0.10)",
+        2 => "rgba(59, 130, 246, 0.10)",
+        3 => "rgba(245, 158, 11, 0.10)",
+_ => "rgba(14, 158, 154, 0.10)"
     };
     var levelLabel = Model.Group.Level == 1 ? "Track" : $"Level {Model.Group.Level}";
     
@@ -15,180 +22,232 @@
     var childGroups = allGroups?.Where(g => g.Group.ParentGroupId == Model.Group.Id).OrderBy(g => g.Group.Name).ToList() ?? new List<TechWayFit.Pulse.Web.Models.GroupWithSessionsViewModel>();
 }
 
-<div class="card border shadow-sm mb-2" data-group-id="@Model.Group.Id">
+<div class="card shadow-sm mb-3" data-group-id="@Model.Group.Id" 
+     style="border: 1.5px solid var(--pulse-border); border-radius: var(--pulse-radius-xl); background: var(--pulse-surface); transition: var(--pulse-transition);">
     @* Header with expand/collapse *@
-    <div class="card-header p-2 cursor-pointer user-select-none" onclick="toggleGroupExpand('@Model.Group.Id')">
+    <div class="card-header cursor-pointer user-select-none" 
+ onclick="toggleGroupExpand('@Model.Group.Id')"
+         style="background: var(--pulse-surface-alt); border-bottom: 1.5px solid var(--pulse-border); padding: 1rem 1.25rem; border-radius: var(--pulse-radius-xl) var(--pulse-radius-xl) 0 0;">
         <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2 flex-grow-1">
-                @* Expand/Collapse Icon *@
-                <i class="ics ics-right-arrow ic-xs text-muted expand-icon" id="expand-icon-@Model.Group.Id"></i>
-                
-                @* Group Icon *@
-                @if (!string.IsNullOrEmpty(Model.Group.Color))
+   <div class="d-flex align-items-center gap-3 flex-grow-1">
+          @* Expand/Collapse Icon *@
+       <div class="expand-icon" id="expand-icon-@Model.Group.Id" 
+       style="transition: transform 0.2s ease; color: var(--pulse-text-light);">
+          <i class="ics ics-right-arrow ic-sm"></i>
+       </div>
+      
+      @* Group Icon with Color *@
+       @if (!string.IsNullOrEmpty(Model.Group.Color))
                 {
-                    <span class="d-inline-flex align-items-center justify-content-center rounded px-2 py-1" 
-                          style="background: @Model.Group.Color;">
-                        <i class="ics @Model.Group.Icon ic-sm"></i>
-                    </span>
-                }
-                else
-                {
-                    <i class="ics @Model.Group.Icon ic-sm"></i>
-                }
-                
-                @* Group Name and Badge *@
+     <div class="d-inline-flex align-items-center justify-content-center rounded-pulse-lg" 
+         style="width: 40px; height: 40px; background: @Model.Group.Color; box-shadow: 0 2px 8px @(Model.Group.Color)40;">
+                 <i class="ics @Model.Group.Icon ic-md text-white"></i>
+            </div>
+ }
+     else
+    {
+    <div class="d-inline-flex align-items-center justify-content-center rounded-pulse-lg" 
+       style="width: 40px; height: 40px; background: var(--pulse-gradient); box-shadow: var(--pulse-shadow-md);">
+       <i class="ics @Model.Group.Icon ic-md text-white"></i>
+          </div>
+       }
+       
+            @* Group Name and Description *@
                 <div class="flex-grow-1">
-                    <h6 class="mb-0 fw-semibold text-dark" style="font-size: 0.9rem;">@Model.Group.Name</h6>
-                    
-                    @if (!string.IsNullOrEmpty(Model.Group.Description))
-                    {
-                        <p class="text-muted mb-0 fs-7 mt-1">@Model.Group.Description</p>
-                    }
-                </div>
-                
-                @* Level Badge and Session Count - Right aligned *@
-                <div class="d-flex align-items-center gap-2 ms-auto me-2">
-                    @if (!string.IsNullOrEmpty(Model.Group.Color))
-                    {
-                        <span class="badge fs-8 px-2 py-1 text-white" style="background-color: @Model.Group.Color;">@levelLabel</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-@levelColor fs-8 px-2 py-1">@levelLabel</span>
-                    }
-                    @if (Model.TotalSessionCount > 0)
-                    {
-                        <span class="badge bg-secondary fs-8 px-2 py-1 text-nowrap">@Model.TotalSessionCount @(Model.TotalSessionCount == 1 ? "session" : "sessions")</span>
-                    }
-                </div>
+      <h6 class="mb-0 fw-bold" style="font-size: 1rem; letter-spacing: -0.01em; color: var(--pulse-text-dark);">
+   @Model.Group.Name
+        </h6>
+      @if (!string.IsNullOrEmpty(Model.Group.Description))
+           {
+          <p class="text-muted mb-0 mt-1" style="font-size: 0.8125rem; line-height: 1.4;">
+       @Model.Group.Description
+            </p>
+       }
+           </div>
+    
+  @* Level Badge and Session Count *@
+     <div class="d-flex align-items-center gap-2">
+             @if (!string.IsNullOrEmpty(Model.Group.Color))
+          {
+    <span class="badge fw-bold" 
+     style="background: @Model.Group.Color; color: white; font-size: 0.6875rem; padding: 0.375rem 0.75rem; letter-spacing: 0.05em; border-radius: var(--pulse-radius-full);">
+         @levelLabel
+          </span>
+          }
+        else
+       {
+        <span class="badge fw-bold" 
+    style="background: @levelBgColor; color: @levelColor; font-size: 0.6875rem; padding: 0.375rem 0.75rem; letter-spacing: 0.05em; border: 1px solid @(levelColor)40; border-radius: var(--pulse-radius-full);">
+   @levelLabel
+             </span>
+    }
+      @if (Model.TotalSessionCount > 0)
+             {
+            <span class="badge badge-gray fw-semibold" 
+   style="font-size: 0.6875rem; padding: 0.375rem 0.75rem; border-radius: var(--pulse-radius-full);">
+    @Model.TotalSessionCount @(Model.TotalSessionCount == 1 ? "session" : "sessions")
+  </span>
+    }
+        </div>
             </div>
             
-            @* Actions Menu *@
-            <div class="dropdown" onclick="event.stopPropagation()">
-                <button class="btn btn-outline-secondary btn-sm dropdown-toggle fs-7 px-2 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    •••
+     @* Actions Menu *@
+            <div class="dropdown ms-2" onclick="event.stopPropagation()">
+       <button class="btn btn-icon btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false"
+ style="width: 32px; height: 32px;">
+         <i class="ics ics-more-horiz ic-sm"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                        <a class="dropdown-item" href="javascript:void(0)" onclick="editGroup('@Model.Group.Id.ToString()', '@(Model.Group.Name.Replace("'", "\\'"))', '@((Model.Group.Description ?? "").Replace("'", "\\'"))', '@Model.Group.Icon', '@(Model.Group.Color ?? "")')">
-                            <i class="ics ics-pencil ic-xs me-1"></i>Edit
-                        </a>
-                    </li>
-                    @if (Model.Group.Level < 3)
-                    {
-                        <li>
-                            <a class="dropdown-item" href="javascript:void(0)" onclick="createSubGroup('@Model.Group.Id', @Model.Group.Level)">
-                                <i class="ics ics-folder ic-xs me-1"></i>Add Sub Group
-                            </a>
-                        </li>
-                    }
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="deleteGroup('@Model.Group.Id.ToString()', '@(Model.Group.Name.Replace("'", "\\'"))')">
-                            <i class="ics ics-trash ic-xs me-1"></i>Delete
-                        </a>
-                    </li>
-                </ul>
+       <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="border-radius: var(--pulse-radius-lg);">
+            <li>
+   <a class="dropdown-item" href="javascript:void(0)" 
+      onclick="editGroup('@Model.Group.Id.ToString()', '@(Model.Group.Name.Replace("'", "\\'"))', '@((Model.Group.Description ?? "").Replace("'", "\\'"))', '@Model.Group.Icon', '@(Model.Group.Color ?? "")')">
+      <i class="ics ics-pencil ic-sm me-2"></i>Edit Group
+             </a>
+  </li>
+          @if (Model.Group.Level < 3)
+              {
+   <li>
+          <a class="dropdown-item" href="javascript:void(0)" onclick="createSubGroup('@Model.Group.Id', @Model.Group.Level)">
+       <i class="ics ics-folder ic-sm me-2"></i>Add Sub Group
+         </a>
+                 </li>
+             }
+      <li><hr class="dropdown-divider" style="border-color: var(--pulse-border);"></li>
+             <li>
+       <a class="dropdown-item text-danger" href="javascript:void(0)" 
+              onclick="deleteGroup('@Model.Group.Id.ToString()', '@(Model.Group.Name.Replace("'", "\\'"))')">
+      <i class="ics ics-trash ic-sm me-2"></i>Delete Group
+     </a>
+   </li>
+    </ul>
             </div>
         </div>
     </div>
     
     @* Expandable Content *@
     <div class="collapse" id="content-@Model.Group.Id">
-        <div class="card-body p-2 pt-2">
+   <div class="card-body" style="padding: 1.25rem; background: var(--pulse-bg);">
             @* Sessions List *@
-            @if (Model.Sessions.Any())
+      @if (Model.Sessions.Any())
             {
-                <div class="mb-2">
-                    <div class="sessions-list pe-2">
-                        @foreach (var session in Model.Sessions)
-                        {
-                            <div class="session-item bg-light rounded p-2 mb-1">
-                                <div class="d-flex align-items-start gap-2">
-                                    <span class="mt-1 lh-1">
-                                        @if (session.IsCompleted)
-                                        {
-                                            <i class="ics ics-check-mark ic-sm text-success"></i>
-                                        }
-                                        else if (session.IsActive)
-                                        {
-                                            <i class="ics ics-stopwatch ic-sm text-warning"></i>
-                                        }
-                                        else
-                                        {
-                                            <i class="ics ics-calendar ic-sm text-muted"></i>
-                                        }
-                                    </span>
-                                    <div class="flex-grow-1" style="min-width: 0;">
-                                        <a href="/facilitator/live?Code=@session.SessionCode" class="text-decoration-none fw-medium d-block text-truncate text-dark" style="font-size: 0.8rem;">
-                                            @session.Title
-                                        </a>
-                                        @if (session.SessionStart.HasValue)
-                                        {
-                                            <small class="text-muted d-block fs-7 mt-1">
-                                                <i class="ics ics-calendar ic-xs me-1"></i>@session.SessionStart.Value.ToString("MMM dd, HH:mm")@(session.SessionEnd.HasValue ? $" - {session.SessionEnd.Value:HH:mm}" : "")
-                                            </small>
-                                        }
-                                    </div>
-                                    <div class="text-end">
-                                            <span class="badge text-bg-info">@session.SessionCode</span>
-                                            </div>
-                                    <div class="text-muted text-end fs-7 text-nowrap">
-                                        <div class="session-status-@session.Status.ToLower()">@session.Status</div>
-                                        <div>Expires @session.ExpiresAt.ToString("MMM d")</div>
-                                    </div>
-                                    
-                                    @* Action Buttons *@
-                                    <div class="d-flex gap-1" onclick="event.stopPropagation();">
-                                        <a href="/facilitator/live?Code=@session.SessionCode" 
-                                           class="btn btn-sm btn-outline-primary" 
-                                          title="View Session">
-                                             <i class="fas fa-eye"></i>
-                                                   </a>
-                                                  <a href="/facilitator/edit-session/@session.SessionCode?returnUrl=@Uri.EscapeDataString(Url.Action("Groups", "Facilitator") ?? "/facilitator/groups")" 
-                                         class="btn btn-sm btn-outline-secondary"
-                                      title="Edit Session">
-                                          <i class="fas fa-edit"></i>
-                                           </a>
-                                                <button type="button" 
-                                      class="btn btn-sm btn-outline-info copy-session-btn" 
-                                             data-session-code="@session.SessionCode"
-                                      data-session-title="@session.Title"
-                                         title="Copy Session">
-                                          <i class="fas fa-copy"></i>
-                                    </button>
-                                    </div>
-                                
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-            }
-            
-            @* Contextual Action Buttons *@
-            <div class="d-flex gap-2 mt-3">
-                @if (Model.Group.Level < 3)
-                {
-                    <button class="btn btn-outline-primary btn-sm fw-medium" onclick="createSubGroup('@Model.Group.Id', @Model.Group.Level)">
-                        + Add @(Model.Group.Level == 1 ? "Level 2" : "Level 3") Group
-                    </button>
-                }
-                <a href="/facilitator/create-session?groupId=@Model.Group.Id" class="btn btn-outline-success btn-sm fw-medium">
-                    + Add Session
-                </a>
+                <div class="mb-3">
+         <label class="form-label mb-2" style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--pulse-text-light);">
+      Sessions
+           </label>
+           <div class="sessions-list">
+                @foreach (var session in Model.Sessions)
+  {
+         <div class="session-item rounded-pulse-lg p-3 mb-2 shadow-sm" 
+     style="background: var(--pulse-surface); border: 1.5px solid var(--pulse-border); transition: var(--pulse-transition);">
+             <div class="d-flex align-items-start gap-3">
+  @* Status Icon *@
+      <div class="flex-shrink-0 mt-1">
+  @if (session.IsCompleted)
+          {
+         <div class="d-flex align-items-center justify-content-center rounded-circle" 
+           style="width: 32px; height: 32px; background: rgba(16, 185, 129, 0.10); color: var(--pulse-success);">
+    <i class="ics ics-check-mark ic-sm"></i>
+         </div>
+        }
+else if (session.IsActive)
+             {
+               <div class="d-flex align-items-center justify-content-center rounded-circle" 
+         style="width: 32px; height: 32px; background: rgba(245, 158, 11, 0.10); color: var(--pulse-warning);">
+   <i class="ics ics-stopwatch ic-sm"></i>
+  </div>
+       }
+                      else
+    {
+    <div class="d-flex align-items-center justify-content-center rounded-circle" 
+              style="width: 32px; height: 32px; background: var(--pulse-gray-100); color: var(--pulse-text-light);">
+            <i class="ics ics-calendar ic-sm"></i>
+</div>
+       }
+   </div>
+        
+@* Session Details *@
+         <div class="flex-grow-1" style="min-width: 0;">
+     <a href="/facilitator/live?Code=@session.SessionCode" 
+    class="text-decoration-none fw-semibold d-block text-truncate mb-1" 
+ style="font-size: 0.9375rem; color: var(--pulse-text-dark);">
+               @session.Title
+      </a>
+              @if (session.SessionStart.HasValue)
+     {
+   <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 0.8125rem;">
+<i class="ics ics-calendar ic-xs"></i>
+        <span>@session.SessionStart.Value.ToString("MMM dd, HH:mm")@(session.SessionEnd.HasValue ? $" - {session.SessionEnd.Value:HH:mm}" : "")</span>
             </div>
-            
-            @* Child Groups (Recursive) *@
+       }
+        </div>
+ 
+     @* Session Code Badge *@
+            <div class="flex-shrink-0">
+  <span class="badge badge-code" style="font-family: var(--pulse-font-mono);">
+     @session.SessionCode
+      </span>
+ </div>
+  
+         @* Status and Expiry *@
+          <div class="flex-shrink-0 text-end" style="min-width: 100px;">
+      <div class="fw-semibold mb-1" style="font-size: 0.75rem; color: var(--pulse-text-mid);">
+              @session.Status
+            </div>
+     <div class="text-muted" style="font-size: 0.6875rem;">
+  Expires @session.ExpiresAt.ToString("MMM d")
+         </div>
+           </div>
+       
+           @* Action Buttons *@
+        <div class="d-flex gap-1 flex-shrink-0" onclick="event.stopPropagation();">
+           <a href="/facilitator/live?Code=@session.SessionCode" 
+         class="btn btn-icon btn-sm btn-outline-primary" 
+  title="View Session">
+        <i class="ics ics-eye ic-sm"></i>
+   </a>
+           <a href="/facilitator/edit-session/@session.SessionCode?returnUrl=@Uri.EscapeDataString(Url.Action("Groups", "Facilitator") ?? "/facilitator/groups")" 
+         class="btn btn-icon btn-sm btn-outline-secondary"
+              title="Edit Session">
+   <i class="ics ics-pencil ic-sm"></i>
+     </a>
+  <button type="button" 
+ class="btn btn-icon btn-sm btn-outline-info copy-session-btn" 
+            data-session-code="@session.SessionCode"
+             data-session-title="@session.Title"
+    title="Copy Session">
+  <i class="ics ics-copy ic-sm"></i>
+     </button>
+           </div>
+ </div>
+    </div>
+           }
+    </div>
+     </div>
+   }
+        
+            @* Contextual Action Buttons *@
+       <div class="d-flex gap-2 flex-wrap mb-3">
+        @if (Model.Group.Level < 3)
+      {
+        <button class="btn btn-outline-primary btn-sm" onclick="createSubGroup('@Model.Group.Id', @Model.Group.Level)">
+   <i class="ics ics-add ic-xs"></i> Add @(Model.Group.Level == 1 ? "Level 2" : "Level 3") Group
+        </button>
+     }
+   <a href="/facilitator/create-session?groupId=@Model.Group.Id" class="btn btn-outline-success btn-sm">
+     <i class="ics ics-add ic-xs"></i> Add Session
+    </a>
+    </div>
+        
+        @* Child Groups (Recursive) *@
             @if (childGroups.Any())
             {
-                <div class="child-groups ps-3 mt-2">
-                    @foreach (var childGroup in childGroups)
-                    {
-                        @await Html.PartialAsync("_GroupCard", childGroup)
-                    }
-                </div>
-            }
+      <div class="child-groups mt-3" style="padding-left: 1.5rem; border-left: 3px solid rgba(14, 158, 154, 0.15);">
+      @foreach (var childGroup in childGroups)
+      {
+         @await Html.PartialAsync("_GroupCard", childGroup)
+          }
+      </div>
+     }
         </div>
     </div>
 </div>
@@ -197,35 +256,35 @@
     function createSubGroup(parentId, parentLevel) {
         event.preventDefault();
         const modal = document.getElementById('createGroupModal');
-        const levelSelect = document.getElementById('groupLevel');
-        const parentSelect = document.getElementById('parentGroup');
-        const createModalLabel = document.getElementById('createGroupModalLabel');
-        
+      const levelSelect = document.getElementById('groupLevel');
+    const parentSelect = document.getElementById('parentGroup');
+  const createModalLabel = document.getElementById('createGroupModalLabel');
+   
         // Calculate the new level (parent level + 1)
         const newLevel = parentLevel + 1;
         
-        // Update modal title to indicate it's for sub-group creation
-        createModalLabel.textContent = `Create Level ${newLevel} Sub Group`;
-        
+      // Update modal title to indicate it's for sub-group creation
+ createModalLabel.textContent = `Create Level ${newLevel} Sub Group`;
+
         // Set level and disable the field since it's auto-calculated
         levelSelect.value = newLevel;
         levelSelect.disabled = true;
         
         // Show parent group container and set parent
-        const parentContainer = document.getElementById('parentGroupContainer');
+     const parentContainer = document.getElementById('parentGroupContainer');
         parentContainer.style.display = 'block';
         parentSelect.required = true;
-        parentSelect.value = parentId;
-        parentSelect.disabled = true; // Disable since parent is pre-selected
-        
+  parentSelect.value = parentId;
+ parentSelect.disabled = true; // Disable since parent is pre-selected
+      
         // Filter and show only valid parent options
         const options = parentSelect.querySelectorAll('option[data-level]');
         options.forEach(option => {
-            const optionLevel = parseInt(option.getAttribute('data-level'));
-            option.style.display = optionLevel < newLevel ? 'block' : 'none';
+  const optionLevel = parseInt(option.getAttribute('data-level'));
+        option.style.display = optionLevel < newLevel ? 'block' : 'none';
         });
         
         new bootstrap.Modal(modal).show();
-        return false;
+      return false;
     }
 </script>

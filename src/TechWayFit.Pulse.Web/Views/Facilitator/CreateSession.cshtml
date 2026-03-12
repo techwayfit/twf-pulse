@@ -12,16 +12,33 @@
     <div class="container container-wide">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <div>
-                <h2 class="mb-2">Create session</h2>
-                <p class="text-muted mb-0">Context → Join Form (max 5 fields) → Launch</p>
-            </div>
+  <div>
+           <h2 class="mb-2">Create session</h2>
+          <p class="text-muted mb-0">Context → Join Form (max 5 fields) → Launch</p>
+         </div>
             <span class="badge bg-white text-dark border px-3 py-2">TTL: <strong>6h</strong></span>
         </div>
 
-   
+        <!-- Template Selection Banner -->
+     <div class="card border-0 shadow-sm mb-4" style="background: var(--pulse-gradient); color: white;">
+     <div class="card-body p-4">
+ <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+     <div class="flex-grow-1">
+        <h5 class="fw-bold mb-1" style="color: white;">Looking for other ways to create a session?</h5>
+      <p class="mb-0 opacity-90" style="color: white; font-size: 0.9375rem;">
+         Create a session from pre-built templates with activities and content
+</p>
+     </div>
+          <div>
+           <a href="@Url.Action("Templates", "Facilitator")" class="btn btn-light fw-semibold shadow-sm">
+ <i class="fas fa-file-lines me-2"></i>Browse Templates
+                </a>
+               </div>
+       </div>
+      </div>
+</div>
 
-        <!-- Form -->
+<!-- Form -->
         <form id="sessionCreateForm" action="/api/sessions" method="post">
             <!-- Hidden field for templateId if coming from template selection -->
             @if (ViewData["TemplateId"] != null)

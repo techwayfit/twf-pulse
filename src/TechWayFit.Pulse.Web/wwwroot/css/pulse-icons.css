@@ -25,7 +25,7 @@
 .ic-mr, .icon-mr { margin-right: 0.5rem; }
 .ic-ml, .icon-ml { margin-left: 0.5rem; }
 
-/* Individual SVG icon classes (87 icons) */
+/* Individual SVG icon classes (90+ icons) */
 .ics-alarm { background-image: url('/images/icons/alarm.svg'); }
 .ics-bar-chart { background-image: url('/images/icons/bar-chart.svg'); }
 .ics-bolt { background-image: url('/images/icons/bolt.svg'); }
@@ -114,3 +114,74 @@
 .ics-wrench { background-image: url('/images/icons/wrench.svg'); }
 .ics-zzz { background-image: url('/images/icons/zzz.svg'); }
 .ics-sparkles { background-image: url('/images/icons/robot.svg'); }
+
+/* ?? Additional Icons (Aliases to existing icons) ?? */
+.ics-add { background-image: url('/images/icons/plus.svg'); }
+
+/* ?? Font Awesome Fallback Icons ?? */
+/* These icons use Font Awesome when SVG doesn't exist */
+.ics-fa {
+    background-image: none !important;
+    width: auto;
+    height: auto;
+}
+
+.ics-fa::before {
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-style: normal;
+    display: inline-block;
+}
+
+.ics-more-horiz {
+    background-image: none !important;
+    width: auto;
+    height: auto;
+}
+
+.ics-more-horiz::before {
+    content: '\f141';
+  font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+}
+
+.ics-eye {
+    background-image: none !important;
+    width: auto;
+    height: auto;
+}
+
+.ics-eye::before {
+    content: '\f06e';
+  font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+}
+
+.ics-copy {
+    background-image: none !important;
+    width: auto;
+    height: auto;
+}
+
+.ics-copy::before {
+    content: '\f0c5';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+}
+
+/* Size adjustments for Font Awesome fallback icons */
+.ics-more-horiz.ic-xs::before,
+.ics-eye.ic-xs::before,
+.ics-copy.ic-xs::before { font-size: 14px; }
+
+.ics-more-horiz.ic-sm::before,
+.ics-eye.ic-sm::before,
+.ics-copy.ic-sm::before { font-size: 16px; }
+
+.ics-more-horiz.ic-md::before,
+.ics-eye.ic-md::before,
+.ics-copy.ic-md::before { font-size: 24px; }
+
+.ics-more-horiz.ic-lg::before,
+.ics-eye.ic-lg::before,
+.ics-copy.ic-lg::before { font-size: 32px; }

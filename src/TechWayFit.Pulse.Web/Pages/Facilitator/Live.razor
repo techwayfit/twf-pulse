@@ -10,9 +10,9 @@
 @if (isLoading)
 {
     <div class="d-flex align-items-center justify-content-center" style="height: calc(100vh - 60px);">
-        <div class="text-center">
+      <div class="text-center">
             <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
+      <span class="visually-hidden">Loading...</span>
             </div>
             <p class="mt-3 text-muted mb-0">Loading session...</p>
         </div>
@@ -22,163 +22,179 @@ else if (!string.IsNullOrEmpty(errorMessage))
 {
     <div class="container container-wide py-4">
         <div class="alert alert-danger">@errorMessage</div>
-        <a href="/" class="btn btn-primary">Back to Home</a>
-    </div>
+     <a href="/" class="btn btn-primary">Back to Home</a>
+ </div>
 }
 else if (session != null)
 {
     <div class="live-page-shell">
 
-        @* ── Slim top bar ── *@
-        <LiveHeader Session="@session"
-                    SessionCode="@sessionCode"
-                    IsPerformingAction="@isPerformingAction"
-                    ParticipantCount="@participantCount"
-                    CurrentActivity="@currentActivity"
-                    Activities="@activities"
-                    IsSidebarCollapsed="@_sidebarCollapsed"
-                    OnToggleSidebar="@(() => { _sidebarCollapsed = !_sidebarCollapsed; _sidebarMobileOpen = !_sidebarMobileOpen; })"
-                    OnShowQRModal="@ShowQRModal"
-                    OnShowEditSession="@ShowEditSessionModal"
-                    OnStartSession="@StartSession"
-                    OnEndSession="@ShowEndSessionModal" />
+        @* ── Enhanced slim top bar ── *@
+   <LiveHeader Session="@session"
+ SessionCode="@sessionCode"
+  IsPerformingAction="@isPerformingAction"
+         ParticipantCount="@participantCount"
+  CurrentActivity="@currentActivity"
+       Activities="@activities"
+   IsSidebarCollapsed="@_sidebarCollapsed"
+    OnToggleSidebar="@(() => { _sidebarCollapsed = !_sidebarCollapsed; _sidebarMobileOpen = !_sidebarMobileOpen; })"
+          OnShowQRModal="@ShowQRModal"
+  OnShowEditSession="@ShowEditSessionModal"
+              OnStartSession="@StartSession"
+          OnEndSession="@ShowEndSessionModal" />
 
         @* ── Two-panel workspace ── *@
-        <div class="live-workspace">
+ <div class="live-workspace">
 
             @* Left sidebar: activity queue *@
-            <aside class="live-sidebar @(_sidebarCollapsed ? "live-sidebar--collapsed" : "") @(_sidebarMobileOpen ? "live-sidebar--open" : "")">
+  <aside class="live-sidebar @(_sidebarCollapsed ? "live-sidebar--collapsed" : "") @(_sidebarMobileOpen ? "live-sidebar--open" : "")">
                 <LiveActivitiesList Activities="@activities"
-                                    SelectedActivityId="@selectedActivityId"
-                                    IsSessionEnded="@(session.Status == SessionStatus.Ended || session.Status == SessionStatus.Expired)"
-                                    OnSelectActivity="@SelectActivity"
-                                    OnAddActivity="@ShowAddActivityModal"
-                                    OnEditActivity="@ShowEditActivityModal"
-                                    OnCopyActivity="@CopyActivity" />
+SelectedActivityId="@selectedActivityId"
+   IsSessionEnded="@(session.Status == SessionStatus.Ended || session.Status == SessionStatus.Expired)"
+  OnSelectActivity="@SelectActivity"
+         OnAddActivity="@ShowAddActivityModal"
+        OnEditActivity="@ShowEditActivityModal"
+              OnCopyActivity="@CopyActivity" />
             </aside>
 
-            @* Mobile sidebar overlay backdrop *@
-            @if (_sidebarMobileOpen)
-            {
-                <div class="d-lg-none position-fixed top-0 start-0 w-100 h-100"
-                     style="background: rgba(0,0,0,0.4); z-index: 199;"
-                     @onclick="@(() => _sidebarMobileOpen = false)"></div>
+         @* Mobile sidebar overlay backdrop *@
+     @if (_sidebarMobileOpen)
+         {
+   <div class="d-lg-none position-fixed top-0 start-0 w-100 h-100"
+      style="background: rgba(0,0,0,0.4); z-index: 199;"
+    @onclick="@(() => _sidebarMobileOpen = false)"></div>
             }
 
-            @* Main stage *@
-            <section class="live-stage">
-                @{
-                    var displayedActivity = GetDisplayedActivity();
-                    var showCurrentControls = IsDisplayingCurrentActivity(displayedActivity);
+          @* Main stage *@
+     <section class="live-stage">
+        @{
+             var displayedActivity = GetDisplayedActivity();
+             var showCurrentControls = IsDisplayingCurrentActivity(displayedActivity);
+    }
+
+     @* Enhanced floating metrics with improved styling *@
+         <div class="live-stage-floating-metrics">
+        @if (session.Status == SessionStatus.Live)
+     {
+      <span class="badge bg-success d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm" style="font-size: 0.75rem; font-weight: 600; border-radius: 20px;">
+       <span class="pulse-dot" style="background: currentColor;"></span>
+       LIVE
+           </span>
+      }
+
+                <span class="live-response-badge shadow-sm">
+       <i class="fas fa-users"></i>
+ <span class="fw-semibold">@participantCount</span>
+          <span class="d-none d-sm-inline">Participant@(participantCount != 1 ? "s" : "")</span>
+             </span>
+
+        @if (currentActivity != null)
+{
+      <span class="live-response-badge shadow-sm" style="background: rgba(26, 188, 156, 0.1); color: var(--pulse-teal-dark);">
+        <i class="fas fa-reply"></i>
+           <span class="fw-semibold">@GetCurrentActivityResponseCount()</span>
+               <span class="d-none d-sm-inline">/ @participantCount</span>
+  </span>
+
+      @if (currentActivity.DurationMinutes.HasValue && currentActivity.OpenedAt.HasValue)
+    {
+  <div id="activity-timer"
+            data-duration="@currentActivity.DurationMinutes.Value"
+   data-opened-at="@currentActivity.OpenedAt.Value.ToString("o")"
+  class="live-timer-badge shadow-sm">
+<i class="fas fa-clock"></i>
+ <span class="timer-text fw-bold">--:--</span>
+          </div>
                 }
+  else if (currentActivity.DurationMinutes.HasValue)
+{
+      <span class="badge bg-light text-muted border shadow-sm" style="font-size: 0.75rem; padding: 0.4rem 0.8rem; border-radius: 20px;">
+              <i class="fas fa-clock me-1"></i>
+     @currentActivity.DurationMinutes&#8202;m
+                  </span>
+     }
+            else if (session.Status == SessionStatus.Live)
+  {
+         <button class="btn btn-sm btn-outline-primary shadow-sm" 
+     @onclick="ShowSetTimerModal"
+          style="border-radius: 20px; font-size: 0.75rem; font-weight: 600; padding: 0.4rem 0.8rem;">
+   <i class="fas fa-clock me-1"></i>Set Timer
+      </button>
+  }
+        }
+  </div>
 
-                <div class="live-stage-floating-metrics">
-                    @if (session.Status == SessionStatus.Live)
-                    {
-                        <span class="badge bg-success d-inline-flex align-items-center gap-1 px-2 py-1" style="font-size: 0.72rem;">
-                            <span class="pulse-dot"></span>LIVE
-                        </span>
-                    }
+      @if (displayedActivity != null)
+            {
+        <LiveCurrentActivity Activity="@displayedActivity"
+       SessionCode="@sessionCode"
+           IsPerformingAction="@isPerformingAction"
+        HasPrevious="@HasPreviousActivity()"
+        HasNext="@HasNextActivity()"
+    ShowCurrentControls="@showCurrentControls"
+          CanStart="@(currentActivity == null && displayedActivity.Status == ActivityStatus.Pending && session.Status != SessionStatus.Ended && session.Status != SessionStatus.Expired)"
+      IsSessionEnded="@(session.Status == SessionStatus.Ended || session.Status == SessionStatus.Expired)"
+  OnClose="@CloseCurrentActivity"
+    OnGoBack="@GoBack"
+          OnMoveNext="@MoveNext"
+       OnStart="@OpenSelectedActivity"
+          OnReopen="@ReopenSelectedActivity" />
+   }
+     else
+{
+       @* Enhanced idle state *@
+         <div class="live-stage-idle">
+   <div class="empty-state">
+   <div class="empty-state-icon">
+     <i class="fas fa-play-circle"></i>
+       </div>
+      <h3>No activity running</h3>
+    <p class="mb-3">Select an activity from the queue on the left to launch it.</p>
+    <button class="btn btn-primary d-lg-none shadow-sm" 
+      @onclick="@(() => _sidebarMobileOpen = true)"
+     style="border-radius: 8px; font-weight: 600;">
+   <i class="fas fa-list me-2"></i>View Activities
+                   </button>
+    </div>
 
-                    <span class="live-response-badge">
-                        <i class="fas fa-users"></i> @participantCount Participants
-                    </span>
+          @if (_hasAiInsight)
+     {
+           <div class="card border-0 shadow-lg" style="max-width: 480px; width: 100%; border-radius: 12px;">
+  <div class="card-body p-4">
+                 <div class="d-flex align-items-center gap-3 mb-3">
+      <div class="d-flex align-items-center justify-content-center" 
+           style="width: 40px; height: 40px; background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%); border-radius: 10px;">
+          <i class="fas fa-robot" style="color: #7c3aed; font-size: 1.2rem;"></i>
+    </div>
+            <div class="flex-grow-1">
+      <strong class="d-block mb-0">AI Insights</strong>
+         <span class="text-muted small">@(_aiInsightTimestamp.ToLocalTime().ToString("HH:mm"))</span>
+    </div>
+    </div>
+  @if (_aiInsightJson.ValueKind != System.Text.Json.JsonValueKind.Undefined)
+            {
+        @if (_aiInsightJson.TryGetProperty("Analysis", out var analysisEl) && analysisEl.ValueKind == System.Text.Json.JsonValueKind.String)
+     {
+<p class="mb-2" style="line-height: 1.6;">@analysisEl.GetString()</p>
+   }
+  @if (_aiInsightJson.TryGetProperty("FacilitatorPrompt", out var promptEl) && promptEl.ValueKind == System.Text.Json.JsonValueKind.String)
+         {
+       <div class="alert alert-info mb-0 py-2 px-3" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); border-radius: 8px;">
+  <i class="fas fa-lightbulb me-2"></i>@promptEl.GetString()
+ </div>
+         }
+    }
+         </div>
+   </div>
+  }
 
-                    @if (currentActivity != null)
-                    {
-                        <span class="live-response-badge">
-                            <i class="fas fa-reply"></i> @GetCurrentActivityResponseCount() / @participantCount
-                        </span>
-
-                        @if (currentActivity.DurationMinutes.HasValue && currentActivity.OpenedAt.HasValue)
-                        {
-                            <div id="activity-timer"
-                                 data-duration="@currentActivity.DurationMinutes.Value"
-                                 data-opened-at="@currentActivity.OpenedAt.Value.ToString("o")"
-                                 class="live-timer-badge">
-                                <i class="fas fa-clock"></i>
-                                <span class="timer-text">--:--</span>
-                            </div>
-                        }
-                        else if (currentActivity.DurationMinutes.HasValue)
-                        {
-                            <span class="live-timer-badge" style="background: var(--pulse-gray-200); color: var(--pulse-text-mid); box-shadow: none;">
-                                <i class="fas fa-clock"></i> @currentActivity.DurationMinutes&#8202;m
-                            </span>
-                        }
-                        else if (session.Status == SessionStatus.Live)
-                        {
-                            <button class="btn btn-sm btn-outline-secondary" @onclick="ShowSetTimerModal">
-                                <i class="fas fa-clock me-1"></i>Set Timer
-                            </button>
-                        }
-                    }
-                </div>
-
-                @if (displayedActivity != null)
-                {
-                    <LiveCurrentActivity Activity="@displayedActivity"
-                                         SessionCode="@sessionCode"
-                                         IsPerformingAction="@isPerformingAction"
-                                         HasPrevious="@HasPreviousActivity()"
-                                         HasNext="@HasNextActivity()"
-                                         ShowCurrentControls="@showCurrentControls"
-                                         CanStart="@(currentActivity == null && displayedActivity.Status == ActivityStatus.Pending && session.Status != SessionStatus.Ended && session.Status != SessionStatus.Expired)"
-                                         IsSessionEnded="@(session.Status == SessionStatus.Ended || session.Status == SessionStatus.Expired)"
-                                         OnClose="@CloseCurrentActivity"
-                                         OnGoBack="@GoBack"
-                                         OnMoveNext="@MoveNext"
-                                         OnStart="@OpenSelectedActivity"
-                                         OnReopen="@ReopenSelectedActivity" />
-                }
-                else
-                {
-                    @* Idle state *@
-                    <div class="live-stage-idle">
-                        <div class="text-center">
-                            <div class="mb-3" style="font-size: 3.5rem; color: var(--pulse-gray-300);">
-                                <i class="fas fa-play-circle"></i>
-                            </div>
-                            <h5 class="fw-semibold text-muted mb-1">No activity running</h5>
-                            <p class="text-muted small mb-3">Select an activity from the queue on the left to launch it.</p>
-                            <button class="btn btn-sm btn-outline-primary d-lg-none" @onclick="@(() => _sidebarMobileOpen = true)">
-                                <i class="fas fa-list me-1"></i>View Activities
-                            </button>
-                        </div>
-
-                        @if (_hasAiInsight)
-                        {
-                            <div class="card border-0 shadow-sm" style="max-width: 480px; width: 100%;">
-                                <div class="card-body p-3">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <i class="fas fa-robot text-primary"></i>
-                                        <strong class="small">AI Insights</strong>
-                                        <span class="text-muted small ms-auto">@(_aiInsightTimestamp.ToLocalTime().ToString("HH:mm"))</span>
-                                    </div>
-                                    @if (_aiInsightJson.ValueKind != System.Text.Json.JsonValueKind.Undefined)
-                                    {
-                                        @if (_aiInsightJson.TryGetProperty("Analysis", out var analysisEl) && analysisEl.ValueKind == System.Text.Json.JsonValueKind.String)
-                                        {
-                                            <p class="small mb-1">@analysisEl.GetString()</p>
-                                        }
-                                        @if (_aiInsightJson.TryGetProperty("FacilitatorPrompt", out var promptEl) && promptEl.ValueKind == System.Text.Json.JsonValueKind.String)
-                                        {
-                                            <div class="alert alert-info py-1 px-2 small mb-0">
-                                                <i class="fas fa-lightbulb me-1"></i>@promptEl.GetString()
-                                            </div>
-                                        }
-                                    }
-                                </div>
-                            </div>
-                        }
-
-                        <button class="btn btn-sm btn-outline-secondary" @onclick="ShowQRModal">
-                            <i class="fas fa-qrcode me-1"></i>Show Joining Info
-                        </button>
-                    </div>
-                }
-            </section>
-        </div>
+   <button class="btn btn-outline-primary shadow-sm" @onclick="ShowQRModal" style="border-radius: 8px; font-weight: 600;">
+     <i class="fas fa-qrcode me-2"></i>Show Joining Info
+        </button>
+     </div>
+     }
+</section>
+      </div>
 
     </div>
 
@@ -186,33 +202,33 @@ else if (session != null)
     <LiveQRModal SessionCode="@sessionCode" JoinUrl="@joinUrl" OnCopyUrl="@CopyJoinUrl" />
 
     <LiveTimerModal TimerDuration="@timerDurationInput"
-                    OnTimerDurationChanged="@((value) => timerDurationInput = value)"
-                    OnSetTimer="@SetActivityTimer" />
+     OnTimerDurationChanged="@((value) => timerDurationInput = value)"
+      OnSetTimer="@SetActivityTimer" />
 
     <div class="modal fade" id="endSessionModal" tabindex="-1" aria-labelledby="endSessionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
+  <div class="modal-content">
+     <div class="modal-header">
                     <h5 class="modal-title" id="endSessionModalLabel">End session?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" disabled="@isPerformingAction"></button>
-                </div>
-                <div class="modal-body">
-                    This will end the session for all participants and it cannot be restarted.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@isPerformingAction">Cancel</button>
-                    <button type="button" class="btn btn-danger" @onclick="ConfirmEndSession" disabled="@isPerformingAction">
-                        @(isPerformingAction ? "Ending..." : "Yes, End Session")
-                    </button>
-                </div>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" disabled="@isPerformingAction"></button>
+ </div>
+      <div class="modal-body">
+        This will end the session for all participants and it cannot be restarted.
+          </div>
+  <div class="modal-footer">
+   <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" disabled="@isPerformingAction">Cancel</button>
+    <button type="button" class="btn btn-danger" @onclick="ConfirmEndSession" disabled="@isPerformingAction">
+          @(isPerformingAction ? "Ending..." : "Yes, End Session")
+    </button>
+       </div>
             </div>
         </div>
     </div>
 
     <EditActivityModal @ref="editActivityModal"
-                       SessionCode="@sessionCode"
-                       OnActivityUpdated="HandleActivityUpdated"
-                       OnActivityDeleted="HandleActivityDeleted" />
+          SessionCode="@sessionCode"
+  OnActivityUpdated="HandleActivityUpdated"
+             OnActivityDeleted="HandleActivityDeleted" />
 
     @if (!string.IsNullOrEmpty(activityModalsHtml))
     {
@@ -222,6 +238,6 @@ else if (session != null)
 
 @code {
     // UI-only state for the two-panel layout
-    private bool _sidebarCollapsed = false;
+ private bool _sidebarCollapsed = false;
     private bool _sidebarMobileOpen = false;
 }

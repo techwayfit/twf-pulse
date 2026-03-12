@@ -11,167 +11,219 @@
     ViewData["AllGroups"] = Model;
 }
 
-
-
-<main class="py-4">
+<main class="py-5" style="background: var(--pulse-bg); min-height: 100vh;">
     <div class="container container-wide">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <div>
-                <h2 class="mb-1 fw-bold text-dark">Session Groups</h2>
-                <p class="text-muted mb-0">Organize your workshop sessions into groups for better management</p>
-            </div>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#createGroupModal">
-                    <i class="fas fa-plus"></i> Create Group
-                </button>
-                @if (isFromCreateSession)
-                {
-                    <a href="@Url.Action("CreateSession", "Facilitator")" class="btn btn-outline-secondary">
-                        ← Back to Create Session
-                    </a>
-                }
-                else
-                {
-                    <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-outline-secondary">
-                        ← Back to Dashboard
-                    </a>
-                }
+    <!-- Header Section -->
+        <div class="mb-4">
+       <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+          <div>
+             <div class="d-flex align-items-center gap-2 mb-2">
+  <div class="d-flex align-items-center justify-content-center rounded-pulse-lg" 
+     style="width: 48px; height: 48px; background: var(--pulse-gradient); box-shadow: var(--pulse-shadow-gradient);">
+         <i class="ics ics-folder ic-lg text-white"></i>
+      </div>
+    <div>
+         <h1 class="mb-0 fw-bold" style="font-size: 1.75rem; letter-spacing: -0.02em; color: var(--pulse-text-dark);">
+              Session Groups
+      </h1>
+         </div>
+        </div>
+           <p class="text-muted mb-0" style="font-size: 0.9375rem;">
+ Organize your workshop sessions into hierarchical groups for better management
+         </p>
+         </div>
+       <div class="d-flex gap-2 flex-wrap">
+      <button type="button" class="btn btn-gradient fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+        <i class="ics ics-add ic-sm"></i> Create Group
+          </button>
+         @if (isFromCreateSession)
+          {
+    <a href="@Url.Action("CreateSession", "Facilitator")" class="btn btn-outline-secondary">
+         <i class="ics ics-left-arrow ic-sm"></i> Back to Create Session
+    </a>
+        }
+      else
+   {
+       <a href="@Url.Action("Dashboard", "Facilitator")" class="btn btn-outline-secondary">
+        <i class="ics ics-left-arrow ic-sm"></i> Back to Dashboard
+  </a>
+     }
+         </div>
             </div>
         </div>
 
-        <!-- Info Alert -->
-        @if (!Model.Any())
+     <!-- Empty State or Info Alert -->
+   @if (!Model.Any())
         {
-            <div class="alert alert-info border-0 shadow-sm mb-4">
-                <div class="d-flex align-items-center">
-                    <div class="me-3 fs-4"><i class="fas fa-lightbulb"></i></div>
-                    <div>
-                        <h6 class="alert-heading mb-1">Get Started with Session Groups</h6>
-                        <p class="mb-0">Create hierarchical groups to organize your workshop sessions. You can have up to 3 levels: Group → Sub Group → Sub Sub Group</p>
-                    </div>
-                </div>
-            </div>
+     <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, rgba(14, 158, 154, 0.05) 0%, rgba(46, 232, 206, 0.05) 100%); border-left: 4px solid var(--pulse-teal-mid) !important;">
+           <div class="card-body p-4">
+        <div class="d-flex align-items-start gap-3">
+    <div class="flex-shrink-0">
+         <div class="d-flex align-items-center justify-content-center rounded-circle" 
+   style="width: 56px; height: 56px; background: var(--pulse-gradient); box-shadow: var(--pulse-shadow-md);">
+       <i class="ics ics-lightbulb ic-lg text-white"></i>
+        </div>
+    </div>
+              <div class="flex-grow-1">
+          <h5 class="fw-bold mb-2" style="color: var(--pulse-text-dark);">Get Started with Session Groups</h5>
+    <p class="mb-3" style="color: var(--pulse-text-mid); line-height: 1.6;">
+            Create hierarchical groups to organize your workshop sessions. You can have up to 3 levels of organization:
+             </p>
+   <ul class="mb-0 ps-3" style="color: var(--pulse-text-mid);">
+      <li class="mb-1"><strong>Level 1:</strong> Main track or category</li>
+           <li class="mb-1"><strong>Level 2:</strong> Sub-group or theme</li>
+      <li class="mb-1"><strong>Level 3:</strong> Specific topic or module</li>
+   </ul>
+      </div>
+         </div>
+           </div>
+          </div>
         }
 
-        <!-- Groups List -->
-        <div id="groupsList">
-            @foreach (var group in Model.Where(g => g.Group.Level == 1).OrderBy(g => g.Group.Name))
-            {
-                @await Html.PartialAsync("_GroupCard", group)
-            }
-        </div>
+      <!-- Groups List -->
+        <div id="groupsList" class="groups-container">
+     @foreach (var group in Model.Where(g => g.Group.Level == 1).OrderBy(g => g.Group.Name))
+    {
+         @await Html.PartialAsync("_GroupCard", group)
+   }
+    </div>
     </div>
 </main>
 
 <!-- Create Group Modal -->
 <div class="modal fade" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createGroupModalLabel">Create Session Group</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content" style="border-radius: var(--pulse-radius-xl); border: none; box-shadow: var(--pulse-shadow-xl);">
+     <div class="modal-header" style="border-bottom: 1.5px solid var(--pulse-border); padding: 1.5rem;">
+                <h5 class="modal-title fw-bold" id="createGroupModalLabel" style="color: var(--pulse-text-dark);">Create Session Group</h5>
+   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="createGroupForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="groupName" class="form-label">Group Name *</label>
-                        <input type="text" class="form-control" id="groupName" name="name" required maxlength="200">
-                    </div>
+    <form id="createGroupForm">
+<div class="modal-body" style="padding: 1.5rem;">
+         <div class="mb-4">
+    <label for="groupName" class="form-label">Group Name *</label>
+        <input type="text" class="form-control" id="groupName" name="name" required maxlength="200" 
+           placeholder="Enter group name...">
+   </div>
 
-                    <div class="mb-3">
-                        <label for="groupDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="groupDescription" name="description" rows="3" maxlength="1000" placeholder="Optional description for this group"></textarea>
-                    </div>
+     <div class="mb-4">
+      <label for="groupDescription" class="form-label">Description</label>
+            <textarea class="form-control" id="groupDescription" name="description" rows="3" maxlength="1000" 
+           placeholder="Optional description for this group"></textarea>
+          </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Icon & Color</label>
-                        <div class="d-flex align-items-start gap-3 flex-wrap">
-                            <div class="d-flex flex-column align-items-center gap-2">
-                                <button type="button" id="groupIcon-display" class="btn btn-outline-secondary fs-2 icon-picker-display"><i class="fas fa-folder"></i></button>
-                                <button type="button" id="groupIcon-change" class="btn btn-sm btn-outline-primary fs-7 picker-btn">Change Icon</button>
-                                <input type="hidden" id="groupIcon" name="icon" value="folder">
-                            </div>
-                            <div class="d-flex flex-column align-items-center gap-2">
-                                <div id="groupColor-preview" class="border rounded fs-8 color-preview">No Color</div>
-                                <button type="button" id="groupColor-change" class="btn btn-sm btn-outline-success fs-7 picker-btn">Change Color</button>
-                                <input type="hidden" id="groupColor" name="color">
-                            </div>
-                        </div>
-                    </div>
+                    <div class="mb-4">
+      <label class="form-label">Icon & Color</label>
+           <div class="d-flex align-items-start gap-4 flex-wrap">
+        <div class="d-flex flex-column align-items-center gap-2">
+        <button type="button" id="groupIcon-display" 
+    class="btn btn-outline-secondary fs-2 icon-picker-display"
+         style="border-radius: var(--pulse-radius-lg);">
+   <i class="fas fa-folder"></i>
+           </button>
+       <button type="button" id="groupIcon-change" class="btn btn-sm btn-outline-primary picker-btn">
+       Change Icon
+         </button>
+    <input type="hidden" id="groupIcon" name="icon" value="folder">
+           </div>
+     <div class="d-flex flex-column align-items-center gap-2">
+   <div id="groupColor-preview" 
+      class="border rounded color-preview d-flex align-items-center justify-content-center"
+       style="border-radius: var(--pulse-radius-lg); font-size: 0.75rem; color: var(--pulse-text-light);">
+         No Color
+     </div>
+      <button type="button" id="groupColor-change" class="btn btn-sm btn-outline-success picker-btn">
+        Change Color
+           </button>
+       <input type="hidden" id="groupColor" name="color">
+  </div>
+      </div>
+           </div>
 
-                    <div class="mb-3">
-                        <label for="groupLevel" class="form-label">Level *</label>
-                        <select class="form-select" id="groupLevel" name="level" required>
-                            <option value="1">Level 1 (Main Group)</option>
-                            <option value="2">Level 2 (Sub Group)</option>
-                            <option value="3">Level 3 (Sub Sub Group)</option>
-                        </select>
-                    </div>
+         <div class="mb-4">
+     <label for="groupLevel" class="form-label">Level *</label>
+         <select class="form-select" id="groupLevel" name="level" required>
+           <option value="1">Level 1 (Main Track)</option>
+   <option value="2">Level 2 (Sub Group)</option>
+      <option value="3">Level 3 (Sub Sub Group)</option>
+   </select>
+      </div>
 
-                    <div class="mb-3" id="parentGroupContainer" style="display: none;">
-                        <label for="parentGroup" class="form-label">Parent Group *</label>
-                        <select class="form-select" id="parentGroup" name="parentGroupId">
-                            <option value="">Select parent group...</option>
-                            @foreach (var group in Model.Where(g => g.Group.Level <= 2))
-                            {
-                                <option value="@group.Group.Id" data-level="@group.Group.Level">
-                                    @(new string('—', (group.Group.Level - 1) * 2)) @group.Group.Name
-                                </option>
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Group</button>
-                </div>
-            </form>
+    <div class="mb-3" id="parentGroupContainer" style="display: none;">
+    <label for="parentGroup" class="form-label">Parent Group *</label>
+     <select class="form-select" id="parentGroup" name="parentGroupId">
+     <option value="">Select parent group...</option>
+             @foreach (var group in Model.Where(g => g.Group.Level <= 2))
+    {
+          <option value="@group.Group.Id" data-level="@group.Group.Level">
+      @(new string('—', (group.Group.Level - 1) * 2)) @group.Group.Name
+   </option>
+     }
+       </select>
+                 </div>
+              </div>
+              <div class="modal-footer" style="border-top: 1.5px solid var(--pulse-border); padding: 1.25rem 1.5rem;">
+             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+     <button type="submit" class="btn btn-gradient shadow-sm">Create Group</button>
         </div>
+      </form>
+     </div>
     </div>
 </div>
 
 <!-- Edit Group Modal -->
 <div class="modal fade" id="editGroupModal" tabindex="-1" aria-labelledby="editGroupModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editGroupModalLabel">Edit Group</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+        <div class="modal-content" style="border-radius: var(--pulse-radius-xl); border: none; box-shadow: var(--pulse-shadow-xl);">
+            <div class="modal-header" style="border-bottom: 1.5px solid var(--pulse-border); padding: 1.5rem;">
+  <h5 class="modal-title fw-bold" id="editGroupModalLabel" style="color: var(--pulse-text-dark);">Edit Group</h5>
+           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+   </div>
             <form id="editGroupForm">
                 <input type="hidden" id="editGroupId" name="id">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="editGroupName" class="form-label">Group Name *</label>
-                        <input type="text" class="form-control" id="editGroupName" name="name" required maxlength="200">
+           <div class="modal-body" style="padding: 1.5rem;">
+    <div class="mb-4">
+           <label for="editGroupName" class="form-label">Group Name *</label>
+          <input type="text" class="form-control" id="editGroupName" name="name" required maxlength="200">
+     </div>
+
+         <div class="mb-4">
+           <label for="editGroupDescription" class="form-label">Description</label>
+      <textarea class="form-control" id="editGroupDescription" name="description" rows="3" maxlength="1000"></textarea>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="editGroupDescription" class="form-label">Description</label>
-                        <textarea class="form-control" id="editGroupDescription" name="description" rows="3" maxlength="1000"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Icon & Color</label>
-                        <div class="d-flex align-items-start gap-3 flex-wrap">
-                            <div class="d-flex flex-column align-items-center gap-2">
-                                <button type="button" id="editGroupIcon-display" class="btn btn-outline-secondary fs-2 icon-picker-display"><i class="fas fa-folder"></i></button>
-                                <button type="button" id="editGroupIcon-change" class="btn btn-sm btn-outline-primary fs-7 picker-btn">Change Icon</button>
-                                <input type="hidden" id="editGroupIcon" name="icon" value="folder">
-                            </div>
-                            <div class="d-flex flex-column align-items-center gap-2">
-                                <div id="editGroupColor-preview" class="border rounded fs-8 color-preview">No Color</div>
-                                <button type="button" id="editGroupColor-change" class="btn btn-sm btn-outline-success fs-7 picker-btn">Change Color</button>
-                                <input type="hidden" id="editGroupColor" name="color">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Group</button>
-                </div>
+     <div class="mb-3">
+<label class="form-label">Icon & Color</label>
+           <div class="d-flex align-items-start gap-4 flex-wrap">
+     <div class="d-flex flex-column align-items-center gap-2">
+           <button type="button" id="editGroupIcon-display" 
+             class="btn btn-outline-secondary fs-2 icon-picker-display"
+               style="border-radius: var(--pulse-radius-lg);">
+          <i class="fas fa-folder"></i>
+              </button>
+       <button type="button" id="editGroupIcon-change" class="btn btn-sm btn-outline-primary picker-btn">
+        Change Icon
+      </button>
+              <input type="hidden" id="editGroupIcon" name="icon" value="folder">
+                 </div>
+               <div class="d-flex flex-column align-items-center gap-2">
+        <div id="editGroupColor-preview" 
+                 class="border rounded color-preview d-flex align-items-center justify-content-center"
+        style="border-radius: var(--pulse-radius-lg); font-size: 0.75rem; color: var(--pulse-text-light);">
+       No Color
+      </div>
+<button type="button" id="editGroupColor-change" class="btn btn-sm btn-outline-success picker-btn">
+         Change Color
+    </button>
+          <input type="hidden" id="editGroupColor" name="color">
+    </div>
+            </div>
+    </div>
+         </div>
+      <div class="modal-footer" style="border-top: 1.5px solid var(--pulse-border); padding: 1.25rem 1.5rem;">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+     <button type="submit" class="btn btn-gradient shadow-sm">Update Group</button>
+    </div>
             </form>
         </div>
     </div>
