@@ -317,21 +317,28 @@ options.Retry.MaxRetryAttempts = 2;
     {
         // Optimize SignalR for workshop scenarios
         options.KeepAliveInterval = TimeSpan.FromSeconds(15);
-    options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
-        options.HandshakeTimeout = TimeSpan.FromSeconds(15);
-        options.MaximumReceiveMessageSize = 32 * 1024; // 32KB limit
+   options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+  options.HandshakeTimeout = TimeSpan.FromSeconds(15);
+options.MaximumReceiveMessageSize = 32 * 1024; // 32KB limit
     });
 
-    // Add response compression services with Brotli and Gzip support
-    builder.Services.AddResponseCompression(options =>
+    // Add Database Backplane for web farm support (uses existing MariaDB/MySQL database)
+  // This allows SignalR to work across multiple servers without Redis or Azure SignalR Service
+    var useDbBackplane = builder.Configuration.GetValue<bool>("SignalR:UseDatabaseBackplane");
+    if (useDbBackplane)
     {
-        options.EnableForHttps = true;
-        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
-        {
-            "image/svg+xml",
-            "application/octet-stream"
-        });
-    });
+        Log.Information("Enabling SignalR database backplane for web farm support");
+    
+        // Register the background service that polls for messages from other servers
+ builder.Services.AddSingleton<TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane.DatabaseBackplaneService>();
+  builder.Services.AddHostedService<TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane.DatabaseBackplaneService>(
+  sp => sp.GetRequiredService<TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane.DatabaseBackplaneService>());
+    }
+else
+{
+    Log.Warning("SignalR database backplane is disabled. In-memory mode (not suitable for web farms).");
+Log.Information("To enable web farm support, set 'SignalR:UseDatabaseBackplane' to true in appsettings.json");
+    }
 
     var app = builder.Build();
 

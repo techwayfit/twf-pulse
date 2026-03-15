@@ -17,6 +17,13 @@
 
     <!-- Pulse Design System Bundle (All CSS combined and minified) -->
     <link rel="stylesheet" href="~/css/pulse-bundle.min.css" asp-append-version="true" />
+    
+    <!-- Connection Status Styles -->
+    <link rel="stylesheet" href="~/css/connection-status.css" asp-append-version="true" />
+    
+    <!-- Print Styles -->
+    <link rel="stylesheet" href="~/css/pulse-print.css" asp-append-version="true" media="print" />
+    
     <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
 
     <!-- Page-specific styles -->
@@ -24,14 +31,22 @@
 
 </head>
 <body class="d-flex flex-column min-vh-100">
-    @* ═══════════════════════════════════════════════════════════════════════
+    @* Connection Status Banner (Hidden by default) *@
+    <div id="connection-status-banner" class="connection-status-banner d-none" role="alert">
+    <div class="container d-flex align-items-center justify-content-center gap-2">
+      <i class="fas fa-spinner fa-spin" id="connection-icon"></i>
+       <span id="connection-message">Connecting...</span>
+  </div>
+    </div>
+
+  @* ═══════════════════════════════════════════════════════════════════════
   NAVIGATION - Always dynamic, never cached
     Shows user-specific menu items
        ═══════════════════════════════════════════════════════════════════════ *@
-    @await Html.PartialAsync("_Navigation")
+  @await Html.PartialAsync("_Navigation")
 
     <main class="flex-grow-1">
-        @await RenderSectionAsync("HeroHeader", required: false)
+    @await RenderSectionAsync("HeroHeader", required: false)
         @await RenderSectionAsync("PersonalizedHeader", required: false)
 
         @if (ViewData["CacheDuration"] != null)
@@ -39,36 +54,37 @@
             var cacheDuration = (int)ViewData["CacheDuration"];
             <cache expires-after="@TimeSpan.FromSeconds(cacheDuration)" vary-by="@Context.Request.Path">
                 @RenderBody()
-            </cache>
+    </cache>
+     IgnoreBody();
         }
         else
         {
-            @RenderBody()
+       @RenderBody()
         }
-         
-        @await RenderSectionAsync("PersonalizedAfterBody", required: false)         
+       
+    @await RenderSectionAsync("PersonalizedAfterBody", required: false)         
         @await RenderSectionAsync("PreFooter", required: false)
     </main>
 
     <!-- Footer - Dark Theme -->
     <footer class="footer-dark">
-        <div class="container container-wide">
-            <div class="footer-grid">
-                <div class="footer-copyright">&copy; @DateTime.Now.Year TechWayFit Pulse. All rights reserved.</div>
-                <div class="footer-links">
-                    <a href="/home/privacy" class="text-decoration-none">Privacy</a>
-                    <a href="/home/terms" class="text-decoration-none">Terms</a>
-                    <a href="/home/support" class="text-decoration-none">Support</a>
-                </div>
-            </div>
+ <div class="container container-wide">
+        <div class="footer-grid">
+    <div class="footer-copyright">&copy; @DateTime.Now.Year TechWayFit Pulse. All rights reserved.</div>
+            <div class="footer-links">
+             <a href="/home/privacy" class="text-decoration-none">Privacy</a>
+             <a href="/home/terms" class="text-decoration-none">Terms</a>
+            <a href="/home/support" class="text-decoration-none">Support</a>
+        </div>
+    </div>
         </div>
     </footer>
 
     <!-- Blazor Error UI (for Blazor pages only) -->
     <div id="blazor-error-ui" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: lightyellow; color: black; padding: 10px; text-align: center; z-index: 9999;">
-        An unhandled error has occurred.
+   An unhandled error has occurred.
         <a href="" class="reload" style="margin-left: 10px;">Reload</a>
-        <a class="dismiss" style="margin-left: 10px; cursor: pointer;"><i class="fas fa-xmark"></i></a>
+      <a class="dismiss" style="margin-left: 10px; cursor: pointer;"><i class="fas fa-xmark"></i></a>
     </div>
 
     <!-- Bootstrap JS Bundle -->
@@ -79,13 +95,83 @@
 
     <!-- Chart.js for dashboard charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-wordcloud@4.3.0/build/index.umd.min.js"></script>
+    
+    <!-- Chart.js Word Cloud Plugin - Load AFTER Chart.js with onload verification -->
+  <script>
+        // Ensure Chart.js is loaded before loading the word cloud plugin
+        (function() {
+      if (typeof Chart !== 'undefined') {
+ // Chart.js is ready, load word cloud plugin
+     var script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chartjs-chart-wordcloud@4.3.0/build/index.umd.min.js';
+                script.onload = function() {
+             console.log('Chart.js word cloud plugin loaded successfully');
+     };
+          script.onerror = function() {
+       console.error('Failed to load Chart.js word cloud plugin');
+   };
+        document.head.appendChild(script);
+         } else {
+     console.error('Chart.js not loaded - cannot load word cloud plugin');
+       }
+        })();
+    </script>
 
     <!-- Pulse Dashboard Scripts Bundle -->
-    <script src="~/js/pulse-dashboard.min.js" asp-append-version="true"></script>
+ <script src="~/js/pulse-dashboard.min.js" asp-append-version="true"></script>
 
-    <!-- Pulse Activity Scripts Bundle -->
+ <!-- Pulse Activity Scripts Bundle -->
     <script src="~/js/pulse-activities.min.js" asp-append-version="true"></script>
+
+    <!-- Connection Status Helper -->
+    <script>
+    // Global helper functions for connection status
+        window.showConnectionStatus = function(state, message) {
+        const banner = document.getElementById('connection-status-banner');
+            const icon = document.getElementById('connection-icon');
+            const messageEl = document.getElementById('connection-message');
+  
+            if (!banner || !icon || !messageEl) return;
+            
+         banner.classList.remove('d-none', 'status-connecting', 'status-connected', 'status-disconnected');
+            icon.className = ''; // Reset icon classes
+            
+      switch(state) {
+         case 'connecting':
+         case 'reconnecting':
+  banner.classList.add('status-connecting');
+         icon.className = 'fas fa-spinner fa-spin';
+       messageEl.textContent = message || 'Reconnecting...';
+        break;
+     case 'connected':
+             banner.classList.add('status-connected');
+        icon.className = 'fas fa-check-circle';
+          messageEl.textContent = message || 'Connected';
+    // Auto-hide after 2 seconds
+    setTimeout(() => banner.classList.add('d-none'), 2000);
+       break;
+      case 'disconnected':
+       case 'offline':
+           banner.classList.add('status-disconnected');
+           icon.className = 'fas fa-wifi-slash';
+               messageEl.textContent = message || 'Connection lost. Retrying...';
+                    break;
+        default:
+           banner.classList.add('d-none');
+  }
+        };
+   
+        // Monitor online/offline events (mobile-friendly)
+        window.addEventListener('online', () => {
+            console.log('Network online - connection may restore');
+          showConnectionStatus('connecting', 'Network restored. Reconnecting...');
+        });
+        
+     window.addEventListener('offline', () => {
+  console.log('Network offline');
+  showConnectionStatus('offline', 'No internet connection');
+        });
+    </script>
 
     <!-- Page-specific scripts -->
     @await RenderSectionAsync("Scripts", required: false)

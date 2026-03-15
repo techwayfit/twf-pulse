@@ -1,0 +1,172 @@
+/* ============================================
+   PULSE PRINT STYLES
+   Version: 1.0.0
+   
+   Print-specific styles to optimize content
+   for printing and hide unnecessary elements.
+   ============================================ */
+
+@media print {
+    /* ------------------------------------------
+       HIDE NON-PRINTABLE ELEMENTS
+       ------------------------------------------ */
+    
+    /* Hide navigation */
+    nav,
+    .navbar,
+    .pulse-navbar,
+    .pulse-session-bar {
+        display: none !important;
+    }
+    
+    /* Hide footer */
+    footer,
+    .footer-dark {
+        display: none !important;
+    }
+    
+    /* Hide interactive elements that don't make sense in print */
+    .navbar-toggler,
+    #blazor-error-ui,
+    .btn-loading::after {
+        display: none !important;
+    }
+ 
+    /* ------------------------------------------
+       PAGE LAYOUT OPTIMIZATION
+   ------------------------------------------ */
+  
+    /* Ensure main content uses full page width */
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    main {
+        padding-top: 0 !important;
+    }
+    
+    /* Preserve container widths */
+    .container,
+    .container-wide,
+    .container-fluid {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+ 
+    /* ------------------------------------------
+       PRESERVE VISUAL STYLES
+       ------------------------------------------ */
+    
+    /* Keep colors and gradients */
+    .bg-gradient,
+    .bg-app,
+    .card-gradient,
+    .btn-gradient,
+    .btn-primary,
+    .badge-gradient {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+    
+    /* Preserve all backgrounds */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+    
+    /* Keep shadows for depth */
+    .card,
+    .shadow,
+    .shadow-sm,
+    .shadow-lg,
+    .shadow-xl,
+    .shadow-gradient {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* ------------------------------------------
+       CONTENT OPTIMIZATION
+  ------------------------------------------ */
+    
+    /* Prevent page breaks inside important elements */
+    .card,
+    .alert,
+    .table,
+    .poll-option,
+    .activity-badge {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* ------------------------------------------
+       BUTTON OPTIMIZATION
+   ------------------------------------------ */
+    
+    /* Keep buttons visible but remove hover effects */
+    .btn {
+        transform: none !important;
+        transition: none !important;
+    }
+    
+    .btn:hover,
+    .btn:focus {
+        transform: none !important;
+        filter: none !important;
+    }
+    
+    /* ------------------------------------------
+       TABLE OPTIMIZATION
+       ------------------------------------------ */
+    
+    table {
+        border-collapse: collapse !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    thead {
+        display: table-header-group;
+    }
+    
+    tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    /* ------------------------------------------
+       PAGE BREAK CONTROL
+       ------------------------------------------ */
+    
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+        break-after: avoid;
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+    
+    img {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        max-width: 100% !important;
+    }
+    
+    /* ------------------------------------------
+       OPTIONAL: HIDE SPECIFIC INTERACTIVE ELEMENTS
+       Uncomment these if you want to hide them in print
+     ------------------------------------------ */
+  
+    /*
+    .btn,
+    button:not(.accordion-button) {
+        display: none !important;
+    }
+    
+    .dropdown,
+.dropdown-menu {
+        display: none !important;
+    }
+ */
+}

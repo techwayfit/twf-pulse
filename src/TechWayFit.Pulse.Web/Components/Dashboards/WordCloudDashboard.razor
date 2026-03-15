@@ -130,13 +130,13 @@
                     @if (viewType == "cloud")
                     {
                         <div class="wordcloud-canvas-shell">
-                            <canvas id="wordcloud-@ActivityId" width="600" height="400"></canvas>
+                            <canvas id="wordcloud-@ActivityId"></canvas>
                         </div>
                     }
                     else if (viewType == "chart")
                     {
                         <div class="wordcloud-canvas-shell">
-                            <canvas id="wordcloud-chart-@ActivityId" width="600" height="400"></canvas>
+                            <canvas id="wordcloud-chart-@ActivityId"></canvas>
                         </div>
                     }
                     else
@@ -422,16 +422,19 @@
         border-radius: 12px;
         border: 1px solid #d6e5e9;
         background: #ffffff;
-        min-height: 420px;
+        height: 380px;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 0.6rem;
+      padding: 1rem;
+        position: relative;
     }
 
     .wordcloud-dashboard .wordcloud-canvas-shell canvas {
-        max-width: 100%;
-        height: auto;
+        max-width: 100% !important;
+      max-height: 100% !important;
+      width: auto !important;
+        height: auto !important;
     }
 
     .wordcloud-dashboard .wordcloud-list-grid {
@@ -558,8 +561,8 @@
 
         if (dashboard?.WordFrequencies?.Any() == true && (viewType == "cloud" || viewType == "chart"))
         {
-            // Single render attempt - canvas should be ready in DOM
-            await Task.Delay(300);
+            // Wait longer for canvas to be fully rendered in DOM (especially on slow connections)
+            await Task.Delay(500);
             await RenderVisualization();
         }
     }
@@ -699,34 +702,76 @@
     private async Task RenderWordCloud()
     {
         var canvasId = $"wordcloud-{ActivityId}";
-        var words = dashboard?.WordFrequencies?
-            .Select(w => new WordData { Text = w.Text, Count = w.Count })
-            .ToArray();
-        
-        Logger.LogInformation("Rendering word cloud for canvas {CanvasId} with {Count} words", canvasId, words?.Length ?? 0);
-        
-        if (words?.Any() == true)
-        {
-            await Task.Delay(200); // Wait for canvas to be fully rendered in DOM
-            await JS.InvokeVoidAsync("renderWordCloud", canvasId, words);
+ 
+        Logger.LogInformation("RenderWordCloud called for canvas {CanvasId}", canvasId);
+    
+      // Verify canvas exists in DOM before attempting render
+        var canvasExists = await JS.InvokeAsync<bool>("eval", $"!!document.getElementById('{canvasId}')");
+        if (!canvasExists)
+    {
+    Logger.LogWarning("Canvas {CanvasId} not found in DOM", canvasId);
+     return;
         }
+
+        var words = dashboard?.WordFrequencies?
+     .Select(w => new { text = w.Text, count = w.Count }) // Use lowercase properties for JS
+         .ToArray();
+        
+        if (words?.Any() != true)
+        {
+            Logger.LogWarning("No word data to render for canvas {CanvasId}", canvasId);
+    return;
+      }
+
+        Logger.LogInformation("Calling renderWordCloud with {Count} words", words.Length);
+      
+        try
+        {
+            await JS.InvokeVoidAsync("renderWordCloud", canvasId, words);
+  Logger.LogInformation("Successfully called renderWordCloud");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to call renderWordCloud JavaScript function");
+     }
     }
 
     private async Task RenderChart()
     {
         var chartId = $"wordcloud-chart-{ActivityId}";
+  
+        Logger.LogInformation("RenderChart called for {ChartId}", chartId);
+        
+        // Verify canvas exists
+        var canvasExists = await JS.InvokeAsync<bool>("eval", $"!!document.getElementById('{chartId}')");
+        if (!canvasExists)
+   {
+            Logger.LogWarning("Chart canvas {ChartId} not found in DOM", chartId);
+ return;
+  }
+
         var data = dashboard?.WordFrequencies?
-            .Take(10)
-            .Select(w => new ChartData { Label = w.Text, Count = w.Count })
-            .ToArray();
+    .Take(10)
+      .Select(w => new { label = w.Text, count = w.Count }) // Use lowercase for JS
+   .ToArray();
+    
+        if (data?.Any() != true)
+      {
+     Logger.LogWarning("No chart data for {ChartId}", chartId);
+       return;
+ }
+
+        Logger.LogInformation("Calling renderWordCloudChart with {Count} items", data.Length);
         
-        Logger.LogInformation("Rendering chart for {ChartId} with {Count} items", chartId, data?.Length ?? 0);
-        
-        if (data?.Any() == true)
-        {
-            await Task.Delay(200); // Wait for canvas to be fully rendered
-            await JS.InvokeVoidAsync("renderWordCloudChart", chartId, data);
+        try
+ {
+      await JS.InvokeVoidAsync("renderWordCloudChart", chartId, data);
+     Logger.LogInformation("Successfully called renderWordCloudChart");
         }
+        catch (Exception ex)
+        {
+Logger.LogError(ex, "Failed to call renderWordCloudChart JavaScript function");
+   }
     }
 
     public async ValueTask DisposeAsync()

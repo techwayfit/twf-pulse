@@ -660,35 +660,37 @@
             if (string.IsNullOrEmpty(participantToken))
             {
                 submitSuccess = false;
-                submitMessage = "Participant token not found. Please refresh the page or rejoin the session.";
+                submitMessage = "Participant token not found in browser storage. Please refresh the page or rejoin the session.";
                 showRejoinAction = true;
-                Console.WriteLine($"Token is empty for participant {participantId.Value}");
+                Console.WriteLine($"[Activity] Token validation failed: Token is empty for participant {participantId.Value}");
                 return;
             }
             
-            // Check if token exists in store
+            // Check if token exists in store (database + cache)
             var storedAuth = await ParticipantTokenStore.TryGetAsync(sessionEntity.Id, participantId.Value);
             if (storedAuth is null)
             {
                 submitSuccess = false;
-                submitMessage = "Session state lost (server restart). Please rejoin the session by refreshing and entering your name again.";
+                submitMessage = "Participant session expired. This can happen after a server restart. Please rejoin the session.";
                 showRejoinAction = true;
-                Console.WriteLine($"No token found in store for participant {participantId.Value} in session {sessionEntity.Id}");
+                Console.WriteLine($"[Activity] Token validation failed: No stored token found for participant {participantId.Value} in session {sessionEntity.Id}. Server may have restarted.");
                 return;
             }
-            
+ 
             if (!await ParticipantTokenStore.IsValidAsync(sessionEntity.Id, participantId.Value, participantToken))
             {
+                // Try to reconcile from localStorage before failing
                 await EnsureParticipantIdentityConsistency(sessionEntity.Id);
 
                 if (!participantId.HasValue || string.IsNullOrWhiteSpace(participantToken) ||
                     !await ParticipantTokenStore.IsValidAsync(sessionEntity.Id, participantId.Value, participantToken))
                 {
                     submitSuccess = false;
-                    submitMessage = "Invalid or expired participant token. The token doesn't match. Please rejoin the session.";
+                    submitMessage = "Participant token validation failed. Your session token doesn't match the server's record. Please rejoin the session.";
                     showRejoinAction = true;
-                    Console.WriteLine($"Token validation failed for participant {participantId.Value} in session {sessionEntity.Id}");
-                    Console.WriteLine($"Expected: {storedAuth.Token.Substring(0, 8)}..., Got: {participantToken.Substring(0, Math.Min(8, participantToken.Length))}...");
+                    Console.WriteLine($"[Activity] Token validation failed: Token mismatch for participant {participantId.Value}");
+                    Console.WriteLine($"[Activity] Expected token starts with: {(storedAuth.Token.Length > 8 ? storedAuth.Token.Substring(0, 8) : storedAuth.Token)}...");
+                    Console.WriteLine($"[Activity] Received token starts with: {(participantToken.Length > 8 ? participantToken.Substring(0, 8) : participantToken)}...");
                     return;
                 }
             }
@@ -736,7 +738,8 @@
 
     private Task RejoinSession()
     {
-        Navigation.NavigateTo($"/participant/join?sessionCode={SessionCode}", true);
-        return Task.CompletedTask;
+        // Instead of forcing a full rejoin, try to restore the session first
+        Navigation.NavigateTo($"/participant/restore?sessionCode={SessionCode}&pid={Pid}", forceLoad: true);
+   return Task.CompletedTask;
     }
 }

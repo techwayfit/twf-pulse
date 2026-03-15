@@ -76,8 +76,27 @@ public sealed class ParticipantTokenStore : IParticipantTokenStore
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.SessionId == sessionId && p.Id == participantId);
 
-            if (participant?.Token != null)
+            if (participant != null)
             {
+                // If token is missing (legacy participant), generate a new one and update the database
+                if (string.IsNullOrEmpty(participant.Token))
+                {
+                    participant.Token = Guid.NewGuid().ToString("N");
+                    
+                    // Update the database with the new token
+                    var updateScope = _scopeFactory.CreateScope();
+                    var updateContext = updateScope.ServiceProvider.GetRequiredService<IPulseDbContext>();
+                    var participantToUpdate = await updateContext.Participants
+                        .FirstOrDefaultAsync(p => p.Id == participantId);
+                
+                    if (participantToUpdate != null)
+                    {
+                        participantToUpdate.Token = participant.Token;
+                        await updateContext.SaveChangesAsync();
+                    }
+                    updateScope.Dispose();
+                }
+        
                 var auth = new ParticipantAuth(participantId, participant.Token, participant.JoinedAt);
                 CacheToken(sessionId, participantId, auth);
                 return auth;

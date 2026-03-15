@@ -1163,21 +1163,119 @@ public partial class Live : IAsyncDisposable
         try
         {
             hubConnection = new HubConnectionBuilder()
-          .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
-                .Build();
+       .WithUrl(Navigation.ToAbsoluteUri("/hubs/workshop"))
+    .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(30) })
+      .Build();
+
+      // Handle reconnection after temporary disconnection
+          hubConnection.Reconnecting += async (error) =>
+            {
+                await InvokeAsync(async () =>
+{
+          Logger.LogWarning("SignalR connection lost, reconnecting... Error: {Error}", error?.Message);
+    
+  // Show "Reconnecting..." banner to user
+    try
+            {
+               await JS.InvokeVoidAsync("showConnectionStatus", "reconnecting", "Reconnecting to server...");
+    }
+     catch { /* Ignore JS interop errors */ }
+           
+         StateHasChanged();
+     });
+            };
+
+      // Handle successful reconnection
+       hubConnection.Reconnected += async (connectionId) =>
+    {
+   await InvokeAsync(async () =>
+       {
+    Logger.LogInformation("SignalR reconnected with connection ID: {ConnectionId}", connectionId);
+      
+  // Show "Connected" banner
+        try
+   {
+      await JS.InvokeVoidAsync("showConnectionStatus", "connected", "Connection restored");
+}
+        catch { /* Ignore JS interop errors */ }
+ 
+   // Re-subscribe to session events
+ try
+       {
+             await hubConnection.InvokeAsync("Subscribe", sessionCode);
+ 
+// Refresh all data to sync with server state
+            await LoadSession();
+   
+        Logger.LogInformation("Re-subscribed to session {SessionCode} after reconnection", sessionCode);
+   }
+      catch (Exception ex)
+  {
+  Logger.LogError(ex, "Failed to re-subscribe after reconnection");
+    errorMessage = "Connection restored, but failed to sync. Please refresh the page.";
+  }
+       
+  StateHasChanged();
+    });
+    };
+
+            // Handle connection closure (e.g., after app restart)
+      hubConnection.Closed += async (error) =>
+  {
+                await InvokeAsync(async () =>
+       {
+      Logger.LogWarning("SignalR connection closed. Error: {Error}", error?.Message);
+             
+     // Show "Disconnected" banner
+            try
+ {
+         await JS.InvokeVoidAsync("showConnectionStatus", "disconnected", "Connection lost. Retrying...");
+    }
+        catch { /* Ignore JS interop errors */ }
+          
+       // Attempt to reconnect after a delay
+        await Task.Delay(TimeSpan.FromSeconds(2));
+      
+ try
+    {
+     if (hubConnection.State == HubConnectionState.Disconnected)
+     {
+    Logger.LogInformation("Attempting to restart SignalR connection...");
+       await hubConnection.StartAsync();
+     await hubConnection.InvokeAsync("Subscribe", sessionCode);
+     await LoadSession();
+ Logger.LogInformation("SignalR connection restarted successfully");
+        
+     // Show success banner
+          try
+ {
+ await JS.InvokeVoidAsync("showConnectionStatus", "connected", "Connection restored");
+         }
+          catch { /* Ignore JS interop errors */ }
+    }
+      }
+   catch (Exception ex)
+     {
+       Logger.LogError(ex, "Failed to restart SignalR connection");
+      errorMessage = "Lost connection to server. Please refresh the page.";
+      }
+       
+        StateHasChanged();
+   });
+     };
 
             // Handle session state changes (includes participant count)
-            hubConnection.On<SessionStateChangedEvent>("SessionStateChanged", async (sessionEvent) =>
-  {
-      await InvokeAsync(async () =>
-        {
-            if (session != null && sessionEvent.SessionCode == session.Code)
+    hubConnection.On<SessionStateChangedEvent>("SessionStateChanged", async (sessionEvent) =>
             {
-                participantCount = sessionEvent.ParticipantCount;
-                StateHasChanged();
-            }
+        await InvokeAsync(async () =>
+          {
+              if (session != null && sessionEvent.SessionCode == session.Code)
+           {
+     participantCount = sessionEvent.ParticipantCount;
+       StateHasChanged();
+   }
+   });
         });
-  });
 
             // Handle participant joins
             hubConnection.On<ParticipantJoinedEvent>("ParticipantJoined", async (participantEvent) =>

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Web.Api;
@@ -13,13 +14,19 @@ public sealed class HubNotificationService : IHubNotificationService
 {
     private readonly IHubContext<WorkshopHub, IWorkshopClient> _hub;
     private readonly IParticipantService _participantService;
+    private readonly TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane.DatabaseBackplaneService? _backplaneService;
 
     public HubNotificationService(
         IHubContext<WorkshopHub, IWorkshopClient> hub,
-        IParticipantService participantService)
+        IParticipantService participantService,
+        IServiceProvider serviceProvider)
     {
         _hub = hub;
         _participantService = participantService;
+
+        // Try to get backplane service if it's registered
+        _backplaneService = serviceProvider.GetService(typeof(TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane.DatabaseBackplaneService))
+            as TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane.DatabaseBackplaneService;
     }
 
     public async Task PublishSessionStateChangedAsync(Session session, CancellationToken cancellationToken = default)
@@ -35,6 +42,12 @@ public sealed class HubNotificationService : IHubNotificationService
             DateTimeOffset.UtcNow);
 
         await _hub.Clients.Group(groupName).SessionStateChanged(sessionStateEvent);
+
+        // Store in database for other servers if backplane is enabled
+        if (_backplaneService != null)
+        {
+            await _backplaneService.StoreMessageAsync(groupName, nameof(IWorkshopClient.SessionStateChanged), new object[] { sessionStateEvent });
+        }
     }
 
     public async Task PublishActivityStateChangedAsync(string sessionCode, Activity activity, CancellationToken cancellationToken = default)
@@ -51,12 +64,22 @@ public sealed class HubNotificationService : IHubNotificationService
             DateTimeOffset.UtcNow);
 
         await _hub.Clients.Group(groupName).ActivityStateChanged(activityStateEvent);
+
+        if (_backplaneService != null)
+        {
+            await _backplaneService.StoreMessageAsync(groupName, nameof(IWorkshopClient.ActivityStateChanged), new object[] { activityStateEvent });
+        }
     }
 
     public async Task PublishActivityDeletedAsync(string sessionCode, Guid activityId, CancellationToken cancellationToken = default)
     {
         var groupName = WorkshopGroupNames.ForSession(sessionCode);
         await _hub.Clients.Group(groupName).ActivityDeleted(activityId);
+
+        if (_backplaneService != null)
+        {
+            await _backplaneService.StoreMessageAsync(groupName, nameof(IWorkshopClient.ActivityDeleted), new object[] { activityId });
+        }
     }
 
     public async Task PublishResponseReceivedAsync(
@@ -68,13 +91,20 @@ public sealed class HubNotificationService : IHubNotificationService
         CancellationToken cancellationToken = default)
     {
         var groupName = WorkshopGroupNames.ForSession(sessionCode);
-        await _hub.Clients.Group(groupName).ResponseReceived(new ResponseReceivedEvent(
+        var responseEvent = new ResponseReceivedEvent(
             sessionCode,
             activityId,
             responseId,
             participantId,
             createdAt,
-            DateTimeOffset.UtcNow));
+            DateTimeOffset.UtcNow);
+
+        await _hub.Clients.Group(groupName).ResponseReceived(responseEvent);
+
+        if (_backplaneService != null)
+        {
+            await _backplaneService.StoreMessageAsync(groupName, nameof(IWorkshopClient.ResponseReceived), new object[] { responseEvent });
+        }
     }
 
     public async Task PublishDashboardUpdatedAsync(
@@ -85,12 +115,19 @@ public sealed class HubNotificationService : IHubNotificationService
         CancellationToken cancellationToken = default)
     {
         var groupName = WorkshopGroupNames.ForSession(sessionCode);
-        await _hub.Clients.Group(groupName).DashboardUpdated(new DashboardUpdatedEvent(
+        var dashboardEvent = new DashboardUpdatedEvent(
             sessionCode,
             activityId,
             aggregateType,
             payload,
-            DateTimeOffset.UtcNow));
+            DateTimeOffset.UtcNow);
+
+        await _hub.Clients.Group(groupName).DashboardUpdated(dashboardEvent);
+
+        if (_backplaneService != null)
+        {
+            await _backplaneService.StoreMessageAsync(groupName, nameof(IWorkshopClient.DashboardUpdated), new object[] { dashboardEvent });
+        }
     }
 
     public async Task PublishQuadrantItemAdvancedAsync(
@@ -100,10 +137,17 @@ public sealed class HubNotificationService : IHubNotificationService
         CancellationToken cancellationToken = default)
     {
         var groupName = WorkshopGroupNames.ForSession(sessionCode);
-        await _hub.Clients.Group(groupName).QuadrantItemAdvanced(new QuadrantItemAdvancedEvent(
+        var quadrantEvent = new QuadrantItemAdvancedEvent(
             sessionCode,
             activityId,
             itemIndex,
-            DateTimeOffset.UtcNow));
+            DateTimeOffset.UtcNow);
+
+        await _hub.Clients.Group(groupName).QuadrantItemAdvanced(quadrantEvent);
+
+        if (_backplaneService != null)
+        {
+            await _backplaneService.StoreMessageAsync(groupName, nameof(IWorkshopClient.QuadrantItemAdvanced), new object[] { quadrantEvent });
+        }
     }
 }

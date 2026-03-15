@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Infrastructure.Persistence.Entities;
+using TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 
@@ -11,21 +12,21 @@ public interface IPulseDbContext : IDisposable
 {
     /// <summary>
     /// Workshop sessions
-/// </summary>
+    /// </summary>
     DbSet<SessionRecord> Sessions { get; }
 
- /// <summary>
+    /// <summary>
     /// Activities within sessions
-/// </summary>
+    /// </summary>
     DbSet<ActivityRecord> Activities { get; }
 
-/// <summary>
-  /// Workshop participants
+    /// <summary>
+    /// Workshop participants
     /// </summary>
     DbSet<ParticipantRecord> Participants { get; }
 
     /// <summary>
-/// Participant responses to activities
+    /// Participant responses to activities
     /// </summary>
     DbSet<ResponseRecord> Responses { get; }
 
@@ -39,18 +40,18 @@ public interface IPulseDbContext : IDisposable
     /// </summary>
     DbSet<FacilitatorUserRecord> FacilitatorUsers { get; }
 
-  /// <summary>
+    /// <summary>
     /// Key-value storage for facilitator preferences
     /// </summary>
- DbSet<FacilitatorUserDataRecord> FacilitatorUserData { get; }
+    DbSet<FacilitatorUserDataRecord> FacilitatorUserData { get; }
 
     /// <summary>
     /// One-time passwords for authentication
     /// </summary>
     DbSet<LoginOtpRecord> LoginOtps { get; }
 
-/// <summary>
-/// Hierarchical session organization
+    /// <summary>
+    /// Hierarchical session organization
     /// </summary>
     DbSet<SessionGroupRecord> SessionGroups { get; }
 
@@ -64,6 +65,11 @@ public interface IPulseDbContext : IDisposable
     /// Separate from the immutable activity Config so session/template copies do not carry runtime state.
     /// </summary>
     DbSet<SessionActivityMetadataRecord> SessionActivityMetadata { get; }
+
+    /// <summary>
+    /// SignalR messages for cross-server communication in web farm deployments
+    /// </summary>
+    DbSet<SignalRMessage> SignalRMessages { get; }
 
     /// <summary>
     /// Saves all changes made in this context to the database.

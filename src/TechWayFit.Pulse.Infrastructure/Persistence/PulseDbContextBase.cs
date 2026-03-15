@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Infrastructure.Persistence.Abstractions;
 using TechWayFit.Pulse.Infrastructure.Persistence.Entities;
+using TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane;
 
 namespace TechWayFit.Pulse.Infrastructure.Persistence;
 
@@ -20,10 +21,11 @@ public DbSet<SessionRecord> Sessions => Set<SessionRecord>();
     public DbSet<ContributionCounterRecord> ContributionCounters => Set<ContributionCounterRecord>();
     public DbSet<FacilitatorUserRecord> FacilitatorUsers => Set<FacilitatorUserRecord>();
   public DbSet<FacilitatorUserDataRecord> FacilitatorUserData => Set<FacilitatorUserDataRecord>();
-    public DbSet<LoginOtpRecord> LoginOtps => Set<LoginOtpRecord>();
+public DbSet<LoginOtpRecord> LoginOtps => Set<LoginOtpRecord>();
     public DbSet<SessionGroupRecord> SessionGroups => Set<SessionGroupRecord>();
     public DbSet<SessionTemplateRecord> SessionTemplates => Set<SessionTemplateRecord>();
     public DbSet<SessionActivityMetadataRecord> SessionActivityMetadata => Set<SessionActivityMetadataRecord>();
+    public DbSet<SignalRMessage> SignalRMessages => Set<SignalRMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -150,6 +152,9 @@ public DbSet<SessionRecord> Sessions => Set<SessionRecord>();
             entity.HasIndex(x => new { x.SessionId, x.ActivityId, x.Key }).IsUnique();
             entity.HasIndex(x => new { x.SessionId, x.ActivityId });
         });
+
+        // SignalRMessages - Database backplane for web farm support
+    modelBuilder.ApplyConfiguration(new TechWayFit.Pulse.Infrastructure.Persistence.Configurations.SignalRMessageConfiguration());
     }
 
  /// <summary>

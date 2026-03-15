@@ -1,387 +1,299 @@
-# MariaDB Schema Scripts - V1.0
+# SignalR Database Backplane - MariaDB/MySQL Scripts
+
+Version: **1.0.0**  
+Date: **2026-03-15**  
+Database: **MariaDB 10.3+ / MySQL 5.7+**
+
+---
 
 ## Overview
 
-This directory contains **manual SQL scripts** for MariaDB/MySQL schema management. EF Core migrations are **disabled** for MariaDB to maintain enterprise control over database changes.
+These SQL scripts enable the **SignalR Database Backplane** feature, which allows TechWayFit Pulse to operate in **web farm (multi-server) environments** without requiring Redis or Azure SignalR Service.
 
-## Why Manual Scripts?
+## How It Works
 
-? **DBA Review & Approval**: DBAs can review SQL before production  
-? **Version Control**: Explicit scripts in git history  
-? **Deployment Control**: Deploy scripts independently of application  
-? **Rollback Strategy**: Clear rollback procedures for each version  
-? **Audit Trail**: Track who changed what and when  
-? **Multi-Environment**: Same scripts work across all environments  
-? **Team Coordination**: No merge conflicts in auto-generated files  
+1. **Message Storage**: When a SignalR event is broadcast, it's stored in the `SignalRMessages` table
+2. **Cross-Server Polling**: Each server polls the database every 500ms for messages from other servers
+3. **Local Broadcast**: Messages from other servers are broadcast to local SignalR clients
+4. **Auto-Cleanup**: Messages older than 5 minutes are automatically deleted
 
-## Compatibility
+---
 
-- **MariaDB**: 10.3 or later (recommended 10.5+)
-- **MySQL**: 8.0 or later
+## Script Files
 
-## Files in This Directory
-
-| File | Purpose | When to Run |
+| File | Purpose | When to Use |
 |------|---------|-------------|
-| `00_MasterSetup.sql` | **All-in-one setup** (recommended) | First-time setup |
+| `001-Create-SignalRMessages-Table.sql` | Creates the backplane table | Initial deployment or migration |
+| `002-Monitoring-Queries.sql` | Health and performance monitoring | Regular monitoring, troubleshooting |
+| `003-Maintenance-Scripts.sql` | Cleanup and optimization | Periodic maintenance, issue resolution |
+| `004-Rollback.sql` | Removes backplane (for single-server) | Downgrade to single-server deployment |
 
-## Quick Start
+---
 
-### Option 1: Master Setup (Recommended)
+## Installation
 
-Run the all-in-one master script:
+### Step 1: Run Migration Script
 
 ```bash
-# For MariaDB
-mysql -u root -p TechWayFitPulse < "00_MasterSetup.sql"
+# Connect to your MariaDB database
+mysql -u your_user -p your_database
 
-# Or using specific user
-mysql -h localhost -u pulseuser -p TechWayFitPulse < "00_MasterSetup.sql"
+# Run the migration
+mysql> source 001-Create-SignalRMessages-Table.sql
 ```
 
-This creates:
-- ? `pulse` schema (database)
-- ? 10 tables
-- ? 20+ indexes
-- ? Migration history table
-- ? Verification report
+**Expected Output:**
+```
+Query OK, 0 rows affected (0.05 sec)
+```
 
-### Option 2: MySQL Workbench
-
-1. Open MySQL Workbench
-2. Connect to your MariaDB/MySQL server
-3. Open `00_MasterSetup.sql`
-4. Execute the script
-
-### Option 3: phpMyAdmin
-
-1. Log in to phpMyAdmin
-2. Select `TechWayFitPulse` database
-3. Go to SQL tab
-4. Paste script contents
-5. Click "Go"
-
-## What Gets Created
-
-### Schema
-- `pulse` - Main application schema (database)
-
-### Tables (10)
-1. `pulse.Sessions` - Workshop sessions
-2. `pulse.Activities` - Activities within sessions
-3. `pulse.Participants` - Session participants
-4. `pulse.Responses` - Participant responses
-5. `pulse.ContributionCounters` - Contribution tracking
-6. `pulse.FacilitatorUsers` - Facilitator accounts
-7. `pulse.FacilitatorUserData` - User preferences (key-value)
-8. `pulse.LoginOtps` - One-time passwords
-9. `pulse.SessionGroups` - Hierarchical session organization
-10. `pulse.SessionTemplates` - Reusable session templates
-
-### Indexes (20+)
-- Unique indexes on codes and emails
-- Performance indexes on foreign keys
-- Composite indexes for common queries
-- Status and date range indexes
-
-### Data Types
-
-MariaDB/MySQL specific types used:
-- `CHAR(36)` - GUID/UUID storage
-- `VARCHAR(n)` - String columns with length
-- `LONGTEXT` - JSON and large text storage
-- `DATETIME(6)` - Timestamps with microsecond precision
-- `TINYINT(1)` - Boolean values
-- `INT` - Integer values
-
-### Storage Engine
-
-All tables use **InnoDB** engine for:
-- ACID compliance
-- Foreign key support
-- Row-level locking
-- Crash recovery
-
-### Character Set
-
-All tables use **utf8mb4** with **unicode_ci** collation for:
-- Full Unicode support (including emojis)
-- Case-insensitive string comparisons
-- International character support
-
-## Verification
-
-After running setup scripts:
+### Step 2: Verify Installation
 
 ```sql
--- Check database
-SHOW DATABASES LIKE 'pulse';
-
--- Switch to pulse database
-USE pulse;
-
--- Check tables
-SHOW TABLES;
-
--- Check table structure
-DESCRIBE Sessions;
+-- Check table exists
+SELECT TABLE_NAME, ENGINE, TABLE_ROWS, TABLE_COMMENT
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = DATABASE()
+AND TABLE_NAME = 'SignalRMessages';
 
 -- Check indexes
-SHOW INDEX FROM Sessions;
-
--- Verify data
-SELECT COUNT(*) FROM Sessions;
+SHOW INDEX FROM SignalRMessages;
 ```
 
-Expected output:
-```
-Database: pulse
-Tables: 10
-Indexes: 20+
-Rows: 0 (initially)
-```
+### Step 3: Enable in Application
 
-## Connection Strings
-
-### Local Development
-
-**Standard Connection**:
-```
-Server=localhost;Port=3306;Database=pulse;Uid=root;Pwd=yourpassword;
-```
-
-**With SSL** (recommended for production):
-```
-Server=localhost;Port=3306;Database=pulse;Uid=pulseuser;Pwd=yourpassword;SslMode=Required;
-```
-
-### Azure Database for MySQL
-
-```
-Server=yourserver.mysql.database.azure.com;Port=3306;Database=pulse;Uid=pulseuser@yourserver;Pwd=yourpassword;SslMode=Required;
-```
-
-### AWS RDS for MariaDB/MySQL
-
-```
-Server=yourinstance.region.rds.amazonaws.com;Port=3306;Database=pulse;Uid=pulseuser;Pwd=yourpassword;SslMode=Required;
-```
-
-### Docker Container
-
-```
-Server=localhost;Port=3307;Database=pulse;Uid=root;Pwd=rootpassword;
-```
-
-## Configuration in appsettings.json
+Add to `appsettings.json` or `appsettings.Production.json`:
 
 ```json
 {
-  "Pulse": {
-  "UseInMemory": false,
-    "DatabaseProvider": "MariaDB"
-  },
-  "ConnectionStrings": {
-    "PulseDb": "Server=localhost;Port=3306;Database=pulse;Uid=root;Pwd=yourpassword;"
+  "SignalR": {
+"UseDatabaseBackplane": true
   }
 }
 ```
 
-**Note**: You can use either `"MariaDB"` or `"MySQL"` as the provider - both work with the same configuration.
+### Step 4: Deploy to Web Farm
 
-## Create Database First
-
-Before running the setup script, ensure the database exists:
-
-```sql
-CREATE DATABASE IF NOT EXISTS TechWayFitPulse
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
-```
-
-Or for the `pulse` schema:
-
-```sql
-CREATE DATABASE IF NOT EXISTS pulse
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
-```
-
-## User Permissions
-
-Create a dedicated user with appropriate permissions:
-
-```sql
--- Create user
-CREATE USER 'pulseuser'@'localhost' IDENTIFIED BY 'securepassword';
-
--- Grant privileges on pulse database
-GRANT ALL PRIVILEGES ON pulse.* TO 'pulseuser'@'localhost';
-
--- Apply changes
-FLUSH PRIVILEGES;
-
--- For remote access (use specific IP instead of % for security)
-CREATE USER 'pulseuser'@'%' IDENTIFIED BY 'securepassword';
-GRANT ALL PRIVILEGES ON pulse.* TO 'pulseuser'@'%';
-FLUSH PRIVILEGES;
-```
-
-## Troubleshooting
-
-### "Access denied for user"
-**Cause**: Authentication failure  
-**Solution**: 
-```sql
--- Check user exists
-SELECT User, Host FROM mysql.user WHERE User = 'pulseuser';
-
--- Reset password
-ALTER USER 'pulseuser'@'localhost' IDENTIFIED BY 'newpassword';
-FLUSH PRIVILEGES;
-```
-
-### "Unknown database 'pulse'"
-**Cause**: Database doesn't exist  
-**Solution**: 
-```sql
-CREATE DATABASE pulse CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-### "Can't connect to MySQL server"
-**Cause**: Server not running or incorrect host/port  
-**Solution**: 
-```bash
-# Check if MariaDB/MySQL is running
-sudo systemctl status mariadb
-# or
-sudo systemctl status mysql
-
-# Start if needed
-sudo systemctl start mariadb
-```
-
-### "CREATE INDEX syntax error"
-**Cause**: MariaDB version < 10.3 doesn't support `IF NOT EXISTS` for indexes  
-**Solution**: Upgrade to MariaDB 10.3+ or manually check index existence before creation
-
-### "Row size too large"
-**Cause**: InnoDB row size limit  
-**Solution**: Already handled - using `LONGTEXT` for JSON columns
-
-## Performance Tuning
-
-### Recommended MariaDB Settings
-
-Add to `/etc/mysql/my.cnf` or `/etc/my.cnf`:
-
-```ini
-[mysqld]
-# InnoDB settings
-innodb_buffer_pool_size = 1G
-innodb_log_file_size = 256M
-innodb_flush_log_at_trx_commit = 2
-innodb_flush_method = O_DIRECT
-
-# Query cache (MariaDB only)
-query_cache_type = 1
-query_cache_size = 64M
-
-# Connection settings
-max_connections = 200
-thread_cache_size = 50
-
-# Character set
-character-set-server = utf8mb4
-collation-server = utf8mb4_unicode_ci
-```
-
-Restart MariaDB after changes:
-```bash
-sudo systemctl restart mariadb
-```
-
-## Future Changes
-
-Future schema changes will be in versioned folders:
-
-```
-Scripts/MariaDB/
-??? V1.0/  ? You are here
-??? V1.1/  ? Future minor version
-?   ??? README.md
-?   ??? 01_AddFeature.sql
-?   ??? 99_Rollback.sql
-??? V2.0/  ? Future major version
-    ??? ...
-```
-
-## Rollback
-
-**V1.0 has no rollback** - it's the baseline schema.
-
-To reset:
-```sql
--- WARNING: This deletes ALL data
-DROP DATABASE IF EXISTS pulse;
-```
-
-Then re-run setup scripts.
-
-## Best Practices
-
-? **Always backup** before running scripts in production  
-? **Test in staging** before production  
-? **Review scripts** with DBA before production deployment  
-? **Run during maintenance window** for production  
-? **Verify results** after running scripts  
-? **Keep scripts in version control** (already done)  
-? **Use SSL** for production connections  
-? **Create dedicated user** - don't use root in production  
-
-## Docker Quick Start
-
-Run MariaDB in Docker for local development:
-
-```bash
-# Pull and run MariaDB
-docker run -d \
-  --name pulse-mariadb \
-  -e MYSQL_ROOT_PASSWORD=rootpassword \
-  -e MYSQL_DATABASE=pulse \
-  -e MYSQL_USER=pulseuser \
-  -e MYSQL_PASSWORD=pulsepassword \
-  -p 3306:3306 \
-  mariadb:10.11
-
-# Run setup script
-docker exec -i pulse-mariadb mysql -uroot -prootpassword pulse < 00_MasterSetup.sql
-```
-
-Connection string for Docker:
-```
-Server=localhost;Port=3306;Database=pulse;Uid=pulseuser;Pwd=pulsepassword;
-```
-
-## Related Documentation
-
-- **Setup Guide**: `docs/mariadb-setup.md`
-- **Migration Strategy**: `docs/database-schema-management-strategy.md`
-- **Architecture**: `docs/mariadb-implementation-summary.md`
-
-## Support
-
-Questions? Check:
-1. MariaDB Documentation: https://mariadb.com/kb/en/
-2. MySQL Documentation: https://dev.mysql.com/doc/
-3. GitHub Issues - Report problems
+- Deploy application to 2+ servers
+- Enable **ARR Affinity** (sticky sessions) in Azure App Service
+- Monitor using queries from `002-Monitoring-Queries.sql`
 
 ---
 
-**Version**: 1.0  
-**Created**: January 2026  
-**Tables**: 10  
-**Indexes**: 20+  
-**MariaDB**: 10.3+  
-**MySQL**: 8.0+  
-**Status**: Production Ready ?
+## Monitoring
+
+### Quick Health Check
+
+Run this query to see overall backplane health:
+
+```sql
+-- From 002-Monitoring-Queries.sql - Query #11
+SELECT 
+    (SELECT COUNT(*) FROM SignalRMessages WHERE IsProcessed = 0) as PendingMessages,
+ (SELECT COUNT(*) FROM SignalRMessages WHERE CreatedAt > DATE_SUB(NOW(), INTERVAL 1 MINUTE)) as LastMinute,
+    (SELECT COUNT(DISTINCT ServerId) FROM SignalRMessages WHERE CreatedAt > DATE_SUB(NOW(), INTERVAL 5 MINUTE)) as ActiveServers;
+```
+
+**Healthy Values:**
+- `PendingMessages`: 0-50 (low is good)
+- `LastMinute`: Varies by activity (10-100 typical)
+- `ActiveServers`: Should match number of web servers
+
+### Common Monitoring Queries
+
+```sql
+-- 1. Check pending message queue
+SELECT COUNT(*) as PendingMessages FROM SignalRMessages WHERE IsProcessed = 0;
+
+-- 2. View active servers
+SELECT DISTINCT ServerId, MAX(CreatedAt) as LastActivity
+FROM SignalRMessages
+WHERE CreatedAt > DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+GROUP BY ServerId;
+
+-- 3. Check table size
+SELECT ROUND(((data_length + index_length) / 1024 / 1024), 2) AS SizeMB
+FROM information_schema.TABLES 
+WHERE table_schema = DATABASE() AND table_name = 'SignalRMessages';
+```
+
+---
+
+## Maintenance
+
+### Manual Cleanup (If Needed)
+
+```sql
+-- From 003-Maintenance-Scripts.sql
+DELETE FROM SignalRMessages
+WHERE CreatedAt < DATE_SUB(NOW(), INTERVAL 5 MINUTE);
+```
+
+### Optimize Table (Monthly)
+
+```sql
+-- From 003-Maintenance-Scripts.sql
+OPTIMIZE TABLE SignalRMessages;
+ANALYZE TABLE SignalRMessages;
+```
+
+### Scheduled Cleanup (Optional)
+
+To enable automatic database cleanup (alternative to application cleanup):
+
+```sql
+-- From 003-Maintenance-Scripts.sql - Script #14
+-- Requires: SET GLOBAL event_scheduler = ON;
+CREATE EVENT evt_cleanup_signalr_messages
+ON SCHEDULE EVERY 5 MINUTE
+DO DELETE FROM SignalRMessages WHERE CreatedAt < DATE_SUB(NOW(), INTERVAL 5 MINUTE);
+```
+
+---
+
+## Troubleshooting
+
+### Issue: Messages Not Syncing Between Servers
+
+**Symptoms:**
+- Participant on Server B doesn't receive updates from Server A
+- `PendingMessages` count is high
+
+**Solution:**
+```sql
+-- 1. Check for stuck messages
+SELECT Id, ServerId, CreatedAt, TIMESTAMPDIFF(SECOND, CreatedAt, NOW()) as AgeSeconds
+FROM SignalRMessages
+WHERE IsProcessed = 0 AND CreatedAt < DATE_SUB(NOW(), INTERVAL 30 SECOND);
+
+-- 2. Mark stuck messages as processed
+UPDATE SignalRMessages
+SET IsProcessed = 1, ProcessedAt = NOW()
+WHERE IsProcessed = 0 AND CreatedAt < DATE_SUB(NOW(), INTERVAL 1 MINUTE);
+```
+
+### Issue: Table Growing Too Large
+
+**Symptoms:**
+- Table size > 100 MB
+- High row count (> 10,000 rows)
+
+**Solution:**
+```sql
+-- 1. Check table size
+SELECT ROUND(((data_length + index_length) / 1024 / 1024), 2) AS SizeMB,
+  table_rows as RowCount
+FROM information_schema.TABLES 
+WHERE table_schema = DATABASE() AND table_name = 'SignalRMessages';
+
+-- 2. Aggressive cleanup (messages older than 2 minutes)
+DELETE FROM SignalRMessages WHERE CreatedAt < DATE_SUB(NOW(), INTERVAL 2 MINUTE);
+
+-- 3. Optimize table
+OPTIMIZE TABLE SignalRMessages;
+```
+
+### Issue: High Database Load
+
+**Symptoms:**
+- Database CPU usage high
+- Slow query logs show frequent SignalR queries
+
+**Solution:**
+
+1. **Increase poll interval** in `DatabaseBackplaneService.cs`:
+   ```csharp
+   private readonly TimeSpan _pollInterval = TimeSpan.FromMilliseconds(1000); // Change from 500ms to 1000ms
+   ```
+
+2. **Reduce message retention**:
+   ```csharp
+   private readonly TimeSpan _messageRetention = TimeSpan.FromMinutes(3); // Change from 5 to 3 minutes
+   ```
+
+3. **Verify indexes are being used**:
+   ```sql
+   EXPLAIN SELECT * FROM SignalRMessages 
+   WHERE IsProcessed = 0 AND ServerId != 'TEST' 
+   ORDER BY CreatedAt LIMIT 100;
+   ```
+
+---
+
+## Performance Metrics
+
+### Expected Load (3 Servers, 100 Active Sessions)
+
+| Metric | Value |
+|--------|-------|
+| **SELECT queries/sec** | ~6 (2 per server) |
+| **INSERT/UPDATE queries/sec** | ~5-15 (during active sessions) |
+| **DELETE queries/sec** | ~0.05 (cleanup every 30 sec) |
+| **Table size** | < 10 MB (with 5-min retention) |
+| **Row count** | < 1,000 rows |
+| **Cross-server latency** | ~500ms average |
+
+### Capacity Limits
+
+- **Recommended**: 2-10 servers
+- **Maximum**: ~20 servers (consider Redis beyond this)
+- **Sessions**: Up to 500 concurrent sessions
+- **Database**: MariaDB 10.3+ or MySQL 5.7+
+
+---
+
+## Rollback / Uninstall
+
+To remove the database backplane and return to single-server mode:
+
+### Step 1: Disable in Application
+
+```json
+{
+  "SignalR": {
+    "UseDatabaseBackplane": false
+  }
+}
+```
+
+### Step 2: Run Rollback Script
+
+```bash
+mysql> source 004-Rollback.sql
+```
+
+### Step 3: Verify Removal
+
+```sql
+SELECT TABLE_NAME 
+FROM information_schema.TABLES
+WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'SignalRMessages';
+-- Should return 0 rows
+```
+
+---
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0.0 | 2026-03-15 | Initial release - SignalR database backplane |
+
+---
+
+## Support
+
+For issues or questions:
+1. Check `002-Monitoring-Queries.sql` for diagnostic queries
+2. Review application logs for backplane-related errors
+3. Run health check query to verify backplane status
+4. See main documentation: `../../../../docs/signalr-database-backplane.md`
+
+---
+
+## Related Documentation
+
+- [SignalR Database Backplane Documentation](../../../../docs/signalr-database-backplane.md)
+- [Implementation Summary](../../../../IMPLEMENTATION-COMPLETE-SignalR-Database-Backplane.md)
+- [SQL Server Scripts](../../SQLServer/v1.0/README.md)
+- [SQLite Scripts](../../SQLite/v1.0/README.md)
