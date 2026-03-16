@@ -109,70 +109,28 @@ else
                     </div>
                 }
 
-                @if (activity.Type == ActivityType.Poll)
+            
+                @* Presentation plugin dispatch — add new activity types by registering
+                    IActivityUiDescriptor; no code changes needed here. *@
+                var domainType = (TechWayFit.Pulse.Domain.Enums.ActivityType)(int)activity.Type;
+                var presentationDescriptor = ActivityUiRegistry.GetDescriptor(domainType);
+                var presentationParams = presentationDescriptor.BuildPresentationParameters(
+                    SessionCode,
+                    activity.ActivityId,
+                    activity.Title,
+                    activity.Prompt,
+                    activity.DurationMinutes,
+                    activity.OpenedAt,
+                    activity.Config);
+                
+                @if (presentationDescriptor.PresentationComponentType is not null)
                 {
-                    <PollPresentation 
-                        SessionCode="@SessionCode" 
-                        ActivityId="@activity.ActivityId"
-                        ActivityTitle="@activity.Title"
-                        ActivityPrompt="@activity.Prompt"
-                        DurationMinutes="@activity.DurationMinutes"
-                        OpenedAt="@activity.OpenedAt" />
-                }
-                else if (activity.Type == ActivityType.WordCloud)
-                {
-                    <WordCloudPresentation 
-                        SessionCode="@SessionCode" 
-                        ActivityId="@activity.ActivityId"
-                        ActivityTitle="@activity.Title"
-                        ActivityPrompt="@activity.Prompt"
-                        DurationMinutes="@activity.DurationMinutes"
-                        OpenedAt="@activity.OpenedAt" />
-                }
-                else if (activity.Type == ActivityType.Rating)
-                {
-                    <RatingPresentation 
-                        SessionCode="@SessionCode" 
-                        ActivityId="@activity.ActivityId"
-                        ActivityTitle="@activity.Title"
-                        ActivityPrompt="@activity.Prompt"
-                        DurationMinutes="@activity.DurationMinutes"
-                        OpenedAt="@activity.OpenedAt"
-                        MaxRating="5" />
-                }
-                else if (activity.Type == ActivityType.Quadrant)
-                {
-                    <QuadrantPresentation 
-                        SessionCode="@SessionCode" 
-                        ActivityId="@activity.ActivityId"
-                        ActivityTitle="@activity.Title"
-                        ActivityPrompt="@activity.Prompt"
-                        DurationMinutes="@activity.DurationMinutes"
-                        OpenedAt="@activity.OpenedAt"
-                        ActivityConfig="@activity.Config" />
-                }
-                else if (activity.Type == ActivityType.GeneralFeedback)
-                {
-                    <GeneralFeedbackPresentation 
-                        SessionCode="@SessionCode" 
-                        ActivityId="@activity.ActivityId"
-                        ActivityTitle="@activity.Title"
-                        ActivityPrompt="@activity.Prompt"
-                        DurationMinutes="@activity.DurationMinutes"
-                        OpenedAt="@activity.OpenedAt" />
-                }
-                else if (activity.Type == ActivityType.QnA)
-                {
-                    <QnAPresentation
-                        SessionCode="@SessionCode"
-                        ActivityId="@activity.ActivityId"
-                        ActivityTitle="@activity.Title"
-                        ActivityPrompt="@activity.Prompt"
-                        DurationMinutes="@activity.DurationMinutes"
-                        OpenedAt="@activity.OpenedAt" />
+                    <DynamicComponent Type="presentationDescriptor.PresentationComponentType"
+                                      Parameters="presentationParams" />
                 }
                 else if (activity.Type == ActivityType.AiSummary)
                 {
+                    @* AiSummary uses inline rendering until AiSummaryPresentation.razor is created. *@
                     <div class="activity-display">
                         @{
                             var summaryConfig = TryParseAiSummaryConfig(activity.Config);
@@ -200,24 +158,6 @@ else
                             </div>
                         }
                     </div>
-                }
-                else if (activity.Type == ActivityType.FiveWhys)
-                {
-                    <FiveWhysPresentation
-                        SessionCode="@SessionCode"
-                        ActivityId="@activity.ActivityId"
-                        ActivityTitle="@activity.Title"
-                        ActivityPrompt="@activity.Prompt"
-                        DurationMinutes="@activity.DurationMinutes"
-                        OpenedAt="@activity.OpenedAt" />
-                }
-                else if (activity.Type == ActivityType.Break)
-                {
-                    <BreakPresentation
-                        SessionCode="@SessionCode"
-                        ActivityId="@activity.ActivityId"
-                        ActivityTitle="@activity.Title"
-                        ActivityConfig="@activity.Config" />
                 }
                 else
                 {

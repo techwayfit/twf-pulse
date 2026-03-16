@@ -6,11 +6,13 @@
 @inject TechWayFit.Pulse.Application.Abstractions.Services.IResponseService ResponseService
 @inject TechWayFit.Pulse.Web.Services.IHubNotificationService HubNotifications
 @inject TechWayFit.Pulse.Web.Api.IParticipantTokenStore ParticipantTokenStore
+@inject IActivityUiRegistry ActivityUiRegistry
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Contracts.Requests
 @using TechWayFit.Pulse.Contracts.Enums
 @using TechWayFit.Pulse.Web.Api
 @using TechWayFit.Pulse.Web.Hubs
+@using TechWayFit.Pulse.Web.Activities
 @using TechWayFit.Pulse.Web.Components.Participant.Activities
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Diagnostics
@@ -156,45 +158,23 @@
                                         </div>
                                     </div>
                                 }
-                                else if (currentActivity.Type == ActivityType.Poll)
-                                {
-                                    <PollActivity Parameters="@CreateActivityParameters()" />
-                                }
-                                else if (currentActivity.Type == ActivityType.WordCloud)
-                                {
-                                    <WordCloudActivity Parameters="@CreateActivityParameters()" />
-                                }
-                                else if (currentActivity.Type == ActivityType.Rating)
-                                {
-                                    <RatingActivity Parameters="@CreateActivityParameters()" />
-                                }
-                                else if (currentActivity.Type == ActivityType.GeneralFeedback)
-                                {
-                                    <GeneralFeedbackActivity Parameters="@CreateActivityParameters()" />
-                                }
-                                else if (currentActivity.Type == ActivityType.Quadrant)
-                                {
-                                    <QuadrantActivity Parameters="@CreateActivityParameters()" />
-                                }
-                                else if (currentActivity.Type == ActivityType.AiSummary)
-                                {
-                                    <AiSummaryActivity Parameters="@CreateActivityParameters()" />
-                                }
-                                else if (currentActivity.Type == ActivityType.Break)
-                                {
-                                    <BreakActivity Parameters="@CreateActivityParameters()" />
-                                }
-                                else if (currentActivity.Type == ActivityType.QnA)
-                                {
-                                    <QnAActivity Parameters="@CreateActivityParameters()" />
-                                }
-                                else if (currentActivity.Type == ActivityType.FiveWhys)
-                                {
-                                    <FiveWhysActivity Parameters="@CreateActivityParameters()" />
-                                }
                                 else
                                 {
-                                    <GenericActivity Parameters="@CreateActivityParameters()" ActivityType="@currentActivity.Type.ToString()" />
+                                    @* Activity plugin dispatch — no if/else chains needed:
+                                       new activity types are registered in IActivityUiRegistry. *@
+                                    
+                                        var domainType = (TechWayFit.Pulse.Domain.Enums.ActivityType)(int)currentActivity.Type;
+                                        var activityDescriptor = ActivityUiRegistry.GetDescriptor(domainType);
+                                    
+                                    @if (activityDescriptor.ParticipantComponentType is not null)
+                                    {
+                                        <DynamicComponent Type="activityDescriptor.ParticipantComponentType"
+                                                          Parameters="@(new Dictionary<string, object?> { { "Parameters", CreateActivityParameters() } })" />
+                                    }
+                                    else
+                                    {
+                                        <GenericActivity Parameters="@CreateActivityParameters()" ActivityType="@currentActivity.Type.ToString()" />
+                                    }
                                 }
                             }
                             else

@@ -5,6 +5,7 @@ using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Contracts.Responses;
 using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Domain.Models.ActivityConfigs;
+using TechWayFit.Pulse.Web.Activities;
 using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Hubs;
 using TechWayFit.Pulse.Web.Services;
@@ -22,6 +23,7 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
     [Inject] private IClientTokenService TokenService { get; set; } = default!;
     [Inject] private ILogger<Presentation> Logger { get; set; } = default!;
     [Inject] private TechWayFit.Pulse.Web.Services.IHubNotificationService HubNotifications { get; set; } = default!;
+    [Inject] private IActivityUiRegistry ActivityUiRegistry { get; set; } = default!;
 
     [SupplyParameterFromQuery]
     public string? Code { get; set; }

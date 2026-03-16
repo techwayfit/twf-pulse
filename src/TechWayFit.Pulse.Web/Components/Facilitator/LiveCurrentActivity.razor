@@ -1,57 +1,34 @@
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Contracts.Enums
-@using TechWayFit.Pulse.Web.Components.Dashboards
+@using TechWayFit.Pulse.Web.Activities
+@inject IActivityUiRegistry ActivityUiRegistry
 
 <div class="live-stage-active">
 
     <!-- Enhanced visualization area -->
     <div class="live-stage-viz">
-    @if (Activity.Type == ActivityType.Poll)
-      {
-        <PollDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
- }
-        else if (Activity.Type == ActivityType.WordCloud)
-        {
-       <WordCloudDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
+    @{
+        @* Activity plugin dispatch — no if/else chains needed:
+           new activity types are automatically handled via IActivityUiRegistry. *@
+        var domainType = (TechWayFit.Pulse.Domain.Enums.ActivityType)(int)Activity.Type;
+        var dashboardDescriptor = ActivityUiRegistry.GetDescriptor(domainType);
+        var dashboardParams = dashboardDescriptor.BuildDashboardParameters(SessionCode, Activity.ActivityId, Activity.Config);
     }
-     else if (Activity.Type == ActivityType.Rating)
-        {
-    <RatingDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
-        }
-      else if (Activity.Type == ActivityType.GeneralFeedback)
-        {
-            <GeneralFeedbackDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
-        }
-        else if (Activity.Type == ActivityType.Quadrant)
-        {
-            <QuadrantDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" ActivityConfig="@Activity.Config" />
-        }
-        else if (Activity.Type == ActivityType.AiSummary)
-  {
-            <AiSummaryDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
-        }
-        else if (Activity.Type == ActivityType.Break)
-        {
-            <BreakDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
-        }
-        else if (Activity.Type == ActivityType.QnA)
-        {
-       <QnADashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
-        }
-    else if (Activity.Type == ActivityType.FiveWhys)
-        {
-    <FiveWhysDashboard SessionCode="@SessionCode" ActivityId="@Activity.ActivityId" />
-     }
-        else
-        {
-            <div class="empty-state">
-     <div class="empty-state-icon">
-   <i class="fas fa-chart-bar"></i>
-     </div>
-     <h3>Dashboard Coming Soon</h3>
+    @if (dashboardDescriptor.DashboardComponentType is not null)
+    {
+        <DynamicComponent Type="dashboardDescriptor.DashboardComponentType"
+                          Parameters="dashboardParams" />
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <h3>Dashboard Coming Soon</h3>
             <p class="mb-0">Live dashboard for @Activity.Type activities is under development</p>
-     </div>
-        }
+        </div>
+    }
     </div>
 
     <!-- Enhanced stage footer with better button styling -->

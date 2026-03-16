@@ -15,6 +15,7 @@ using TechWayFit.Pulse.Infrastructure.Extensions;
 using TechWayFit.Pulse.Infrastructure.Persistence;
 using TechWayFit.Pulse.Web.Api;
 using TechWayFit.Pulse.Web.Services;
+using TechWayFit.Pulse.Web.Activities;
 using TechWayFit.Pulse.Web.Configuration;
 
 // Configure Serilog
@@ -280,6 +281,13 @@ options.Retry.MaxRetryAttempts = 2;
     builder.Services.AddScoped<IGeneralFeedbackDashboardService, GeneralFeedbackDashboardService>();
     builder.Services.AddScoped<IQnADashboardService, QnADashboardService>();
     builder.Services.AddScoped<IQuadrantDashboardService, QuadrantDashboardService>();
+
+    // Activity plugin registry (new extensible architecture).
+    // Individual plugins replace the per-type dashboard services above;
+    // the legacy dashboard service registrations are kept while SessionsController
+    // is still being migrated to IActivityDashboardService.
+    builder.Services.AddAllActivityPlugins();
+
     builder.Services.AddScoped<ISessionActivityMetadataService, SessionActivityMetadataService>();
     builder.Services.AddScoped<ISessionCodeGenerator, SessionCodeGenerator>();
     builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
