@@ -550,15 +550,8 @@ class AddActivitiesManager {
     }
     
     getActivityIcon(type) {
-        const icons = {
-            'poll': '<i class="ics ics-chart ic-sm"></i>',
-            'wordcloud': '<i class="ics ics-thought-balloon ic-sm"></i>',
-            'quadrant': '<i class="ics ics-chart-increasing ic-sm"></i>',
-            'fivewhys': '<i class="ics ics-search ic-sm"></i>',
-            'rating': '<i class="ics ics-star ic-sm"></i>',
-            'feedback': '<i class="ics ics-chat ic-sm"></i>'
-        };
-        return icons[type.toLowerCase()] || '<i class="ics ics-clipboard ic-sm"></i>';
+        return ActivityRegistry.getHandler(type.toLowerCase())?.metadata?.icon
+            ?? '<i class="ics ics-clipboard ic-sm"></i>';
     }
 
     showNotification(type, title, message) {
@@ -749,55 +742,7 @@ class AddActivitiesManager {
 
     mapTemplateConfig(activityType, templateConfig) {
         if (!templateConfig) return {};
-
-        const type = activityType.toLowerCase();
-        
-        switch (type) {
-            case 'poll':
-                return {
-                    options: templateConfig.options || [],
-                    allowMultiple: templateConfig.multipleChoice || false,
-                    maxResponses: 1
-                };
-            
-            case 'wordcloud':
-                return {
-                    maxWords: templateConfig.maxWords || 3,
-                    allowMultiple: false,
-                    maxSubmissions: 1
-                };
-            
-            case 'quadrant':
-                return {
-                    xAxisLabel: templateConfig.xAxisLabel || 'X Axis',
-                    yAxisLabel: templateConfig.yAxisLabel || 'Y Axis',
-                    topLeft: templateConfig.topLeftLabel || 'Top Left',
-                    topRight: templateConfig.topRightLabel || 'Top Right',
-                    bottomLeft: templateConfig.bottomLeftLabel || 'Bottom Left',
-                    bottomRight: templateConfig.bottomRightLabel || 'Bottom Right'
-                };
-            
-            case 'fivewhys':
-                return {
-                    maxDepth: templateConfig.maxDepth || 5
-                };
-            
-            case 'rating':
-                return {
-                    scale: templateConfig.maxRating || 5,
-                    lowLabel: 'Low',
-                    highLabel: 'High',
-                    maxResponses: null
-                };
-            
-            case 'feedback':
-                return {
-                    maxResponses: null
-                };
-            
-            default:
-                return templateConfig || {};
-        }
+        return ActivityRegistry.mapTemplateConfig(activityType.toLowerCase(), templateConfig);
     }
 
     async createActivityFromData(activityData) {

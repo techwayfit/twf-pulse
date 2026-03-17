@@ -434,6 +434,18 @@
 @section Scripts {
     <!-- Tom Select for searchable dropdowns -->
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <!-- Activity plugin architecture: base registry + per-activity files (load before legacy shims) -->
+    <script src="~/js/activity-base.js" asp-append-version="true"></script>
+    <script src="~/js/activity-poll.js" asp-append-version="true"></script>
+    <script src="~/js/activity-wordcloud.js" asp-append-version="true"></script>
+    <script src="~/js/activity-rating.js" asp-append-version="true"></script>
+    <script src="~/js/activity-qna.js" asp-append-version="true"></script>
+    <script src="~/js/activity-generalfeedback.js" asp-append-version="true"></script>
+    <script src="~/js/activity-quadrant.js" asp-append-version="true"></script>
+    <script src="~/js/activity-fivewhys.js" asp-append-version="true"></script>
+    <script src="~/js/activity-aisummary.js" asp-append-version="true"></script>
+    <script src="~/js/activity-break.js" asp-append-version="true"></script>
+    <!-- Legacy shims (no-ops when above files are loaded) -->
     <script src="~/js/activity-types.js" asp-append-version="true"></script>
     <script src="~/js/add-activities.js" asp-append-version="true"></script>
     <script src="~/js/activity-modals.js" asp-append-version="true"></script>

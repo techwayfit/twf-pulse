@@ -1,6 +1,13 @@
 /**
- * Activity Form Modals JavaScript
- * Handles the modal forms for creating different activity types
+ * activity-modals.js — LEGACY SHIM
+ *
+ * Save functions, reset helpers and option helpers have been moved to the
+ * individual activity-{name}.js files.  When activity-base.js is present
+ * (ActivityRegistry already defined) this entire file is a no-op.
+ */
+if (typeof ActivityRegistry === 'undefined') {
+/**
+ * Activity Form Modals JavaScript (fallback — used when per-activity files are absent)
  */
 
 (function() {
@@ -588,3 +595,4 @@ function resetFiveWhysForm() {
     window.initializePollModal = initializePollModal;
     window.initializeWordCloudModal = initializeWordCloudModal;
 })();
+} // end legacy shim guard

@@ -1,7 +1,7 @@
 # How to Add a New Activity Type
 
 This guide reflects the **activity plugin architecture** introduced in March 2026.
-Adding a new activity type now requires **5 steps** touching at most **7 files**, compared to the previous 24-step, 22-file process.
+Adding a new activity type now requires **6 steps** touching at most **8 files**, compared to the previous 24-step, 22-file process.
 
 > **Naming convention used throughout**: replace `Xxx` / `xxx` with your activity name (e.g. `Quiz`, `Brainstorm`).
 
@@ -361,7 +361,132 @@ Both registrations belong in `AddAllActivityPlugins()` alongside the other activ
 
 ---
 
-## Additional Tasks (context-dependent)
+## Step 6 — Create the Activity JavaScript File
+
+> **This step is mandatory.** Without a `activity-{name}.js` file the "Add Activity" modal will not save, and activity cards will not render correctly.
+
+### 6a. Create `src/TechWayFit.Pulse.Web/wwwroot/js/activity-xxx.js`
+
+Each activity owns its JavaScript inside a single self-contained file that:
+- Extends the `Activity` base class from `activity-base.js`
+- Registers itself with `ActivityRegistry` (auto-discovered — no central switch to edit)
+- Exposes a backward-compatible global `window.saveXxxActivity`
+
+```javascript
+/**
+ * activity-xxx.js
+ * Depends on: activity-base.js (loaded first via AddActivities.cshtml)
+ */
+class XxxActivity extends Activity {
+
+    // ── Required static identity ───────────────────────────────────────────
+    static get activityType() { return 'xxx'; }          // must match C# ActivityType enum (lowercase)
+
+    static get metadata() {
+        return {
+            icon:        '<i class="fas fa-[icon-name] ic-sm"></i>',  // shown in activity list
+            displayName: 'Xxx',
+            description: 'Short one-liner shown in template picker',
+        };
+    }
+
+    // ── Constructor — extract config fields ───────────────────────────────
+    constructor(data = {}) {
+        super(data);
+        this.someSetting = this.config.someSetting || 'default';
+    }
+
+    // ── Required instance methods ─────────────────────────────────────────
+    getModalId()    { return 'xxxModal'; }        // Bootstrap modal ID
+    getFieldPrefix(){ return 'xxx'; }             // form field ID prefix
+
+    /** Called by Activity.populateModal() when editing an existing activity */
+    populateSpecificFields(prefix) {
+        this._setField(`${prefix}SomeSetting`, this.someSetting);
+    }
+
+    /** Read form fields and return the full activity data object */
+    collectData() {
+        const prefix = this.getFieldPrefix();
+        const common = this._collectCommon(prefix);
+        return {
+            ...common,
+            type: 'Xxx',
+            config: {
+                someSetting: this._getField(`${prefix}SomeSetting`) || 'default',
+            },
+        };
+    }
+
+    /** One-line HTML shown on the activity card under the title */
+    renderCardDetails() {
+        return `Some setting: ${this.escapeHtml(this.someSetting)}`;
+    }
+
+    toJSON() {
+        return { ...super.toJSON(), config: { someSetting: this.someSetting } };
+    }
+
+    // ── Static save / reset ───────────────────────────────────────────────
+    static async save() {
+        const title = document.getElementById('xxxTitle')?.value?.trim();
+        if (!title) { alert('Please enter an activity title'); return; }
+
+        const config = {
+            someSetting: document.getElementById('xxxSomeSetting')?.value || 'default',
+        };
+
+        await ActivityBase.submitAndClose(
+            { type: 'Xxx', title,
+              prompt:          document.getElementById('xxxPrompt')?.value || null,
+              durationMinutes: parseInt(document.getElementById('xxxDuration')?.value) || 5,
+              config:          JSON.stringify(config) },
+            'xxxModal',
+            XxxActivity.reset,
+        );
+    }
+
+    static reset() {
+        document.getElementById('xxxForm')?.reset();
+    }
+
+    // ── Template config mapping ───────────────────────────────────────────
+    /** Maps a template's config JSON to this activity's config shape */
+    static mapTemplateConfig(c) {
+        return { someSetting: c.someSetting || 'default' };
+    }
+}
+
+// ── Self-register (no central switch to edit) ─────────────────────────────
+ActivityRegistry.register(XxxActivity);
+window.XxxActivity = XxxActivity;
+
+// Backward-compat for modal onclick="saveXxxActivity()"
+window.saveXxxActivity = () => XxxActivity.save();
+```
+
+### 6b. Register the script in `AddActivities.cshtml`
+
+Open `src/TechWayFit.Pulse.Web/Views/Facilitator/AddActivities.cshtml` and add **one line** in the
+`@section Scripts` block, alongside the other `activity-*.js` entries:
+
+```html
+<script src="~/js/activity-xxx.js" asp-append-version="true"></script>
+```
+
+> The file must be loaded **after** `activity-base.js` and **before** `activity-types.js`.
+> The existing script block is already ordered this way — just insert your entry in alphabetical order.
+
+### Key contracts your class must satisfy
+
+| What | Where |
+|---|---|
+| `static get activityType()` returns the lowercase type key | matches `ActivityType.Xxx.ToString().ToLower()` in C# |
+| `ActivityRegistry.register(XxxActivity)` called at module level | enables auto-discovery |
+| `static async save()` calls `ActivityBase.submitAndClose(...)` | integration with AddActivitiesManager |
+| `window.saveXxxActivity = () => XxxActivity.save()` | modal's `onclick` attribute |
+
+---
 
 ### A — API Mapper
 
@@ -385,15 +510,20 @@ ActivityType.Xxx => JsonSerializer.Serialize(new { SomeSetting = "default" }),
 
 The AI summary exclusion (`IncludeInAiSummary`, `CanBeAiGenerated`) is declared on the plugin itself and read by `IActivityRegistry` — **no changes needed** to the three AI service files for inclusion/exclusion.
 
-### C — "Add Activity" modal
+### C — "Add Activity" modal HTML
 
-Create the modal HTML and the `saveXxxActivity()` JS function following the same patterns as the existing modals in:
+Create the modal HTML for the add-activity dialog (the save button wires the `onclick` to `saveXxxActivity()`).
+
+Both places must be kept in sync (one is MVC, one is Blazor):
 
 - `src/TechWayFit.Pulse.Web/Components/Facilitator/ActivityFormModals.razor`
 - `src/TechWayFit.Pulse.Web/Views/Shared/_ActivityFormModals.cshtml`
-- `src/TechWayFit.Pulse.Web/wwwroot/js/activity-modals.js`
-- `src/TechWayFit.Pulse.Web/Views/Facilitator/AddActivities.cshtml` (Add button)
-- `src/TechWayFit.Pulse.Web/wwwroot/js/activity-types.js` (Activity class)
+
+Add a trigger button in:
+
+- `src/TechWayFit.Pulse.Web/Views/Facilitator/AddActivities.cshtml` (the "Add" button that opens the modal)
+
+> The JavaScript save function (`saveXxxActivity`) and the `ActivityRegistry` metadata are handled automatically by `activity-xxx.js` (Step 6). You do **not** need to edit `activity-modals.js`, `activity-types.js`, or `add-activities.js`.
 
 ### D — Edit-activity config fields
 
@@ -422,13 +552,15 @@ Only needed for activities with non-standard server-side actions (e.g. AiSummary
 | 11 | `Web/Activities/Plugins/Xxx/XxxActivityUiDescriptor.cs` | **New file** — UI wiring |
 | 12 | `Web/Activities/Plugins/Xxx/XxxWebServiceExtensions.cs` | **New file** — DI |
 | 13 | `Web/Activities/AllActivityPluginsExtensions.cs` | Add two registration calls |
-| 14 | `Web/Api/ApiMapper.cs` | Map enum both ways *(if needed)* |
-| 15 | `AI/Services/SessionAIService.cs` | Add config-build case *(if AI-generated)* |
-| 16 | `Web/Components/Facilitator/ActivityFormModals.razor` + JS + MVC | "Add" modal *(if applicable)* |
-| 17 | `Web/Components/Facilitator/EditActivityModal.razor` | Edit config fields *(if applicable)* |
-| 18 | `Controllers/Api/SessionsController.cs` | Custom endpoint *(if applicable)* |
+| 14 | `Web/wwwroot/js/activity-xxx.js` | **New file** — JS form handler & ActivityRegistry entry |
+| 15 | `Web/Views/Facilitator/AddActivities.cshtml` | Add `<script>` tag for `activity-xxx.js` |
+| 16 | `Web/Api/ApiMapper.cs` | Map enum both ways *(if needed)* |
+| 17 | `AI/Services/SessionAIService.cs` | Add config-build case *(if AI-generated)* |
+| 18 | `Web/Components/Facilitator/ActivityFormModals.razor` + MVC | "Add" modal HTML *(if applicable)* |
+| 19 | `Web/Components/Facilitator/EditActivityModal.razor` | Edit config fields *(if applicable)* |
+| 20 | `Controllers/Api/SessionsController.cs` | Custom endpoint *(if applicable)* |
 
-**Required for every new type: steps 1–13.** Steps 14–18 are context-dependent.
+**Required for every new type: steps 1–15.** Steps 16–20 are context-dependent.
 
 ---
 
@@ -444,6 +576,9 @@ The following files required changes under the old architecture but are **fully 
 | `AI/Services/SessionAIService.cs` — exclusion filter | Driven by `IncludeInAiSummary` on the plugin |
 | `AI/Services/IntelligentSessionAIService.cs` — exclusion filter | Same |
 | `AI/Services/MLNetSessionAIService.cs` — exclusion filter | Same |
+| `wwwroot/js/activity-types.js` — new class definition | Moves to `activity-{name}.js` (Step 6) |
+| `wwwroot/js/activity-modals.js` — new save/reset function | Moves to `activity-{name}.js` static `save()` / `reset()` |
+| `wwwroot/js/add-activities.js` — icon map or template-config switch | Driven by `ActivityRegistry` metadata |
 
 ---
 

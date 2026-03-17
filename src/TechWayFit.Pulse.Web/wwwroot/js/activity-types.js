@@ -1,6 +1,14 @@
 /**
- * Activity Type Classes - OOP approach for managing different activity types
+ * activity-types.js — LEGACY SHIM
+ *
+ * All activity classes have been moved to individual per-activity files
+ * (activity-poll.js, activity-wordcloud.js, …).
+ *
+ * This file is kept only as a fallback for pages that load it WITHOUT
+ * activity-base.js.  When activity-base.js is present (and ActivityRegistry
+ * is therefore already defined), the entire body is skipped.
  */
+if (typeof ActivityRegistry === 'undefined') {
 
 // Base Activity Class
 class Activity {
@@ -870,3 +878,4 @@ window.QnAActivity = QnAActivity;
 window.AiSummaryActivity = AiSummaryActivity;
 window.BreakActivity = BreakActivity;
 window.ActivityFactory = ActivityFactory;
+} // end legacy shim guard
