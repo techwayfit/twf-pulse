@@ -15,18 +15,20 @@ public sealed class ActivitiesController : SessionApiControllerBase
     private readonly ISessionService _sessions;
     private readonly IActivityService _activities;
     private readonly IHubContext<WorkshopHub, IWorkshopClient> _hub;
-    private readonly TechWayFit.Pulse.Web.Services.IHubNotificationService _hubNotifications;
+    private readonly IHubNotificationService _hubNotifications;
     private readonly ISessionActivityMetadataService _metadataService;
     private readonly ILogger<ActivitiesController> _logger;
+    private readonly IApiMapper _mapper;
 
     public ActivitiesController(
         ISessionService sessions,
         IActivityService activities,
         IFacilitatorTokenStore facilitatorTokens,
         IHubContext<WorkshopHub, IWorkshopClient> hub,
-        TechWayFit.Pulse.Web.Services.IHubNotificationService hubNotifications,
+        IHubNotificationService hubNotifications,
         ISessionActivityMetadataService metadataService,
-        ILogger<ActivitiesController> logger)
+        ILogger<ActivitiesController> logger,
+        IApiMapper mapper)
         : base(facilitatorTokens: facilitatorTokens)
     {
         _sessions = sessions;
@@ -35,6 +37,7 @@ public sealed class ActivitiesController : SessionApiControllerBase
         _hubNotifications = hubNotifications;
         _metadataService = metadataService;
         _logger = logger;
+        _mapper = mapper;
     }
 
     [HttpPost("{code}/activities")]
@@ -67,7 +70,7 @@ public sealed class ActivitiesController : SessionApiControllerBase
             var activity = await _activities.AddActivityAsync(
                 session.Id,
                 order.Value,
-                ApiMapper.MapActivityType(request.Type),
+                _mapper.MapActivityType(request.Type),
                 request.Title,
                 request.Prompt,
                 request.Config,
@@ -130,7 +133,7 @@ public sealed class ActivitiesController : SessionApiControllerBase
                     var activity = await _activities.AddActivityAsync(
                         session.Id,
                         nextOrder++,
-                        ApiMapper.MapActivityType(item.Type),
+                        _mapper.MapActivityType(item.Type),
                         item.Title,
                         item.Prompt,
                         item.Config,
@@ -269,7 +272,7 @@ public sealed class ActivitiesController : SessionApiControllerBase
             var copiedActivity = await _activities.CopyActivityAsync(session.Id, activityId, cancellationToken);
 
             await _hubNotifications.PublishActivityStateChangedAsync(session.Code, copiedActivity, cancellationToken);
-            return Ok(Wrap(ApiMapper.ToAgenda(copiedActivity)));
+            return Ok(Wrap(_mapper.ToAgenda(copiedActivity)));
         }
         catch (ArgumentException ex)
         {
@@ -295,7 +298,7 @@ public sealed class ActivitiesController : SessionApiControllerBase
         var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
         var response = agenda
             .OrderBy(activity => activity.Order)
-            .Select(ApiMapper.ToAgenda)
+            .Select(_mapper.ToAgenda)
             .ToList();
 
         return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(response));
@@ -324,7 +327,7 @@ public sealed class ActivitiesController : SessionApiControllerBase
             var updated = await _activities.ReorderAsync(session.Id, request.ActivityIds, cancellationToken);
             var response = updated
                 .OrderBy(activity => activity.Order)
-                .Select(ApiMapper.ToAgenda)
+                .Select(_mapper.ToAgenda)
                 .ToList();
 
             return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(response));

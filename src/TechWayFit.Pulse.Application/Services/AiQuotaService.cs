@@ -9,15 +9,18 @@ namespace TechWayFit.Pulse.Application.Services;
 public sealed class AiQuotaService : IAiQuotaService
 {
     private readonly IFacilitatorUserDataRepository _userDataRepository;
+    private readonly IDateTimeProvider _dateTimeProvider;
     private readonly AiQuotaOptions _options;
     private readonly ILogger<AiQuotaService> _logger;
 
     public AiQuotaService(
         IFacilitatorUserDataRepository userDataRepository,
+        IDateTimeProvider dateTimeProvider,
         IOptions<AiQuotaOptions> options,
         ILogger<AiQuotaService> logger)
     {
         _userDataRepository = userDataRepository;
+        _dateTimeProvider = dateTimeProvider;
         _options = options.Value;
         _logger = logger;
     }
@@ -150,7 +153,7 @@ public sealed class AiQuotaService : IAiQuotaService
             cancellationToken);
 
         DateTimeOffset resetDate;
-        var now = DateTimeOffset.UtcNow;
+        var now = _dateTimeProvider.UtcNow;
 
         if (resetDateData == null || !DateTimeOffset.TryParse(resetDateData.Value, out resetDate))
         {

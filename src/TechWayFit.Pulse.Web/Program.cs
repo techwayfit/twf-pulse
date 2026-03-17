@@ -1,24 +1,8 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Components.Server.Circuits;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.DataProtection.Repositories;
-using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 using Serilog.Events;
-using TechWayFit.Pulse.Application.Abstractions.Services;
-using TechWayFit.Pulse.Application.Services;
 using TechWayFit.Pulse.Infrastructure.Extensions;
-using TechWayFit.Pulse.Infrastructure.Persistence;
-using TechWayFit.Pulse.Web.Api;
-using TechWayFit.Pulse.Web.Services;
-using TechWayFit.Pulse.Web.Activities;
-using TechWayFit.Pulse.Web.Configuration;
+using TechWayFit.Pulse.Web.Extensions;
 
-// Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
@@ -30,7 +14,7 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.File(
         path: Path.Combine("App_Data", "logs", "pulse-.txt"),
         rollingInterval: RollingInterval.Day,
-  retainedFileCountLimit: 30,
+        retainedFileCountLimit: 30,
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
@@ -39,419 +23,33 @@ try
     Log.Information("Starting TechWayFit Pulse application");
 
     var builder = WebApplication.CreateBuilder(args);
-
-    // Add Serilog to the application
     builder.Host.UseSerilog();
 
     builder.Configuration.AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true);
 
-    // Explicitly load user secrets (needed for VS Code debugging)
     if (builder.Environment.IsDevelopment())
     {
- builder.Configuration.AddUserSecrets<Program>();
+        builder.Configuration.AddUserSecrets<Program>();
     }
 
-    // Configure strongly typed options and validate at startup.
-    builder.Services.AddOptions<ActivityDefaultsOptions>()
-        .Bind(builder.Configuration.GetSection(ActivityDefaultsOptions.SectionName))
-        .Validate(
-            options => options.Poll.MaxResponsesPerParticipant > 0
-                && options.Rating.MaxResponsesPerParticipant > 0
-                && options.WordCloud.MaxSubmissionsPerParticipant > 0
-                && options.GeneralFeedback.MaxResponsesPerParticipant > 0,
-            "Activity defaults must be greater than zero.")
-        .ValidateOnStart();
-
-    builder.Services.AddOptions<TechWayFit.Pulse.AI.Options.OpenAIOptions>()
-        .Bind(builder.Configuration.GetSection(TechWayFit.Pulse.AI.Options.OpenAIOptions.SectionName))
-        .Validate(
-            options => !string.IsNullOrWhiteSpace(options.Endpoint)
-                && !string.IsNullOrWhiteSpace(options.Model)
-                && options.MaxTokens > 0,
-            "OpenAI options are invalid.")
-        .ValidateOnStart();
-
-    builder.Services.AddOptions<ContextDocumentLimitsOptions>()
-        .Bind(builder.Configuration.GetSection(ContextDocumentLimitsOptions.SectionName))
-        .Validate(
-            options => options.SprintBacklogSummaryMaxChars > 0
-                && options.IncidentSummaryMaxChars > 0
-                && options.ProductSummaryMaxChars > 0,
-            "Context document limits must be greater than zero.")
-        .ValidateOnStart();
-
-    builder.Services.AddOptions<AiQuotaOptions>()
-        .Bind(builder.Configuration.GetSection(AiQuotaOptions.SectionName))
-        .Validate(options => options.FreeSessionsPerMonth >= 0, "AI quota cannot be negative.")
-        .ValidateOnStart();
-
-    // Add authentication services
-    builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-  .AddCookie(options =>
-      {
-        options.LoginPath = "/account/login";
-    options.LogoutPath = "/account/logout";
-            options.AccessDeniedPath = "/account/login";
-            options.ExpireTimeSpan = TimeSpan.FromHours(8); // 8 hours of inactivity
-  options.SlidingExpiration = true; // Extends timeout on activity
-    options.Cookie.Name = "TechWayFit.Pulse.Auth";
-            options.Cookie.HttpOnly = true;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-            options.Cookie.SameSite = SameSiteMode.Lax;
-  });
-
-builder.Services.AddAuthorization();
-
-    // Add Data Protection with custom file-based key storage
-    var keysPath = Path.Combine(builder.Environment.ContentRootPath, "keys");
-    var loggerFactory = LoggerFactory.Create(logging => logging.AddConsole());
-    var customRepo = new CustomFileSystemXmlRepository(
-     new DirectoryInfo(keysPath),
-        loggerFactory.CreateLogger<CustomFileSystemXmlRepository>());
-
-    builder.Services.AddSingleton<IXmlRepository>(customRepo);
-    builder.Services.AddDataProtection()
-        .SetApplicationName("TechWayFit.Pulse")
-        .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
-
-    // Add services to the container.
-    builder.Services.AddRazorPages();
-    builder.Services.AddControllersWithViews()
-  .AddJsonOptions(options =>
-        {
-            options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-  options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-        });
-
-    // Add Blazor Server for interactive pages only
-    builder.Services.AddServerSideBlazor(options =>
-    {
-        // Optimize Blazor Server for workshop scenarios
-        options.DetailedErrors = builder.Environment.IsDevelopment();
-        options.DisconnectedCircuitMaxRetained = 10; // Limit retained circuits
-      options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(3); // Reduce retention time
-   options.JSInteropDefaultCallTimeout = TimeSpan.FromSeconds(30);
- options.MaxBufferedUnacknowledgedRenderBatches = 10; // Reduce memory usage
-    });
-
-    // Register circuit handler for mobile connection management
-    builder.Services.AddScoped<CircuitHandler, TechWayFit.Pulse.Web.Infrastructure.MobileCircuitHandler>();
-
-    // Add session support for token storage
-    builder.Services.AddSession(options =>
-    {
-     options.IdleTimeout = TimeSpan.FromHours(2);
-     options.Cookie.HttpOnly = true;
-   options.Cookie.IsEssential = true;
-    });
-
-    // Add HttpContextAccessor for session access
-    builder.Services.AddHttpContextAccessor();
-    
-    // Add Response Compression for better performance
-    builder.Services.AddResponseCompression(options =>
-    {
-        options.EnableForHttps = true; // Safe in modern .NET
-        options.Providers.Add<BrotliCompressionProvider>();
-        options.Providers.Add<GzipCompressionProvider>();
-  
-        // Specify MIME types to compress
-        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
-        {
-    "application/json",
-    "application/javascript",
-            "text/css",
-            "text/html",
-         "text/plain",
-    "image/svg+xml"
-        });
-    });
-
-    // Configure Brotli compression (preferred by modern browsers)
-    builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
-    {
-        options.Level = System.IO.Compression.CompressionLevel.Fastest;
-    });
-
-    // Configure Gzip compression (fallback for older browsers)
-    builder.Services.Configure<GzipCompressionProviderOptions>(options =>
-    {
-        options.Level = System.IO.Compression.CompressionLevel.Fastest;
-    });
-    
-    // Add Memory Cache for content caching (cache tag helper)
-    // Configure with size limit for content-only caching
-    builder.Services.AddMemoryCache(options =>
-    {
-        options.SizeLimit = 100 * 1024 * 1024; // 100MB total cache size
-        options.CompactionPercentage = 0.25; // Compact by 25% when limit reached
-        options.ExpirationScanFrequency = TimeSpan.FromMinutes(5); // Check for expired entries every 5 min
-    });
-
-    builder.Services.AddSingleton<IFacilitatorTokenStore, FacilitatorTokenStore>();
-    builder.Services.AddSingleton<IParticipantTokenStore, ParticipantTokenStore>();
-
-    // Add default HttpClientFactory for dev/testing pages
-    builder.Services.AddHttpClient();
-
-    // Add named HttpClient for OpenAI (used by AI services) with retry policy
-    builder.Services.AddHttpClient("openai", (client) =>
-    {
-        // BaseAddress may be overridden by configuration (full endpoint expected)
-        var openAiBase = builder.Configuration["AI:OpenAI:Endpoint"];
-        if (!string.IsNullOrWhiteSpace(openAiBase))
-        {
-            client.BaseAddress = new Uri(openAiBase);
-       Log.Information("OpenAI HttpClient BaseAddress set to: {BaseAddress}", openAiBase);
-        }
-     else
-{
- Log.Warning("OpenAI endpoint not configured in settings");
-        }
-        client.Timeout = TimeSpan.FromSeconds(90); // Increased for retry attempts
-    })
-    .AddStandardResilienceHandler(options =>
-    {
-        // Configure retry with exponential backoff
-options.Retry.MaxRetryAttempts = 2;
-        options.Retry.Delay = TimeSpan.FromSeconds(2);
-        options.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
-        options.Retry.UseJitter = true;
-
-        // Configure circuit breaker
-        options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(120);
-        options.CircuitBreaker.FailureRatio = 0.7;
-      options.CircuitBreaker.MinimumThroughput = 5;
-
-        // Configure timeout per attempt - increased for OpenAI
-        options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(60);
-
-      // Configure total timeout - increased for retries
-        options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(120);
-});
-
-    // Shared HTTP client for all OpenAI/Azure OpenAI calls (singleton — stateless)
-    builder.Services.AddSingleton<TechWayFit.Pulse.AI.Http.OpenAIApiClient>();
-
-    // AI services: register real implementations when AI enabled and API key present, otherwise register mocks
-    var aiEnabled = builder.Configuration.GetValue<bool>("AI:Enabled");
-    var aiProvider = builder.Configuration.GetValue<string>("AI:Provider") ?? "Mock";
-    var openAiApiKey = builder.Configuration["AI:OpenAI:ApiKey"];
-
-    Log.Information("Environment: {Environment}", builder.Environment.EnvironmentName);
-    Log.Information("AI Enabled: {Enabled}", aiEnabled);
-    Log.Information("AI Provider: {Provider}", aiProvider);
-    Log.Information("API Key present: {HasKey}, Length: {Length}",
-        !string.IsNullOrWhiteSpace(openAiApiKey),
-        openAiApiKey?.Length ?? 0);
-
-    // Register AI services based on provider configuration
-    // Providers: "OpenAI" (GPT AI), "MLNet" (ML.NET machine learning), "Intelligent" (NLP-based), "Mock" (simple)
-    if (aiEnabled && !string.IsNullOrWhiteSpace(openAiApiKey) && aiProvider.Equals("OpenAI", StringComparison.OrdinalIgnoreCase))
-    {
-        Log.Information("Registering REAL AI services (OpenAI API enabled)");
-    builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.ParticipantAIService>();
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.FacilitatorAIService>();
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.SessionAIService>();
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.FiveWhysAIService>();
-    }
-    else if (aiProvider.Equals("MLNet", StringComparison.OrdinalIgnoreCase))
-    {
- Log.Information("Registering ML.NET AI services (Microsoft ML.NET machine learning)");
-   builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
- builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.MLNetSessionAIService>();
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.MockFiveWhysAIService>();
-    }
- else if (aiProvider.Equals("Intelligent", StringComparison.OrdinalIgnoreCase))
-    {
-        Log.Information("Registering INTELLIGENT AI services (NLP-inspired keyword-based generation)");
-     builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IParticipantAIService, TechWayFit.Pulse.AI.Services.MockParticipantAIService>();
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFacilitatorAIService, TechWayFit.Pulse.AI.Services.MockFacilitatorAIService>();
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.IntelligentSessionAIService>();
-        builder.Services.AddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.MockFiveWhysAIService>();
-    }
-  builder.Services.AddKeyedScoped<TechWayFit.Pulse.Application.Abstractions.Services.ISessionAIService, TechWayFit.Pulse.AI.Services.IntelligentSessionAIService>("Intelligent");
-
-    // Ensure IFiveWhysAIService always has a fallback registration (mock if not already registered by a provider above)
-    builder.Services.TryAddScoped<TechWayFit.Pulse.Application.Abstractions.Services.IFiveWhysAIService, TechWayFit.Pulse.AI.Services.MockFiveWhysAIService>();
-
-    // Register AI work queue and background processor
-    builder.Services.AddSingleton<TechWayFit.Pulse.Application.Abstractions.Services.IAIWorkQueue, TechWayFit.Pulse.Infrastructure.AI.AIWorkQueue>();
-    builder.Services.AddHostedService<TechWayFit.Pulse.Web.BackgroundServices.AIProcessingHostedService>();
-
-    // Add HttpContextAccessor for dynamic URL resolution
-    builder.Services.AddHttpContextAccessor();
-
-    // Register database and repositories using provider-specific extension method
-    builder.Services.AddPulseDatabase(builder.Configuration);
-
-    // Application services
-    builder.Services.AddScoped<ISessionService, SessionService>();
-    builder.Services.AddScoped<IActivityService, ActivityService>();
-    builder.Services.AddScoped<IParticipantService, ParticipantService>();
-    builder.Services.AddScoped<IResponseService, ResponseService>();
-    builder.Services.AddScoped<IDashboardService, DashboardService>();
-    builder.Services.AddScoped<IAiQuotaService, AiQuotaService>();
-    builder.Services.AddScoped<IPollDashboardService, PollDashboardService>();
-  builder.Services.AddScoped<IWordCloudDashboardService, WordCloudDashboardService>();
-    builder.Services.AddScoped<IRatingDashboardService, RatingDashboardService>();
-    builder.Services.AddScoped<IGeneralFeedbackDashboardService, GeneralFeedbackDashboardService>();
-    builder.Services.AddScoped<IQnADashboardService, QnADashboardService>();
-    builder.Services.AddScoped<IQuadrantDashboardService, QuadrantDashboardService>();
-
-    // Activity plugin registry (new extensible architecture).
-    // Individual plugins replace the per-type dashboard services above;
-    // the legacy dashboard service registrations are kept while SessionsController
-    // is still being migrated to IActivityDashboardService.
-    builder.Services.AddAllActivityPlugins();
-
-    builder.Services.AddScoped<ISessionActivityMetadataService, SessionActivityMetadataService>();
-    builder.Services.AddScoped<ISessionCodeGenerator, SessionCodeGenerator>();
-    builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
-    builder.Services.AddScoped<ISessionGroupService, SessionGroupService>();
-    builder.Services.AddScoped<ISessionTemplateService, TechWayFit.Pulse.Infrastructure.Services.SessionTemplateService>();
-
-    // Token Services
-    builder.Services.AddSingleton<IFacilitatorTokenService, FacilitatorTokenService>();
-    builder.Services.AddScoped<IClientTokenService, ClientTokenService>();
-
-    // API key encryption service (wraps Data Protection for BYOK API key storage)
-    builder.Services.AddScoped<IApiKeyProtectionService, ApiKeyProtectionService>();
-
-    // Hub Notification Service for real-time events
-    builder.Services.AddScoped<IHubNotificationService, HubNotificationService>();
-
-    // Register file service for template caching
-    builder.Services.AddSingleton<IFileService, FileService>();
-
-    // Register email service based on configuration
-    var emailProvider = builder.Configuration.GetValue<string>("Email:Provider");
-    if (emailProvider?.Equals("Smtp", StringComparison.OrdinalIgnoreCase) == true)
-    {
-    builder.Services.AddScoped<IEmailService, SmtpEmailService>();
-    }
-    else
-    {
-        // Default to console for development/testing
-        builder.Services.AddScoped<IEmailService, ConsoleEmailService>();
-    }
-
-    // SignalR for real-time features
-    builder.Services.AddSignalR(options =>
-    {
-        // Optimize SignalR for workshop scenarios
-        options.KeepAliveInterval = TimeSpan.FromSeconds(15);
-   options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
-  options.HandshakeTimeout = TimeSpan.FromSeconds(15);
-options.MaximumReceiveMessageSize = 32 * 1024; // 32KB limit
-    });
-
-    // Add Database Backplane for web farm support (uses existing MariaDB/MySQL database)
-  // This allows SignalR to work across multiple servers without Redis or Azure SignalR Service
-    var useDbBackplane = builder.Configuration.GetValue<bool>("SignalR:UseDatabaseBackplane");
-    if (useDbBackplane)
-    {
-        Log.Information("Enabling SignalR database backplane for web farm support");
-    
-        // Register the background service that polls for messages from other servers
- builder.Services.AddSingleton<TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane.DatabaseBackplaneService>();
-  builder.Services.AddHostedService<TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane.DatabaseBackplaneService>(
-  sp => sp.GetRequiredService<TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane.DatabaseBackplaneService>());
-    }
-else
-{
-    Log.Warning("SignalR database backplane is disabled. In-memory mode (not suitable for web farms).");
-Log.Information("To enable web farm support, set 'SignalR:UseDatabaseBackplane' to true in appsettings.json");
-    }
+    builder.Services
+        .AddPulseOptions(builder.Configuration)
+        .AddPulseAuthentication(builder.Environment)
+        .AddPulseWebServices(builder.Environment)
+        .AddPulseAIServices(builder.Configuration, builder.Environment)
+        .AddPulseApplicationServices(builder.Configuration)
+        .AddPulseSignalR(builder.Configuration)
+        .AddPulseHealthChecks();
 
     var app = builder.Build();
 
-    // Ensure database is created using provider-specific method
     app.Services.EnsurePulseDatabase(builder.Configuration);
 
-    // Configure the HTTP request pipeline.
-    if (!app.Environment.IsDevelopment())
-    {
-        app.UseExceptionHandler("/Error");
-        app.UseHsts();
-    }
-    else
-    {
-        app.UseDeveloperExceptionPage();
-    }
-
-    // Handle status code errors (404, 403, etc.) - must be before UseStaticFiles
-    app.UseStatusCodePagesWithReExecute("/Error/{0}");
-
-    // Important: UseHttpsRedirection should come before UseStaticFiles
-    app.UseHttpsRedirection();
-
-    // Enable response compression (must be before UseStaticFiles)
-    app.UseResponseCompression();
-
-    // Configure static files with proper caching
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        OnPrepareResponse = ctx =>
-    {
-         // Add cache headers for better performance
-if (ctx.File.Name.EndsWith(".css") || ctx.File.Name.EndsWith(".js"))
- {
-    ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=600");
-       }
-        }
-    });
-
-    // Add Serilog request logging middleware
-    app.UseSerilogRequestLogging(options =>
-    {
-        options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
-        options.GetLevel = (httpContext, elapsed, ex) => ex != null
-        ? LogEventLevel.Error
-    : httpContext.Response.StatusCode > 499
-         ? LogEventLevel.Error
-        : LogEventLevel.Information;
-    });
-
-    app.UseRouting();
-
-    // Add session middleware for facilitator token storage
-    app.UseSession();
-
-    // Add authentication & authorization middleware
-    app.UseAuthentication();
-
-    // Add facilitator token middleware (after authentication, before authorization)
-    app.UseMiddleware<TechWayFit.Pulse.Web.Middleware.FacilitatorTokenMiddleware>();
-    
-    // Add facilitator context middleware (populates AsyncLocal context)
-    app.UseMiddleware<TechWayFit.Pulse.Web.Middleware.FacilitatorContextMiddleware>();
-
-    app.UseAuthorization();
-
-    // Map API controllers first (highest priority)
-    app.MapControllers();
-
-    // Map SignalR hub for real-time features
-    app.MapHub<TechWayFit.Pulse.Web.Hubs.WorkshopHub>("/hubs/workshop");
-
- // Map Blazor Hub (only for interactive pages)
-    app.MapBlazorHub();
-
-    // Map MVC routes for static pages (no WebSocket)
-    app.MapControllerRoute(
-        name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-    // Map Razor Pages (for Blazor interactive components only)
-    app.MapRazorPages();
-
-    // Blazor pages fallback (only for routes that need interactivity)
-    app.MapFallbackToPage("/_Host");
+    app.UsePulseWebPipeline();
+    app.MapPulseEndpoints();
 
     Log.Information("TechWayFit Pulse application started successfully");
- app.Run();
+    app.Run();
 }
 catch (Exception ex)
 {

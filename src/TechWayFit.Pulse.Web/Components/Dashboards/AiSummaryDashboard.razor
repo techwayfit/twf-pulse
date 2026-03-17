@@ -3,6 +3,7 @@
 @using TechWayFit.Pulse.Domain.Models.ActivityConfigs
 @using Microsoft.AspNetCore.SignalR.Client
 @using TechWayFit.Pulse.Web.Hubs
+@using TechWayFit.Pulse.Web.Api
 @using TechWayFit.Pulse.Web.Services
 @using System.Text.Json
 @using Markdig
@@ -11,6 +12,7 @@
 @inject IActivityService ActivityService
 @inject ISessionAIService SessionAIService
 @inject IHubNotificationService HubNotifications
+@inject IApiMapper ApiMapper
 @inject NavigationManager Navigation
 @inject ILogger<AiSummaryDashboard> Logger
 @implements IAsyncDisposable
@@ -543,7 +545,7 @@
                          && a.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary
                          && a.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.Break)
                 .OrderBy(a => a.Order)
-                .Select(TechWayFit.Pulse.Web.Api.ApiMapper.ToAgenda)
+                .Select(ApiMapper.ToAgenda)
                 .ToList();
 
             string? customPromptAddition = config?.CustomPromptAddition;

@@ -15,7 +15,8 @@ public sealed class SessionsController : SessionApiControllerBase
     private readonly IAuthenticationService _authService;
     private readonly ISessionCodeGenerator _codeGenerator;
     private readonly ISessionGroupService _sessionGroups;
-    private readonly TechWayFit.Pulse.Web.Services.IHubNotificationService _hubNotifications;
+    private readonly IHubNotificationService _hubNotifications;
+    private readonly IApiMapper _mapper;
 
     public SessionsController(
         ISessionService sessions,
@@ -23,7 +24,8 @@ public sealed class SessionsController : SessionApiControllerBase
         IFacilitatorTokenStore facilitatorTokens,
         ISessionCodeGenerator codeGenerator,
         ISessionGroupService sessionGroups,
-        TechWayFit.Pulse.Web.Services.IHubNotificationService hubNotifications)
+        IHubNotificationService hubNotifications,
+        IApiMapper mapper)
         : base(facilitatorTokens: facilitatorTokens)
     {
         _sessions = sessions;
@@ -31,6 +33,7 @@ public sealed class SessionsController : SessionApiControllerBase
         _codeGenerator = codeGenerator;
         _sessionGroups = sessionGroups;
         _hubNotifications = hubNotifications;
+        _mapper = mapper;
     }
 
     [HttpPost]
@@ -43,8 +46,8 @@ public sealed class SessionsController : SessionApiControllerBase
             ValidateJoinFormSchema(request.JoinFormSchema);
             var code = await _codeGenerator.GenerateUniqueCodeAsync(cancellationToken);
 
-            var settings = ApiMapper.ToDomain(request.Settings);
-            var joinFormSchema = ApiMapper.ToDomain(request.JoinFormSchema);
+            var settings = _mapper.ToDomain(request.Settings);
+            var joinFormSchema = _mapper.ToDomain(request.JoinFormSchema);
             var facilitatorUserId = await HttpContext.GetFacilitatorUserIdAsync(_authService, cancellationToken);
 
             var groupId = request.GroupId;
@@ -89,7 +92,7 @@ public sealed class SessionsController : SessionApiControllerBase
             return NotFound(Error<SessionSummaryResponse>("not_found", "Session not found."));
         }
 
-        return Ok(Wrap(ApiMapper.ToSummary(session)));
+        return Ok(Wrap(_mapper.ToSummary(session)));
     }
 
     [HttpPost("{code}/start")]
@@ -116,7 +119,7 @@ public sealed class SessionsController : SessionApiControllerBase
             await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
         }
 
-        return Ok(Wrap(ApiMapper.ToSummary(updated ?? session)));
+        return Ok(Wrap(_mapper.ToSummary(updated ?? session)));
     }
 
     [HttpPost("{code}/end")]
@@ -143,7 +146,7 @@ public sealed class SessionsController : SessionApiControllerBase
             await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
         }
 
-        return Ok(Wrap(ApiMapper.ToSummary(updated ?? session)));
+        return Ok(Wrap(_mapper.ToSummary(updated ?? session)));
     }
 
     [HttpPut("{code}/join-form")]
@@ -166,9 +169,9 @@ public sealed class SessionsController : SessionApiControllerBase
                 return authError;
             }
 
-            var schema = ApiMapper.ToDomain(request.JoinFormSchema);
+            var schema = _mapper.ToDomain(request.JoinFormSchema);
             var updated = await _sessions.UpdateJoinFormSchemaAsync(session.Id, schema, DateTimeOffset.UtcNow, cancellationToken);
-            return Ok(Wrap(ApiMapper.ToSummary(updated)));
+            return Ok(Wrap(_mapper.ToSummary(updated)));
         }
         catch (ArgumentException ex)
         {
@@ -203,7 +206,7 @@ public sealed class SessionsController : SessionApiControllerBase
             await _sessions.SetSessionGroupAsync(session.Id, request.GroupId, DateTimeOffset.UtcNow, cancellationToken);
 
             var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
-            return Ok(Wrap(ApiMapper.ToSummary(updated ?? session)));
+            return Ok(Wrap(_mapper.ToSummary(updated ?? session)));
         }
         catch (ArgumentException ex)
         {
@@ -327,7 +330,7 @@ public sealed class SessionsController : SessionApiControllerBase
                 throw new InvalidOperationException("Session not found after update.");
             }
 
-            return Ok(Wrap(ApiMapper.ToSummary(finalSession)));
+            return Ok(Wrap(_mapper.ToSummary(finalSession)));
         }
         catch (ArgumentException ex)
         {
@@ -370,7 +373,7 @@ public sealed class SessionsController : SessionApiControllerBase
                 DateTimeOffset.UtcNow,
                 cancellationToken);
 
-            return Ok(Wrap(ApiMapper.ToSummary(updatedSession)));
+            return Ok(Wrap(_mapper.ToSummary(updatedSession)));
         }
         catch (ArgumentException ex)
         {

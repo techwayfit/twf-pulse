@@ -22,8 +22,9 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
     [Inject] private IParticipantService ParticipantService { get; set; } = default!;
     [Inject] private IClientTokenService TokenService { get; set; } = default!;
     [Inject] private ILogger<Presentation> Logger { get; set; } = default!;
-    [Inject] private TechWayFit.Pulse.Web.Services.IHubNotificationService HubNotifications { get; set; } = default!;
+    [Inject] private IHubNotificationService HubNotifications { get; set; } = default!;
     [Inject] private IActivityUiRegistry ActivityUiRegistry { get; set; } = default!;
+    [Inject] private IApiMapper ApiMapper { get; set; } = default!;
 
     [SupplyParameterFromQuery]
     public string? Code { get; set; }

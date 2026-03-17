@@ -15,8 +15,9 @@ public sealed class SessionAiController : SessionApiControllerBase
     private readonly IActivityService _activities;
     private readonly IAuthenticationService _authService;
     private readonly ISessionAIService _sessionAI;
-    private readonly TechWayFit.Pulse.Web.Services.IHubNotificationService _hubNotifications;
+    private readonly IHubNotificationService _hubNotifications;
     private readonly ILogger<SessionAiController> _logger;
+    private readonly IApiMapper _mapper;
 
     public SessionAiController(
         ISessionService sessions,
@@ -24,8 +25,9 @@ public sealed class SessionAiController : SessionApiControllerBase
         IAuthenticationService authService,
         ISessionAIService sessionAI,
         IFacilitatorTokenStore facilitatorTokens,
-        TechWayFit.Pulse.Web.Services.IHubNotificationService hubNotifications,
-        ILogger<SessionAiController> logger)
+        IHubNotificationService hubNotifications,
+        ILogger<SessionAiController> logger,
+        IApiMapper mapper)
         : base(facilitatorTokens: facilitatorTokens)
     {
         _sessions = sessions;
@@ -34,6 +36,7 @@ public sealed class SessionAiController : SessionApiControllerBase
         _sessionAI = sessionAI;
         _hubNotifications = hubNotifications;
         _logger = logger;
+        _mapper = mapper;
     }
 
     [HttpPost("generate")]
@@ -138,7 +141,7 @@ public sealed class SessionAiController : SessionApiControllerBase
                          && a.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary
                          && a.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.Break)
                 .OrderBy(a => a.Order)
-                .Select(ApiMapper.ToAgenda)
+                .Select(_mapper.ToAgenda)
                 .ToList();
 
             string? customPromptAddition = null;

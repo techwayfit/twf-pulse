@@ -12,6 +12,7 @@ public sealed class AuthenticationService : IAuthenticationService
     private readonly ILoginOtpRepository _otpRepository;
     private readonly IEmailService _emailService;
     private readonly ISessionGroupService _sessionGroupService;
+    private readonly IDateTimeProvider _dateTimeProvider;
     private readonly ILogger<AuthenticationService> _logger;
 
     private const int OtpLength = 6;
@@ -19,16 +20,18 @@ public sealed class AuthenticationService : IAuthenticationService
     private const int MaxOtpAttemptsPerHour = 5;
 
     public AuthenticationService(
-      IFacilitatorUserRepository userRepository,
+        IFacilitatorUserRepository userRepository,
         ILoginOtpRepository otpRepository,
         IEmailService emailService,
         ISessionGroupService sessionGroupService,
+        IDateTimeProvider dateTimeProvider,
         ILogger<AuthenticationService> logger)
     {
         _userRepository = userRepository;
         _otpRepository = otpRepository;
         _emailService = emailService;
         _sessionGroupService = sessionGroupService;
+        _dateTimeProvider = dateTimeProvider;
         _logger = logger;
     }
 
@@ -50,7 +53,7 @@ public sealed class AuthenticationService : IAuthenticationService
                MaxOtpAttemptsPerHour,
             cancellationToken);
 
-        var oneHourAgo = DateTimeOffset.UtcNow.AddHours(-1);
+        var oneHourAgo = _dateTimeProvider.UtcNow.AddHours(-1);
         var recentOtpCount = recentOtps.Count(o => o.CreatedAt > oneHourAgo);
 
         if (recentOtpCount >= MaxOtpAttemptsPerHour)
@@ -61,7 +64,7 @@ public sealed class AuthenticationService : IAuthenticationService
 
         // Generate OTP
         var otpCode = GenerateOtpCode();
-        var now = DateTimeOffset.UtcNow;
+        var now = _dateTimeProvider.UtcNow;
         var otp = new LoginOtp(
             Guid.NewGuid(),
           normalizedEmail,
@@ -111,13 +114,13 @@ otpCode,
             return new VerifyOtpResult(false, null, "Invalid or expired OTP code.");
         }
 
-        if (!otp.IsValid(DateTimeOffset.UtcNow))
+        if (!otp.IsValid(_dateTimeProvider.UtcNow))
         {
             return new VerifyOtpResult(false, null, "OTP code has expired.");
         }
 
         // Mark OTP as used
-        otp.MarkAsUsed(DateTimeOffset.UtcNow);
+        otp.MarkAsUsed(_dateTimeProvider.UtcNow);
         await _otpRepository.UpdateAsync(otp, cancellationToken);
 
         // Get or create user
@@ -127,7 +130,7 @@ otpCode,
         {
             // Create new user - use provided displayName, otherwise extract from email
             var userDisplayName = displayName ?? ExtractDisplayNameFromEmail(normalizedEmail);
-            var now = DateTimeOffset.UtcNow;
+            var now = _dateTimeProvider.UtcNow;
             user = new FacilitatorUser(
                             Guid.NewGuid(),
                             normalizedEmail,
@@ -165,7 +168,7 @@ otpCode,
         else
         {
             // Update last login
-            user.UpdateLastLogin(DateTimeOffset.UtcNow);
+            user.UpdateLastLogin(_dateTimeProvider.UtcNow);
             await _userRepository.UpdateAsync(user, cancellationToken);
         }
 

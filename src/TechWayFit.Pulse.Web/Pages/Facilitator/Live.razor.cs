@@ -27,8 +27,9 @@ public partial class Live : IAsyncDisposable
     [Inject] private IClientTokenService TokenService { get; set; } = default!;
     [Inject] private ILogger<Live> Logger { get; set; } = default!;
     [Inject] private IWebHostEnvironment Environment { get; set; } = default!;
-    [Inject] private TechWayFit.Pulse.Web.Services.IHubNotificationService HubNotifications { get; set; } = default!;
+    [Inject] private IHubNotificationService HubNotifications { get; set; } = default!;
     [Inject] private ISessionActivityMetadataService MetadataService { get; set; } = default!;
+    [Inject] private IApiMapper ApiMapper { get; set; } = default!;
 
     [SupplyParameterFromQuery]
     public string? Code { get; set; }

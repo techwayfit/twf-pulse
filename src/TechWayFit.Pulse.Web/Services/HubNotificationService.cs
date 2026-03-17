@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Options;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Web.Api;
@@ -14,15 +13,21 @@ public sealed class HubNotificationService : IHubNotificationService
 {
     private readonly IHubContext<WorkshopHub, IWorkshopClient> _hub;
     private readonly IParticipantService _participantService;
+    private readonly IDateTimeProvider _dateTimeProvider;
+    private readonly IApiMapper _mapper;
     private readonly TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane.DatabaseBackplaneService? _backplaneService;
 
     public HubNotificationService(
         IHubContext<WorkshopHub, IWorkshopClient> hub,
         IParticipantService participantService,
+        IDateTimeProvider dateTimeProvider,
+        IApiMapper mapper,
         IServiceProvider serviceProvider)
     {
         _hub = hub;
         _participantService = participantService;
+        _dateTimeProvider = dateTimeProvider;
+        _mapper = mapper;
 
         // Try to get backplane service if it's registered
         _backplaneService = serviceProvider.GetService(typeof(TechWayFit.Pulse.Infrastructure.SignalR.DatabaseBackplane.DatabaseBackplaneService))
@@ -36,10 +41,10 @@ public sealed class HubNotificationService : IHubNotificationService
 
         var sessionStateEvent = new SessionStateChangedEvent(
             session.Code,
-            ApiMapper.MapSessionStatus(session.Status),
+            _mapper.MapSessionStatus(session.Status),
             session.CurrentActivityId,
             participants.Count,
-            DateTimeOffset.UtcNow);
+            _dateTimeProvider.UtcNow);
 
         await _hub.Clients.Group(groupName).SessionStateChanged(sessionStateEvent);
 
@@ -58,10 +63,10 @@ public sealed class HubNotificationService : IHubNotificationService
             activity.Id,
             activity.Order,
             activity.Title,
-            ApiMapper.MapActivityStatus(activity.Status),
+            _mapper.MapActivityStatus(activity.Status),
             activity.OpenedAt,
             activity.ClosedAt,
-            DateTimeOffset.UtcNow);
+            _dateTimeProvider.UtcNow);
 
         await _hub.Clients.Group(groupName).ActivityStateChanged(activityStateEvent);
 
@@ -97,7 +102,7 @@ public sealed class HubNotificationService : IHubNotificationService
             responseId,
             participantId,
             createdAt,
-            DateTimeOffset.UtcNow);
+            _dateTimeProvider.UtcNow);
 
         await _hub.Clients.Group(groupName).ResponseReceived(responseEvent);
 
@@ -120,7 +125,7 @@ public sealed class HubNotificationService : IHubNotificationService
             activityId,
             aggregateType,
             payload,
-            DateTimeOffset.UtcNow);
+            _dateTimeProvider.UtcNow);
 
         await _hub.Clients.Group(groupName).DashboardUpdated(dashboardEvent);
 
@@ -141,7 +146,7 @@ public sealed class HubNotificationService : IHubNotificationService
             sessionCode,
             activityId,
             itemIndex,
-            DateTimeOffset.UtcNow);
+            _dateTimeProvider.UtcNow);
 
         await _hub.Clients.Group(groupName).QuadrantItemAdvanced(quadrantEvent);
 
