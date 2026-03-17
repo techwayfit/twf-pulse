@@ -193,7 +193,7 @@
                 @foreach (var field in extraFields)
                 {
                   <div class="mb-3">
-                    @if (field.Type != TechWayFit.Pulse.Contracts.Enums.FieldType.Boolean)
+                    @if (field.Type != TechWayFit.Pulse.Domain.Enums.FieldType.Boolean)
                     {
                       <label for="field-@field.Id" class="form-label @(field.Required ? "required" : "")">
                         @field.Label
@@ -204,7 +204,7 @@
                       </label>
                     }
 
-                    @if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Text)
+                    @if (field.Type == TechWayFit.Pulse.Domain.Enums.FieldType.Text)
                     {
                       <input id="field-@field.Id" 
                              type="text"
@@ -212,7 +212,7 @@
                              @bind="fieldValues[field.Id]" 
                              placeholder="@GetFieldPlaceholder(field)" />
                     }
-                    else if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Dropdown)
+                    else if (field.Type == TechWayFit.Pulse.Domain.Enums.FieldType.Dropdown)
                     {
                       <select id="field-@field.Id" 
                               class="form-select" 
@@ -227,7 +227,7 @@
                         }
                       </select>
                     }
-                    else if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Number)
+                    else if (field.Type == TechWayFit.Pulse.Domain.Enums.FieldType.Number)
                     {
                       <input id="field-@field.Id" 
                              type="number"
@@ -235,7 +235,7 @@
                              @bind="fieldValues[field.Id]" 
                              placeholder="@GetFieldPlaceholder(field)" />
                     }
-                    else if (field.Type == TechWayFit.Pulse.Contracts.Enums.FieldType.Boolean)
+                    else if (field.Type == TechWayFit.Pulse.Domain.Enums.FieldType.Boolean)
                     {
                       <div class="form-check">
                         <input id="field-@field.Id" 
@@ -627,8 +627,8 @@
   private string GetFieldPlaceholder(JoinFormFieldDto field) =>
   field.Type switch
   {
-    TechWayFit.Pulse.Contracts.Enums.FieldType.Text => "Enter text...",
-    TechWayFit.Pulse.Contracts.Enums.FieldType.Number => "Enter number...",
+    TechWayFit.Pulse.Domain.Enums.FieldType.Text => "Enter text...",
+    TechWayFit.Pulse.Domain.Enums.FieldType.Number => "Enter number...",
     _ => ""
   };
 

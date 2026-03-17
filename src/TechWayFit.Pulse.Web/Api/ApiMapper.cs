@@ -1,4 +1,4 @@
-using TechWayFit.Pulse.Contracts.Enums;
+using TechWayFit.Pulse.Domain.Enums;
 using TechWayFit.Pulse.Contracts.Models;
 using TechWayFit.Pulse.Contracts.Responses;
 using TechWayFit.Pulse.Domain.Entities;
@@ -73,88 +73,11 @@ internal static class ApiMapper
             activity.DurationMinutes);
     }
 
-    internal static TechWayFit.Pulse.Domain.Enums.ActivityType MapActivityType(ActivityType type)
-    {
-        return type switch
-        {
-            ActivityType.Poll => TechWayFit.Pulse.Domain.Enums.ActivityType.Poll,
-            ActivityType.Quiz => TechWayFit.Pulse.Domain.Enums.ActivityType.Quiz,
-            ActivityType.WordCloud => TechWayFit.Pulse.Domain.Enums.ActivityType.WordCloud,
-            ActivityType.QnA => TechWayFit.Pulse.Domain.Enums.ActivityType.QnA,
-            ActivityType.Rating => TechWayFit.Pulse.Domain.Enums.ActivityType.Rating,
-            ActivityType.Quadrant => TechWayFit.Pulse.Domain.Enums.ActivityType.Quadrant,
-            ActivityType.FiveWhys => TechWayFit.Pulse.Domain.Enums.ActivityType.FiveWhys,
-            ActivityType.GeneralFeedback => TechWayFit.Pulse.Domain.Enums.ActivityType.GeneralFeedback,
-            ActivityType.AiSummary => TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary,
-            ActivityType.Break => TechWayFit.Pulse.Domain.Enums.ActivityType.Break,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported activity type.")
-        };
-    }
+    internal static ActivityType MapActivityType(ActivityType type) => type;
 
-    internal static ActivityType MapActivityType(TechWayFit.Pulse.Domain.Enums.ActivityType type)
-    {
-        return type switch
-        {
-            TechWayFit.Pulse.Domain.Enums.ActivityType.Poll => ActivityType.Poll,
-            TechWayFit.Pulse.Domain.Enums.ActivityType.Quiz => ActivityType.Quiz,
-            TechWayFit.Pulse.Domain.Enums.ActivityType.WordCloud => ActivityType.WordCloud,
-            TechWayFit.Pulse.Domain.Enums.ActivityType.QnA => ActivityType.QnA,
-            TechWayFit.Pulse.Domain.Enums.ActivityType.Rating => ActivityType.Rating,
-            TechWayFit.Pulse.Domain.Enums.ActivityType.Quadrant => ActivityType.Quadrant,
-            TechWayFit.Pulse.Domain.Enums.ActivityType.FiveWhys => ActivityType.FiveWhys,
-            TechWayFit.Pulse.Domain.Enums.ActivityType.GeneralFeedback => ActivityType.GeneralFeedback,
-            TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary => ActivityType.AiSummary,
-            TechWayFit.Pulse.Domain.Enums.ActivityType.Break => ActivityType.Break,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported activity type.")
-        };
-    }
+    internal static SessionStatus MapSessionStatus(SessionStatus status) => status;
 
-    internal static SessionStatus MapSessionStatus(TechWayFit.Pulse.Domain.Enums.SessionStatus status)
-    {
-        return status switch
-        {
-            TechWayFit.Pulse.Domain.Enums.SessionStatus.Draft => SessionStatus.Draft,
-            TechWayFit.Pulse.Domain.Enums.SessionStatus.Live => SessionStatus.Live,
-            TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended => SessionStatus.Ended,
-            TechWayFit.Pulse.Domain.Enums.SessionStatus.Expired => SessionStatus.Expired,
-            _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unsupported session status.")
-        };
-    }
+    internal static ActivityStatus MapActivityStatus(ActivityStatus status) => status;
 
-    internal static TechWayFit.Pulse.Contracts.Enums.ActivityStatus MapActivityStatus(TechWayFit.Pulse.Domain.Enums.ActivityStatus status)
-    {
-        return status switch
-        {
-            TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending => TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
-            TechWayFit.Pulse.Domain.Enums.ActivityStatus.Open => TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open,
-            TechWayFit.Pulse.Domain.Enums.ActivityStatus.Closed => TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Closed,
-            _ => throw new ArgumentOutOfRangeException(nameof(status), status, "Unsupported activity status.")
-        };
-    }
-
-    private static TechWayFit.Pulse.Domain.Enums.FieldType MapFieldType(FieldType type)
-    {
-        return type switch
-        {
-            FieldType.Text => TechWayFit.Pulse.Domain.Enums.FieldType.Text,
-            FieldType.Number => TechWayFit.Pulse.Domain.Enums.FieldType.Number,
-            FieldType.Dropdown => TechWayFit.Pulse.Domain.Enums.FieldType.Dropdown,
-            FieldType.MultiSelect => TechWayFit.Pulse.Domain.Enums.FieldType.MultiSelect,
-            FieldType.Boolean => TechWayFit.Pulse.Domain.Enums.FieldType.Boolean,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported field type.")
-        };
-    }
-
-    private static FieldType MapFieldType(TechWayFit.Pulse.Domain.Enums.FieldType type)
-    {
-        return type switch
-        {
-            TechWayFit.Pulse.Domain.Enums.FieldType.Text => FieldType.Text,
-            TechWayFit.Pulse.Domain.Enums.FieldType.Number => FieldType.Number,
-            TechWayFit.Pulse.Domain.Enums.FieldType.Dropdown => FieldType.Dropdown,
-            TechWayFit.Pulse.Domain.Enums.FieldType.MultiSelect => FieldType.MultiSelect,
-            TechWayFit.Pulse.Domain.Enums.FieldType.Boolean => FieldType.Boolean,
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported field type.")
-        };
-    }
+    private static FieldType MapFieldType(FieldType type) => type;
 }

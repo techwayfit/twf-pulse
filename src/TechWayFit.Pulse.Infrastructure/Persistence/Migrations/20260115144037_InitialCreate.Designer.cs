@@ -8,11 +8,11 @@ using TechWayFit.Pulse.Infrastructure.Persistence.Sqlite;
 
 #nullable disable
 
-namespace TechWayFit.Pulse.Web.Migrations
+namespace TechWayFit.Pulse.Infrastructure.Migrations
 {
     [DbContext(typeof(PulseSqlLiteDbContext))]
-    [Migration("20260119234236_AddSessionTemplates")]
-    partial class AddSessionTemplates
+    [Migration("20260115144037_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -329,57 +329,6 @@ namespace TechWayFit.Pulse.Web.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("Sessions", (string)null);
-                });
-
-            modelBuilder.Entity("TechWayFit.Pulse.Infrastructure.Persistence.Entities.SessionTemplateRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Category")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ConfigJson")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("CreatedByUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("IconEmoji")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsSystemTemplate")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Category");
-
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("IsSystemTemplate");
-
-                    b.ToTable("SessionTemplates", (string)null);
                 });
 #pragma warning restore 612, 618
         }

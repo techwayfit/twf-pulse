@@ -9,7 +9,7 @@
 @inject IActivityUiRegistry ActivityUiRegistry
 @using TechWayFit.Pulse.Contracts.Responses
 @using TechWayFit.Pulse.Contracts.Requests
-@using TechWayFit.Pulse.Contracts.Enums
+@using TechWayFit.Pulse.Domain.Enums
 @using TechWayFit.Pulse.Web.Api
 @using TechWayFit.Pulse.Web.Hubs
 @using TechWayFit.Pulse.Web.Activities
@@ -146,7 +146,7 @@
                         </div>
 
                         <div class="response-section mt-4">
-                            @if (currentActivity.Status == TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open)
+                            @if (currentActivity.Status == TechWayFit.Pulse.Domain.Enums.ActivityStatus.Open)
                             {
                                 @if (!participantId.HasValue)
                                 {
@@ -544,9 +544,9 @@
     {
         return currentActivity?.Status switch
         {
-            TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending => "secondary",
-            TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open => "success",
-            TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Closed => "danger",
+            TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending => "secondary",
+            TechWayFit.Pulse.Domain.Enums.ActivityStatus.Open => "success",
+            TechWayFit.Pulse.Domain.Enums.ActivityStatus.Closed => "danger",
             _ => "secondary"
         };
     }
@@ -566,9 +566,9 @@
     {
         return currentActivity?.Status switch
         {
-            TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending => "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25",
-            TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Open => "bg-success bg-opacity-10 text-success border border-success border-opacity-25",
-            TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Closed => "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25",
+            TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending => "bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25",
+            TechWayFit.Pulse.Domain.Enums.ActivityStatus.Open => "bg-success bg-opacity-10 text-success border border-success border-opacity-25",
+            TechWayFit.Pulse.Domain.Enums.ActivityStatus.Closed => "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25",
             _ => "bg-light text-dark border"
         };
     }

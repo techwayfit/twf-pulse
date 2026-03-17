@@ -8,7 +8,7 @@ using TechWayFit.Pulse.Infrastructure.Persistence.Sqlite;
 
 #nullable disable
 
-namespace TechWayFit.Pulse.Web.Migrations
+namespace TechWayFit.Pulse.Infrastructure.Migrations
 {
     [DbContext(typeof(PulseSqlLiteDbContext))]
     [Migration("20260217025454_AddParticipantToken")]

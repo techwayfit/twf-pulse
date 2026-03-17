@@ -113,7 +113,7 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
                 return;
             }
 
-            var openActivity = activities.FirstOrDefault(a => a.Status == Contracts.Enums.ActivityStatus.Open);
+            var openActivity = activities.FirstOrDefault(a => a.Status == Domain.Enums.ActivityStatus.Open);
 
             if (activity == null)
             {
@@ -308,7 +308,7 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
             return;
         }
 
-        if (activity.Status == Contracts.Enums.ActivityStatus.Open)
+        if (activity.Status == Domain.Enums.ActivityStatus.Open)
         {
             isReviewNavigation = false;
             return;
@@ -327,7 +327,7 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
             }
 
             var currentlyOpen = activities.FirstOrDefault(a =>
-                a.Status == Contracts.Enums.ActivityStatus.Open &&
+                a.Status == Domain.Enums.ActivityStatus.Open &&
                 a.ActivityId != activity.ActivityId);
 
             if (currentlyOpen != null)
@@ -335,7 +335,7 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
                 await ActivityService.CloseAsync(session.Id, currentlyOpen.ActivityId, DateTimeOffset.UtcNow);
             }
 
-            if (activity.Status == Contracts.Enums.ActivityStatus.Closed)
+            if (activity.Status == Domain.Enums.ActivityStatus.Closed)
             {
                 await ActivityService.ReopenAsync(session.Id, activity.ActivityId, DateTimeOffset.UtcNow);
             }
@@ -389,7 +389,7 @@ public partial class Presentation : ComponentBase, IAsyncDisposable
             return;
         }
 
-        if (activity.Status != Contracts.Enums.ActivityStatus.Open)
+        if (activity.Status != Domain.Enums.ActivityStatus.Open)
         {
             return;
         }

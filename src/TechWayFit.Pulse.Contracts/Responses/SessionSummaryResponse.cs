@@ -1,4 +1,4 @@
-using TechWayFit.Pulse.Contracts.Enums;
+using TechWayFit.Pulse.Domain.Enums;
 using TechWayFit.Pulse.Contracts.Models;
 
 namespace TechWayFit.Pulse.Contracts.Responses;

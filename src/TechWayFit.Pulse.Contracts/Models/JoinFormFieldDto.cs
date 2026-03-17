@@ -1,4 +1,4 @@
-using TechWayFit.Pulse.Contracts.Enums;
+using TechWayFit.Pulse.Domain.Enums;
 using System.Text.Json.Serialization;
 
 namespace TechWayFit.Pulse.Contracts.Models;

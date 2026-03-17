@@ -414,16 +414,16 @@ public class SessionTemplatesController : ControllerBase
         };
     }
 
-    private static TechWayFit.Pulse.Contracts.Enums.FieldType ParseFieldType(string type)
+    private static TechWayFit.Pulse.Domain.Enums.FieldType ParseFieldType(string type)
     {
         return type.ToLowerInvariant() switch
         {
-            "text" => TechWayFit.Pulse.Contracts.Enums.FieldType.Text,
-            "number" => TechWayFit.Pulse.Contracts.Enums.FieldType.Number,
-            "select" or "dropdown" => TechWayFit.Pulse.Contracts.Enums.FieldType.Dropdown,
-            "multiselect" => TechWayFit.Pulse.Contracts.Enums.FieldType.MultiSelect,
-            "boolean" or "checkbox" => TechWayFit.Pulse.Contracts.Enums.FieldType.Boolean,
-            _ => TechWayFit.Pulse.Contracts.Enums.FieldType.Text
+            "text" => TechWayFit.Pulse.Domain.Enums.FieldType.Text,
+            "number" => TechWayFit.Pulse.Domain.Enums.FieldType.Number,
+            "select" or "dropdown" => TechWayFit.Pulse.Domain.Enums.FieldType.Dropdown,
+            "multiselect" => TechWayFit.Pulse.Domain.Enums.FieldType.MultiSelect,
+            "boolean" or "checkbox" => TechWayFit.Pulse.Domain.Enums.FieldType.Boolean,
+            _ => TechWayFit.Pulse.Domain.Enums.FieldType.Text
         };
     }
 

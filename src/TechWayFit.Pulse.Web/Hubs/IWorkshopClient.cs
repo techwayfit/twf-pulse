@@ -1,4 +1,4 @@
-using TechWayFit.Pulse.Contracts.Enums;
+using TechWayFit.Pulse.Domain.Enums;
 
 namespace TechWayFit.Pulse.Web.Hubs;
 
@@ -61,7 +61,7 @@ public sealed record ActivityStateChangedEvent(
     Guid ActivityId,
     int Order,
     string Title,
-    TechWayFit.Pulse.Contracts.Enums.ActivityStatus Status,
+    TechWayFit.Pulse.Domain.Enums.ActivityStatus Status,
     DateTimeOffset? OpenedAt,
     DateTimeOffset? ClosedAt,
     DateTimeOffset Timestamp);

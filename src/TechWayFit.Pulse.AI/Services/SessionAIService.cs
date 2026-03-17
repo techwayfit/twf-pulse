@@ -15,7 +15,7 @@ using TechWayFit.Pulse.AI.Prompts;
 using TechWayFit.Pulse.AI.Utilities;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Application.Context;
-using TechWayFit.Pulse.Contracts.Enums;
+using TechWayFit.Pulse.Domain.Enums;
 using TechWayFit.Pulse.Contracts.Models;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
@@ -487,7 +487,7 @@ namespace TechWayFit.Pulse.AI.Services
                     // Enforce maximum limits from configuration
                     config = EnforceActivityLimits(at, config);
 
-                    list.Add(new AgendaActivityResponse(Guid.NewGuid(), order++, at, title, prompt, config, TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending, null, null, duration));
+                    list.Add(new AgendaActivityResponse(Guid.NewGuid(), order++, at, title, prompt, config, TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending, null, null, duration));
                 }
 
                 return list;

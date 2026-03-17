@@ -51,21 +51,39 @@ try
  builder.Configuration.AddUserSecrets<Program>();
     }
 
-    // Configure activity defaults
-    builder.Services.Configure<ActivityDefaultsOptions>(
-        builder.Configuration.GetSection(ActivityDefaultsOptions.SectionName));
+    // Configure strongly typed options and validate at startup.
+    builder.Services.AddOptions<ActivityDefaultsOptions>()
+        .Bind(builder.Configuration.GetSection(ActivityDefaultsOptions.SectionName))
+        .Validate(
+            options => options.Poll.MaxResponsesPerParticipant > 0
+                && options.Rating.MaxResponsesPerParticipant > 0
+                && options.WordCloud.MaxSubmissionsPerParticipant > 0
+                && options.GeneralFeedback.MaxResponsesPerParticipant > 0,
+            "Activity defaults must be greater than zero.")
+        .ValidateOnStart();
 
-    // Configure OpenAI options
-    builder.Services.Configure<TechWayFit.Pulse.AI.Options.OpenAIOptions>(
-        builder.Configuration.GetSection(TechWayFit.Pulse.AI.Options.OpenAIOptions.SectionName));
+    builder.Services.AddOptions<TechWayFit.Pulse.AI.Options.OpenAIOptions>()
+        .Bind(builder.Configuration.GetSection(TechWayFit.Pulse.AI.Options.OpenAIOptions.SectionName))
+        .Validate(
+            options => !string.IsNullOrWhiteSpace(options.Endpoint)
+                && !string.IsNullOrWhiteSpace(options.Model)
+                && options.MaxTokens > 0,
+            "OpenAI options are invalid.")
+        .ValidateOnStart();
 
-    // Configure context document limits
-    builder.Services.Configure<ContextDocumentLimitsOptions>(
-        builder.Configuration.GetSection(ContextDocumentLimitsOptions.SectionName));
-    
-    // Configure AI quota limits
-    builder.Services.Configure<AiQuotaOptions>(
-        builder.Configuration.GetSection("AI:Quota"));
+    builder.Services.AddOptions<ContextDocumentLimitsOptions>()
+        .Bind(builder.Configuration.GetSection(ContextDocumentLimitsOptions.SectionName))
+        .Validate(
+            options => options.SprintBacklogSummaryMaxChars > 0
+                && options.IncidentSummaryMaxChars > 0
+                && options.ProductSummaryMaxChars > 0,
+            "Context document limits must be greater than zero.")
+        .ValidateOnStart();
+
+    builder.Services.AddOptions<AiQuotaOptions>()
+        .Bind(builder.Configuration.GetSection(AiQuotaOptions.SectionName))
+        .Validate(options => options.FreeSessionsPerMonth >= 0, "AI quota cannot be negative.")
+        .ValidateOnStart();
 
     // Add authentication services
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -304,8 +322,7 @@ options.Retry.MaxRetryAttempts = 2;
     // Hub Notification Service for real-time events
     builder.Services.AddScoped<IHubNotificationService, HubNotificationService>();
 
-    // Register file service and memory cache for template caching
-    builder.Services.AddMemoryCache();
+    // Register file service for template caching
     builder.Services.AddSingleton<IFileService, FileService>();
 
     // Register email service based on configuration

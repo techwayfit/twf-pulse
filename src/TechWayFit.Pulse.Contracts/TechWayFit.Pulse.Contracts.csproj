@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TechWayFit.Pulse.Domain\TechWayFit.Pulse.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

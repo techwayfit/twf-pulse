@@ -8,11 +8,11 @@ using TechWayFit.Pulse.Infrastructure.Persistence.Sqlite;
 
 #nullable disable
 
-namespace TechWayFit.Pulse.Web.Migrations
+namespace TechWayFit.Pulse.Infrastructure.Migrations
 {
     [DbContext(typeof(PulseSqlLiteDbContext))]
-    [Migration("20260207153833_AddIsDefaultToSessionGroups")]
-    partial class AddIsDefaultToSessionGroups
+    [Migration("20260119234236_AddSessionTemplates")]
+    partial class AddSessionTemplates
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,9 +31,6 @@ namespace TechWayFit.Pulse.Web.Migrations
 
                     b.Property<string>("ConfigJson")
                         .HasColumnType("TEXT");
-
-                    b.Property<int?>("DurationMinutes")
-                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset?>("OpenedAt")
                         .HasColumnType("TEXT");
@@ -88,40 +85,6 @@ namespace TechWayFit.Pulse.Web.Migrations
                     b.HasIndex("SessionId");
 
                     b.ToTable("ContributionCounters", (string)null);
-                });
-
-            modelBuilder.Entity("TechWayFit.Pulse.Infrastructure.Persistence.Entities.FacilitatorUserDataRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("FacilitatorUserId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FacilitatorUserId");
-
-                    b.HasIndex("FacilitatorUserId", "Key")
-                        .IsUnique();
-
-                    b.ToTable("FacilitatorUserData", (string)null);
                 });
 
             modelBuilder.Entity("TechWayFit.Pulse.Infrastructure.Persistence.Entities.FacilitatorUserRecord", b =>
@@ -266,9 +229,6 @@ namespace TechWayFit.Pulse.Web.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Color")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -278,13 +238,6 @@ namespace TechWayFit.Pulse.Web.Migrations
 
                     b.Property<Guid?>("FacilitatorUserId")
                         .HasColumnType("TEXT");
-
-                    b.Property<string>("Icon")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Level")
                         .HasColumnType("INTEGER");
@@ -345,12 +298,6 @@ namespace TechWayFit.Pulse.Web.Migrations
 
                     b.Property<string>("JoinFormSchemaJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("SessionEnd")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("SessionStart")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("SettingsJson")

@@ -2,20 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TechWayFit.Pulse.Infrastructure.Persistence.Sqlite;
 
 #nullable disable
 
-namespace TechWayFit.Pulse.Web.Migrations
+namespace TechWayFit.Pulse.Infrastructure.Migrations
 {
     [DbContext(typeof(PulseSqlLiteDbContext))]
-    [Migration("20260115144037_InitialCreate")]
-    partial class InitialCreate
+    partial class PulseDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -31,6 +28,9 @@ namespace TechWayFit.Pulse.Web.Migrations
 
                     b.Property<string>("ConfigJson")
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("DurationMinutes")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset?>("OpenedAt")
                         .HasColumnType("TEXT");
@@ -85,6 +85,40 @@ namespace TechWayFit.Pulse.Web.Migrations
                     b.HasIndex("SessionId");
 
                     b.ToTable("ContributionCounters", (string)null);
+                });
+
+            modelBuilder.Entity("TechWayFit.Pulse.Infrastructure.Persistence.Entities.FacilitatorUserDataRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("FacilitatorUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FacilitatorUserId");
+
+                    b.HasIndex("FacilitatorUserId", "Key")
+                        .IsUnique();
+
+                    b.ToTable("FacilitatorUserData", (string)null);
                 });
 
             modelBuilder.Entity("TechWayFit.Pulse.Infrastructure.Persistence.Entities.FacilitatorUserRecord", b =>
@@ -181,6 +215,9 @@ namespace TechWayFit.Pulse.Web.Migrations
                     b.Property<Guid>("SessionId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Token")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SessionId", "JoinedAt");
@@ -229,6 +266,9 @@ namespace TechWayFit.Pulse.Web.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Color")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -238,6 +278,13 @@ namespace TechWayFit.Pulse.Web.Migrations
 
                     b.Property<Guid?>("FacilitatorUserId")
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Level")
                         .HasColumnType("INTEGER");
@@ -300,6 +347,12 @@ namespace TechWayFit.Pulse.Web.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("SessionEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("SessionStart")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("SettingsJson")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -329,6 +382,57 @@ namespace TechWayFit.Pulse.Web.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("Sessions", (string)null);
+                });
+
+            modelBuilder.Entity("TechWayFit.Pulse.Infrastructure.Persistence.Entities.SessionTemplateRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ConfigJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IconEmoji")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSystemTemplate")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("IsSystemTemplate");
+
+                    b.ToTable("SessionTemplates", (string)null);
                 });
 #pragma warning restore 612, 618
         }

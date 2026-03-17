@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace TechWayFit.Pulse.Web.Migrations
+namespace TechWayFit.Pulse.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AddIsDefaultToSessionGroups : Migration

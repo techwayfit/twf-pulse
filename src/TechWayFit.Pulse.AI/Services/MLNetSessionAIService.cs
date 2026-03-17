@@ -247,11 +247,11 @@ namespace TechWayFit.Pulse.AI.Services
             activities.Add(new AgendaActivityResponse(
                 Guid.NewGuid(),
                 activitySequence++,
-                TechWayFit.Pulse.Contracts.Enums.ActivityType.Poll,
+                TechWayFit.Pulse.Domain.Enums.ActivityType.Poll,
                 "Opening Assessment",
                 openingQuestion,
                 GeneratePollOptions(new[] { "Needs significant improvement", "Could be better", "Doing well", "Excellent" }),
-                TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                 null, null, 3
             ));
 
@@ -261,11 +261,11 @@ namespace TechWayFit.Pulse.AI.Services
                 activities.Add(new AgendaActivityResponse(
                     Guid.NewGuid(),
                     activitySequence++,
-                    TechWayFit.Pulse.Contracts.Enums.ActivityType.Poll,
+                    TechWayFit.Pulse.Domain.Enums.ActivityType.Poll,
                     $"{CapitalizeKeyword(domainContext!)} Priorities",
                     "Which area should we focus on first?",
                     GeneratePollOptions(domainInfo.Activities.Take(4)),
-                    TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                    TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                     null, null, 4
                 ));
             }
@@ -278,11 +278,11 @@ namespace TechWayFit.Pulse.AI.Services
             activities.Add(new AgendaActivityResponse(
                 Guid.NewGuid(),
                 activitySequence++,
-                TechWayFit.Pulse.Contracts.Enums.ActivityType.WordCloud,
+                TechWayFit.Pulse.Domain.Enums.ActivityType.WordCloud,
                 "Key Themes",
                 wordCloudPrompt,
                 "{}",
-                TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                 null, null, 4
             ));
 
@@ -294,11 +294,11 @@ namespace TechWayFit.Pulse.AI.Services
             activities.Add(new AgendaActivityResponse(
                 Guid.NewGuid(),
                 activitySequence++,
-                TechWayFit.Pulse.Contracts.Enums.ActivityType.GeneralFeedback,
+                TechWayFit.Pulse.Domain.Enums.ActivityType.GeneralFeedback,
                 sentiment == "improvement-focused" ? "Opportunity Identification" : "Challenge Identification",
                 challengePrompt,
                 "{}",
-                TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                 null, null, 5
             ));
 
@@ -310,11 +310,11 @@ namespace TechWayFit.Pulse.AI.Services
             activities.Add(new AgendaActivityResponse(
                 Guid.NewGuid(),
                 activitySequence++,
-                TechWayFit.Pulse.Contracts.Enums.ActivityType.Poll,
+                TechWayFit.Pulse.Domain.Enums.ActivityType.Poll,
                 "Approach Selection",
                 "Which approach resonates most with the team?",
                 GeneratePollOptions(contextKeywords),
-                TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                 null, null, 4
             ));
 
@@ -322,11 +322,11 @@ namespace TechWayFit.Pulse.AI.Services
             activities.Add(new AgendaActivityResponse(
                 Guid.NewGuid(),
                 activitySequence++,
-                TechWayFit.Pulse.Contracts.Enums.ActivityType.GeneralFeedback,
+                TechWayFit.Pulse.Domain.Enums.ActivityType.GeneralFeedback,
                 "Solution Ideation",
                 $"Share one innovative idea for {primaryKeyword.ToLower()}",
                 "{}",
-                TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                 null, null, 6
             ));
 
@@ -338,11 +338,11 @@ namespace TechWayFit.Pulse.AI.Services
             activities.Add(new AgendaActivityResponse(
                 Guid.NewGuid(),
                 activitySequence++,
-                TechWayFit.Pulse.Contracts.Enums.ActivityType.Quadrant,
+                TechWayFit.Pulse.Domain.Enums.ActivityType.Quadrant,
                 "Impact vs Effort Analysis",
                 $"Map {quadrantItems} on Impact (Y) and Effort (X) dimensions",
                 "{\"xAxisLabel\": \"Effort Required\", \"yAxisLabel\": \"Impact\", \"topLeftLabel\": \"High Impact, Low Effort (Quick Wins)\", \"topRightLabel\": \"High Impact, High Effort (Major Projects)\", \"bottomLeftLabel\": \"Low Impact, Low Effort (Fill-ins)\", \"bottomRightLabel\": \"Low Impact, High Effort (Avoid)\", \"scale\": 10}",
-                TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                 null, null, 8
             ));
 
@@ -350,11 +350,11 @@ namespace TechWayFit.Pulse.AI.Services
             activities.Add(new AgendaActivityResponse(
                 Guid.NewGuid(),
                 activitySequence++,
-                TechWayFit.Pulse.Contracts.Enums.ActivityType.WordCloud,
+                TechWayFit.Pulse.Domain.Enums.ActivityType.WordCloud,
                 "Insights & Learnings",
                 "What's your key insight so far? (one word)",
                 "{}",
-                TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                 null, null, 4
             ));
 
@@ -362,11 +362,11 @@ namespace TechWayFit.Pulse.AI.Services
             activities.Add(new AgendaActivityResponse(
                 Guid.NewGuid(),
                 activitySequence++,
-                TechWayFit.Pulse.Contracts.Enums.ActivityType.Poll,
+                TechWayFit.Pulse.Domain.Enums.ActivityType.Poll,
                 "Next Action",
                 "What should be our immediate next step?",
                 GeneratePollOptions(keywords.Take(4)),
-                TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                 null, null, 4
             ));
 
@@ -374,11 +374,11 @@ namespace TechWayFit.Pulse.AI.Services
             activities.Add(new AgendaActivityResponse(
                 Guid.NewGuid(),
                 activitySequence++,
-                TechWayFit.Pulse.Contracts.Enums.ActivityType.Poll,
+                TechWayFit.Pulse.Domain.Enums.ActivityType.Poll,
                 "Commitment Level",
                 "How committed are you to taking action based on today's discussion?",
                 GeneratePollOptions(new[] { "Fully committed - ready to act", "Committed with some reservations", "Neutral - need more information", "Uncertain about next steps" }),
-                TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                 null, null, 3
             ));
 
@@ -386,11 +386,11 @@ namespace TechWayFit.Pulse.AI.Services
             activities.Add(new AgendaActivityResponse(
                 Guid.NewGuid(),
                 activitySequence++,
-                TechWayFit.Pulse.Contracts.Enums.ActivityType.GeneralFeedback,
+                TechWayFit.Pulse.Domain.Enums.ActivityType.GeneralFeedback,
                 "Session Reflection",
                 "What's your most valuable takeaway from this session?",
                 "{}",
-                TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                 null, null, 5
             ));
 
@@ -403,29 +403,29 @@ namespace TechWayFit.Pulse.AI.Services
             {
                 new AgendaActivityResponse(
                     Guid.NewGuid(), 1,
-                    TechWayFit.Pulse.Contracts.Enums.ActivityType.Poll,
+                    TechWayFit.Pulse.Domain.Enums.ActivityType.Poll,
                     "Opening Poll",
                     $"How familiar are you with {request.Title}?",
                     GeneratePollOptions(new[] { "Beginner", "Intermediate", "Advanced", "Expert" }),
-                    TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                    TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                     null, null, 3
                 ),
                 new AgendaActivityResponse(
                     Guid.NewGuid(), 2,
-                    TechWayFit.Pulse.Contracts.Enums.ActivityType.WordCloud,
+                    TechWayFit.Pulse.Domain.Enums.ActivityType.WordCloud,
                     "Key Themes",
                     "What word comes to mind?",
                     "{}",
-                    TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                    TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                     null, null, 5
                 ),
                 new AgendaActivityResponse(
                     Guid.NewGuid(), 3,
-                    TechWayFit.Pulse.Contracts.Enums.ActivityType.GeneralFeedback,
+                    TechWayFit.Pulse.Domain.Enums.ActivityType.GeneralFeedback,
                     "Ideas",
                     "Share your thoughts",
                     "{}",
-                    TechWayFit.Pulse.Contracts.Enums.ActivityStatus.Pending,
+                    TechWayFit.Pulse.Domain.Enums.ActivityStatus.Pending,
                     null, null, 5
                 )
             };
@@ -518,8 +518,8 @@ namespace TechWayFit.Pulse.AI.Services
         {
             // Fallback – no AI API available; return structured text summary
             var relevant = completedActivities
-                .Where(a => a.Type != TechWayFit.Pulse.Contracts.Enums.ActivityType.AiSummary
-                         && a.Type != TechWayFit.Pulse.Contracts.Enums.ActivityType.Break)
+                .Where(a => a.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.AiSummary
+                         && a.Type != TechWayFit.Pulse.Domain.Enums.ActivityType.Break)
                 .OrderBy(a => a.Order)
                 .ToList();
 

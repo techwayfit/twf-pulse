@@ -89,14 +89,14 @@ public static class DatabaseServiceExtensions
         {
      options.UseSqlite(connectionString, sqliteOptions =>
  {
-      sqliteOptions.MigrationsAssembly("TechWayFit.Pulse.Web");
+      sqliteOptions.MigrationsAssembly("TechWayFit.Pulse.Infrastructure");
          });
     });
         services.AddDbContextFactory<PulseSqlLiteDbContext>(options =>
         {
             options.UseSqlite(connectionString, sqliteOptions =>
             {
-                sqliteOptions.MigrationsAssembly("TechWayFit.Pulse.Web");
+                sqliteOptions.MigrationsAssembly("TechWayFit.Pulse.Infrastructure");
             });
         }, ServiceLifetime.Scoped);
 

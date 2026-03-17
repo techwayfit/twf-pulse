@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
-using TechWayFit.Pulse.Contracts.Enums;
+using TechWayFit.Pulse.Domain.Enums;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
 using TechWayFit.Pulse.Web.Components.Facilitator;
