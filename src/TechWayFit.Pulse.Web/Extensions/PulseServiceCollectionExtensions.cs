@@ -28,6 +28,10 @@ public static class PulseServiceCollectionExtensions
 {
     public static IServiceCollection AddPulseOptions(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddOptions<SecurityHeadersOptions>()
+            .Bind(configuration.GetSection(SecurityHeadersOptions.SectionName))
+            .ValidateOnStart();
+
         services.AddOptions<ActivityDefaultsOptions>()
             .Bind(configuration.GetSection(ActivityDefaultsOptions.SectionName))
             .Validate(

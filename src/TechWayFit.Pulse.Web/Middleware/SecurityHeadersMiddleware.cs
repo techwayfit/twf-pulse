@@ -1,28 +1,23 @@
+using Microsoft.Extensions.Options;
+using TechWayFit.Pulse.Web.Configuration;
+
 namespace TechWayFit.Pulse.Web.Middleware;
 
 public sealed class SecurityHeadersMiddleware
 {
-    private const string CspPolicy = "default-src 'self'; "
-        + "base-uri 'self'; "
-        + "frame-ancestors 'self'; "
-        + "form-action 'self'; "
-        + "img-src 'self' data: blob: https:; "
-        + "font-src 'self' data: https://fonts.gstatic.com; "
-        + "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-        + "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-        + "connect-src 'self' https: wss: ws:;";
-
     private readonly RequestDelegate _next;
+    private readonly string _cspPolicy;
 
-    public SecurityHeadersMiddleware(RequestDelegate next)
+    public SecurityHeadersMiddleware(RequestDelegate next, IOptions<SecurityHeadersOptions> options)
     {
         _next = next;
+        _cspPolicy = options.Value.ContentSecurityPolicy.Build();
     }
 
     public async Task InvokeAsync(HttpContext context)
     {
         var headers = context.Response.Headers;
-        headers["Content-Security-Policy"] = CspPolicy;
+        headers["Content-Security-Policy"] = _cspPolicy;
         headers["X-Content-Type-Options"] = "nosniff";
         headers["X-Frame-Options"] = "SAMEORIGIN";
         headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
