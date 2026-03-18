@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Domain.Entities;
 
 namespace TechWayFit.Pulse.Web.Controllers;
@@ -54,11 +55,13 @@ public class AccountController : Controller
             return View();
         }
 
-        var result = await _authService.SendLoginOtpAsync(email, displayName, cancellationToken);
+        var result = await _authService.SendLoginOtpAsync(
+            new SendLoginOtpCommand(email, displayName),
+            cancellationToken);
 
-        if (!result.Success)
+        if (!result.IsSuccess)
         {
-            TempData["Error"] = result.Message;
+            TempData["Error"] = result.Error?.Message ?? "Failed to send OTP.";
             return View();
         }
 
@@ -98,23 +101,27 @@ public class AccountController : Controller
         }
 
         var displayName = TempData["DisplayName"] as string;
-        var result = await _authService.VerifyOtpAsync(email, otpCode, displayName, cancellationToken);
+        var result = await _authService.VerifyOtpAsync(
+            new VerifyOtpCommand(email, otpCode, displayName),
+            cancellationToken);
 
-        if (!result.Success || result.User == null)
+        if (!result.IsSuccess || result.Value == null)
         {
-            TempData["Error"] = result.ErrorMessage ?? "Invalid OTP code.";
+            TempData["Error"] = result.Error?.Message ?? "Invalid OTP code.";
             TempData["Email"] = email;
             TempData["ReturnUrl"] = returnUrl;
             return RedirectToAction(nameof(VerifyOtp));
         }
 
+        var user = result.Value;
+
         // Create authentication claims
         var claims = new List<Claim>
    {
-            new Claim(ClaimTypes.NameIdentifier, result.User.Id.ToString()),
-         new Claim(ClaimTypes.Email, result.User.Email),
- new Claim(ClaimTypes.Name, result.User.DisplayName),
-            new Claim("FacilitatorUserId", result.User.Id.ToString())
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+         new Claim(ClaimTypes.Email, user.Email),
+ new Claim(ClaimTypes.Name, user.DisplayName),
+            new Claim("FacilitatorUserId", user.Id.ToString())
         };
 
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

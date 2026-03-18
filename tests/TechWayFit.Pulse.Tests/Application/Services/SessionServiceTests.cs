@@ -58,7 +58,7 @@ public class SessionServiceTests
         result.Status.Should().Be(SessionStatus.Draft);
         result.CreatedAt.Should().Be(now);
         result.FacilitatorUserId.Should().Be(facilitatorUserId);
-        result.ExpiresAt.Should().Be(now.AddMinutes(360));
+        result.ExpiresAt.Should().Be(now.AddDays(30));
 
         _sessionRepositoryMock.Verify(
            x => x.AddAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>()),

@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 using TechWayFit.Pulse.Infrastructure.Persistence.SqlServer;
 
@@ -10,7 +9,7 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.SqlServer.Repositories;
 /// </summary>
 public sealed class ResponseRepository : ResponseRepositoryBase<PulseSqlServerDbContext>
 {
-    public ResponseRepository(IDbContextFactory<PulseSqlServerDbContext> dbContextFactory) : base(dbContextFactory)
+    public ResponseRepository(PulseSqlServerDbContext dbContext) : base(dbContext)
     {
     }
 }

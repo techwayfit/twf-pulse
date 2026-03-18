@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TechWayFit.Pulse.Application.Abstractions.Services;
@@ -86,6 +87,7 @@ public sealed class ParticipantsController : SessionApiControllerBase
     }
 
     [HttpPost("{code}/facilitators/join")]
+    [EnableRateLimiting("api-write")]
     public async Task<ActionResult<ApiResponse<JoinFacilitatorResponse>>> JoinFacilitator(
         string code,
         [FromBody] JoinFacilitatorRequest request,
@@ -110,6 +112,7 @@ public sealed class ParticipantsController : SessionApiControllerBase
     }
 
     [HttpPost("{code}/participants/join")]
+    [EnableRateLimiting("participant-join")]
     public async Task<ActionResult<ApiResponse<JoinParticipantResponse>>> JoinParticipant(
         string code,
         [FromBody] JoinParticipantRequest request,

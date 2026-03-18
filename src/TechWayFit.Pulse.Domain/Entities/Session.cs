@@ -1,10 +1,14 @@
 using TechWayFit.Pulse.Domain.Enums;
+using TechWayFit.Pulse.Domain.Events;
+using TechWayFit.Pulse.Domain.Exceptions;
 using TechWayFit.Pulse.Domain.ValueObjects;
 
 namespace TechWayFit.Pulse.Domain.Entities;
 
 public sealed class Session
 {
+    private readonly List<IDomainEvent> _domainEvents = new();
+
     public Session(
         Guid id,
         string code,
@@ -89,6 +93,20 @@ public sealed class Session
     /// </summary>
     public DateTime? SessionEnd { get; private set; }
 
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
+    public IReadOnlyList<IDomainEvent> DequeueDomainEvents()
+    {
+        if (_domainEvents.Count == 0)
+        {
+            return Array.Empty<IDomainEvent>();
+        }
+
+        var drained = _domainEvents.ToArray();
+        _domainEvents.Clear();
+        return drained;
+    }
+
     public void SetStatus(SessionStatus status, DateTimeOffset updatedAt)
     {
         Status = status;
@@ -138,5 +156,63 @@ public sealed class Session
         SessionStart = sessionStart;
         SessionEnd = sessionEnd;
         UpdatedAt = updatedAt;
+    }
+
+    public Response SubmitResponse(
+        Activity activity,
+        Participant participant,
+        string payload,
+        DateTimeOffset createdAt)
+    {
+        ArgumentNullException.ThrowIfNull(activity);
+        ArgumentNullException.ThrowIfNull(participant);
+
+        if (Status != SessionStatus.Live)
+        {
+            throw new DomainRuleViolationException("Session is not live.");
+        }
+
+        if (activity.SessionId != Id)
+        {
+            throw new DomainRuleViolationException("Activity not found for this session.");
+        }
+
+        if (Settings.StrictCurrentActivityOnly && CurrentActivityId != activity.Id)
+        {
+            throw new DomainRuleViolationException("Responses are locked to the current activity.");
+        }
+
+        if (activity.Status != ActivityStatus.Open)
+        {
+            throw new DomainRuleViolationException("Activity is not open.");
+        }
+
+        if (participant.SessionId != Id)
+        {
+            throw new DomainRuleViolationException("Participant not found for this session.");
+        }
+
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            throw new DomainRuleViolationException("Response payload is required.");
+        }
+
+        var response = new Response(
+            Guid.NewGuid(),
+            Id,
+            activity.Id,
+            participant.Id,
+            payload.Trim(),
+            participant.Dimensions,
+            createdAt);
+
+        _domainEvents.Add(new ResponseSubmittedDomainEvent(
+            SessionId: Id,
+            ActivityId: activity.Id,
+            ParticipantId: participant.Id,
+            ResponseId: response.Id,
+            OccurredAt: createdAt));
+
+        return response;
     }
 }

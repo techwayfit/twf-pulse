@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Contracts.Requests;
@@ -9,6 +11,8 @@ namespace TechWayFit.Pulse.Web.Controllers.Api;
 
 [ApiController]
 [Route("api/sessions")]
+[Authorize]
+[EnableRateLimiting("ai-generation")]
 public sealed class SessionAiController : SessionApiControllerBase
 {
     private readonly ISessionService _sessions;

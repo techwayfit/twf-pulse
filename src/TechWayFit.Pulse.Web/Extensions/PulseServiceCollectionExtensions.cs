@@ -1,11 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.Repositories;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -94,8 +96,26 @@ public static class PulseServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddPulseWebServices(this IServiceCollection services, IWebHostEnvironment environment)
+    public static IServiceCollection AddPulseWebServices(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        IWebHostEnvironment environment)
     {
+        var redisConnection = configuration.GetConnectionString("Redis")
+            ?? configuration["Pulse:Redis:ConnectionString"];
+        if (!string.IsNullOrWhiteSpace(redisConnection))
+        {
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnection;
+                options.InstanceName = "twf-pulse";
+            });
+        }
+        else
+        {
+            services.AddDistributedMemoryCache();
+        }
+
         services.AddRazorPages();
         services.AddControllersWithViews()
             .AddJsonOptions(options =>
@@ -160,6 +180,66 @@ public static class PulseServiceCollectionExtensions
             options.ExpirationScanFrequency = TimeSpan.FromMinutes(5);
         });
 
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.OnRejected = async (context, token) =>
+            {
+                context.HttpContext.Response.ContentType = "application/json";
+                await context.HttpContext.Response.WriteAsync(
+                    "{\"error\":\"rate_limited\",\"message\":\"Too many requests. Please try again shortly.\"}",
+                    token);
+            };
+
+            options.AddPolicy("participant-join", httpContext =>
+                RateLimitPartition.GetSlidingWindowLimiter(
+                    partitionKey: $"join:{httpContext.Connection.RemoteIpAddress}",
+                    factory: _ => new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 30,
+                        Window = TimeSpan.FromMinutes(1),
+                        SegmentsPerWindow = 6,
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    }));
+
+            options.AddPolicy("api-write", httpContext =>
+                RateLimitPartition.GetSlidingWindowLimiter(
+                    partitionKey: $"api-write:{httpContext.Connection.RemoteIpAddress}",
+                    factory: _ => new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 60,
+                        Window = TimeSpan.FromMinutes(1),
+                        SegmentsPerWindow = 6,
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    }));
+
+            options.AddPolicy("participant-submit", httpContext =>
+                RateLimitPartition.GetSlidingWindowLimiter(
+                    partitionKey: $"submit:{httpContext.Connection.RemoteIpAddress}",
+                    factory: _ => new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 120,
+                        Window = TimeSpan.FromMinutes(1),
+                        SegmentsPerWindow = 6,
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    }));
+
+            options.AddPolicy("ai-generation", httpContext =>
+                RateLimitPartition.GetSlidingWindowLimiter(
+                    partitionKey: $"ai:{httpContext.Connection.RemoteIpAddress}",
+                    factory: _ => new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 10,
+                        Window = TimeSpan.FromMinutes(1),
+                        SegmentsPerWindow = 6,
+                        QueueLimit = 0,
+                        AutoReplenishment = true
+                    }));
+        });
+
         services.AddSingleton<IFacilitatorTokenStore, FacilitatorTokenStore>();
         services.AddSingleton<IParticipantTokenStore, ParticipantTokenStore>();
 
@@ -211,9 +291,7 @@ public static class PulseServiceCollectionExtensions
         Log.Information("Environment: {Environment}", environment.EnvironmentName);
         Log.Information("AI Enabled: {Enabled}", aiEnabled);
         Log.Information("AI Provider: {Provider}", aiProvider);
-        Log.Information("API Key present: {HasKey}, Length: {Length}",
-            !string.IsNullOrWhiteSpace(openAiApiKey),
-            openAiApiKey?.Length ?? 0);
+        Log.Information("API Key present: {HasKey}", !string.IsNullOrWhiteSpace(openAiApiKey));
 
         if (aiEnabled && !string.IsNullOrWhiteSpace(openAiApiKey) && aiProvider.Equals("OpenAI", StringComparison.OrdinalIgnoreCase))
         {
@@ -274,6 +352,7 @@ public static class PulseServiceCollectionExtensions
         services.AddScoped<ISessionGroupService, SessionGroupService>();
         services.AddScoped<ISessionTemplateService, TechWayFit.Pulse.Infrastructure.Services.SessionTemplateService>();
         services.AddScoped<IDateTimeProvider, SystemDateTimeProvider>();
+        services.AddScoped<IDomainEventDispatcher, LoggingDomainEventDispatcher>();
 
         services.AddSingleton<IFacilitatorTokenService, FacilitatorTokenService>();
         services.AddScoped<IClientTokenService, ClientTokenService>();

@@ -1,6 +1,8 @@
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Domain.Entities;
+using TechWayFit.Pulse.Domain.Events;
 
 namespace TechWayFit.Pulse.Application.Services;
 
@@ -11,19 +13,39 @@ public sealed class ResponseService : IResponseService
     private readonly IActivityRepository _activities;
     private readonly IParticipantRepository _participants;
     private readonly IContributionCounterRepository _counters;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IDomainEventDispatcher _domainEventDispatcher;
 
     public ResponseService(
         IResponseRepository responses,
         ISessionRepository sessions,
         IActivityRepository activities,
         IParticipantRepository participants,
-        IContributionCounterRepository counters)
+        IContributionCounterRepository counters,
+        IUnitOfWork unitOfWork,
+        IDomainEventDispatcher domainEventDispatcher)
     {
         _responses = responses;
         _sessions = sessions;
         _activities = activities;
         _participants = participants;
         _counters = counters;
+        _unitOfWork = unitOfWork;
+        _domainEventDispatcher = domainEventDispatcher;
+    }
+
+    public Task<Response> SubmitAsync(
+        SubmitResponseCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return SubmitAsync(
+            command.SessionId,
+            command.ActivityId,
+            command.ParticipantId,
+            command.Payload,
+            command.CreatedAt,
+            cancellationToken);
     }
 
     public async Task<Response> SubmitAsync(
@@ -60,25 +82,10 @@ public sealed class ResponseService : IResponseService
             throw new InvalidOperationException("Session not found.");
         }
 
-        if (session.Status != Domain.Enums.SessionStatus.Live)
-        {
-            throw new InvalidOperationException("Session is not live.");
-        }
-
-        if (session.Settings.StrictCurrentActivityOnly && session.CurrentActivityId != activityId)
-        {
-            throw new InvalidOperationException("Responses are locked to the current activity.");
-        }
-
         var activity = await _activities.GetByIdAsync(activityId, cancellationToken);
         if (activity is null || activity.SessionId != sessionId)
         {
             throw new InvalidOperationException("Activity not found for this session.");
-        }
-
-        if (activity.Status != Domain.Enums.ActivityStatus.Open)
-        {
-            throw new InvalidOperationException("Activity is not open.");
         }
 
         var participant = await _participants.GetByIdAsync(participantId, cancellationToken);
@@ -87,46 +94,54 @@ public sealed class ResponseService : IResponseService
             throw new InvalidOperationException("Participant not found for this session.");
         }
 
-        var counter = await _counters.GetAsync(participantId, sessionId, cancellationToken);
-        var currentTotal = counter?.TotalContributions ?? 0;
-         
-        // Check activity-level limit (e.g., PollConfig.MaxResponsesPerParticipant)
-        if (activity.Config is not null)
-        {
-            var config = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
-            if (config.TryGetProperty("MaxResponsesPerParticipant", out var maxResponsesProp) && 
-                maxResponsesProp.TryGetInt32(out var maxResponses) && 
-                maxResponses > 0)
+        var domainEvents = Array.Empty<IDomainEvent>();
+        var response = await _unitOfWork.ExecuteInTransactionAsync(
+            async ct =>
             {
-                var activityResponseCount = await _responses.CountByActivityAndParticipantAsync(
-                    activityId,
-                    participantId,
-                    cancellationToken);
+                var counter = await _counters.GetAsync(participantId, sessionId, ct);
+                var currentTotal = counter?.TotalContributions ?? 0;
 
-                if (activityResponseCount >= maxResponses)
+                // Check activity-level limit (e.g., PollConfig.MaxResponsesPerParticipant)
+                if (activity.Config is not null)
                 {
-                    throw new InvalidOperationException($"You have already submitted {activityResponseCount} response(s) to this activity. Maximum allowed is {maxResponses}.");
+                    var config = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(activity.Config);
+                    if (config.TryGetProperty("MaxResponsesPerParticipant", out var maxResponsesProp)
+                        && maxResponsesProp.TryGetInt32(out var maxResponses)
+                        && maxResponses > 0)
+                    {
+                        var activityResponseCount = await _responses.CountByActivityAndParticipantAsync(
+                            activityId,
+                            participantId,
+                            ct);
+
+                        if (activityResponseCount >= maxResponses)
+                        {
+                            throw new InvalidOperationException($"You have already submitted {activityResponseCount} response(s) to this activity. Maximum allowed is {maxResponses}.");
+                        }
+                    }
                 }
-            }
+
+                var submittedResponse = session.SubmitResponse(activity, participant, payload, createdAt);
+                await _responses.AddAsync(submittedResponse, ct);
+
+                var updatedCounter = counter ?? new ContributionCounter(
+                    participantId,
+                    sessionId,
+                    currentTotal,
+                    createdAt);
+                updatedCounter.Increment(createdAt);
+                await _counters.UpsertAsync(updatedCounter, ct);
+
+                domainEvents = session.DequeueDomainEvents().ToArray();
+                return submittedResponse;
+            },
+            cancellationToken);
+
+        if (domainEvents.Length > 0)
+        {
+            await _domainEventDispatcher.DispatchAsync(domainEvents, cancellationToken);
         }
 
-        var response = new Response(
-            Guid.NewGuid(),
-            sessionId,
-            activityId,
-            participantId,
-            payload.Trim(),
-            participant.Dimensions,
-            createdAt);
-
-        await _responses.AddAsync(response, cancellationToken);
-        var updatedCounter = counter ?? new Domain.Entities.ContributionCounter(
-            participantId,
-            sessionId,
-            currentTotal,
-            createdAt);
-        updatedCounter.Increment(createdAt);
-        await _counters.UpsertAsync(updatedCounter, cancellationToken);
         return response;
     }
 

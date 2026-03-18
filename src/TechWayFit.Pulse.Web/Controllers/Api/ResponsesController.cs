@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Contracts.Models;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
@@ -36,6 +38,7 @@ public sealed class ResponsesController : SessionApiControllerBase
     }
 
     [HttpPost("{code}/activities/{activityId:guid}/responses")]
+    [EnableRateLimiting("participant-submit")]
     public async Task<ActionResult<ApiResponse<SubmitResponseResponse>>> SubmitResponse(
         string code,
         Guid activityId,
@@ -57,11 +60,12 @@ public sealed class ResponsesController : SessionApiControllerBase
             }
 
             var response = await _responses.SubmitAsync(
-                session.Id,
-                activityId,
-                request.ParticipantId,
-                request.Payload,
-                DateTimeOffset.UtcNow,
+                new SubmitResponseCommand(
+                    session.Id,
+                    activityId,
+                    request.ParticipantId,
+                    request.Payload,
+                    DateTimeOffset.UtcNow),
                 cancellationToken);
 
             var sessionGroup = WorkshopGroupNames.ForSession(session.Code);

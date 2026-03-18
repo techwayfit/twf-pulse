@@ -1,3 +1,4 @@
+using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Domain.Enums;
 using TechWayFit.Pulse.Domain.ValueObjects;
@@ -6,6 +7,10 @@ namespace TechWayFit.Pulse.Application.Abstractions.Services;
 
 public interface ISessionService
 {
+    Task<Session> CreateSessionAsync(
+        CreateSessionCommand command,
+        CancellationToken cancellationToken = default);
+
     Task<Session> CreateSessionAsync(
         string code,
         string title,
@@ -19,6 +24,10 @@ public interface ISessionService
         CancellationToken cancellationToken = default);
 
     Task<Session?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
+
+    Task<Session> UpdateSessionAsync(
+        UpdateSessionCommand command,
+        CancellationToken cancellationToken = default);
 
     Task<Session> UpdateSessionAsync(
         Guid sessionId,

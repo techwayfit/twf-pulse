@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
 using TechWayFit.Pulse.Web.Api;
@@ -9,6 +12,7 @@ namespace TechWayFit.Pulse.Web.Controllers.Api;
 
 [ApiController]
 [Route("api/sessions")]
+[Authorize]
 public sealed class SessionsController : SessionApiControllerBase
 {
     private readonly ISessionService _sessions;
@@ -37,6 +41,7 @@ public sealed class SessionsController : SessionApiControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting("api-write")]
     public async Task<ActionResult<ApiResponse<CreateSessionResponse>>> CreateSession(
         [FromBody] CreateSessionRequest request,
         CancellationToken cancellationToken)
@@ -58,15 +63,16 @@ public sealed class SessionsController : SessionApiControllerBase
             }
 
             var session = await _sessions.CreateSessionAsync(
-                code,
-                request.Title,
-                request.Goal,
-                request.Context,
-                settings,
-                joinFormSchema,
-                DateTimeOffset.UtcNow,
-                facilitatorUserId,
-                groupId,
+                new CreateSessionCommand(
+                    code,
+                    request.Title,
+                    request.Goal,
+                    request.Context,
+                    settings,
+                    joinFormSchema,
+                    DateTimeOffset.UtcNow,
+                    facilitatorUserId,
+                    groupId),
                 cancellationToken);
 
             return Ok(Wrap(new CreateSessionResponse(session.Id, session.Code)));
@@ -82,6 +88,7 @@ public sealed class SessionsController : SessionApiControllerBase
     }
 
     [HttpGet("{code}")]
+    [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<SessionSummaryResponse>>> GetSession(
         string code,
         CancellationToken cancellationToken)
@@ -275,11 +282,12 @@ public sealed class SessionsController : SessionApiControllerBase
             var sessionId = session.Id;
 
             await _sessions.UpdateSessionAsync(
-                sessionId,
-                request.Title,
-                request.Goal,
-                request.Context,
-                DateTimeOffset.UtcNow,
+                new UpdateSessionCommand(
+                    sessionId,
+                    request.Title,
+                    request.Goal,
+                    request.Context,
+                    DateTimeOffset.UtcNow),
                 cancellationToken);
 
             var currentSessionForGroup = await _sessions.GetByCodeAsync(code, cancellationToken);

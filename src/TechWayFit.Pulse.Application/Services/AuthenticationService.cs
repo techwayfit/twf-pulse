@@ -1,7 +1,9 @@
 using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
+using TechWayFit.Pulse.Application.Abstractions.Results;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Domain.Entities;
 
 namespace TechWayFit.Pulse.Application.Services;
@@ -35,14 +37,16 @@ public sealed class AuthenticationService : IAuthenticationService
         _logger = logger;
     }
 
-    public async Task<SendOtpResult> SendLoginOtpAsync(
-        string email,
- string? displayName = null,
+    public async Task<Result> SendLoginOtpAsync(
+        SendLoginOtpCommand command,
         CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(command);
+
+        var email = command.Email;
         if (string.IsNullOrWhiteSpace(email))
         {
-            return new SendOtpResult(false, "Email is required.");
+            return Result.Failure(ResultErrors.Validation("Email is required."));
         }
 
         var normalizedEmail = email.Trim().ToLowerInvariant();
@@ -59,7 +63,7 @@ public sealed class AuthenticationService : IAuthenticationService
         if (recentOtpCount >= MaxOtpAttemptsPerHour)
         {
             _logger.LogWarning("Rate limit exceeded for email {Email}", normalizedEmail);
-            return new SendOtpResult(false, "Too many OTP requests. Please try again later.");
+            return Result.Failure(ResultErrors.RateLimited("Too many OTP requests. Please try again later."));
         }
 
         // Generate OTP
@@ -76,31 +80,33 @@ otpCode,
 
         // Check if user exists
         var existingUser = await _userRepository.GetByEmailAsync(normalizedEmail, cancellationToken);
-        var userName = existingUser?.DisplayName ?? displayName ?? "there";
+        var userName = existingUser?.DisplayName ?? command.DisplayName ?? "there";
 
         // Send OTP email
         try
         {
             await _emailService.SendLoginOtpAsync(normalizedEmail, otpCode, userName, cancellationToken);
             _logger.LogInformation("Login OTP sent to {Email}", normalizedEmail);
-            return new SendOtpResult(true, "OTP sent to your email.");
+            return Result.Success();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to send OTP email to {Email}", normalizedEmail);
-            return new SendOtpResult(false, "Failed to send OTP. Please try again.");
+            return Result.Failure(ResultErrors.Unexpected("Failed to send OTP. Please try again."));
         }
     }
 
-    public async Task<VerifyOtpResult> VerifyOtpAsync(
-        string email,
-        string otpCode,
-        string? displayName = null,
+    public async Task<Result<FacilitatorUser>> VerifyOtpAsync(
+        VerifyOtpCommand command,
       CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(command);
+        var email = command.Email;
+        var otpCode = command.OtpCode;
+
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(otpCode))
         {
-            return new VerifyOtpResult(false, null, "Email and OTP code are required.");
+            return Result<FacilitatorUser>.Failure(ResultErrors.Validation("Email and OTP code are required."));
         }
 
         var normalizedEmail = email.Trim().ToLowerInvariant();
@@ -111,12 +117,12 @@ otpCode,
         if (otp == null)
         {
             _logger.LogWarning("Invalid OTP attempt for email {Email}", normalizedEmail);
-            return new VerifyOtpResult(false, null, "Invalid or expired OTP code.");
+            return Result<FacilitatorUser>.Failure(ResultErrors.Unauthorized("Invalid or expired OTP code."));
         }
 
         if (!otp.IsValid(_dateTimeProvider.UtcNow))
         {
-            return new VerifyOtpResult(false, null, "OTP code has expired.");
+            return Result<FacilitatorUser>.Failure(ResultErrors.Unauthorized("OTP code has expired."));
         }
 
         // Mark OTP as used
@@ -129,7 +135,7 @@ otpCode,
         if (user == null)
         {
             // Create new user - use provided displayName, otherwise extract from email
-            var userDisplayName = displayName ?? ExtractDisplayNameFromEmail(normalizedEmail);
+            var userDisplayName = command.DisplayName ?? ExtractDisplayNameFromEmail(normalizedEmail);
             var now = _dateTimeProvider.UtcNow;
             user = new FacilitatorUser(
                             Guid.NewGuid(),
@@ -173,7 +179,7 @@ otpCode,
         }
 
         _logger.LogInformation("User {Email} logged in successfully", normalizedEmail);
-        return new VerifyOtpResult(true, user);
+        return Result<FacilitatorUser>.Success(user);
     }
 
     public async Task<FacilitatorUser?> GetFacilitatorAsync(Guid userId, CancellationToken cancellationToken = default)

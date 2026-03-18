@@ -13,7 +13,7 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.Sqlite.Repositories;
 /// </summary>
 public sealed class ResponseRepository : ResponseRepositoryBase<PulseSqlLiteDbContext>
 {
-    public ResponseRepository(IDbContextFactory<PulseSqlLiteDbContext> dbContextFactory) : base(dbContextFactory)
+    public ResponseRepository(PulseSqlLiteDbContext dbContext) : base(dbContext)
     {
     }
 
@@ -21,8 +21,7 @@ public sealed class ResponseRepository : ResponseRepositoryBase<PulseSqlLiteDbCo
         Guid activityId,
         CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        var records = await dbContext.Responses
+        var records = await DbContext.Responses
             .AsNoTracking()
             .Where(x => x.ActivityId == activityId)
             .ToListAsync(cancellationToken);
@@ -38,8 +37,7 @@ public sealed class ResponseRepository : ResponseRepositoryBase<PulseSqlLiteDbCo
         Guid participantId,
         CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        var records = await dbContext.Responses
+        var records = await DbContext.Responses
             .AsNoTracking()
             .Where(x => x.SessionId == sessionId && x.ParticipantId == participantId)
             .ToListAsync(cancellationToken);
@@ -54,8 +52,7 @@ public sealed class ResponseRepository : ResponseRepositoryBase<PulseSqlLiteDbCo
         Guid sessionId,
         CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        var records = await dbContext.Responses
+        var records = await DbContext.Responses
             .AsNoTracking()
             .Where(x => x.SessionId == sessionId)
             .ToListAsync(cancellationToken);

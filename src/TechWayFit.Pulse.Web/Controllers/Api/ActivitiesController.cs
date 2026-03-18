@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TechWayFit.Pulse.Application.Abstractions.Services;
@@ -10,6 +12,8 @@ namespace TechWayFit.Pulse.Web.Controllers.Api;
 
 [ApiController]
 [Route("api/sessions")]
+[Authorize]
+[EnableRateLimiting("api-write")]
 public sealed class ActivitiesController : SessionApiControllerBase
 {
     private readonly ISessionService _sessions;

@@ -35,7 +35,7 @@ try
     builder.Services
         .AddPulseOptions(builder.Configuration)
         .AddPulseAuthentication(builder.Environment)
-        .AddPulseWebServices(builder.Environment)
+        .AddPulseWebServices(builder.Configuration, builder.Environment)
         .AddPulseAIServices(builder.Configuration, builder.Environment)
         .AddPulseApplicationServices(builder.Configuration)
         .AddPulseSignalR(builder.Configuration)

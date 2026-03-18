@@ -14,6 +14,7 @@ public static class PulseApplicationBuilderExtensions
         }
 
         app.UseMiddleware<TechWayFit.Pulse.Web.Middleware.GlobalExceptionHandlingMiddleware>();
+        app.UseMiddleware<TechWayFit.Pulse.Web.Middleware.SecurityHeadersMiddleware>();
         app.UseStatusCodePagesWithReExecute("/Error/{0}");
 
         app.UseHttpsRedirection();
@@ -39,6 +40,7 @@ public static class PulseApplicationBuilderExtensions
         });
 
         app.UseRouting();
+        app.UseRateLimiter();
         app.UseSession();
         app.UseAuthentication();
         app.UseMiddleware<TechWayFit.Pulse.Web.Middleware.FacilitatorTokenMiddleware>();

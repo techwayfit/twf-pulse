@@ -12,16 +12,11 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 public class ContributionCounterRepository<TContext> : IContributionCounterRepository
     where TContext : DbContext, IPulseDbContext
 {
-    private readonly IDbContextFactory<TContext> _dbContextFactory;
+    private readonly TContext _dbContext;
 
-    public ContributionCounterRepository(IDbContextFactory<TContext> dbContextFactory)
+    public ContributionCounterRepository(TContext dbContext)
     {
-        _dbContextFactory = dbContextFactory;
-    }
-
-    private async Task<TContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
-    {
-        return await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        _dbContext = dbContext;
     }
 
     public async Task<ContributionCounter?> GetAsync(
@@ -29,8 +24,7 @@ public class ContributionCounterRepository<TContext> : IContributionCounterRepos
         Guid sessionId,
         CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        var record = await dbContext.ContributionCounters
+        var record = await _dbContext.ContributionCounters
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.ParticipantId == participantId && x.SessionId == sessionId, cancellationToken);
 
@@ -39,8 +33,7 @@ public class ContributionCounterRepository<TContext> : IContributionCounterRepos
 
     public async Task UpsertAsync(ContributionCounter counter, CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        var existingRecord = await dbContext.ContributionCounters
+        var existingRecord = await _dbContext.ContributionCounters
             .FindAsync(new object[] { counter.ParticipantId }, cancellationToken);
 
         if (existingRecord != null)
@@ -51,9 +44,9 @@ public class ContributionCounterRepository<TContext> : IContributionCounterRepos
         }
         else
         {
-            dbContext.ContributionCounters.Add(counter.ToRecord());
+            _dbContext.ContributionCounters.Add(counter.ToRecord());
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

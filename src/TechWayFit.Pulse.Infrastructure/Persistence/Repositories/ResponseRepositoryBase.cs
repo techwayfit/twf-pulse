@@ -12,29 +12,22 @@ namespace TechWayFit.Pulse.Infrastructure.Persistence.Repositories;
 public abstract class ResponseRepositoryBase<TContext> : IResponseRepository
     where TContext : DbContext, IPulseDbContext
 {
-    private readonly IDbContextFactory<TContext> _dbContextFactory;
+    protected readonly TContext DbContext;
 
-    protected ResponseRepositoryBase(IDbContextFactory<TContext> dbContextFactory)
+    protected ResponseRepositoryBase(TContext dbContext)
     {
-        _dbContextFactory = dbContextFactory;
-    }
-
-    protected async Task<TContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
-    {
-        return await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        DbContext = dbContext;
     }
 
     public async Task AddAsync(Response response, CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        dbContext.Responses.Add(response.ToRecord());
-        await dbContext.SaveChangesAsync(cancellationToken);
+        DbContext.Responses.Add(response.ToRecord());
+        await DbContext.SaveChangesAsync(cancellationToken);
     }
 
     public virtual async Task<IReadOnlyList<Response>> GetByActivityAsync(Guid activityId, CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        var query = dbContext.Responses
+        var query = DbContext.Responses
             .AsNoTracking()
             .Where(x => x.ActivityId == activityId);
 
@@ -49,8 +42,7 @@ public abstract class ResponseRepositoryBase<TContext> : IResponseRepository
         Guid participantId,
         CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        return await dbContext.Responses
+        return await DbContext.Responses
             .AsNoTracking()
             .Where(x => x.ActivityId == activityId && x.ParticipantId == participantId)
             .CountAsync(cancellationToken);
@@ -61,8 +53,7 @@ public abstract class ResponseRepositoryBase<TContext> : IResponseRepository
         Guid participantId,
         CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        var query = dbContext.Responses
+        var query = DbContext.Responses
             .AsNoTracking()
             .Where(x => x.SessionId == sessionId && x.ParticipantId == participantId);
 
@@ -76,8 +67,7 @@ public abstract class ResponseRepositoryBase<TContext> : IResponseRepository
         Guid sessionId,
         CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        var query = dbContext.Responses
+        var query = DbContext.Responses
             .AsNoTracking()
             .Where(x => x.SessionId == sessionId);
 
@@ -98,19 +88,17 @@ public abstract class ResponseRepositoryBase<TContext> : IResponseRepository
         string newPayload,
         CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        var record = await dbContext.Responses.FindAsync(new object[] { responseId }, cancellationToken);
+        var record = await DbContext.Responses.FindAsync(new object[] { responseId }, cancellationToken);
         if (record is null) return;
         record.PayloadJson = newPayload;
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await DbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<Domain.Entities.Response?> GetByIdAsync(
         Guid responseId,
         CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await CreateDbContextAsync(cancellationToken);
-        var record = await dbContext.Responses
+        var record = await DbContext.Responses
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == responseId, cancellationToken);
         return record?.ToDomain();

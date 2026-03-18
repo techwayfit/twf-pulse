@@ -1,5 +1,6 @@
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Domain.Enums;
 using TechWayFit.Pulse.Domain.ValueObjects;
@@ -17,6 +18,24 @@ public sealed class SessionService : ISessionService
     {
         _sessions = sessions;
         _activities = activities;
+    }
+
+    public Task<Session> CreateSessionAsync(
+        CreateSessionCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return CreateSessionAsync(
+            command.Code,
+            command.Title,
+            command.Goal,
+            command.Context,
+            command.Settings,
+            command.JoinFormSchema,
+            command.Now,
+            command.FacilitatorUserId,
+            command.GroupId,
+            cancellationToken);
     }
 
     public async Task<Session> CreateSessionAsync(
@@ -83,6 +102,20 @@ public sealed class SessionService : ISessionService
     public Task<Session?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
         return _sessions.GetByCodeAsync(code, cancellationToken);
+    }
+
+    public Task<Session> UpdateSessionAsync(
+        UpdateSessionCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return UpdateSessionAsync(
+            command.SessionId,
+            command.Title,
+            command.Goal,
+            command.Context,
+            command.Now,
+            cancellationToken);
     }
 
     public async Task<Session> UpdateSessionAsync(

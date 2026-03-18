@@ -1,8 +1,9 @@
 # TechWayFit Pulse — Architecture Review
 
-**Date:** 16 March 2026  
+**Date:** 17 March 2026  
 **Scope:** All projects in `TechWayFit.Pulse.sln`  
-**Reviewer:** Solution Architecture Analysis
+**Reviewer:** Solution Architecture Analysis  
+**Last Updated:** 18 March 2026 — Phase 3 Sprint 1 baseline implemented
 
 ---
 
@@ -449,41 +450,41 @@ Participant tokens are managed via `IParticipantTokenStore` backed by an in-memo
 
 ## Recommended Roadmap
 
-### Phase 1 — Structural (1–2 sprints)
-1. Split `SessionsController` into 5–6 focused controllers
-2. Eliminate enum duplication (choose Domain enums as the single source)
-3. Remove `WeatherForecast` scaffolding
-4. Fix double `AddMemoryCache()` registration
-5. Move migrations to `Infrastructure`
-6. Add `ValidateOnStart()` to all options registrations
+### Phase 1 — Structural ✅ COMPLETE
+1. ✅ Split `SessionsController` into 5–6 focused controllers — `SessionsController`, `ActivitiesController`, `ResponsesController`, `ParticipantsController`, `DashboardsController`, `SessionAiController` all implemented
+2. ✅ Eliminate enum duplication — `Contracts` now imports directly from `TechWayFit.Pulse.Domain.Enums`; no duplicate enum definitions remain
+3. ✅ Remove `WeatherForecast` scaffolding — files deleted
+4. ✅ Fix double `AddMemoryCache()` registration — single registration with size limits in `PulseServiceCollectionExtensions`
+5. ✅ Move migrations to `Infrastructure` — all migrations now in `TechWayFit.Pulse.Infrastructure/Persistence/Migrations/`
+6. ✅ Add `ValidateOnStart()` to all options registrations — applied to all `Configure<T>()` calls in `PulseServiceCollectionExtensions`
 
-### Phase 2 — Quality & Testability (2–3 sprints)
-7. Extract `Program.cs` registrations into `AddPulse*` extension methods
-8. Replace `ApiMapper` static class with Mapperly-generated mappers
-9. Add FluentValidation + global exception middleware
-10. Introduce `IDateTimeProvider`
-11. Move `IHubNotificationService` interface to `Application.Abstractions`
-12. Add health check endpoints
+### Phase 2 — Quality & Testability ✅ COMPLETE
+7. ✅ Extract `Program.cs` registrations into `AddPulse*` extension methods — `AddPulseOptions`, `AddPulseAuthentication`, `AddPulseWebServices`, `AddPulseAIServices`, `AddPulseApplicationServices`, `AddPulseSignalR`, `AddPulseHealthChecks` all implemented; `Program.cs` reduced to ~50 lines
+8. ✅ Replace `ApiMapper` static class with Mapperly-generated mappers — `ApiMapper` is now a Mapperly `[Mapper]` partial class implementing `IApiMapper`; no more manual switch-statement conversions
+9. ✅ Add FluentValidation + global exception middleware — `ApiRequestValidators.cs` with validators for all request types; `GlobalExceptionHandlingMiddleware` registered via `PulseApplicationBuilderExtensions`
+10. ✅ Introduce `IDateTimeProvider` — interface in `Application.Abstractions.Services`, `SystemDateTimeProvider` in `Application.Services`; direct `DateTimeOffset.UtcNow` calls removed from services
+11. ✅ Move `IHubNotificationService` interface to `Application.Abstractions` — interface lives at `Application/Abstractions/Services/IHubNotificationService.cs`; implementation remains in Web layer
+12. ✅ Add health check endpoints — `/health` and `/health/ready` mapped via `AddPulseHealthChecks()` / `PulseApplicationBuilderExtensions`
 
-### Phase 3 — Architecture & Enterprise Readiness (3–4 sprints)
-13. Introduce `Result<T>` pattern and refactor all service error returns
-14. Introduce command/query records (CQRS-lite, with or without MediatR)
-15. Move domain rules into aggregate methods; add domain events
-16. Introduce Unit of Work for atomic operations
-17. Rate-limiting middleware on public endpoints
-18. Audit trail via DbContext interceptor
-19. Distributed token store for participants (Redis or Data Protection tokens)
-20. Formal security review: CSP headers, authorization policies, endpoint hardening
+### Phase 3 — Architecture & Enterprise Readiness 🚧 IN PROGRESS (Sprint 1 complete)
+13. 🚧 Introduce `Result<T>` pattern and refactor all service error returns — `Result` primitives added and authentication flow migrated; full service-wide migration pending
+14. 🚧 Introduce command/query records (CQRS-lite, with or without MediatR) — command records added for session creation/update, response submission, OTP flows; broader query/handler rollout pending
+15. ✅ Move domain rules into aggregate methods; add domain events — `Session.SubmitResponse(...)` now enforces response invariants and raises `ResponseSubmittedDomainEvent`
+16. ✅ Introduce Unit of Work for atomic operations — `IUnitOfWork` + `PulseUnitOfWork` added; response submit + contribution counter updates now run in a transaction
+17. ✅ Rate-limiting middleware on public endpoints — policies added and applied to join/submit/AI endpoints
+18. ✅ Audit trail via DbContext interceptor — `AuditTrailSaveChangesInterceptor` now captures and logs entity mutations in save pipeline
+19. ✅ Distributed token store for participants (Redis or Data Protection tokens) — participant token store now uses memory + distributed cache + DB fallback
+20. 🚧 Formal security review: CSP headers, authorization policies, endpoint hardening — CSP/security headers and endpoint authorization tightened; full formal review still pending
 
 ---
 
 ## Summary Scorecard
 
-| Dimension | Current | Target |
-|---|---|---|
-| Separation of Concerns | ⚠️ Medium — God controller, anemic domain | ✅ High |
-| Testability | ⚠️ Medium — static mappers, service locator, `UtcNow` direct calls | ✅ High |
-| Extensibility | ⚠️ Medium — string-based AI provider selection, enum duplication | ✅ High |
-| Security | ⚠️ Medium — missing auth on endpoints, no rate limiting, no CSP | ✅ High |
-| Enterprise Readiness | ⚠️ Low-Medium — no audit trail, no health checks, in-memory tokens | ✅ High |
-| Code Quality | ✅ Good — consistent naming, DI throughout, async/await correct | ✅ High |
+| Dimension | Original | Phase 1+2 (Current) | Target |
+|---|---|---|---|
+| Separation of Concerns | ⚠️ Medium — God controller, anemic domain | ✅ High — controllers split, enum duplication removed | ✅ High |
+| Testability | ⚠️ Medium — static mappers, service locator, `UtcNow` direct calls | ✅ High — Mapperly injected mapper, `IDateTimeProvider`, `IHubNotificationService` in Application | ✅ High |
+| Extensibility | ⚠️ Medium — string-based AI provider selection, enum duplication | ✅ High — `AddPulse*` extensions, Domain enums as single source | ✅ High |
+| Security | ⚠️ Medium — missing auth on endpoints, no rate limiting, no CSP | ✅ High — CSP headers, authorization hardening, and rate limiting now implemented (formal review pending) | ✅ High |
+| Enterprise Readiness | ⚠️ Low-Medium — no audit trail, no health checks, in-memory tokens | ✅ High — health checks, audit interceptor, and distributed participant token caching implemented | ✅ High |
+| Code Quality | ✅ Good — consistent naming, DI throughout, async/await correct | ✅ High — `ValidateOnStart`, migrations in Infrastructure, scaffolding removed | ✅ High |

@@ -12,6 +12,8 @@ using MariaDbRepos = TechWayFit.Pulse.Infrastructure.Persistence.MariaDb.Reposit
 using TechWayFit.Pulse.Infrastructure.Persistence.SqlServer;
 using TechWayFit.Pulse.Infrastructure.Persistence.Sqlite;
 using TechWayFit.Pulse.Infrastructure.Persistence.MariaDb;
+using TechWayFit.Pulse.Infrastructure.Persistence.Interceptors;
+using TechWayFit.Pulse.Infrastructure.Persistence.UnitOfWork;
 
 namespace TechWayFit.Pulse.Infrastructure.Extensions;
 
@@ -35,6 +37,7 @@ public static class DatabaseServiceExtensions
         // MemoryApplicationCache wraps IMemoryCache (registered via AddMemoryCache in Program.cs).
         // To switch to a distributed cache (Redis, etc.), replace this registration only.
         services.AddSingleton<IApplicationCache, MemoryApplicationCache>();
+        services.AddScoped<AuditTrailSaveChangesInterceptor>();
 
         if (useInMemory || string.IsNullOrWhiteSpace(connectionString))
         {
@@ -62,16 +65,19 @@ public static class DatabaseServiceExtensions
     /// </summary>
     private static IServiceCollection AddPulseInMemoryDatabase(this IServiceCollection services)
     {
-        services.AddDbContext<PulseSqlLiteDbContext>(options =>
-        {
-          options.UseInMemoryDatabase("Pulse");
-        });
-        services.AddDbContextFactory<PulseSqlLiteDbContext>(options =>
+        services.AddDbContext<PulseSqlLiteDbContext>((sp, options) =>
         {
             options.UseInMemoryDatabase("Pulse");
+            options.AddInterceptors(sp.GetRequiredService<AuditTrailSaveChangesInterceptor>());
+        });
+        services.AddDbContextFactory<PulseSqlLiteDbContext>((sp, options) =>
+        {
+            options.UseInMemoryDatabase("Pulse");
+            options.AddInterceptors(sp.GetRequiredService<AuditTrailSaveChangesInterceptor>());
         }, ServiceLifetime.Scoped);
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseSqlLiteDbContext>());
+        services.AddScoped<IUnitOfWork, PulseUnitOfWork>();
 
   services.AddStandardRepositories();
 
@@ -85,22 +91,25 @@ public static class DatabaseServiceExtensions
         this IServiceCollection services,
    string connectionString)
     {
-        services.AddDbContext<PulseSqlLiteDbContext>(options =>
+        services.AddDbContext<PulseSqlLiteDbContext>((sp, options) =>
         {
      options.UseSqlite(connectionString, sqliteOptions =>
  {
       sqliteOptions.MigrationsAssembly("TechWayFit.Pulse.Infrastructure");
          });
+            options.AddInterceptors(sp.GetRequiredService<AuditTrailSaveChangesInterceptor>());
     });
-        services.AddDbContextFactory<PulseSqlLiteDbContext>(options =>
+        services.AddDbContextFactory<PulseSqlLiteDbContext>((sp, options) =>
         {
             options.UseSqlite(connectionString, sqliteOptions =>
             {
                 sqliteOptions.MigrationsAssembly("TechWayFit.Pulse.Infrastructure");
             });
+            options.AddInterceptors(sp.GetRequiredService<AuditTrailSaveChangesInterceptor>());
         }, ServiceLifetime.Scoped);
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseSqlLiteDbContext>());
+        services.AddScoped<IUnitOfWork, PulseUnitOfWork>();
 
         services.AddStandardRepositories();
 
@@ -116,7 +125,7 @@ public static class DatabaseServiceExtensions
         this IServiceCollection services,
         string connectionString)
     {
-   services.AddDbContext<PulseSqlServerDbContext>(options =>
+   services.AddDbContext<PulseSqlServerDbContext>((sp, options) =>
         {
 options.UseSqlServer(connectionString, sqlServerOptions =>
   {
@@ -127,10 +136,11 @@ options.UseSqlServer(connectionString, sqlServerOptions =>
 
                 sqlServerOptions.CommandTimeout(30);
 
-  sqlServerOptions.MigrationsHistoryTable("__MigrationHistory", "pulse");
+                sqlServerOptions.MigrationsHistoryTable("__MigrationHistory", "pulse");
       });
+            options.AddInterceptors(sp.GetRequiredService<AuditTrailSaveChangesInterceptor>());
   });
-        services.AddDbContextFactory<PulseSqlServerDbContext>(options =>
+        services.AddDbContextFactory<PulseSqlServerDbContext>((sp, options) =>
         {
             options.UseSqlServer(connectionString, sqlServerOptions =>
             {
@@ -143,9 +153,11 @@ options.UseSqlServer(connectionString, sqlServerOptions =>
 
                 sqlServerOptions.MigrationsHistoryTable("__MigrationHistory", "pulse");
             });
+            options.AddInterceptors(sp.GetRequiredService<AuditTrailSaveChangesInterceptor>());
         }, ServiceLifetime.Scoped);
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseSqlServerDbContext>());
+        services.AddScoped<IUnitOfWork, PulseUnitOfWork>();
 
         services.AddSqlServerRepositories();
 
@@ -162,7 +174,7 @@ options.UseSqlServer(connectionString, sqlServerOptions =>
   this IServiceCollection services,
   string connectionString)
     {
-        services.AddDbContext<PulseMariaDbContext>(options =>
+        services.AddDbContext<PulseMariaDbContext>((sp, options) =>
         {
         // Oracle's official MySQL provider - fully compatible with EF Core 10
 options.UseMySQL(connectionString, mySqlOptions =>
@@ -176,8 +188,9 @@ options.UseMySQL(connectionString, mySqlOptions =>
 
       mySqlOptions.MigrationsHistoryTable("__MigrationHistory", "pulse");
             });
+            options.AddInterceptors(sp.GetRequiredService<AuditTrailSaveChangesInterceptor>());
         });
-        services.AddDbContextFactory<PulseMariaDbContext>(options =>
+        services.AddDbContextFactory<PulseMariaDbContext>((sp, options) =>
         {
             options.UseMySQL(connectionString, mySqlOptions =>
             {
@@ -190,9 +203,11 @@ options.UseMySQL(connectionString, mySqlOptions =>
 
                 mySqlOptions.MigrationsHistoryTable("__MigrationHistory", "pulse");
             });
+            options.AddInterceptors(sp.GetRequiredService<AuditTrailSaveChangesInterceptor>());
         }, ServiceLifetime.Scoped);
 
         services.AddScoped<IPulseDbContext>(sp => sp.GetRequiredService<PulseMariaDbContext>());
+        services.AddScoped<IUnitOfWork, PulseUnitOfWork>();
 
         services.AddMariaDbRepositories();
 
