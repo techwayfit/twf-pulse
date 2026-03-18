@@ -1,4 +1,5 @@
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
+using TechWayFit.Pulse.Application.Abstractions.Results;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Domain.Entities;
@@ -20,22 +21,30 @@ public sealed class SessionService : ISessionService
         _activities = activities;
     }
 
-    public Task<Session> CreateSessionAsync(
+    public async Task<Result<Session>> CreateSessionAsync(
         CreateSessionCommand command,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return CreateSessionAsync(
-            command.Code,
-            command.Title,
-            command.Goal,
-            command.Context,
-            command.Settings,
-            command.JoinFormSchema,
-            command.Now,
-            command.FacilitatorUserId,
-            command.GroupId,
-            cancellationToken);
+        try
+        {
+            var session = await CreateSessionAsync(
+                command.Code,
+                command.Title,
+                command.Goal,
+                command.Context,
+                command.Settings,
+                command.JoinFormSchema,
+                command.Now,
+                command.FacilitatorUserId,
+                command.GroupId,
+                cancellationToken);
+            return Result<Session>.Success(session);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result<Session>.Failure(MapError(ex));
+        }
     }
 
     public async Task<Session> CreateSessionAsync(
@@ -104,18 +113,122 @@ public sealed class SessionService : ISessionService
         return _sessions.GetByCodeAsync(code, cancellationToken);
     }
 
-    public Task<Session> UpdateSessionAsync(
+    public async Task<Result<Session>> UpdateSessionAsync(
         UpdateSessionCommand command,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return UpdateSessionAsync(
-            command.SessionId,
-            command.Title,
-            command.Goal,
-            command.Context,
-            command.Now,
-            cancellationToken);
+        try
+        {
+            var session = await UpdateSessionAsync(
+                command.SessionId,
+                command.Title,
+                command.Goal,
+                command.Context,
+                command.Now,
+                cancellationToken);
+            return Result<Session>.Success(session);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result<Session>.Failure(MapError(ex));
+        }
+    }
+
+    public async Task<Result> SetStatusAsync(
+        SetSessionStatusCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            await SetStatusAsync(command.SessionId, command.Status, command.Now, cancellationToken);
+            return Result.Success();
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result.Failure(MapError(ex));
+        }
+    }
+
+    public async Task<Result> SetCurrentActivityAsync(
+        SetCurrentActivityCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            await SetCurrentActivityAsync(command.SessionId, command.ActivityId, command.Now, cancellationToken);
+            return Result.Success();
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result.Failure(MapError(ex));
+        }
+    }
+
+    public async Task<Result<Session>> UpdateJoinFormSchemaAsync(
+        UpdateJoinFormSchemaCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            var session = await UpdateJoinFormSchemaAsync(command.SessionId, command.JoinFormSchema, command.Now, cancellationToken);
+            return Result<Session>.Success(session);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result<Session>.Failure(MapError(ex));
+        }
+    }
+
+    public async Task<Result> SetSessionGroupAsync(
+        SetSessionGroupCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            await SetSessionGroupAsync(command.SessionId, command.GroupId, command.Now, cancellationToken);
+            return Result.Success();
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result.Failure(MapError(ex));
+        }
+    }
+
+    public async Task<Result> SetSessionScheduleAsync(
+        SetSessionScheduleCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            await SetSessionScheduleAsync(command.SessionId, command.SessionStart, command.SessionEnd, command.Now, cancellationToken);
+            return Result.Success();
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result.Failure(MapError(ex));
+        }
+    }
+
+    public async Task<Result<Session>> CopySessionAsync(
+        CopySessionCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            var session = await CopySessionAsync(command.SessionId, command.NewCode, command.Now, cancellationToken);
+            return Result<Session>.Success(session);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result<Session>.Failure(MapError(ex));
+        }
     }
 
     public async Task<Session> UpdateSessionAsync(
@@ -350,5 +463,19 @@ public sealed class SessionService : ISessionService
         }
 
         return newSession;
+    }
+
+    private static Error MapError(Exception ex)
+    {
+        return ex switch
+        {
+            ArgumentException argumentException => ResultErrors.Validation(argumentException.Message),
+            InvalidOperationException invalidOperationException when invalidOperationException.Message.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                => new Error("not_found", invalidOperationException.Message, ErrorType.NotFound),
+            InvalidOperationException invalidOperationException when invalidOperationException.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)
+                => new Error("conflict", invalidOperationException.Message, ErrorType.Conflict),
+            InvalidOperationException invalidOperationException => ResultErrors.Validation(invalidOperationException.Message),
+            _ => ResultErrors.Unexpected("An unexpected error occurred.")
+        };
     }
 }

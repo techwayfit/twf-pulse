@@ -1,3 +1,4 @@
+using TechWayFit.Pulse.Application.Abstractions.Results;
 using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Domain.Entities;
 
@@ -5,7 +6,7 @@ namespace TechWayFit.Pulse.Application.Abstractions.Services;
 
 public interface IResponseService
 {
-    Task<Response> SubmitAsync(
+    Task<Result<Response>> SubmitAsync(
         SubmitResponseCommand command,
         CancellationToken cancellationToken = default);
 

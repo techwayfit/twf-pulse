@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
 using TechWayFit.Pulse.Web.Api;
@@ -50,48 +51,42 @@ public sealed class ActivitiesController : SessionApiControllerBase
         [FromBody] AddActivityRequest request,
         CancellationToken cancellationToken)
     {
-        try
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
         {
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (session is null)
-            {
-                return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
-            }
+            return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
+        }
 
-            var authError = RequireFacilitatorToken<ActivityResponse>(session);
-            if (authError is not null)
-            {
-                return authError;
-            }
+        var authError = RequireFacilitatorToken<ActivityResponse>(session);
+        if (authError is not null)
+        {
+            return authError;
+        }
 
-            var order = request.Order;
-            if (!order.HasValue || order.Value <= 0)
-            {
-                var existingActivities = await _activities.GetAgendaAsync(session.Id, cancellationToken);
-                order = existingActivities.Count + 1;
-            }
+        var order = request.Order;
+        if (!order.HasValue || order.Value <= 0)
+        {
+            var existingActivities = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+            order = existingActivities.Count + 1;
+        }
 
-            var activity = await _activities.AddActivityAsync(
+        var activity = await _activities.AddActivityAsync(
+            new AddActivityCommand(
                 session.Id,
                 order.Value,
                 _mapper.MapActivityType(request.Type),
                 request.Title,
                 request.Prompt,
                 request.Config,
-                request.DurationMinutes,
-                cancellationToken);
+                request.DurationMinutes),
+            cancellationToken);
+        if (!activity.IsSuccess || activity.Value is null)
+        {
+            return FromResult<ActivityResponse>(activity);
+        }
 
-            await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
-            return Ok(Wrap(new ActivityResponse(activity.Id)));
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
-        }
+        await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity.Value, cancellationToken);
+        return Ok(Wrap(new ActivityResponse(activity.Value.Id)));
     }
 
     [HttpPost("{code}/activities/bulk")]
@@ -135,17 +130,22 @@ public sealed class ActivitiesController : SessionApiControllerBase
                 try
                 {
                     var activity = await _activities.AddActivityAsync(
+                        new AddActivityCommand(
                         session.Id,
                         nextOrder++,
                         _mapper.MapActivityType(item.Type),
                         item.Title,
                         item.Prompt,
                         item.Config,
-                        item.DurationMinutes,
+                        item.DurationMinutes),
                         cancellationToken);
+                    if (!activity.IsSuccess || activity.Value is null)
+                    {
+                        throw new InvalidOperationException(activity.Error?.Message ?? "Failed to create activity.");
+                    }
 
-                    createdActivityIds.Add(activity.Id);
-                    await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+                    createdActivityIds.Add(activity.Value.Id);
+                    await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity.Value, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -182,40 +182,34 @@ public sealed class ActivitiesController : SessionApiControllerBase
         [FromBody] UpdateActivityRequest request,
         CancellationToken cancellationToken)
     {
-        try
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
         {
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (session is null)
-            {
-                return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
-            }
+            return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
+        }
 
-            var authError = RequireFacilitatorToken<ActivityResponse>(session);
-            if (authError is not null)
-            {
-                return authError;
-            }
+        var authError = RequireFacilitatorToken<ActivityResponse>(session);
+        if (authError is not null)
+        {
+            return authError;
+        }
 
-            var activity = await _activities.UpdateActivityAsync(
+        var activity = await _activities.UpdateActivityAsync(
+            new UpdateActivityCommand(
                 session.Id,
                 activityId,
                 request.Title,
                 request.Prompt,
                 request.Config,
-                request.DurationMinutes,
-                cancellationToken);
+                request.DurationMinutes),
+            cancellationToken);
+        if (!activity.IsSuccess || activity.Value is null)
+        {
+            return FromResult<ActivityResponse>(activity);
+        }
 
-            await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
-            return Ok(Wrap(new ActivityResponse(activity.Id)));
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
-        }
+        await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity.Value, cancellationToken);
+        return Ok(Wrap(new ActivityResponse(activity.Value.Id)));
     }
 
     [HttpDelete("{code}/activities/{activityId:guid}")]
@@ -224,33 +218,28 @@ public sealed class ActivitiesController : SessionApiControllerBase
         Guid activityId,
         CancellationToken cancellationToken)
     {
-        try
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
         {
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (session is null)
-            {
-                return NotFound(Error<object>("not_found", "Session not found."));
-            }
-
-            var authError = RequireFacilitatorToken<object>(session);
-            if (authError is not null)
-            {
-                return authError;
-            }
-
-            await _activities.DeleteActivityAsync(session.Id, activityId, cancellationToken);
-
-            await _hub.Clients.Group(WorkshopGroupNames.ForSession(session.Code)).ActivityDeleted(activityId);
-            return Ok(Wrap(new { message = "Activity deleted successfully" }));
+            return NotFound(Error<object>("not_found", "Session not found."));
         }
-        catch (ArgumentException ex)
+
+        var authError = RequireFacilitatorToken<object>(session);
+        if (authError is not null)
         {
-            return BadRequest(Error<object>("validation_error", ex.Message));
+            return authError;
         }
-        catch (InvalidOperationException ex)
+
+        var deleteResult = await _activities.DeleteActivityAsync(
+            new DeleteActivityCommand(session.Id, activityId),
+            cancellationToken);
+        if (!deleteResult.IsSuccess)
         {
-            return BadRequest(Error<object>("validation_error", ex.Message));
+            return FromResult<object>(deleteResult);
         }
+
+        await _hub.Clients.Group(WorkshopGroupNames.ForSession(session.Code)).ActivityDeleted(activityId);
+        return Ok(Wrap(new { message = "Activity deleted successfully" }));
     }
 
     [HttpPost("{code}/activities/{activityId:guid}/copy")]
@@ -259,33 +248,28 @@ public sealed class ActivitiesController : SessionApiControllerBase
         Guid activityId,
         CancellationToken cancellationToken)
     {
-        try
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
         {
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (session is null)
-            {
-                return NotFound(Error<AgendaActivityResponse>("not_found", "Session not found."));
-            }
-
-            var authError = RequireFacilitatorToken<AgendaActivityResponse>(session);
-            if (authError is not null)
-            {
-                return authError;
-            }
-
-            var copiedActivity = await _activities.CopyActivityAsync(session.Id, activityId, cancellationToken);
-
-            await _hubNotifications.PublishActivityStateChangedAsync(session.Code, copiedActivity, cancellationToken);
-            return Ok(Wrap(_mapper.ToAgenda(copiedActivity)));
+            return NotFound(Error<AgendaActivityResponse>("not_found", "Session not found."));
         }
-        catch (ArgumentException ex)
+
+        var authError = RequireFacilitatorToken<AgendaActivityResponse>(session);
+        if (authError is not null)
         {
-            return BadRequest(Error<AgendaActivityResponse>("validation_error", ex.Message));
+            return authError;
         }
-        catch (InvalidOperationException ex)
+
+        var copiedActivity = await _activities.CopyActivityAsync(
+            new CopyActivityCommand(session.Id, activityId),
+            cancellationToken);
+        if (!copiedActivity.IsSuccess || copiedActivity.Value is null)
         {
-            return BadRequest(Error<AgendaActivityResponse>("validation_error", ex.Message));
+            return FromResult<AgendaActivityResponse>(copiedActivity);
         }
+
+        await _hubNotifications.PublishActivityStateChangedAsync(session.Code, copiedActivity.Value, cancellationToken);
+        return Ok(Wrap(_mapper.ToAgenda(copiedActivity.Value)));
     }
 
     [HttpGet("{code}/activities")]
@@ -314,36 +298,32 @@ public sealed class ActivitiesController : SessionApiControllerBase
         [FromBody] ReorderActivitiesRequest request,
         CancellationToken cancellationToken)
     {
-        try
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
         {
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (session is null)
-            {
-                return NotFound(Error<IReadOnlyList<AgendaActivityResponse>>("not_found", "Session not found."));
-            }
-
-            var authError = RequireFacilitatorToken<IReadOnlyList<AgendaActivityResponse>>(session);
-            if (authError is not null)
-            {
-                return authError;
-            }
-
-            var updated = await _activities.ReorderAsync(session.Id, request.ActivityIds, cancellationToken);
-            var response = updated
-                .OrderBy(activity => activity.Order)
-                .Select(_mapper.ToAgenda)
-                .ToList();
-
-            return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(response));
+            return NotFound(Error<IReadOnlyList<AgendaActivityResponse>>("not_found", "Session not found."));
         }
-        catch (ArgumentException ex)
+
+        var authError = RequireFacilitatorToken<IReadOnlyList<AgendaActivityResponse>>(session);
+        if (authError is not null)
         {
-            return BadRequest(Error<IReadOnlyList<AgendaActivityResponse>>("validation_error", ex.Message));
+            return authError;
         }
-        catch (InvalidOperationException ex)
+
+        var updated = await _activities.ReorderAsync(
+            new ReorderActivitiesCommand(session.Id, request.ActivityIds),
+            cancellationToken);
+        if (!updated.IsSuccess || updated.Value is null)
         {
-            return BadRequest(Error<IReadOnlyList<AgendaActivityResponse>>("validation_error", ex.Message));
+            return FromResult<IReadOnlyList<AgendaActivityResponse>>(updated);
         }
+
+        var response = updated.Value
+            .OrderBy(activity => activity.Order)
+            .Select(_mapper.ToAgenda)
+            .ToList();
+
+        return Ok(Wrap<IReadOnlyList<AgendaActivityResponse>>(response));
     }
 
     [HttpPost("{code}/activities/{activityId:guid}/open")]
@@ -352,46 +332,48 @@ public sealed class ActivitiesController : SessionApiControllerBase
         Guid activityId,
         CancellationToken cancellationToken)
     {
-        try
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
         {
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (session is null)
-            {
-                return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
-            }
-
-            var authError = RequireFacilitatorToken<ActivityResponse>(session);
-            if (authError is not null)
-            {
-                return authError;
-            }
-
-            await _activities.OpenAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
-            await _sessions.SetCurrentActivityAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
-
-            var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (updated is not null)
-            {
-                await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
-            }
-
-            var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
-            var activity = agenda.FirstOrDefault(item => item.Id == activityId);
-            if (activity is not null)
-            {
-                await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
-            }
-
-            return Ok(Wrap(new ActivityResponse(activityId)));
+            return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
         }
-        catch (ArgumentException ex)
+
+        var authError = RequireFacilitatorToken<ActivityResponse>(session);
+        if (authError is not null)
         {
-            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+            return authError;
         }
-        catch (InvalidOperationException ex)
+
+        var openResult = await _activities.OpenAsync(
+            new OpenActivityCommand(session.Id, activityId, DateTimeOffset.UtcNow),
+            cancellationToken);
+        if (!openResult.IsSuccess)
         {
-            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+            return FromResult<ActivityResponse>(openResult);
         }
+
+        var setCurrentResult = await _sessions.SetCurrentActivityAsync(
+            new SetCurrentActivityCommand(session.Id, activityId, DateTimeOffset.UtcNow),
+            cancellationToken);
+        if (!setCurrentResult.IsSuccess)
+        {
+            return FromResult<ActivityResponse>(setCurrentResult);
+        }
+
+        var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (updated is not null)
+        {
+            await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
+        }
+
+        var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+        var activity = agenda.FirstOrDefault(item => item.Id == activityId);
+        if (activity is not null)
+        {
+            await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+        }
+
+        return Ok(Wrap(new ActivityResponse(activityId)));
     }
 
     [HttpPost("{code}/activities/{activityId:guid}/reopen")]
@@ -400,51 +382,59 @@ public sealed class ActivitiesController : SessionApiControllerBase
         Guid activityId,
         CancellationToken cancellationToken)
     {
-        try
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
         {
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (session is null)
-            {
-                return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
-            }
-
-            var authError = RequireFacilitatorToken<ActivityResponse>(session);
-            if (authError is not null)
-            {
-                return authError;
-            }
-
-            if (session.CurrentActivityId.HasValue && session.CurrentActivityId.Value != activityId)
-            {
-                await _activities.CloseAsync(session.Id, session.CurrentActivityId.Value, DateTimeOffset.UtcNow, cancellationToken);
-            }
-
-            await _activities.ReopenAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
-            await _sessions.SetCurrentActivityAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
-
-            var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (updated is not null)
-            {
-                await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
-            }
-
-            var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
-            var activity = agenda.FirstOrDefault(item => item.Id == activityId);
-            if (activity is not null)
-            {
-                await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
-            }
-
-            return Ok(Wrap(new ActivityResponse(activityId)));
+            return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
         }
-        catch (ArgumentException ex)
+
+        var authError = RequireFacilitatorToken<ActivityResponse>(session);
+        if (authError is not null)
         {
-            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+            return authError;
         }
-        catch (InvalidOperationException ex)
+
+        if (session.CurrentActivityId.HasValue && session.CurrentActivityId.Value != activityId)
         {
-            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+            var closeCurrentResult = await _activities.CloseAsync(
+                new CloseActivityCommand(session.Id, session.CurrentActivityId.Value, DateTimeOffset.UtcNow),
+                cancellationToken);
+            if (!closeCurrentResult.IsSuccess)
+            {
+                return FromResult<ActivityResponse>(closeCurrentResult);
+            }
         }
+
+        var reopenResult = await _activities.ReopenAsync(
+            new ReopenActivityCommand(session.Id, activityId, DateTimeOffset.UtcNow),
+            cancellationToken);
+        if (!reopenResult.IsSuccess)
+        {
+            return FromResult<ActivityResponse>(reopenResult);
+        }
+
+        var setCurrentResult = await _sessions.SetCurrentActivityAsync(
+            new SetCurrentActivityCommand(session.Id, activityId, DateTimeOffset.UtcNow),
+            cancellationToken);
+        if (!setCurrentResult.IsSuccess)
+        {
+            return FromResult<ActivityResponse>(setCurrentResult);
+        }
+
+        var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (updated is not null)
+        {
+            await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
+        }
+
+        var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+        var activity = agenda.FirstOrDefault(item => item.Id == activityId);
+        if (activity is not null)
+        {
+            await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+        }
+
+        return Ok(Wrap(new ActivityResponse(activityId)));
     }
 
     [HttpPost("{code}/activities/{activityId:guid}/close")]
@@ -453,46 +443,48 @@ public sealed class ActivitiesController : SessionApiControllerBase
         Guid activityId,
         CancellationToken cancellationToken)
     {
-        try
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
         {
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (session is null)
-            {
-                return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
-            }
-
-            var authError = RequireFacilitatorToken<ActivityResponse>(session);
-            if (authError is not null)
-            {
-                return authError;
-            }
-
-            await _activities.CloseAsync(session.Id, activityId, DateTimeOffset.UtcNow, cancellationToken);
-            await _sessions.SetCurrentActivityAsync(session.Id, null, DateTimeOffset.UtcNow, cancellationToken);
-
-            var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (updated is not null)
-            {
-                await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
-            }
-
-            var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
-            var activity = agenda.FirstOrDefault(item => item.Id == activityId);
-            if (activity is not null)
-            {
-                await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
-            }
-
-            return Ok(Wrap(new ActivityResponse(activityId)));
+            return NotFound(Error<ActivityResponse>("not_found", "Session not found."));
         }
-        catch (ArgumentException ex)
+
+        var authError = RequireFacilitatorToken<ActivityResponse>(session);
+        if (authError is not null)
         {
-            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+            return authError;
         }
-        catch (InvalidOperationException ex)
+
+        var closeResult = await _activities.CloseAsync(
+            new CloseActivityCommand(session.Id, activityId, DateTimeOffset.UtcNow),
+            cancellationToken);
+        if (!closeResult.IsSuccess)
         {
-            return BadRequest(Error<ActivityResponse>("validation_error", ex.Message));
+            return FromResult<ActivityResponse>(closeResult);
         }
+
+        var setCurrentResult = await _sessions.SetCurrentActivityAsync(
+            new SetCurrentActivityCommand(session.Id, null, DateTimeOffset.UtcNow),
+            cancellationToken);
+        if (!setCurrentResult.IsSuccess)
+        {
+            return FromResult<ActivityResponse>(setCurrentResult);
+        }
+
+        var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (updated is not null)
+        {
+            await _hubNotifications.PublishSessionStateChangedAsync(updated, cancellationToken);
+        }
+
+        var agenda = await _activities.GetAgendaAsync(session.Id, cancellationToken);
+        var activity = agenda.FirstOrDefault(item => item.Id == activityId);
+        if (activity is not null)
+        {
+            await _hubNotifications.PublishActivityStateChangedAsync(session.Code, activity, cancellationToken);
+        }
+
+        return Ok(Wrap(new ActivityResponse(activityId)));
     }
 
     [HttpPost("{code}/activities/{activityId:guid}/quadrant/set-item")]

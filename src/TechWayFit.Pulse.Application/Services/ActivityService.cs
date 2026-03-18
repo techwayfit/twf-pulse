@@ -1,5 +1,7 @@
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
+using TechWayFit.Pulse.Application.Abstractions.Results;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Domain.Enums;
 
@@ -16,6 +18,30 @@ public sealed class ActivityService : IActivityService
     {
         _activities = activities;
         _sessions = sessions;
+    }
+
+    public async Task<Result<Activity>> AddActivityAsync(
+        AddActivityCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            var activity = await AddActivityAsync(
+                command.SessionId,
+                command.Order,
+                command.Type,
+                command.Title,
+                command.Prompt,
+                command.Config,
+                command.DurationMinutes,
+                cancellationToken);
+            return Result<Activity>.Success(activity);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result<Activity>.Failure(MapError(ex));
+        }
     }
 
     public async Task<Activity> AddActivityAsync(
@@ -84,6 +110,29 @@ public sealed class ActivityService : IActivityService
     public Task<IReadOnlyList<Activity>> GetAgendaAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
         return _activities.GetBySessionAsync(sessionId, cancellationToken);
+    }
+
+    public async Task<Result<Activity>> UpdateActivityAsync(
+        UpdateActivityCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            var activity = await UpdateActivityAsync(
+                command.SessionId,
+                command.ActivityId,
+                command.Title,
+                command.Prompt,
+                command.Config,
+                command.DurationMinutes,
+                cancellationToken);
+            return Result<Activity>.Success(activity);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result<Activity>.Failure(MapError(ex));
+        }
     }
 
     public async Task<Activity> UpdateActivityAsync(
@@ -163,6 +212,38 @@ public sealed class ActivityService : IActivityService
         }
 
         await _activities.DeleteAsync(activity, cancellationToken);
+    }
+
+    public async Task<Result> DeleteActivityAsync(
+        DeleteActivityCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            await DeleteActivityAsync(command.SessionId, command.ActivityId, cancellationToken);
+            return Result.Success();
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result.Failure(MapError(ex));
+        }
+    }
+
+    public async Task<Result<Activity>> CopyActivityAsync(
+        CopyActivityCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            var activity = await CopyActivityAsync(command.SessionId, command.ActivityId, cancellationToken);
+            return Result<Activity>.Success(activity);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result<Activity>.Failure(MapError(ex));
+        }
     }
 
     public async Task<Activity> CopyActivityAsync(
@@ -270,6 +351,38 @@ public sealed class ActivityService : IActivityService
         return await _activities.GetBySessionAsync(sessionId, cancellationToken);
     }
 
+    public async Task<Result<IReadOnlyList<Activity>>> ReorderAsync(
+        ReorderActivitiesCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            var activities = await ReorderAsync(command.SessionId, command.OrderedActivityIds, cancellationToken);
+            return Result<IReadOnlyList<Activity>>.Success(activities);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result<IReadOnlyList<Activity>>.Failure(MapError(ex));
+        }
+    }
+
+    public async Task<Result> OpenAsync(
+        OpenActivityCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            await OpenAsync(command.SessionId, command.ActivityId, command.OpenedAt, cancellationToken);
+            return Result.Success();
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result.Failure(MapError(ex));
+        }
+    }
+
     public async Task OpenAsync(
         Guid sessionId,
         Guid activityId,
@@ -337,6 +450,22 @@ public sealed class ActivityService : IActivityService
         await _activities.UpdateAsync(activity, cancellationToken);
     }
 
+    public async Task<Result> ReopenAsync(
+        ReopenActivityCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            await ReopenAsync(command.SessionId, command.ActivityId, command.OpenedAt, cancellationToken);
+            return Result.Success();
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result.Failure(MapError(ex));
+        }
+    }
+
     public async Task CloseAsync(
         Guid sessionId,
         Guid activityId,
@@ -366,5 +495,35 @@ public sealed class ActivityService : IActivityService
 
         activity.Close(closedAt);
         await _activities.UpdateAsync(activity, cancellationToken);
+    }
+
+    public async Task<Result> CloseAsync(
+        CloseActivityCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            await CloseAsync(command.SessionId, command.ActivityId, command.ClosedAt, cancellationToken);
+            return Result.Success();
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result.Failure(MapError(ex));
+        }
+    }
+
+    private static Error MapError(Exception ex)
+    {
+        return ex switch
+        {
+            ArgumentException argumentException => ResultErrors.Validation(argumentException.Message),
+            InvalidOperationException invalidOperationException when invalidOperationException.Message.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                => new Error("not_found", invalidOperationException.Message, ErrorType.NotFound),
+            InvalidOperationException invalidOperationException when invalidOperationException.Message.Contains("does not belong", StringComparison.OrdinalIgnoreCase)
+                => new Error("forbidden", invalidOperationException.Message, ErrorType.Forbidden),
+            InvalidOperationException invalidOperationException => ResultErrors.Validation(invalidOperationException.Message),
+            _ => ResultErrors.Unexpected("An unexpected error occurred.")
+        };
     }
 }

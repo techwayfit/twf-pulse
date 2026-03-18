@@ -1,6 +1,8 @@
 using System;
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
+using TechWayFit.Pulse.Application.Abstractions.Results;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Domain.Entities;
 
 namespace TechWayFit.Pulse.Application.Services;
@@ -15,6 +17,28 @@ public sealed class ParticipantService : IParticipantService
     {
         _participants = participants;
         _sessions = sessions;
+    }
+
+    public async Task<Result<Participant>> JoinAsync(
+        JoinParticipantCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        try
+        {
+            var participant = await JoinAsync(
+                command.SessionId,
+                command.DisplayName,
+                command.IsAnonymous,
+                command.Dimensions,
+                command.JoinedAt,
+                cancellationToken);
+            return Result<Participant>.Success(participant);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result<Participant>.Failure(MapError(ex));
+        }
     }
 
     public async Task<Participant> JoinAsync(
@@ -112,5 +136,17 @@ public sealed class ParticipantService : IParticipantService
     public Task<IReadOnlyList<Participant>> GetBySessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
         return _participants.GetBySessionAsync(sessionId, cancellationToken);
+    }
+
+    private static Error MapError(Exception ex)
+    {
+        return ex switch
+        {
+            ArgumentException argumentException => ResultErrors.Validation(argumentException.Message),
+            InvalidOperationException invalidOperationException when invalidOperationException.Message.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                => new Error("not_found", invalidOperationException.Message, ErrorType.NotFound),
+            InvalidOperationException invalidOperationException => ResultErrors.Validation(invalidOperationException.Message),
+            _ => ResultErrors.Unexpected("An unexpected error occurred.")
+        };
     }
 }

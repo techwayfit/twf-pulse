@@ -74,8 +74,12 @@ public sealed class SessionsController : SessionApiControllerBase
                     facilitatorUserId,
                     groupId),
                 cancellationToken);
+            if (!session.IsSuccess || session.Value is null)
+            {
+                return FromResult<CreateSessionResponse>(session);
+            }
 
-            return Ok(Wrap(new CreateSessionResponse(session.Id, session.Code)));
+            return Ok(Wrap(new CreateSessionResponse(session.Value.Id, session.Value.Code)));
         }
         catch (ArgumentException ex)
         {
@@ -119,7 +123,13 @@ public sealed class SessionsController : SessionApiControllerBase
             return authError;
         }
 
-        await _sessions.SetStatusAsync(session.Id, TechWayFit.Pulse.Domain.Enums.SessionStatus.Live, DateTimeOffset.UtcNow, cancellationToken);
+        var startResult = await _sessions.SetStatusAsync(
+            new SetSessionStatusCommand(session.Id, TechWayFit.Pulse.Domain.Enums.SessionStatus.Live, DateTimeOffset.UtcNow),
+            cancellationToken);
+        if (!startResult.IsSuccess)
+        {
+            return FromResult<SessionSummaryResponse>(startResult);
+        }
         var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (updated is not null)
         {
@@ -146,7 +156,13 @@ public sealed class SessionsController : SessionApiControllerBase
             return authError;
         }
 
-        await _sessions.SetStatusAsync(session.Id, TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended, DateTimeOffset.UtcNow, cancellationToken);
+        var endResult = await _sessions.SetStatusAsync(
+            new SetSessionStatusCommand(session.Id, TechWayFit.Pulse.Domain.Enums.SessionStatus.Ended, DateTimeOffset.UtcNow),
+            cancellationToken);
+        if (!endResult.IsSuccess)
+        {
+            return FromResult<SessionSummaryResponse>(endResult);
+        }
         var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
         if (updated is not null)
         {
@@ -177,8 +193,15 @@ public sealed class SessionsController : SessionApiControllerBase
             }
 
             var schema = _mapper.ToDomain(request.JoinFormSchema);
-            var updated = await _sessions.UpdateJoinFormSchemaAsync(session.Id, schema, DateTimeOffset.UtcNow, cancellationToken);
-            return Ok(Wrap(_mapper.ToSummary(updated)));
+            var updated = await _sessions.UpdateJoinFormSchemaAsync(
+                new UpdateJoinFormSchemaCommand(session.Id, schema, DateTimeOffset.UtcNow),
+                cancellationToken);
+            if (!updated.IsSuccess || updated.Value is null)
+            {
+                return FromResult<SessionSummaryResponse>(updated);
+            }
+
+            return Ok(Wrap(_mapper.ToSummary(updated.Value)));
         }
         catch (ArgumentException ex)
         {
@@ -210,7 +233,13 @@ public sealed class SessionsController : SessionApiControllerBase
                 return authError;
             }
 
-            await _sessions.SetSessionGroupAsync(session.Id, request.GroupId, DateTimeOffset.UtcNow, cancellationToken);
+            var setGroupResult = await _sessions.SetSessionGroupAsync(
+                new SetSessionGroupCommand(session.Id, request.GroupId, DateTimeOffset.UtcNow),
+                cancellationToken);
+            if (!setGroupResult.IsSuccess)
+            {
+                return FromResult<SessionSummaryResponse>(setGroupResult);
+            }
 
             var updated = await _sessions.GetByCodeAsync(code, cancellationToken);
             return Ok(Wrap(_mapper.ToSummary(updated ?? session)));
@@ -245,9 +274,15 @@ public sealed class SessionsController : SessionApiControllerBase
             }
 
             var newCode = await _codeGenerator.GenerateUniqueCodeAsync(cancellationToken);
-            var newSession = await _sessions.CopySessionAsync(session.Id, newCode, DateTimeOffset.UtcNow, cancellationToken);
+            var newSession = await _sessions.CopySessionAsync(
+                new CopySessionCommand(session.Id, newCode, DateTimeOffset.UtcNow),
+                cancellationToken);
+            if (!newSession.IsSuccess || newSession.Value is null)
+            {
+                return FromResult<CreateSessionResponse>(newSession);
+            }
 
-            return Ok(Wrap(new CreateSessionResponse(newSession.Id, newSession.Code)));
+            return Ok(Wrap(new CreateSessionResponse(newSession.Value.Id, newSession.Value.Code)));
         }
         catch (ArgumentException ex)
         {
@@ -281,7 +316,7 @@ public sealed class SessionsController : SessionApiControllerBase
 
             var sessionId = session.Id;
 
-            await _sessions.UpdateSessionAsync(
+            var updateResult = await _sessions.UpdateSessionAsync(
                 new UpdateSessionCommand(
                     sessionId,
                     request.Title,
@@ -289,15 +324,24 @@ public sealed class SessionsController : SessionApiControllerBase
                     request.Context,
                     DateTimeOffset.UtcNow),
                 cancellationToken);
+            if (!updateResult.IsSuccess)
+            {
+                return FromResult<SessionSummaryResponse>(updateResult);
+            }
 
             var currentSessionForGroup = await _sessions.GetByCodeAsync(code, cancellationToken);
             if (currentSessionForGroup is not null && request.GroupId != currentSessionForGroup.GroupId)
             {
-                await _sessions.SetSessionGroupAsync(
-                    sessionId,
-                    request.GroupId,
-                    DateTimeOffset.UtcNow,
+                var setGroupResult = await _sessions.SetSessionGroupAsync(
+                    new SetSessionGroupCommand(
+                        sessionId,
+                        request.GroupId,
+                        DateTimeOffset.UtcNow),
                     cancellationToken);
+                if (!setGroupResult.IsSuccess)
+                {
+                    return FromResult<SessionSummaryResponse>(setGroupResult);
+                }
             }
 
             if (request.SessionStart.HasValue || request.SessionEnd.HasValue)
@@ -305,12 +349,17 @@ public sealed class SessionsController : SessionApiControllerBase
                 var currentSessionForSchedule = await _sessions.GetByCodeAsync(code, cancellationToken);
                 if (currentSessionForSchedule is not null)
                 {
-                    await _sessions.SetSessionScheduleAsync(
-                        sessionId,
-                        request.SessionStart ?? currentSessionForSchedule.SessionStart,
-                        request.SessionEnd ?? currentSessionForSchedule.SessionEnd,
-                        DateTimeOffset.UtcNow,
+                    var setScheduleResult = await _sessions.SetSessionScheduleAsync(
+                        new SetSessionScheduleCommand(
+                            sessionId,
+                            request.SessionStart ?? currentSessionForSchedule.SessionStart,
+                            request.SessionEnd ?? currentSessionForSchedule.SessionEnd,
+                            DateTimeOffset.UtcNow),
                         cancellationToken);
+                    if (!setScheduleResult.IsSuccess)
+                    {
+                        return FromResult<SessionSummaryResponse>(setScheduleResult);
+                    }
                 }
             }
 

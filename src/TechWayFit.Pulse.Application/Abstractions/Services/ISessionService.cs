@@ -1,4 +1,5 @@
 using TechWayFit.Pulse.Application.Commands;
+using TechWayFit.Pulse.Application.Abstractions.Results;
 using TechWayFit.Pulse.Domain.Entities;
 using TechWayFit.Pulse.Domain.Enums;
 using TechWayFit.Pulse.Domain.ValueObjects;
@@ -7,7 +8,7 @@ namespace TechWayFit.Pulse.Application.Abstractions.Services;
 
 public interface ISessionService
 {
-    Task<Session> CreateSessionAsync(
+    Task<Result<Session>> CreateSessionAsync(
         CreateSessionCommand command,
         CancellationToken cancellationToken = default);
 
@@ -25,8 +26,32 @@ public interface ISessionService
 
     Task<Session?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
 
-    Task<Session> UpdateSessionAsync(
+    Task<Result<Session>> UpdateSessionAsync(
         UpdateSessionCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> SetStatusAsync(
+        SetSessionStatusCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> SetCurrentActivityAsync(
+        SetCurrentActivityCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<Session>> UpdateJoinFormSchemaAsync(
+        UpdateJoinFormSchemaCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> SetSessionGroupAsync(
+        SetSessionGroupCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task<Result> SetSessionScheduleAsync(
+        SetSessionScheduleCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task<Result<Session>> CopySessionAsync(
+        CopySessionCommand command,
         CancellationToken cancellationToken = default);
 
     Task<Session> UpdateSessionAsync(

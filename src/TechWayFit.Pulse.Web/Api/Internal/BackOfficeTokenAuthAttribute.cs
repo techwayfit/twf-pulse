@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -32,12 +34,18 @@ public sealed class BackOfficeTokenAuthAttribute : Attribute, IActionFilter
 
         var providedToken = context.HttpContext.Request.Headers[HeaderName].FirstOrDefault();
 
-        if (string.IsNullOrWhiteSpace(providedToken) ||
-            !string.Equals(providedToken, expectedToken, StringComparison.Ordinal))
+        if (string.IsNullOrWhiteSpace(providedToken) || !FixedTimeEquals(providedToken, expectedToken))
         {
             context.Result = new UnauthorizedObjectResult(new { error = "Invalid or missing BackOffice token." });
         }
     }
 
     public void OnActionExecuted(ActionExecutedContext context) { }
+
+    private static bool FixedTimeEquals(string providedToken, string expectedToken)
+    {
+        var providedBytes = Encoding.UTF8.GetBytes(providedToken);
+        var expectedBytes = Encoding.UTF8.GetBytes(expectedToken);
+        return CryptographicOperations.FixedTimeEquals(providedBytes, expectedBytes);
+    }
 }

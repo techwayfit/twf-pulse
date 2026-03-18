@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using TechWayFit.Pulse.Application.Abstractions.Services;
+using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Contracts.Models;
 using TechWayFit.Pulse.Contracts.Requests;
 using TechWayFit.Pulse.Contracts.Responses;
@@ -118,47 +119,42 @@ public sealed class ParticipantsController : SessionApiControllerBase
         [FromBody] JoinParticipantRequest request,
         CancellationToken cancellationToken)
     {
-        try
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
         {
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (session is null)
-            {
-                return NotFound(Error<JoinParticipantResponse>("not_found", "Session not found."));
-            }
+            return NotFound(Error<JoinParticipantResponse>("not_found", "Session not found."));
+        }
 
-            var participant = await _participants.JoinAsync(
+        var joinResult = await _participants.JoinAsync(
+            new JoinParticipantCommand(
                 session.Id,
                 request.DisplayName,
                 request.IsAnonymous,
                 request.Dimensions ?? new Dictionary<string, string?>(),
-                DateTimeOffset.UtcNow,
-                cancellationToken);
-
-            var participantCount = await _participants.GetBySessionAsync(session.Id, cancellationToken);
-
-            await _hub.Clients.Group(WorkshopGroupNames.ForSession(session.Code)).ParticipantJoined(new ParticipantJoinedEvent(
-                session.Code,
-                participant.Id,
-                participant.DisplayName,
-                participantCount.Count,
-                DateTimeOffset.UtcNow));
-
-            if (!string.IsNullOrEmpty(participant.Token))
-            {
-                await _participantTokens.TryGetAsync(session.Id, participant.Id);
-            }
-
-            return Ok(Wrap(new JoinParticipantResponse(
-                participant.Id,
-                participant.Token ?? throw new InvalidOperationException("Participant token not generated"))));
-        }
-        catch (ArgumentException ex)
+                DateTimeOffset.UtcNow),
+            cancellationToken);
+        if (!joinResult.IsSuccess || joinResult.Value is null)
         {
-            return BadRequest(Error<JoinParticipantResponse>("validation_error", ex.Message));
+            return FromResult<JoinParticipantResponse>(joinResult);
         }
-        catch (InvalidOperationException ex)
+
+        var participant = joinResult.Value;
+        var participantCount = await _participants.GetBySessionAsync(session.Id, cancellationToken);
+
+        await _hub.Clients.Group(WorkshopGroupNames.ForSession(session.Code)).ParticipantJoined(new ParticipantJoinedEvent(
+            session.Code,
+            participant.Id,
+            participant.DisplayName,
+            participantCount.Count,
+            DateTimeOffset.UtcNow));
+
+        if (!string.IsNullOrEmpty(participant.Token))
         {
-            return BadRequest(Error<JoinParticipantResponse>("validation_error", ex.Message));
+            await _participantTokens.TryGetAsync(session.Id, participant.Id);
         }
+
+        return Ok(Wrap(new JoinParticipantResponse(
+            participant.Id,
+            participant.Token ?? throw new InvalidOperationException("Participant token not generated"))));
     }
 }

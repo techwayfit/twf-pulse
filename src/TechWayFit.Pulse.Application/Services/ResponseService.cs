@@ -1,4 +1,5 @@
 using TechWayFit.Pulse.Application.Abstractions.Repositories;
+using TechWayFit.Pulse.Application.Abstractions.Results;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Application.Commands;
 using TechWayFit.Pulse.Domain.Entities;
@@ -34,18 +35,26 @@ public sealed class ResponseService : IResponseService
         _domainEventDispatcher = domainEventDispatcher;
     }
 
-    public Task<Response> SubmitAsync(
+    public async Task<Result<Response>> SubmitAsync(
         SubmitResponseCommand command,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(command);
-        return SubmitAsync(
-            command.SessionId,
-            command.ActivityId,
-            command.ParticipantId,
-            command.Payload,
-            command.CreatedAt,
-            cancellationToken);
+        try
+        {
+            var response = await SubmitAsync(
+                command.SessionId,
+                command.ActivityId,
+                command.ParticipantId,
+                command.Payload,
+                command.CreatedAt,
+                cancellationToken);
+            return Result<Response>.Success(response);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        {
+            return Result<Response>.Failure(MapError(ex));
+        }
     }
 
     public async Task<Response> SubmitAsync(
@@ -156,5 +165,19 @@ public sealed class ResponseService : IResponseService
         CancellationToken cancellationToken = default)
     {
         return _responses.GetByParticipantAsync(sessionId, participantId, cancellationToken);
+    }
+
+    private static Error MapError(Exception ex)
+    {
+        return ex switch
+        {
+            ArgumentException argumentException => ResultErrors.Validation(argumentException.Message),
+            InvalidOperationException invalidOperationException when invalidOperationException.Message.Contains("not found", StringComparison.OrdinalIgnoreCase)
+                => new Error("not_found", invalidOperationException.Message, ErrorType.NotFound),
+            InvalidOperationException invalidOperationException when invalidOperationException.Message.Contains("locked", StringComparison.OrdinalIgnoreCase)
+                => new Error("forbidden", invalidOperationException.Message, ErrorType.Forbidden),
+            InvalidOperationException invalidOperationException => ResultErrors.Validation(invalidOperationException.Message),
+            _ => ResultErrors.Unexpected("An unexpected error occurred.")
+        };
     }
 }

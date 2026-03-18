@@ -45,63 +45,56 @@ public sealed class ResponsesController : SessionApiControllerBase
         [FromBody] SubmitResponseRequest request,
         CancellationToken cancellationToken)
     {
-        try
+        var session = await _sessions.GetByCodeAsync(code, cancellationToken);
+        if (session is null)
         {
-            var session = await _sessions.GetByCodeAsync(code, cancellationToken);
-            if (session is null)
-            {
-                return NotFound(Error<SubmitResponseResponse>("not_found", "Session not found."));
-            }
+            return NotFound(Error<SubmitResponseResponse>("not_found", "Session not found."));
+        }
 
-            var tokenValidationResult = await RequireParticipantToken<SubmitResponseResponse>(session.Id, request.ParticipantId);
-            if (tokenValidationResult is not null)
-            {
-                return tokenValidationResult;
-            }
+        var tokenValidationResult = await RequireParticipantToken<SubmitResponseResponse>(session.Id, request.ParticipantId);
+        if (tokenValidationResult is not null)
+        {
+            return tokenValidationResult;
+        }
 
-            var response = await _responses.SubmitAsync(
-                new SubmitResponseCommand(
-                    session.Id,
-                    activityId,
-                    request.ParticipantId,
-                    request.Payload,
-                    DateTimeOffset.UtcNow),
-                cancellationToken);
-
-            var sessionGroup = WorkshopGroupNames.ForSession(session.Code);
-            _logger.LogInformation(
-                "Response submitted: SessionCode={SessionCode}, Group={Group}, ActivityId={ActivityId}, ParticipantId={ParticipantId}, ResponseId={ResponseId}",
-                session.Code,
-                sessionGroup,
+        var response = await _responses.SubmitAsync(
+            new SubmitResponseCommand(
+                session.Id,
                 activityId,
                 request.ParticipantId,
-                response.Id);
-
-            await _hub.Clients.Group(sessionGroup).ResponseReceived(new ResponseReceivedEvent(
-                session.Code,
-                activityId,
-                response.Id,
-                request.ParticipantId,
-                response.CreatedAt,
-                DateTimeOffset.UtcNow));
-
-            await _hub.Clients.Group(sessionGroup).DashboardUpdated(new DashboardUpdatedEvent(
-                session.Code,
-                activityId,
-                "response_submitted",
-                new { ResponseId = response.Id, ActivityId = activityId },
-                DateTimeOffset.UtcNow));
-
-            return Ok(Wrap(new SubmitResponseResponse(response.Id)));
-        }
-        catch (ArgumentException ex)
+                request.Payload,
+                DateTimeOffset.UtcNow),
+            cancellationToken);
+        if (!response.IsSuccess || response.Value is null)
         {
-            return BadRequest(Error<SubmitResponseResponse>("validation_error", ex.Message));
+            return FromResult<SubmitResponseResponse>(response);
         }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(Error<SubmitResponseResponse>("validation_error", ex.Message));
-        }
+
+        var sessionGroup = WorkshopGroupNames.ForSession(session.Code);
+        _logger.LogInformation(
+            "Response submitted: SessionCode={SessionCode}, Group={Group}, ActivityId={ActivityId}, ParticipantId={ParticipantId}, ResponseId={ResponseId}",
+            session.Code,
+            sessionGroup,
+            activityId,
+            request.ParticipantId,
+            response.Value.Id);
+
+        await _hub.Clients.Group(sessionGroup).ResponseReceived(new ResponseReceivedEvent(
+            session.Code,
+            activityId,
+            response.Value.Id,
+            request.ParticipantId,
+            response.Value.CreatedAt,
+            DateTimeOffset.UtcNow));
+
+        await _hub.Clients.Group(sessionGroup).DashboardUpdated(new DashboardUpdatedEvent(
+            session.Code,
+            activityId,
+            "response_submitted",
+            new { ResponseId = response.Value.Id, ActivityId = activityId },
+            DateTimeOffset.UtcNow));
+
+        return Ok(Wrap(new SubmitResponseResponse(response.Value.Id)));
     }
 
     [HttpGet("{code}/participants/{participantId:guid}/responses")]

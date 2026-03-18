@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using TechWayFit.Pulse.Application.Abstractions.Results;
 using TechWayFit.Pulse.Application.Abstractions.Services;
 using TechWayFit.Pulse.Contracts.Models;
 using TechWayFit.Pulse.Contracts.Responses;
@@ -30,6 +31,48 @@ public abstract class SessionApiControllerBase : ControllerBase
     protected static ApiResponse<T> Error<T>(string code, string message)
     {
         return new ApiResponse<T>(default, new[] { new ApiError(code, message) });
+    }
+
+    protected ActionResult<ApiResponse<T>> FromResult<T>(Result result)
+    {
+        if (result.IsSuccess)
+        {
+            throw new InvalidOperationException("Expected failed result but received success.");
+        }
+
+        var error = result.Error ?? ResultErrors.Unexpected("Unknown error");
+        return FromError<T>(error);
+    }
+
+    protected ActionResult<ApiResponse<T>> FromResult<T>(Result<T> result)
+    {
+        if (result.IsSuccess)
+        {
+            if (result.Value is null)
+            {
+                throw new InvalidOperationException("Successful result does not contain a value.");
+            }
+
+            return Ok(Wrap(result.Value));
+        }
+
+        var error = result.Error ?? ResultErrors.Unexpected("Unknown error");
+        return FromError<T>(error);
+    }
+
+    private ActionResult<ApiResponse<T>> FromError<T>(Error error)
+    {
+        var apiError = Error<T>(error.Code, error.Message);
+        return error.Type switch
+        {
+            ErrorType.NotFound => NotFound(apiError),
+            ErrorType.Unauthorized => Unauthorized(apiError),
+            ErrorType.Forbidden => StatusCode(StatusCodes.Status403Forbidden, apiError),
+            ErrorType.RateLimited => StatusCode(StatusCodes.Status429TooManyRequests, apiError),
+            ErrorType.Conflict => Conflict(apiError),
+            ErrorType.Unexpected => StatusCode(StatusCodes.Status500InternalServerError, apiError),
+            _ => BadRequest(apiError)
+        };
     }
 
     protected ActionResult<ApiResponse<T>>? RequireFacilitatorToken<T>(TechWayFit.Pulse.Domain.Entities.Session session)
