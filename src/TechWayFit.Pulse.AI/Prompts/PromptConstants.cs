@@ -59,14 +59,14 @@ Return ONLY a valid JSON array. No markdown, no explanation.";
         {
             public const string SystemPrompt =
                 @"You are an expert workshop facilitator producing a concise, insightful summary of a completed workshop session. 
-Write in clear, professional language. Structure the summary with markdown headings. 
+Write in clear, professional language. Structure the summary with HTML headings. 
 Highlight key themes, decisions, and patterns that emerged from participant responses.
 Keep it actionable – end with 2-3 key takeaways or next steps.
 Application supports bootstrap 3.7, so use bootstrap alerts, cards, buttons, tables, etc. to make it more beautiful and presentable.
 ";
 
             public const string UserPromptOpener  = "Please summarise this workshop session.";
-            public const string UserPromptCloser  = "\nGenerate a comprehensive session summary in markdown format.";
+            public const string UserPromptCloser  = "\nGenerate a comprehensive session summary in HTML format.";
             public const string AdditionalInstructions = "\nAdditional instructions: ";
         }
 
