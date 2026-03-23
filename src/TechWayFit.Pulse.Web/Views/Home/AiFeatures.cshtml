@@ -84,7 +84,7 @@
                     <div class="col-md-4">
                         <div class="border rounded p-3 h-100">
                             <h6 class="fw-semibold mb-2"><i class="ics ics-pencil ic-sm ic-mr text-secondary"></i>Manual</h6>
-                            <p class="text-muted small mb-0">Add activities one by one — Poll, Word Cloud, Quadrant, Rating, or General Feedback — filling in each form yourself</p>
+                            <p class="text-muted small mb-0">Add activities one by one — Poll, Word Cloud, Q&amp;A, Rating, Quadrant, 5 Whys, General Feedback, AI Summary, or Break — filling in each form yourself</p>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -173,11 +173,108 @@
                 <div class="bg-light p-4 rounded mb-0">
                     <h6 class="fw-semibold mb-2">What the AI generates:</h6>
                     <ul class="text-muted mb-0">
-                        <li>A sequenced list of activities (Poll, Word Cloud, Rating, General Feedback, Quadrant)</li>
-                        <li>Each activity comes with a question, description, and pre-filled options where applicable</li>
+                        <li>A sequenced list of activities — typically Polls, Word Clouds, Ratings, Quadrant matrices, General Feedback, and Q&amp;A, chosen to suit the workshop type and duration</li>
+                        <li>Each activity comes with a question/prompt, description, and pre-filled options where applicable</li>
                         <li>Activities are ordered for a natural workshop flow</li>
-                        <li>You can edit, reorder, or delete any activity before saving</li>
+                        <li>You can edit, reorder, or delete any generated activity before saving</li>
+                        <li>You can run AI Create multiple times in the same session — generated activities accumulate (max 30 per session)</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Summary Activity -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-sparkles ic-md text-success"></i>
+                    </div>
+                    <h2 class="h4 mb-0">AI Summary Activity</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    The <strong>AI Summary</strong> is a dedicated activity type you can add at the end of any session.
+                    When the facilitator opens it in the live console, the AI reads all completed (closed) activities and streams
+                    a markdown-formatted summary in real time — giving participants an instant structured recap of everything the session covered.
+                </p>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Real-time Streaming</strong>
+                                <small class="text-muted">Summary text streams token-by-token as the AI generates it — no waiting for the full result</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Contextual Recap</strong>
+                                <small class="text-muted">Only closed activities with participant responses feed into the summary — Break and other AI Summary activities are excluded</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Custom Prompt Addition</strong>
+                                <small class="text-muted">Optionally supply extra instructions when adding the AI Summary activity (e.g., &ldquo;Focus on action items&rdquo;)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-check-circle text-success me-2 mt-1"></i>
+                            <div>
+                                <strong class="d-block">Shown on Presentation Screen</strong>
+                                <small class="text-muted">The streamed summary appears in the facilitator's Presentation view so the whole room can see it</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success border-0 mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <small><strong>Tip:</strong> Add the AI Summary activity last in your session agenda. Open all other activities, collect responses, then open AI Summary as the final step to give participants an AI-generated recap they can reflect on.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5 Whys AI -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-danger bg-opacity-10 rounded-3 p-3 me-3">
+                        <i class="ics ics-search ic-md text-danger"></i>
+                    </div>
+                    <h2 class="h4 mb-0">5 Whys — AI-Guided Root Cause Analysis</h2>
+                </div>
+
+                <p class="text-muted mb-3">
+                    The <strong>5 Whys</strong> activity uses AI to guide each participant through a personal root-cause analysis chain.
+                    After a participant answers the initial question, the AI evaluates their response and either asks a targeted follow-up
+                    &ldquo;Why&rdquo; question or — if the root cause has been identified — surfaces it with a brief insight and recommended actions.
+                </p>
+
+                <div class="bg-light p-4 rounded mb-3">
+                    <h6 class="fw-semibold mb-2">How it works per participant:</h6>
+                    <ol class="mb-0 text-muted">
+                        <li>Facilitator sets the root question (e.g., &ldquo;Why is our deployment pipeline failing?&rdquo;) when creating the activity</li>
+                        <li>Participant submits their first answer in the join view</li>
+                        <li>AI analyses the full conversation chain and asks the next contextual &ldquo;Why&rdquo;</li>
+                        <li>This continues until the AI determines the root cause (typically 3–5 steps)</li>
+                        <li>The AI surfaces the identified root cause and a short insight/recommendation</li>
+                    </ol>
+                </div>
+
+                <div class="alert alert-info border-0 mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <small>Each participant has their own independent AI conversation chain — the AI adapts its follow-up questions based on each person&apos;s individual answers, so ten participants may reach ten different root causes.</small>
                 </div>
             </div>
         </div>
@@ -202,22 +299,24 @@
                     <h6 class="fw-semibold mb-2">How to add your own API key:</h6>
                     <ol class="mb-0 text-muted">
                         <li>Sign in to your facilitator account</li>
-                        <li>Go to <strong>Account Settings</strong></li>
-                        <li>Paste your OpenAI API key into the <strong>AI API Key</strong> field</li>
-                        <li>Save — your key is stored encrypted and used only for your sessions</li>
+                        <li>Click your name in the top navigation and go to <strong>Profile</strong></li>
+                        <li>Scroll to the <strong>AI Configuration</strong> section</li>
+                        <li>Paste your OpenAI API key into the <strong>OpenAI API Key</strong> field</li>
+                        <li>Optionally set a custom <strong>OpenAI Base URL</strong> if you use Azure OpenAI or another OpenAI-compatible endpoint</li>
+                        <li>Save — your key is stored encrypted using ASP.NET Core Data Protection and used only for your sessions</li>
                     </ol>
                 </div>
 
                 <div class="alert alert-warning border-0 mb-0">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    <small><strong>Privacy:</strong> Your API key is stored encrypted and is never shared or used for other accounts.</small>
+                    <small><strong>Privacy:</strong> Your API key is encrypted at rest and never shared with other accounts. The Profile page also shows your current quota usage and reset date.</small>
                 </div>
             </div>
         </div>
 
         <!-- Back to Support -->
         <div class="text-center mt-4">
-            <a href="/home/support" class="btn btn-lg btn-primary d-inline-flex align-items-center gap-2">
+            <a href="/home/support" class="btn btn-lg btn-outline-secondary d-inline-flex align-items-center gap-2">
                 <i class="fas fa-arrow-left"></i>
                 <span>Back to Support</span>
             </a>

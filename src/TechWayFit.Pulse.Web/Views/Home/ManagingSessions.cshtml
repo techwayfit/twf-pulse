@@ -24,23 +24,25 @@
                 </div>
 
                 <p class="text-muted mb-3">
-                    Session groups let you organize multiple sessions under a shared label — for example, grouping all sessions for
-                    a quarterly review or a specific team. Groups appear in the facilitator dashboard for easy filtering.
+                    Session groups are named entities you create and manage to organise multiple sessions under a shared label —
+                    for example, grouping all sessions for a quarterly review or a specific team. Groups support up to three levels
+                    of hierarchy (Main Track &rarr; Sub Group &rarr; Sub Sub Group) and appear in the facilitator dashboard for
+                    easy filtering.
                 </p>
 
                 <div class="bg-light p-4 rounded mb-3">
                     <h6 class="fw-semibold mb-2">How to use groups:</h6>
                     <ol class="mb-0 text-muted">
-                        <li>Open the <strong>Create Session</strong> form</li>
-                        <li>Enter a group name in the <strong>Session Group</strong> field (optional)</li>
-                        <li>Sessions with the same group name are listed together in your dashboard</li>
-                        <li>Filter the dashboard by group to focus on a subset of sessions</li>
+                        <li>From the facilitator dashboard, click <strong>Manage Groups</strong> to open the Groups page</li>
+                        <li>Create a group, choose its level (<strong>Level 1</strong> Main Track, <strong>Level 2</strong> Sub Group, or <strong>Level 3</strong> Sub Sub Group), and select a parent if needed</li>
+                        <li>When creating or editing a session, select the group from the <strong>Session Group</strong> dropdown</li>
+                        <li>Use the group filter on the dashboard to focus on a specific subset of sessions</li>
                     </ol>
                 </div>
 
-                <div class="alert alert-info border-0 mb-0">
-                    <i class="fas fa-image me-2"></i>
-                    <small><strong>Screenshot:</strong> Dashboard filtered by session group (to be added)</small>
+                <div class="alert alert-success border-0 mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <small><strong>Tip:</strong> Groups must be created before they can be assigned to a session. Visit the Groups page via the <em>Manage Groups</em> button on your dashboard.</small>
                 </div>
             </div>
         </div>
@@ -106,33 +108,34 @@
             </div>
         </div>
 
-        <!-- Exporting Data -->
+        <!-- Bulk Activity Upload -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-body p-4 p-md-5">
                 <div class="d-flex align-items-center mb-4">
                     <div class="bg-info bg-opacity-10 rounded-3 p-3 me-3">
-                        <i class="ics ics-download ic-md text-info"></i>
+                        <i class="ics ics-upload ic-md text-info"></i>
                     </div>
-                    <h2 class="h4 mb-0">Exporting Session Data and Reports</h2>
+                    <h2 class="h4 mb-0">Bulk Adding Activities via CSV</h2>
                 </div>
 
                 <p class="text-muted mb-3">
-                    After a session concludes, you can download participant responses and activity results for further analysis or reporting.
+                    Instead of adding activities one by one, you can upload a CSV file to create multiple activities at once.
+                    This is especially useful when preparing large or templated sessions.
                 </p>
 
                 <div class="bg-light p-4 rounded mb-3">
-                    <h6 class="fw-semibold mb-2">Export steps:</h6>
+                    <h6 class="fw-semibold mb-2">How to bulk upload activities:</h6>
                     <ol class="mb-0 text-muted">
-                        <li>Navigate to the facilitator dashboard and select the session</li>
-                        <li>Click the <strong>Export</strong> button for the session or for an individual activity</li>
-                        <li>Choose <strong>CSV</strong> (spreadsheet-compatible) or <strong>JSON</strong> (developer-friendly)</li>
-                        <li>The file downloads immediately to your device</li>
+                        <li>Open a session and navigate to <strong>Add Activities</strong></li>
+                        <li>Click <strong>Download CSV Template</strong> to get the correct column structure</li>
+                        <li>Fill in your activities using the columns: <code>Order</code>, <code>Type</code>, <code>Title</code>, <code>Prompt</code>, <code>ConfigJson</code>, <code>DurationInMin</code></li>
+                        <li>Upload the completed file — all valid rows will be imported as activities</li>
                     </ol>
                 </div>
 
                 <div class="alert alert-warning border-0 mb-0">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    <small><strong>Note:</strong> Sessions are automatically deleted after their TTL (default 6 hours). Export data before the session expires if you need to keep the results.</small>
+                    <small><strong>Note:</strong> The <code>Type</code> column must match a supported activity type name (e.g., <em>Poll</em>, <em>WordCloud</em>, <em>QnA</em>, <em>Quadrant</em>, <em>Rating</em>, <em>FiveWhys</em>, <em>GeneralFeedback</em>). Invalid rows are skipped with a validation message.</small>
                 </div>
             </div>
         </div>
@@ -148,35 +151,35 @@
                 </div>
 
                 <p class="text-muted mb-3">
-                    Save time by starting from an existing session. Built-in system templates and any sessions you have saved as templates
-                    can be cloned with a single click — all activities, settings, and join-form fields are copied into a brand-new session.
+                    Save time by reusing existing content. There are two ways to start a new session from pre-built content:
+                    copying an existing session from your dashboard, or launching one of the system templates on the Templates page.
                 </p>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <div class="border rounded p-3">
-                            <h6 class="fw-semibold mb-2"><i class="fas fa-layer-group me-2 text-primary"></i>System Templates</h6>
-                            <p class="text-muted small mb-0">Pre-built templates for common workshop scenarios (retrospectives, planning, team health checks)</p>
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-semibold mb-2"><i class="fas fa-copy me-2 text-primary"></i>Copy a Session</h6>
+                            <p class="text-muted small mb-0">Click the <strong>Copy</strong> button on any session in your facilitator dashboard. A new draft session is created with all activities, settings, and join-form fields duplicated. You can then edit the copy before going live.</p>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="border rounded p-3">
-                            <h6 class="fw-semibold mb-2"><i class="fas fa-bookmark me-2 text-success"></i>Saved Templates</h6>
-                            <p class="text-muted small mb-0">Sessions you have saved as reusable templates, available only to you</p>
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-semibold mb-2"><i class="fas fa-layer-group me-2 text-success"></i>System Templates</h6>
+                            <p class="text-muted small mb-0">Browse 22 pre-built templates across five categories — Retrospective, Product Discovery, Incident Review, Team Building, and Training — on the <strong>Templates</strong> page. Click any template to launch a fully configured session instantly.</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="alert alert-info border-0 mb-0">
-                    <i class="fas fa-image me-2"></i>
-                    <small><strong>Screenshot:</strong> Template selection grid on the Create Session page (to be added)</small>
+                <div class="alert alert-success border-0 mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <small><strong>Tip:</strong> Copied sessions start as drafts. Review and update the title, group, and TTL before sharing the join code with participants.</small>
                 </div>
             </div>
         </div>
 
         <!-- Back to Support -->
         <div class="text-center mt-4">
-            <a href="/home/support" class="btn btn-lg btn-primary d-inline-flex align-items-center gap-2">
+            <a href="/home/support" class="btn btn-lg btn-outline-secondary d-inline-flex align-items-center gap-2">
                 <i class="fas fa-arrow-left"></i>
                 <span>Back to Support</span>
             </a>

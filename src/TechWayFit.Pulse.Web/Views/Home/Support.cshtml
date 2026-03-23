@@ -72,10 +72,10 @@
                             </div>
                             <p class="text-muted mb-3">Organize and control your workshop sessions effectively.</p>
                             <ul class="text-muted small">
-                                <li>Use session groups for organization</li>
+                                <li>Use session groups with hierarchy for organisation</li>
                                 <li>Control activity visibility and timing</li>
-                                <li>Export session data and reports</li>
-                                <li>Clone sessions from templates</li>
+                                <li>Bulk upload activities via CSV</li>
+                                <li>Copy sessions or start from system templates</li>
                             </ul>
                             <span class="text-primary small fw-medium">View Guide <i class="fas fa-arrow-right ms-1"></i></span>
                         </div>
@@ -96,10 +96,10 @@
                             </div>
                             <p class="text-muted mb-3">Choose the right activity for your workshop goals.</p>
                             <ul class="text-muted small">
-                                <li><strong>Polls:</strong> Single or multiple choice questions</li>
-                                <li><strong>Word Clouds:</strong> Collect and visualize keywords</li>
-                                <li><strong>Quadrant Matrix:</strong> 2x2 positioning exercises</li>
-                                <li><strong>5 Whys:</strong> Root cause analysis</li>
+                                <li><strong>Polls &amp; Q&amp;A:</strong> Gather quick votes and open questions</li>
+                                <li><strong>Word Clouds &amp; Rating:</strong> Visualise sentiment and priorities</li>
+                                <li><strong>Quadrant &amp; 5 Whys:</strong> Positioning and root cause analysis</li>
+                                <li><strong>AI Summary &amp; Break:</strong> Session recap and scheduled pauses</li>
                             </ul>
                             <span class="text-primary small fw-medium">View Guide <i class="fas fa-arrow-right ms-1"></i></span>
                         </div>
@@ -120,10 +120,10 @@
                             </div>
                             <p class="text-muted mb-3">Let AI help you design effective workshops.</p>
                             <ul class="text-muted small">
-                                <li>Generate session templates from descriptions</li>
-                                <li>AI-suggested activity sequences</li>
-                                <li>Automatically generated join form fields</li>
-                                <li>Smart content recommendations</li>
+                                <li>Generate a sequenced activity set from your session title and context</li>
+                                <li>AI-guided 5 Whys root cause analysis per participant</li>
+                                <li>AI Summary activity streams a live session recap</li>
+                                <li>Bring your own OpenAI API key for unlimited use</li>
                             </ul>
                             <span class="text-primary small fw-medium">View Guide <i class="fas fa-arrow-right ms-1"></i></span>
                         </div>
@@ -164,8 +164,8 @@
                 <div class="mb-4">
                     <h3 class="h6 fw-semibold mb-2">How long do sessions last?</h3>
                     <p class="text-muted mb-0">
-                        Sessions have a default time-to-live (TTL) of 6 hours. After this period, session data is automatically
-                        deleted unless you explicitly save it. You can extend or save sessions from the facilitator dashboard.
+                        Session lifetime is configurable per session via the TTL (time-to-live) setting when creating or editing a session.
+                        System templates default to 120 minutes, but you can set any duration. Once the TTL expires, the session and its data are automatically removed.
                     </p>
                 </div>
 
@@ -188,16 +188,14 @@
                 <div class="mb-4">
                     <h3 class="h6 fw-semibold mb-2">Can I reuse session templates?</h3>
                     <p class="text-muted mb-0">
-                        Yes! You can save sessions as templates and clone them for future workshops. Templates preserve
-                        all activities and settings but generate a new session code each time.
+                        Yes! There are two ways to reuse content. Use the <strong>Copy</strong> button on any session in your dashboard to duplicate it with all its activities into a new draft. Or go to the <strong>Templates</strong> page to browse 22 pre-built system templates and launch one instantly.
                     </p>
                 </div>
 
                 <div class="mb-4">
-                    <h3 class="h6 fw-semibold mb-2">How do I export session data?</h3>
+                    <h3 class="h6 fw-semibold mb-2">Can I add multiple activities at once?</h3>
                     <p class="text-muted mb-0">
-                        From the facilitator dashboard, click on a session and use the export button to download
-                        responses in CSV or JSON format. All activity results can be exported individually or as a complete report.
+                        Yes! On the <strong>Add Activities</strong> page, download the CSV template, fill in your activities (Order, Type, Title, Prompt, ConfigJson, DurationInMin), and upload the file. All valid rows are imported in one go.
                     </p>
                 </div>
 
@@ -215,7 +213,7 @@
         <div class="card border-0 shadow-sm bg-primary bg-opacity-10">
             <div class="card-body p-4 text-center">
                 <h2 class="h5 fw-semibold mb-3">Still Need Help?</h2>
-                <p class="text-white mb-4">
+                <p class="text-muted mb-4">
                     Can't find what you're looking for? We're here to help!
                 </p>
                 <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">

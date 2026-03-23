@@ -274,22 +274,45 @@
                         </div>
                     </div>
 
+                    <!-- Q&A -->
+                    <div class="accordion-item border rounded-3 mb-2">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#qnaActivity" aria-expanded="false">
+                                <i class="fas fa-lightbulb text-warning me-3"></i>
+                                <strong>Q&amp;A (Questions &amp; Answers)</strong>
+                            </button>
+                        </h3>
+                        <div id="qnaActivity" class="accordion-collapse collapse" data-bs-parent="#activityAccordion">
+                            <div class="accordion-body">
+                                <p class="mb-2">Submit questions and upvote the most important ones.</p>
+                                <ul class="small text-muted mb-0">
+                                    <li>Type your question and click Submit</li>
+                                    <li>Upvote others' questions to surface the most popular ones</li>
+                                    <li>Optionally submit anonymously if the facilitator allows it</li>
+                                    <li>Answered questions are marked by the facilitator</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 5 Whys -->
                     <div class="accordion-item border rounded-3 mb-2">
                         <h3 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
                                     data-bs-target="#fiveWhysActivity" aria-expanded="false">
-                                <i class="fas fa-question-circle text-warning me-3"></i>
+                                <i class="fas fa-search text-danger me-3"></i>
                                 <strong>5 Whys Analysis</strong>
                             </button>
                         </h3>
                         <div id="fiveWhysActivity" class="accordion-collapse collapse" data-bs-parent="#activityAccordion">
                             <div class="accordion-body">
-                                <p class="mb-2">Collaborate on root cause analysis.</p>
+                                <p class="mb-2">AI-guided root cause analysis with layered questioning.</p>
                                 <ul class="small text-muted mb-0">
-                                    <li>Answer "Why?" questions to dig deeper into issues</li>
-                                    <li>Build on previous answers to reach root causes</li>
-                                    <li>Contribute to collaborative problem-solving</li>
+                                    <li>Answer the initial question, then respond to AI-generated follow-up "Why?" prompts</li>
+                                    <li>Depth (3–7 levels) is set by the facilitator</li>
+                                    <li>AI extracts root causes from all participant answers</li>
+                                    <li>Your chain of answers is private; only root causes are shared</li>
                                 </ul>
                             </div>
                         </div>
@@ -300,38 +323,80 @@
                         <h3 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
                                     data-bs-target="#ratingActivity" aria-expanded="false">
-                                <i class="fas fa-star text-danger me-3"></i>
-                                <strong>Ratings</strong>
+                                <i class="fas fa-star text-warning me-3"></i>
+                                <strong>Rating</strong>
                             </button>
                         </h3>
                         <div id="ratingActivity" class="accordion-collapse collapse" data-bs-parent="#activityAccordion">
                             <div class="accordion-body">
-                                <p class="mb-2">Rate items on a numerical scale.</p>
+                                <p class="mb-2">Rate on a 1–5 or 1–10 star/numeric scale.</p>
                                 <ul class="small text-muted mb-0">
-                                    <li>Use sliders or stars to provide ratings</li>
-                                    <li>Rate multiple items in one activity</li>
-                                    <li>See average ratings from the group</li>
+                                    <li>Click the stars or select a number to submit your rating</li>
+                                    <li>Only one rating per participant is allowed by default</li>
+                                    <li>The facilitator sees the real-time average and distribution</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Feedback -->
+                    <!-- General Feedback -->
                     <div class="accordion-item border rounded-3 mb-2">
                         <h3 class="accordion-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
                                     data-bs-target="#feedbackActivity" aria-expanded="false">
-                                <i class="fas fa-comments text-primary me-3"></i>
-                                <strong>Open Feedback</strong>
+                                <i class="fas fa-comment text-secondary me-3"></i>
+                                <strong>General Feedback</strong>
                             </button>
                         </h3>
                         <div id="feedbackActivity" class="accordion-collapse collapse" data-bs-parent="#activityAccordion">
                             <div class="accordion-body">
-                                <p class="mb-2">Provide detailed written feedback or comments.</p>
+                                <p class="mb-2">Open-ended text responses for qualitative feedback.</p>
                                 <ul class="small text-muted mb-0">
-                                    <li>Type detailed responses in text boxes</li>
-                                    <li>Share thoughts, suggestions, or reflections</li>
-                                    <li>Your feedback is visible to facilitators</li>
+                                    <li>Type your thoughts, suggestions, or reflections in free text</li>
+                                    <li>You may submit multiple responses if the facilitator allows it</li>
+                                    <li>Responses appear in real-time on the facilitator's dashboard</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Summary -->
+                    <div class="accordion-item border rounded-3 mb-2">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#aiSummaryActivity" aria-expanded="false">
+                                <i class="fas fa-robot text-primary me-3"></i>
+                                <strong>AI Summary</strong>
+                            </button>
+                        </h3>
+                        <div id="aiSummaryActivity" class="accordion-collapse collapse" data-bs-parent="#activityAccordion">
+                            <div class="accordion-body">
+                                <p class="mb-2">A read-only activity that displays an AI-generated session summary.</p>
+                                <ul class="small text-muted mb-0">
+                                    <li>No input required — just read and follow along</li>
+                                    <li>AI synthesises themes and key takeaways from all prior activities</li>
+                                    <li>Summary appears once the facilitator opens the activity</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Break -->
+                    <div class="accordion-item border rounded-3 mb-2">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#breakActivity" aria-expanded="false">
+                                <i class="fas fa-coffee text-success me-3"></i>
+                                <strong>Break</strong>
+                            </button>
+                        </h3>
+                        <div id="breakActivity" class="accordion-collapse collapse" data-bs-parent="#activityAccordion">
+                            <div class="accordion-body">
+                                <p class="mb-2">A scheduled rest period with a countdown timer.</p>
+                                <ul class="small text-muted mb-0">
+                                    <li>A countdown timer shows how long the break lasts</li>
+                                    <li>Click the <strong>I'm Back</strong> button when you return</li>
+                                    <li>The facilitator can see how many participants are ready</li>
                                 </ul>
                             </div>
                         </div>
@@ -498,11 +563,11 @@
             </div>
         </div>
 
-        <!-- Back to Home -->
+        <!-- Back to Support -->
         <div class="text-center mt-4">
-            <a href="/" class="btn btn-lg btn-primary d-inline-flex align-items-center gap-2">
-                <i class="fas fa-home"></i>
-                <span>Back to Home</span>
+            <a href="/home/support" class="btn btn-lg btn-outline-secondary d-inline-flex align-items-center gap-2">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Support</span>
             </a>
         </div>
     </div>
